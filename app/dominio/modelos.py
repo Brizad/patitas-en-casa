@@ -70,3 +70,12 @@ class Refugio:
     nombre: str
     capacidad: int
     ocupados: int = 0
+
+    def tiene_cupo(self) -> bool:
+        return self.ocupados < self.capacidad
+
+    def porcentaje_ocupacion(self) -> float:
+        return self.ocupados / self.capacidad
+
+    def texto_ocupacion(self) -> str:
+        return f"{self.ocupados}/{self.capacidad}"

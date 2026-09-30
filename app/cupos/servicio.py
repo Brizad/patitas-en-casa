@@ -24,11 +24,11 @@ class ServicioCupos:
     def registrar_ingreso(self, animal: Animal) -> Refugio:
         if not animal.nombre or not animal.estado_salud:
             raise ValueError("La ficha clínica exige nombre y estado de salud.")
-        if self._refugio.ocupados >= self._refugio.capacidad:
+        if not self._refugio.tiene_cupo():
             raise CupoAgotado(f"{self._refugio.nombre} no tiene cupos disponibles.")
         self.animales.append(animal)
         self._refugio.ocupados += 1
-        if self.porcentaje_ocupacion() >= config.ALERTA_OCUPACION:
+        if self._refugio.porcentaje_ocupacion() >= config.ALERTA_OCUPACION:
             umbral = int(config.ALERTA_OCUPACION * 100)
             self._notificador.enviar(
                 "coordinadores", f"Ocupación sobre el {umbral} % en {self._refugio.nombre}"
@@ -36,8 +36,7 @@ class ServicioCupos:
         return self._refugio
 
     def porcentaje_ocupacion(self) -> float:
-        # Calcula con los datos internos del refugio.
-        return self._refugio.ocupados / self._refugio.capacidad
+        return self._refugio.porcentaje_ocupacion()
 
     def texto_ocupacion(self) -> str:
-        return f"{self._refugio.ocupados}/{self._refugio.capacidad}"
+        return self._refugio.texto_ocupacion()
