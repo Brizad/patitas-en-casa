@@ -46,3 +46,11 @@ def test_cola_ubica_revision_sobre_media_y_critico_primero():
     critica = nuevo_reporte(minutos=5)
     critica.prioridad, critica.estado = Prioridad.CRITICA, EstadoReporte.CLASIFICADO
     assert ordenar_cola([media, revision, critica]) == [critica, revision, media]
+
+
+def test_confianza_baja_con_prioridad_critica_no_se_degrada():
+    """Camino 4 de V(G)=4: la baja confianza solo exige revisión en prioridades media o baja."""
+    servicio = ServicioTriaje(clasificador=stub(Prioridad.CRITICA, 0.5))
+    r = servicio.evaluar(nuevo_reporte("perro convulsionando"))
+    assert r.estado == EstadoReporte.CLASIFICADO
+    assert r.prioridad == Prioridad.CRITICA
