@@ -33,3 +33,10 @@ def test_ficha_incompleta_no_se_guarda():
     servicio = ServicioCupos(Refugio("Refugio de prueba", 10, 0), Mock())
     with pytest.raises(ValueError):
         servicio.registrar_ingreso(Animal(nombre="", especie=Especie.GATO, estado_salud=""))
+
+
+def test_no_alerta_por_debajo_del_umbral_de_la_linea_base():
+    notificador = Mock()
+    servicio = ServicioCupos(Refugio("Refugio de prueba", 40, 34), notificador)
+    servicio.registrar_ingreso(animal())  # 35/40 = 87,5 % < 90 % (RF-07)
+    notificador.enviar.assert_not_called()
