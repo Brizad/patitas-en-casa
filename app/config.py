@@ -4,7 +4,7 @@
 UMBRAL_CONFIANZA = 0.6
 
 # RF-07: porcentaje de ocupación a partir del cual se alerta al coordinador.
-ALERTA_OCUPACION = None  # por definir
+ALERTA_OCUPACION = 0.85  # valor del borrador de requisitos
 
 # RF-01: límites del video adjunto al reporte.
 VIDEO_MAX_SEGUNDOS = 60
