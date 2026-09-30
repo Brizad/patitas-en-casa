@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.dominio.modelos import Prioridad
+from app.triaje.normalizacion import normalizar
 
 # Léxico de señales clínicas: fragmento -> prioridad que sugiere.
 LEXICO = {
@@ -40,7 +41,7 @@ class Resultado:
 
 
 def clasificar(texto):
-    t = texto.lower()
+    t = normalizar(texto)
     enc = []
     for k in LEXICO:
         i = t.find(k)

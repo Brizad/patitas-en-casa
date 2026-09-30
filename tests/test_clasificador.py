@@ -24,3 +24,10 @@ def test_confianza_crece_con_senales_del_mismo_nivel():
     una = clasificar("perro atropellado")
     dos = clasificar("perro atropellado, está inconsciente")
     assert dos.confianza > una.confianza
+
+
+def test_bug01_senales_con_tilde_se_detectan():
+    """Regresión BUG-01: 'convulsión' y 'vómito' con tilde no se detectaban."""
+    r = clasificar("El perro tuvo una convulsión y después vómito con sangre")
+    assert r.prioridad == Prioridad.CRITICA
+    assert any("convulsion" in e for e in r.evidencias)
