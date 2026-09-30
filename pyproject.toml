@@ -1,6 +1,6 @@
 [project]
 name = "patitas-en-casa"
-version = "0.0.0"
+version = "0.1.0"
 description = "Gestión logística de refugios animales con triaje de emergencias"
 requires-python = ">=3.11"
 
