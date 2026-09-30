@@ -2,16 +2,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 
 
-class Especie(str, Enum):
+class Especie(StrEnum):
     PERRO = "perro"
     GATO = "gato"
 
 
-class Prioridad(str, Enum):
+class Prioridad(StrEnum):
     """Escala de triaje (RF-02). Tiempos objetivo preliminares, a validar con veterinarios."""
 
     CRITICA = "critica"  # atención en 1 hora o menos
@@ -20,7 +20,7 @@ class Prioridad(str, Enum):
     BAJA = "baja"  # 72 horas o menos
 
 
-class EstadoReporte(str, Enum):
+class EstadoReporte(StrEnum):
     RECIBIDO = "recibido"
     CLASIFICADO = "clasificado"
     REQUIERE_REVISION = "requiere_revision"
@@ -51,7 +51,7 @@ class Reporte:
     prioridad: Prioridad | None = None
     confianza: float | None = None
     evidencias: list[str] = field(default_factory=list)
-    creado_en: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    creado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass

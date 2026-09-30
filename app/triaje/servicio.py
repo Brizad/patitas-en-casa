@@ -1,9 +1,9 @@
 """Política de decisión del Motor de Triaje (RNF-03 y flujo E1 del UC-01)."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as TiempoAgotado
-from typing import Callable
 
 from app import config
 from app.dominio.modelos import EstadoReporte, Prioridad, Reporte

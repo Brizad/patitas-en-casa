@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock
 
 from app.dominio.modelos import EstadoReporte, Prioridad, Reporte, Ubicacion
@@ -8,7 +8,7 @@ from app.triaje.servicio import ServicioTriaje, ordenar_cola
 
 def nuevo_reporte(texto="perro herido en la calle 10", minutos=0):
     r = Reporte(codigo="ABCD1234", descripcion=texto, ubicacion=Ubicacion(direccion="Calle 10"))
-    r.creado_en = datetime(2026, 9, 29, 10, 0, tzinfo=timezone.utc) + timedelta(minutes=minutos)
+    r.creado_en = datetime(2026, 9, 29, 10, 0, tzinfo=UTC) + timedelta(minutes=minutos)
     return r
 
 

@@ -29,9 +29,9 @@ class ServicioCupos:
         self.animales.append(animal)
         self._refugio.ocupados += 1
         if self.porcentaje_ocupacion() >= config.ALERTA_OCUPACION:
+            umbral = int(config.ALERTA_OCUPACION * 100)
             self._notificador.enviar(
-                "coordinadores",
-                f"Ocupación sobre el {int(config.ALERTA_OCUPACION * 100)} % en {self._refugio.nombre}",
+                "coordinadores", f"Ocupación sobre el {umbral} % en {self._refugio.nombre}"
             )
         return self._refugio
 
