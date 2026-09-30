@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Build (instalar dependencias)
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint (Ruff)
+        run: ruff check .
+
+      - name: Test (pytest con cobertura)
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
