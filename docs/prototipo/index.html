@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dashboards Patitas en Casa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Balsamiq+Sans:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+*{box-sizing:border-box}html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Visor: barra de roles + escenario que muestra el dashboard escalado + fichas numeradas que explican cada zona */
+:root{
+--bg:#EEF1EE; --panel:#FFFFFF; --ink:#16282A; --mute:#5A676B; --line:#D5DDD9; --accent:#0F4F47; --accent-2:#F2A65A; --chip:#E3ECE8;
+--f-ui:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif; --f-wf:'Balsamiq Sans','Comic Sans MS','Segoe UI',sans-serif; --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0E1716;--panel:#16211F;--ink:#E6EEEB;--mute:#9DB0AB;--line:#2A3936;--accent:#7FC8B9;--accent-2:#F2A65A;--chip:#1F2E2B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1716;--panel:#16211F;--ink:#E6EEEB;--mute:#9DB0AB;--line:#2A3936;--accent:#7FC8B9;--accent-2:#F2A65A;--chip:#1F2E2B;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:22px}
+header.top h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+header.top p{margin:4px 0 0;color:var(--mute);max-width:70ch}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 14px var(--f-ui);padding:8px 12px;border-radius:999px;cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;color:var(--ink);font:600 14px var(--f-ui);padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-2);color:#1C1A14}
+button:focus-visible{outline:3px solid var(--accent-2);outline-offset:2px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:13.5px}
+.meta b{color:var(--ink)}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;overflow:hidden}
+.viewport{position:relative;overflow:hidden}
+.scale{transform-origin:0 0;width:1280px}
+.phones{display:flex;gap:28px;justify-content:center;flex-wrap:nowrap;width:max-content}
+.notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:12px;min-width:0}
+.note .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--panel);font:700 13px var(--f-ui);display:flex;align-items:center;justify-content:center}
+.note h3{margin:0 0 4px;font-size:15px}
+.note p{margin:0;color:var(--mute);font-size:14px;line-height:1.45}
+.note code{font:500 12px var(--f-mono);background:var(--chip);color:var(--ink);padding:1px 6px;border-radius:6px;white-space:nowrap}
+.legend{color:var(--mute);font-size:13px}
+@media (prefers-reduced-motion:no-preference){.scale{transition:opacity .15s}}
+/* modo captura (documento) */
+body.shot{padding:0;background:#fff}
+body.shot .wrap>*:not(.stage){display:none}
+body.shot .stage{border:0;border-radius:0;padding:0}
+/* ===================== UI del producto (mockup) ===================== */
+.scr{--p-bg:#F6F5F1;--p-side:#0F4F47;--p-side-ink:#D5E6E2;--p-card:#FFFFFF;--p-line:#E4E4DE;--p-ink:#1C2B2D;--p-mute:#5B6670;--p-acc:#F2A65A;--p-teal:#0F6B5E;--p-soft:#E7F1EE;
+--c-cri:#9B1C1C;--c-cri-bg:#FDE7E4;--c-alt:#8A3A06;--c-alt-bg:#FDEBDD;--c-med:#6F4A00;--c-med-bg:#FEF3C7;--c-baj:#23613A;--c-baj-bg:#E3F1E7;--c-rev:#5B3E96;--c-rev-bg:#EEE8F7;
+font-family:var(--f-ui);color:var(--p-ink);background:var(--p-bg);font-size:15px;line-height:1.35;position:relative}
+.scr *{box-sizing:border-box}
+.desk{width:1280px;min-height:800px;display:grid;grid-template-columns:232px 1fr}
+.side{background:var(--p-side);padding:22px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:17px;padding:2px 8px 20px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--p-acc);color:var(--p-side);display:flex;align-items:center;justify-content:center;flex:none}
+.nv{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--p-side-ink);font-weight:600;font-size:14.5px}
+.nv.on{background:#fff;color:var(--p-side)}
+.nv .ct{margin-left:auto;background:var(--p-acc);color:#1C1A14;border-radius:999px;font-size:12px;padding:1px 8px;font-weight:700}
+.side .foot{margin-top:auto;color:var(--p-side-ink);font-size:12.5px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.15)}
+.main{padding:22px 26px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.bar{display:flex;align-items:center;gap:14px}
+.bar h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
+.bar .sub{color:var(--p-mute);font-size:14px}
+.bar .sp{flex:1}
+.who{display:flex;align-items:center;gap:8px;background:var(--p-card);border:1px solid var(--p-line);border-radius:999px;padding:5px 12px 5px 5px;font-size:13.5px;font-weight:600}
+.av{width:28px;height:28px;border-radius:50%;background:var(--p-soft);color:var(--p-teal);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;border:1px solid var(--p-line);background:var(--p-card);color:var(--p-ink)}
+.btn.pri{background:var(--p-teal);border-color:var(--p-teal);color:#fff}
+.btn.warn{background:var(--c-cri);border-color:var(--c-cri);color:#fff}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr 1fr}.g21{grid-template-columns:1.55fr 1fr}.g12{grid-template-columns:1fr 1.4fr}
+.card{background:var(--p-card);border:1px solid var(--p-line);border-radius:14px;padding:18px;position:relative;min-width:0}
+.card h4{margin:0 0 12px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.card h4 .r{margin-left:auto;font-weight:600;font-size:13px;color:var(--p-teal)}
+.kpi .l{font-size:12.5px;font-weight:700;color:var(--p-mute);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:13.5px;color:var(--p-mute);margin-top:2px}
+.kpi.alert{border-color:#F2B8B0;background:#FFF7F5}
+.kpi.alert .v{color:var(--c-cri)}
+.chip{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.cri{background:var(--c-cri-bg);color:var(--c-cri)}.alt{background:var(--c-alt-bg);color:var(--c-alt)}.med{background:var(--c-med-bg);color:var(--c-med)}.baj{background:var(--c-baj-bg);color:var(--c-baj)}.rev{background:var(--c-rev-bg);color:var(--c-rev)}.neu{background:var(--p-soft);color:var(--p-teal)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+.t th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--p-mute);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--p-line)}
+.t td{padding:10px;border-bottom:1px solid #EFEFEA;vertical-align:middle}
+.t tr.sel td{background:#FFF8EF}
+.mono{font-family:var(--f-mono);font-size:13px;letter-spacing:.02em}
+.mute{color:var(--p-mute)}
+.pb{height:10px;border-radius:99px;background:#ECEBE5;overflow:hidden}
+.pb span{display:block;height:100%;border-radius:99px;background:var(--p-teal)}
+.pb span.hot{background:var(--c-cri)}
+.al{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #EFEFEA;font-size:14px}
+.al:last-child{border-bottom:0}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;margin-top:5px}
+.ph{background:linear-gradient(135deg,#F7DDBF,#F2C7A0);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#8A5A2B}
+.chart{display:block;width:100%;height:auto}
+.mk{display:none}
+.row{display:flex;align-items:center;gap:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.f{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:700}
+.in{border:1px solid var(--p-line);background:#fff;border-radius:10px;padding:11px 12px;font-weight:500;color:var(--p-ink);font-size:14.5px}
+.in.area{min-height:92px}
+.tag{font-size:12px;color:var(--p-mute);font-weight:500}
+.ev{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:6px 0}
+.ev i{font-style:normal;flex:none;width:20px;height:20px;border-radius:6px;background:var(--p-soft);color:var(--p-teal);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+.tl{display:flex;flex-direction:column;gap:0}
+.tl div{display:flex;gap:12px;font-size:14.5px;position:relative;padding:0 0 16px 0}
+.tl div:before{content:"";width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--p-line);flex:none;margin-top:2px;z-index:1}
+.tl div.ok:before{background:var(--p-teal);border-color:var(--p-teal)}
+.tl div.now:before{background:var(--p-acc);border-color:var(--p-acc)}
+.tl div:after{content:"";position:absolute;left:6px;top:16px;bottom:0;width:2px;background:var(--p-line)}
+.tl div:last-child:after{display:none}
+/* teléfono */
+.phone{width:360px;border-radius:38px;background:#1E2A2C;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.phone .in-ph{border-radius:28px;overflow:hidden;background:var(--p-bg);height:740px;display:flex;flex-direction:column}
+.pst{display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:10px 20px 6px;color:var(--p-ink)}
+.phd{background:var(--p-side);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px}
+.pbd{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;overflow:hidden}
+.pcap{text-align:center;font-weight:700;font-size:14px;color:var(--ink);margin-top:10px;font-family:var(--f-ui)}
+.big{font-family:var(--f-mono);font-size:30px;letter-spacing:.12em;font-weight:500;text-align:center;background:#fff;border:2px dashed var(--p-acc);border-radius:14px;padding:16px 8px}
+.sw{width:42px;height:24px;border-radius:99px;background:var(--p-teal);position:relative;flex:none}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.map{height:150px;border-radius:12px;background:
+linear-gradient(90deg,transparent 48%,#fff 48%,#fff 52%,transparent 52%),linear-gradient(0deg,transparent 46%,#fff 46%,#fff 50%,transparent 50%),linear-gradient(30deg,transparent 60%,#fff 60%,#fff 63%,transparent 63%),#DCE8DF;position:relative}
+.pin{position:absolute;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff}
+.pawtrail{margin-top:auto;padding:0 10px;opacity:1}
+.pawtrail+.foot{margin-top:6px}
+.av2{width:34px;height:34px;border-radius:50%!important;background:none;overflow:hidden;flex:none}
+.wf .pawtrail{display:none}
+.vista{display:flex;flex-direction:column;gap:10px;margin-bottom:34px}
+.vista:last-child{margin-bottom:0}
+.vh{font:700 15px var(--f-ui);color:var(--ink)}
+.vh .mono{font:500 13px var(--f-mono);background:var(--chip);padding:2px 8px;border-radius:6px;margin-right:6px}
+body.shot .vh{display:none}
+.board{width:1280px;padding:26px;display:flex;flex-direction:column;gap:18px}
+.sw-row{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.swc{display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.swc .sq{height:64px;border-radius:10px;border:1px solid var(--p-line)}
+.sk{height:14px;border-radius:7px;background:linear-gradient(90deg,#ECEBE5,#F6F5F1,#ECEBE5)}
+.es{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;color:var(--p-ink);font-size:14px}
+.es svg{color:var(--p-teal)}
+.mk.r{left:auto;right:-11px}
+.phones>div{display:flex;flex-direction:column}
+.phones .phone{flex:1;display:flex}
+.phones .in-ph{height:auto;min-height:740px;flex:1}
+.wf .swc .sq{filter:grayscale(1)}
+.wf .sk{background:#E3E3E3}
+.wf .es svg{color:#555}
+/* ===================== Wireframe ===================== */
+.wf .scr{--p-bg:#FFFFFF;--p-side:#FFFFFF;--p-side-ink:#555;--p-card:#FFFFFF;--p-line:#9A9A9A;--p-ink:#2B2B2B;--p-mute:#6B6B6B;--p-acc:#BDBDBD;--p-teal:#4A4A4A;--p-soft:#EDEDED;
+--c-cri:#2B2B2B;--c-cri-bg:#fff;--c-alt:#2B2B2B;--c-alt-bg:#fff;--c-med:#2B2B2B;--c-med-bg:#fff;--c-baj:#2B2B2B;--c-baj-bg:#fff;--c-rev:#2B2B2B;--c-rev-bg:#fff;font-family:var(--f-wf)}
+.wf .side{border-right:2px solid #9A9A9A}
+.wf .brand{color:#2B2B2B}
+.wf .nv.on{background:#EDEDED;color:#2B2B2B;outline:2px solid #9A9A9A}
+.wf .side .foot{border-top-color:#C8C8C8}
+.wf .card,.wf .who,.wf .in,.wf .btn{border-width:2px;border-style:solid}
+.wf .card{border-radius:6px}
+.wf .chip{border:1.5px solid #555;background:#fff;color:#2B2B2B}
+.wf .btn.pri,.wf .btn.warn{background:#4A4A4A;border-color:#4A4A4A;color:#fff}
+.wf .kpi.alert{background:#fff;border-color:#2B2B2B;border-style:dashed}
+.wf .ph,.wf .map{background:#fff;border:2px solid #9A9A9A;border-radius:6px;position:relative;color:transparent}
+.wf .ph *, .wf .map *{visibility:hidden}
+.wf .ph:before,.wf .map:before{content:"";position:absolute;inset:0;background:linear-gradient(to top right,transparent calc(50% - 1px),#9A9A9A,transparent calc(50% + 1px)),linear-gradient(to top left,transparent calc(50% - 1px),#9A9A9A,transparent calc(50% + 1px))}
+.wf .chart rect,.wf .chart path.fill{fill:#DDDDDD!important}
+.wf .chart path.ln{stroke:#555!important}
+.wf .chart circle{fill:#555!important}
+.wf .pb span,.wf .pb span.hot{background:repeating-linear-gradient(45deg,#777 0 4px,#bbb 4px 8px)}
+.wf .dot{background:#777!important}
+.wf .phone{background:#fff;border:3px solid #555;box-shadow:none}
+.wf .phd{color:#2B2B2B;border-bottom:2px solid #9A9A9A}
+.wf .sw{background:#777}
+.wf .big{border-color:#555}
+.wf .logo{background:#fff;border:2px solid #555;color:#555}
+.wf .mk{display:flex;position:absolute;top:-11px;left:-11px;width:24px;height:24px;border-radius:50%;background:#E8552B;color:#fff;font:700 13px var(--f-ui);align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 3px #fff}
+.wf .tl div.ok:before,.wf .tl div.now:before{background:#555;border-color:#555}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+<div>
+<h1>Patitas en Casa · Dashboards por rol</h1>
+<p>Prototipo de la Semana 3: cada rol tiene su dashboard en dos niveles de fidelidad. El wireframe muestra la estructura con zonas numeradas; el mockup muestra el diseño final. Los datos son de ejemplo.</p>
+</div>
+<div class="ctrl">
+<div class="seg" role="group" aria-label="Nivel de fidelidad">
+<button id="m-wf" aria-pressed="false">Wireframe</button>
+<button id="m-mk" aria-pressed="true">Mockup</button>
+</div>
+</div>
+</header>
+<nav class="tabs" id="tabs" aria-label="Roles"></nav>
+<div class="meta" id="meta"></div>
+<section class="stage"><div class="viewport" id="vp"><div class="scale" id="sc"></div></div></section>
+<p class="legend" id="legend"></p>
+<section class="notes" id="notes" aria-label="Explicación de cada zona"></section>
+</div>
+<script>
+const I={
+home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+grid:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+truck:'<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+box:'<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/>',
+chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c3 0 6 2 6 5"/>',
+gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/>',
+shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+pin:'<path d="M12 21s-6-6-6-11a6 6 0 0 1 12 0c0 5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
+cam:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+paw:'<circle cx="7" cy="9" r="1.8"/><circle cx="12" cy="6.5" r="1.8"/><circle cx="17" cy="9" r="1.8"/><path d="M8 16c0-2.4 1.8-4 4-4s4 1.6 4 4c0 1.4-1.2 2-4 2s-4-.6-4-2z"/>',
+search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
+};
+const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const mk=n=>`<span class="mk">${n}</span>`;
+const chip=(p,t)=>`<span class="chip ${p}">${t}</span>`;
+const PR={cri:'Crítica',alt:'Alta',med:'Media',baj:'Baja',rev:'Requiere revisión'};
+const logo=`<span class="logo">${ic('paw',22)}</span>`;
+function desk(nav,active,title,sub,user,body,foot){
+return `<div class="scr desk"><aside class="side"><div class="brand">${logo}Patitas en Casa</div>
+${nav.map(([n,i,c])=>`<div class="nv${n===active?' on':''}">${ic(i)}${n}${c?`<span class="ct">${c}</span>`:''}</div>`).join('')}
+<div class="pawtrail">${paws()}</div><div class="foot">${foot}</div></aside>
+<main class="main"><div class="bar"><div><h2>${title}</h2><div class="sub">${sub}</div></div><span class="sp"></span>
+<div class="who"><span class="av">${user[0]}</span>${user[1]}</div></div>${body}</main></div>`;
+}
+function phone(head,body,cap){
+return `<div><div class="phone"><div class="in-ph scr"><div class="pst"><span>9:41</span><span>4G ▮▮▮</span></div>
+<div class="phd">${logo}${head}</div><div class="pbd">${body}</div></div></div><div class="pcap">${cap}</div></div>`;
+}
+// barras a escala: valores, máximo del eje, etiquetas
+function bars(vals,max,labels,w=520,h=170,hot=[]){
+const pad=28,bw=(w-pad-10)/vals.length,ch=h-34;
+let g='';
+[0,.5,1].forEach(f=>{const y=10+ch-ch*f;g+=`<line x1="${pad}" x2="${w}" y1="${y}" y2="${y}" stroke="#E4E4DE"/><text x="${pad-6}" y="${y+4}" font-size="11" text-anchor="end" fill="#5B6670">${Math.round(max*f)}</text>`});
+vals.forEach((v,i)=>{const bh=ch*v/max,x=pad+i*bw+bw*.18;
+g+=`<rect x="${x}" y="${10+ch-bh}" width="${bw*.64}" height="${bh}" rx="4" fill="${hot.includes(i)?'#C2410C':'#0F6B5E'}"/>`+
+`<text x="${x+bw*.32}" y="${h-6}" font-size="11.5" text-anchor="middle" fill="#5B6670">${labels[i]}</text>`+
+`<text x="${x+bw*.32}" y="${6+ch-bh}" font-size="11.5" text-anchor="middle" fill="#1C2B2D" font-weight="700">${v}</text>`});
+return `<svg class="chart" viewBox="0 0 ${w} ${h}">${g}</svg>`;
+}
+function line(vals,max,labels,w=520,h=170,vals2){
+const pad=28,ch=h-34,step=(w-pad-20)/(vals.length-1);
+const pt=(v,i)=>[pad+10+i*step,10+ch-ch*v/max];
+let g='';
+[0,.5,1].forEach(f=>{const y=10+ch-ch*f;g+=`<line x1="${pad}" x2="${w}" y1="${y}" y2="${y}" stroke="#E4E4DE"/><text x="${pad-6}" y="${y+4}" font-size="11" text-anchor="end" fill="#5B6670">${Math.round(max*f)}</text>`});
+const P=vals.map(pt);
+g+=`<path class="fill" d="M${P[0][0]},${10+ch} L${P.map(p=>p.join(',')).join(' L')} L${P[P.length-1][0]},${10+ch}Z" fill="#0F6B5E" fill-opacity=".12"/>`;
+g+=`<path class="ln" d="M${P.map(p=>p.join(',')).join(' L')}" fill="none" stroke="#0F6B5E" stroke-width="2.5"/>`;
+if(vals2){const Q=vals2.map(pt);g+=`<path class="ln" d="M${Q.map(p=>p.join(',')).join(' L')}" fill="none" stroke="#C2410C" stroke-width="2" stroke-dasharray="5 4"/>`}
+P.forEach((p,i)=>{g+=`<text x="${p[0]}" y="${h-6}" font-size="11.5" text-anchor="middle" fill="#5B6670">${labels[i]}</text>`});
+const L=P[P.length-1];g+=`<circle cx="${L[0]}" cy="${L[1]}" r="4.5" fill="#0F6B5E"/>`;
+return `<svg class="chart" viewBox="0 0 ${w} ${h}">${g}</svg>`;
+}
+// Ilustraciones originales y sencillas de perros y gatos (SVG)
+function dog(f='#C98B4F',e='#8A5A2B',bg='#FBE7CF',tongue=true){return `<svg viewBox="0 0 120 120" width="100%" height="100%" aria-hidden="true">
+<circle cx="60" cy="60" r="58" fill="${bg}"/>
+<ellipse cx="30" cy="52" rx="14" ry="26" fill="${e}" transform="rotate(18 30 52)"/><ellipse cx="90" cy="52" rx="14" ry="26" fill="${e}" transform="rotate(-18 90 52)"/>
+<ellipse cx="60" cy="62" rx="31" ry="33" fill="${f}"/>
+<ellipse cx="60" cy="80" rx="19" ry="15" fill="#FFF4E6"/>
+<circle cx="48" cy="58" r="4.6" fill="#2B1D12"/><circle cx="72" cy="58" r="4.6" fill="#2B1D12"/><circle cx="49.5" cy="56.5" r="1.4" fill="#fff"/><circle cx="73.5" cy="56.5" r="1.4" fill="#fff"/>
+<ellipse cx="60" cy="72" rx="7" ry="5" fill="#2B1D12"/>
+<path d="M60 77v5M52 83q8 6 16 0" stroke="#2B1D12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+${tongue?'<path d="M56 85q4 10 8 0z" fill="#E86F6F"/>':''}</svg>`}
+function cat(f='#E9A25B',e='#C77B32',bg='#FCE9D6',stripes=true){return `<svg viewBox="0 0 120 120" width="100%" height="100%" aria-hidden="true">
+<circle cx="60" cy="60" r="58" fill="${bg}"/>
+<path d="M30 50L34 18L54 38z" fill="${f}"/><path d="M90 50L86 18L66 38z" fill="${f}"/><path d="M35 40l2-14l10 10z" fill="#F7C6C6"/><path d="M85 40l-2-14l-10 10z" fill="#F7C6C6"/>
+<ellipse cx="60" cy="66" rx="34" ry="30" fill="${f}"/>
+${stripes?`<path d="M60 38v10M50 40l3 8M70 40l-3 8" stroke="${e}" stroke-width="3" stroke-linecap="round"/>`:''}
+<ellipse cx="47" cy="62" rx="5" ry="6" fill="#2F4A2B"/><ellipse cx="73" cy="62" rx="5" ry="6" fill="#2F4A2B"/><ellipse cx="47" cy="62" rx="1.8" ry="4.5" fill="#111"/><ellipse cx="73" cy="62" rx="1.8" ry="4.5" fill="#111"/>
+<path d="M56 73h8l-4 4z" fill="#D9646B"/><path d="M60 77q-4 6-9 3M60 77q4 6 9 3" stroke="#3A2A20" stroke-width="2" fill="none" stroke-linecap="round"/>
+<path d="M36 72h-16M36 77l-15 4M84 72h16M84 77l15 4" stroke="#3A2A20" stroke-width="1.6" stroke-linecap="round"/></svg>`}
+function paws(c='rgba(255,255,255,.14)'){let g='';[[10,70,-20],[34,48,-10],[18,22,-25],[44,4,-12]].forEach(([x,y,r])=>{g+=`<g transform="translate(${x} ${y}) rotate(${r})" fill="${c}"><ellipse cx="8" cy="10" rx="5" ry="4.2"/><circle cx="2.5" cy="3.5" r="2"/><circle cx="7" cy="1" r="2"/><circle cx="12" cy="1.6" r="2"/><circle cx="15" cy="5" r="2"/></g>`});return `<svg viewBox="0 0 70 90" width="70" height="90" aria-hidden="true">${g}</svg>`}
+const kpi=(n,l,v,s,cls='')=>`<div class="card kpi ${cls}">${mk(n)}<div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+const NAV_K=[['Inicio','grid'],['Reportes','list',14],['Rescates','truck',4],['Animales','paw'],['Adopciones','heart',2],['Indicadores','chart'],['Exportar','doc']];
+const NAV_V=[['Cola de triaje','list',9],['Fichas clínicas','doc'],['Aptitud para adopción','heart',3],['Mi turno','grid']];
+const NAV_M=[['Inicio','grid'],['Usuarios y roles','users'],['Refugios','home'],['Parámetros','gear'],['Bitácora','shield'],['Modelos de IA','chart']];
+const NAV_A=[['Mi panel','grid'],['Mi hogar','home'],['Recomendados','heart',3],['Mis solicitudes','doc',1],['Seguimientos','bell']];
+const NAV_L=[['Indicadores','chart'],['Reportes por zona','pin'],['Refugios','home'],['Exportar','doc']];
+const FOOT='Refugio de ejemplo · Cúcuta<br>Datos de ejemplo';
+const R=[
+{id:'ciudadano',nombre:'Ciudadano',tipo:'phone',quien:'Persona que encuentra un perro o gato en riesgo. Usa la PWA desde el celular, sin crear cuenta.',
+vistas:[{id:'P-01 a P-03',nombre:'Reportar, código y estado',html:()=>`<div class="phones">${
+phone('Reportar emergencia',`
+<div class="card" style="padding:14px">${mk(1)}<div class="f">¿Qué le pasa al animal?<div class="in area">Perro atropellado en la avenida, no se levanta y sangra de una pata trasera.</div><span class="tag">Mínimo 20 caracteres · 78/500</span></div></div>
+<div class="card" style="padding:14px">${mk(2)}<div class="f">Ubicación<div class="in row">${ic('pin',18)} Barrio San Rafael · GPS ±12 m</div><span class="tag">Puedes escribir la dirección si no hay GPS</span></div></div>
+<div class="card" style="padding:14px">${mk(3)}<div class="f">Video (opcional)<div class="in row">${ic('cam',18)} video_perro.mp4 · 0:42 · 18 MB</div><span class="tag">Hasta 60 s y 50 MB</span></div></div>
+<div class="card" style="padding:12px 14px">${mk(4)}<div class="row" style="font-size:13.5px"><span class="sw" style="width:36px;height:20px"></span>Quiero recibir avisos (WhatsApp o correo)</div></div>
+<div class="btn pri" style="justify-content:center;padding:13px;position:relative">${mk(5)}Enviar reporte</div>
+<div class="mute" style="font-size:12.5px;text-align:center">Sin conexión, el reporte se guarda y se envía solo al volver la señal.</div>`,'1. Reportar emergencia')}${
+phone('Reporte enviado',`
+<div style="text-align:center;padding-top:20px"><div class="ph art" style="margin:0 auto;width:120px;height:120px;border-radius:50%;background:none">${dog()}</div>
+<h3 style="margin:14px 0 4px;font-size:20px">¡Gracias por avisar!</h3><div class="mute" style="font-size:14px">Tu reporte ya está en la cola del refugio.</div></div>
+<div style="position:relative">${mk(6)}<div class="tag" style="text-align:center;margin-bottom:6px;font-weight:700">TU CÓDIGO DE SEGUIMIENTO</div><div class="big">F2HW 5RTB</div></div>
+<div class="card" style="padding:14px;font-size:14px">${mk(7)}<b>Guárdalo:</b> con este código consultas el estado sin dar tu nombre ni tu número.</div>
+<div class="btn" style="justify-content:center">Copiar código</div><div class="btn pri" style="justify-content:center">Ver estado del reporte</div>`,'2. Código de seguimiento')}${
+phone('Estado del reporte',`
+<div class="card" style="padding:14px">${mk(8)}<div class="tag" style="font-weight:700">CÓDIGO</div><div class="mono" style="font-size:18px">F2HW5RTB</div><div class="mute" style="font-size:13px;margin-top:4px">Último cambio: hoy, 10:26 a. m.</div></div>
+<div class="card" style="padding:16px">${mk(9)}<div class="tl">
+<div class="ok"><span><b>Recibido</b><br><span class="mute">10:05 a. m.</span></span></div>
+<div class="ok"><span><b>Revisado por el veterinario</b><br><span class="mute">10:11 a. m.</span></span></div>
+<div class="now"><span><b>Rescatista en camino</b><br><span class="mute">10:26 a. m.</span></span></div>
+<div><span><b>Atendido</b></span></div>
+<div><span><b>Cerrado</b></span></div></div></div>
+<div class="mute" style="font-size:12.5px">Por privacidad no se muestran la dirección exacta ni datos de otras personas.</div>`,'3. Consultar estado')}</div>`}],
+notas:[
+[1,'Descripción guiada','Campo libre con mínimo de 20 caracteres y contador. Es la entrada principal del triaje por texto.','RF-01 · RN-01'],
+[2,'Ubicación','GPS del celular con precisión visible, o dirección escrita si no hay GPS. Sin ubicación no se puede enviar.','RF-01 · RN-01'],
+[3,'Video opcional','Hasta 60 s y 50 MB. Sirve como evidencia adicional para el análisis de marcha.','RF-01 · RF-03'],
+[4,'Avisos con autorización','El contacto es opcional y solo se pide si la persona activa el interruptor.','RF-18 · RNF-08'],
+[5,'Envío sin cuenta','Un solo botón. Si no hay señal, la PWA guarda el reporte y lo reenvía sin duplicarlo.','RF-01 · RF-12'],
+[6,'Código de seguimiento','Código de 8 caracteres en grande, separado en dos bloques para dictarlo o anotarlo fácil.','RF-01 · RF-11'],
+[7,'Privacidad explícita','Explica que el código reemplaza el nombre y el número.','RN-14'],
+[8,'Consulta por código','Muestra solo el código y la fecha del último cambio.','RF-11 · RN-14'],
+[9,'Línea de tiempo','Estados en lenguaje ciudadano; el paso actual se resalta.','RF-11']]},
+{id:'veterinario',nombre:'Veterinario',tipo:'desk',quien:'Profesional del refugio que valida la prioridad clínica de cada reporte.',
+vistas:[{id:'P-04',nombre:'Cola de triaje',html:()=>desk(NAV_V,'Cola de triaje','Cola de triaje','Lunes 5 de octubre · ordenada por prioridad y luego por antigüedad',['DV','Dra. Valentina R.'],`
+<div class="grid g4">${kpi(1,'En cola','9','2 críticos · 3 por revisar')}${kpi(1,'Críticos sin confirmar','2','El más antiguo: 6 min','alert')}${kpi(1,'Requieren revisión','3','Confianza menor a 0,6')}${kpi(1,'Tiempo medio de confirmación','6 min','Hoy · meta ≤ 10 min')}</div>
+<div class="grid g21">
+<div class="card">${mk(2)}<h4>Reportes pendientes<span class="r">Filtrar ▾</span></h4><table class="t"><tr><th>Código</th><th>Resumen</th><th>Sugerida</th><th>Conf.</th><th>Espera</th></tr>
+<tr class="sel"><td class="mono">F2HW5RTB</td><td>Perro atropellado, no se levanta, sangra · San Rafael</td><td>${chip('cri','Crítica')}</td><td>0,87</td><td>6 min</td></tr>
+<tr><td class="mono">K7PQ2MZD</td><td>Gata con convulsiones y vómito · La Libertad</td><td>${chip('cri','Crítica')}</td><td>0,81</td><td>3 min</td></tr>
+<tr><td class="mono">R9TB4LXA</td><td>Clasificador sin respuesta en 10 s · Atalaya</td><td>${chip('alt','Sin clasificar · alta')}</td><td>—</td><td>9 min</td></tr>
+<tr><td class="mono">H3WD8NQE</td><td>Perro cojea, herida en la pata · Caobos</td><td>${chip('alt','Alta')}</td><td>0,74</td><td>14 min</td></tr>
+<tr><td class="mono">M5CJ1VKS</td><td>Perro flaco, sin herida visible · El Rodeo</td><td>${chip('rev','Requiere revisión')}</td><td>0,48</td><td>21 min</td></tr>
+<tr><td class="mono">P8LN6GHT</td><td>Cachorros abandonados en caja · Motilones</td><td>${chip('med','Media')}</td><td>0,69</td><td>25 min</td></tr></table></div>
+<div class="card">${mk(3)}<h4>F2HW5RTB · Perro atropellado ${chip('cri','Crítica sugerida')}</h4>
+<div class="mute" style="font-size:13.5px;margin-bottom:8px">Recibido 10:05 a. m. · San Rafael · texto y video</div>
+<div style="font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--p-mute)">Evidencias (confianza 0,87)</div>
+<div class="ev"><i>1</i>“atropellado”: trauma por vehículo</div><div class="ev"><i>2</i>“sangra”: hemorragia activa</div><div class="ev"><i>3</i>“no se levanta”: posible lesión grave</div>
+<div style="position:relative;margin-top:8px">${mk(4)}<div class="ph" style="height:96px;justify-content:flex-start;gap:12px;padding:0 14px"><div style="width:70px;height:70px;flex:none">${dog('#C98B4F','#8A5A2B','#FFF4E6',false)}</div><span style="font-size:13.5px"><b>Video 0:42 · análisis de marcha</b><br>Anomalía en extremidad posterior izquierda</span></div></div>
+<div class="card" style="padding:10px 12px;margin-top:10px;background:#FFF8EF;border-color:#F4D9B5;font-size:13.5px">${mk(5)}Posible duplicado: K2ZC9WQA a 140 m, hace 35 min.</div>
+<div class="row" style="margin-top:12px;position:relative">${mk(6)}<span class="btn pri">Confirmar crítica</span><span class="btn">Ajustar prioridad…</span></div>
+<div class="tag" style="margin-top:6px">Ajustar exige justificación. La IA sugiere; la decisión es tuya.</div></div></div>`,'Turno: 7:00 a. m. – 3:00 p. m.<br>Datos de ejemplo')}],
+notas:[
+[1,'Resumen del turno','Cuántos casos esperan, cuántos son críticos y cuánto tarda la confirmación. El indicador crítico se resalta en rojo.','RF-04 · RF-30'],
+[2,'Cola priorizada','Ordenada por prioridad sugerida y luego por antigüedad. Los casos de baja confianza aparecen como “Requiere revisión” y nunca como baja.','RF-04 · RN-02 · RN-03'],
+[3,'Detalle con evidencias','Cada sugerencia muestra al menos tres evidencias y su confianza, para que el veterinario entienda el porqué.','RF-02 · RNF-09'],
+[4,'Análisis del video','Resultado del análisis de marcha como evidencia adicional. Si texto y video discrepan, prevalece la prioridad más alta.','RF-03 · RF-19 · RN-07'],
+[5,'Posible duplicado','Aviso de otro reporte a menos de 200 m en las últimas 2 horas; el veterinario decide si los fusiona.','RF-17'],
+[6,'Confirmar o ajustar','Solo el veterinario confirma la prioridad. Cambiarla exige justificación y queda en la bitácora.','RF-04 · RN-06 · RN-16']]},
+{id:'coordinador',nombre:'Coordinador del refugio',tipo:'desk',quien:'Responsable operativo del refugio. Es el dashboard principal del sistema.',
+vistas:[{id:'P-05',nombre:'Panel del refugio',html:()=>desk(NAV_K,'Inicio','Panel del refugio','Lunes 5 de octubre de 2026 · actualizado hace 1 min',['CM','Carlos M. · Coordinador'],`
+<div class="grid g4">${kpi(1,'Ocupación','36 / 40','90 % · alerta activa','alert')}${kpi(1,'Reportes hoy','14','3 críticos · 5 altos')}${kpi(1,'Rescates en curso','4','1 sin aceptar hace 12 min')}${kpi(1,'Adopciones del mes','6','2 solicitudes por decidir')}</div>
+<div class="grid g21">
+<div class="card">${mk(2)}<h4>Ocupación por espacio<span class="r">Registrar ingreso</span></h4>
+<div class="stack">${[['Perros adultos',18,20],['Cachorros',7,8],['Gatos',9,10],['Aislamiento',2,2]].map(([n,o,c])=>`<div><div class="row" style="justify-content:space-between;font-size:14px"><span>${n}</span><b>${o} / ${c}</b></div><div class="pb"><span class="${o/c>=.9?'hot':''}" style="width:${o/c*100}%"></span></div></div>`).join('')}</div>
+<div style="margin-top:8px;position:relative;padding-top:16px">${mk(3)}<div class="row" style="justify-content:space-between"><b style="font-size:14px">Ingresos y egresos · últimos 7 días</b><span class="tag">— ingresos  - - egresos</span></div>${line([2,3,1,4,2,3,2],5,['mar','mié','jue','vie','sáb','dom','lun'],620,150,[1,1,2,1,3,1,1])}</div></div>
+<div class="card">${mk(4)}<h4>Alertas</h4>
+<div class="al"><span class="dot" style="background:#9B1C1C"></span><span><b>Ocupación en 90 %.</b> Los nuevos ingresos requieren un egreso o traslado.</span></div>
+<div class="al"><span class="dot" style="background:#C2410C"></span><span><b>Rescate crítico sin aceptar</b> (F2HW5RTB) hace 12 min. Se escala a los 15 min.</span></div>
+<div class="al"><span class="dot" style="background:#B07A00"></span><span><b>Seguimiento de 30 días vencido:</b> Luna, adoptada el 28 de agosto.</span></div>
+<div class="al"><span class="dot" style="background:#0F6B5E"></span><span>2 animales con concepto “apto” listos para publicar.<span class="row" style="margin-top:8px;gap:8px"><span class="ph art av2">${cat()}</span><b style="font-size:13px">Canela</b><span class="ph art av2">${dog('#B07A4A','#6E4526','#E8F1EA')}</span><b style="font-size:13px">Toby</b></span></span></div></div></div>
+<div class="grid g2">
+<div class="card">${mk(5)}<h4>Reportes recientes<span class="r">Ver todos</span></h4><table class="t"><tr><th>Código</th><th>Barrio</th><th>Prioridad</th><th>Estado</th></tr>
+<tr><td class="mono">F2HW5RTB</td><td>San Rafael</td><td>${chip('cri','Crítica')}</td><td>Confirmado · sin rescatista</td></tr>
+<tr><td class="mono">K7PQ2MZD</td><td>La Libertad</td><td>${chip('cri','Crítica')}</td><td>Rescate asignado</td></tr>
+<tr><td class="mono">H3WD8NQE</td><td>Caobos</td><td>${chip('alt','Alta')}</td><td>En revisión</td></tr>
+<tr><td class="mono">M5CJ1VKS</td><td>El Rodeo</td><td>${chip('rev','Requiere revisión')}</td><td>En cola</td></tr></table></div>
+<div class="card">${mk(6)}<h4>Solicitudes de adopción<span class="r">Decidir</span></h4><table class="t"><tr><th>Animal</th><th>Adoptante</th><th>Compat.</th><th>Acción</th></tr>
+<tr><td>Canela · gata, 4 años</td><td>Adoptante 0412</td><td>86 %</td><td><span class="btn" style="padding:5px 10px;font-size:13px">Revisar</span></td></tr>
+<tr><td>Toby · perro, 6 años</td><td>Adoptante 0388</td><td>78 %</td><td><span class="btn" style="padding:5px 10px;font-size:13px">Pedir visita</span></td></tr></table>
+<div class="tag" style="margin-top:8px">El puntaje orienta; la decisión es del refugio.</div></div></div>`,FOOT)},{id:'P-06',nombre:'Registrar ingreso',html:()=>desk(NAV_K,'Animales','Registrar ingreso','Ficha clínica mínima · el cupo se valida antes de guardar',['CM','Carlos M. · Coordinador'],`
+<div class="grid g21">
+<div class="card">${mk(7)}<h4>Datos del animal</h4>
+<div class="grid g2" style="gap:12px">
+${[['Especie','Perro'],['Nombre provisional','Rocky'],['Sexo y edad aproximada','Macho · 3 años aprox.'],['Origen','Rescate F2HW5RTB · San Rafael'],['Espacio asignado','Perros adultos'],['Fecha de ingreso','5 oct. 2026 · 11:05 a. m.']].map(([a,b])=>`<div class="f">${a}<div class="in">${b}</div></div>`).join('')}
+</div>
+<div class="f" style="margin-top:12px">Estado de salud<div class="in area" style="min-height:64px">Fractura en pata trasera izquierda; consciente y alerta. Remitido por el rescatista.</div></div>
+<div class="grid g3" style="gap:12px;margin-top:12px">
+${[['Tratamientos','Analgésico e inmovilización'],['Vacunas','Desconocidas · programar'],['Esterilización','Pendiente · programar']].map(([a,b])=>`<div class="f">${a}<div class="in">${b}</div></div>`).join('')}
+</div>
+<div class="row" style="margin-top:16px"><span class="btn pri">Guardar ingreso</span><span class="btn">Cancelar</span></div></div>
+<div class="stack" style="gap:16px">
+<div class="card">${mk(8)}<h4>Cupo disponible</h4>
+<div class="row" style="justify-content:space-between;font-size:14px"><span>Perros adultos</span><b>18 / 20 → 19 / 20</b></div><div class="pb" style="margin:6px 0 12px"><span class="hot" style="width:95%"></span></div>
+<div class="row" style="justify-content:space-between;font-size:14px"><span>Total del refugio</span><b>36 / 40 → 37 / 40</b></div><div class="pb" style="margin-top:6px"><span class="hot" style="width:92.5%"></span></div>
+<div class="card" style="margin-top:12px;padding:10px 12px;background:#FFF7F5;border-color:#F2B8B0;font-size:13.5px">Con este ingreso la ocupación queda en 92 %. Con 40 / 40 el sistema no deja guardar y propone un traslado.</div></div>
+<div class="card">${mk(9)}<h4>Fotos</h4><div class="grid g3" style="gap:8px"><div class="ph art" style="height:86px;background:#FBE7CF"><div style="width:76px;height:76px">${dog('#D8A86B','#9C6B3A','#FBE7CF',false)}</div></div><div class="ph" style="height:86px;background:#F6F5F1;border:2px dashed #D9D4C7;color:#5B6670;flex-direction:column;font-size:12.5px;font-weight:700">${ic('cam',22)}Agregar</div><div class="ph" style="height:86px;background:#F6F5F1;border:2px dashed #D9D4C7;color:#5B6670;flex-direction:column;font-size:12.5px;font-weight:700">${ic('cam',22)}Agregar</div></div>
+<div class="tag" style="margin-top:10px">Al guardar queda en la bitácora quién lo registró y la ocupación antes y después.</div></div></div></div>`,FOOT)}],
+notas:[
+[1,'Indicadores del día','Cuatro cifras que el coordinador revisa primero: ocupación, reportes, rescates y adopciones. La ocupación al 90 % se resalta.','RF-07 · RF-30 · RN-04'],
+[2,'Cupos en tiempo real','Ocupación por espacio con barras; las que superan el 90 % cambian de color.','RF-06 · RF-07 · RN-04'],
+[3,'Ingresos y egresos','Tendencia de la semana para anticipar si el refugio se va a llenar.','RF-26 · RF-30'],
+[4,'Alertas accionables','Ocupación, rescates sin aceptar que se van a escalar, seguimientos vencidos y animales listos.','RF-23 · RN-12 · RN-09'],
+[5,'Reportes recientes','Estado operativo de cada reporte para coordinar con veterinarios y rescatistas.','RF-04 · RF-05'],
+[6,'Solicitudes de adopción','Aprobar, rechazar con motivo o pedir visita previa. El puntaje es orientativo.','RF-27 · RN-16'],
+[7,'Ficha clínica mínima','Especie, estado de salud, tratamientos, vacunas y esterilización. El origen enlaza el ingreso con el rescate.','RF-06'],
+[8,'Validación del cupo','Muestra la ocupación antes y después del ingreso. Con el refugio lleno no deja guardar.','RF-07 · RN-04'],
+[9,'Fotos y trazabilidad','Fotos del animal y registro automático en la bitácora.','RF-32 · RNF-12']]},
+{id:'rescatista',nombre:'Rescatista',tipo:'phone',quien:'Voluntario que atiende rescates en campo desde el celular.',
+vistas:[{id:'P-07 a P-09',nombre:'Ofertas, rescate en curso y resultado',html:()=>`<div class="phones">${
+phone('Rescates',`
+<div class="card" style="padding:12px 14px">${mk(1)}<div class="row" style="justify-content:space-between"><span><b>Disponible</b><br><span class="tag">Zona: Comuna 6 y alrededores</span></span><span class="sw"></span></div></div>
+<div style="font-weight:800;font-size:13px;color:var(--p-mute);text-transform:uppercase;letter-spacing:.04em">Ofertas cerca de ti</div>
+<div class="card" style="padding:14px">${mk(2)}<div class="row" style="justify-content:space-between">${chip('cri','Crítica')}<b>1,2 km</b></div><div style="margin:8px 0 4px;font-weight:700">Perro atropellado · San Rafael</div><div class="tag">Confirmado por veterinario hace 2 min</div><div class="row" style="margin-top:10px"><span class="btn pri" style="flex:1;justify-content:center">Aceptar rescate</span></div><div class="tag" style="margin-top:6px">Si nadie acepta en 15 min, se amplía el radio.</div></div>
+<div class="card" style="padding:14px"><div class="row" style="justify-content:space-between">${chip('alt','Alta')}<b>3,4 km</b></div><div style="margin:8px 0 4px;font-weight:700">Gato atrapado en canal · Atalaya</div><div class="tag">Hace 9 min</div></div>`,'1. Ofertas de rescate')}${
+phone('Rescate asignado',`
+<div class="map" style="position:relative">${mk(3)}<span class="pin" style="left:62%;top:30%;background:#9B1C1C"></span><span class="pin" style="left:22%;top:66%;background:#0F6B5E"></span></div>
+<div class="card" style="padding:14px"><div class="row" style="justify-content:space-between"><b>F2HW5RTB</b>${chip('cri','Crítica')}</div><div class="tag" style="margin-top:4px">Calle 8 con Av. 4 (aprox.) · 1,2 km · 6 min</div></div>
+<div class="card" style="padding:14px">${mk(4)}<div class="tl"><div class="ok"><span>Aceptado · 10:24</span></div><div class="now"><span><b>En camino</b></span></div><div><span>En el sitio</span></div></div></div>
+<div class="row"><span class="btn pri" style="flex:1;justify-content:center">Llegué al sitio</span></div>
+<div class="row" style="position:relative">${mk(5)}<span class="btn" style="flex:1;justify-content:center">Liberar rescate</span></div>`,'2. Rescate en curso')}${
+phone('Resultado del rescate',`
+<div style="font-weight:800">¿Cómo terminó el rescate?</div>
+<div class="stack" style="position:relative">${mk(6)}
+<div class="in row" style="border-color:var(--p-teal);border-width:2px">${ic('home',18)} <b>Trasladado a refugio</b></div>
+<div class="in row">${ic('heart',18)} Atendido en el sitio</div><div class="in row">${ic('search',18)} No encontrado</div><div class="in row">${ic('doc',18)} Fallecido</div></div>
+<div class="f">Nota (opcional)<div class="in area" style="min-height:70px">Fractura en pata trasera, consciente.</div></div>
+<div class="btn pri" style="justify-content:center;padding:13px">Registrar resultado</div>
+<div class="card" style="padding:12px 14px">${mk(7)}<b>Este mes:</b> 7 rescates · tiempo medio de llegada 18 min</div>`,'3. Registrar resultado')}</div>`}],
+notas:[
+[1,'Disponibilidad y zona','Interruptor de disponibilidad y zona de cobertura. Solo se ofrecen rescates a quien está disponible.','RF-15'],
+[2,'Ofertas por cercanía','Rescates críticos y altos confirmados, con distancia. Avisa que el radio se amplía si nadie acepta.','RF-05 · RF-23'],
+[3,'Mapa aproximado','Ubicación del caso y del rescatista, sin datos del ciudadano.','RF-21 · RNF-08'],
+[4,'Avance del rescate','Pasos del rescate asignado; el actual se resalta.','RF-21'],
+[5,'Liberar','Si no puede seguir, lo libera y el sistema lo ofrece de nuevo. Un rescate tiene un solo rescatista a la vez.','RN-08'],
+[6,'Resultado','Cuatro resultados posibles, uno por toque.','RF-22'],
+[7,'Historial personal','Resumen de los rescates del mes.','RF-30']]},
+{id:'adoptante',nombre:'Adoptante',tipo:'desk',quien:'Persona mayor de edad que quiere adoptar y recibe recomendaciones según su hogar.',
+vistas:[{id:'P-10',nombre:'Panel del adoptante',html:()=>desk(NAV_A,'Mi panel','Hola, Laura','Te mostramos los animales que mejor encajan con tu hogar',['LG','Laura G.'],`
+<div class="grid g12">
+<div class="card">${mk(1)}<h4>${ic('home',18)} Mi hogar<span class="r">Editar</span></h4>
+<div class="stack" style="font-size:14px">${[['Vivienda','Apartamento de 45 m², sin patio'],['Convivientes','2 adultos y un niño de 4 años'],['Tiempo fuera de casa','10 horas al día'],['Experiencia','Tuvo un gato por 8 años']].map(([a,b])=>`<div class="row" style="justify-content:space-between;border-bottom:1px solid #EFEFEA;padding-bottom:8px"><span class="mute">${a}</span><b style="text-align:right">${b}</b></div>`).join('')}</div>
+<div class="card" style="margin-top:12px;padding:12px;font-size:13.5px;background:#F4F8F6">${mk(2)}2 animales no aparecen porque no son aptos con niños menores de 6 años.</div></div>
+<div class="card">${mk(3)}<h4>${ic('heart',18)} Recomendados para ti</h4><div class="grid g3">
+${[['Canela','Gata · 4 años · esterilizada',86,['Energía baja: encaja con 10 h fuera','Convive bien con niños','Ideal para apartamento']],['Toby','Perro pequeño · 6 años',78,['Tamaño adecuado a 45 m²','Tranquilo con niños','Necesita 2 paseos diarios']],['Mora','Gata · 2 años',71,['Apta con niños','Juguetona: pide más tiempo','Ideal para apartamento']]].map(([n,d,s,f],i)=>`<div style="border:1px solid var(--p-line);border-radius:12px;overflow:hidden;position:relative">${i==0?mk(4):''}<div class="ph art" style="height:110px;border-radius:0;background:${['#FCE9D6','#E8F1EA','#ECEAF4'][i]}"><div style="width:96px;height:96px">${[cat(),dog('#B07A4A','#6E4526','#FBE7CF'),cat('#9AA0A6','#6F757B','#ECEAF4')][i]}</div></div><div style="padding:12px"><div class="row" style="justify-content:space-between"><b style="font-size:16px">${n}</b>${chip('neu',s+' %')}</div><div class="tag">${d}</div><div style="margin-top:8px;font-size:13px" class="stack">${f.map(x=>`<span>✓ ${x}</span>`).join('')}</div><div class="btn ${i==0?'pri':''}" style="margin-top:10px;width:100%;justify-content:center">${i==0?'Solicitud enviada':'Solicitar adopción'}</div></div></div>`).join('')}</div>
+<div class="tag" style="margin-top:10px">La compatibilidad es una orientación; el refugio revisa cada solicitud.</div></div></div>
+<div class="grid g2">
+<div class="card">${mk(5)}<h4>Mis solicitudes</h4><table class="t"><tr><th>Animal</th><th>Enviada</th><th>Estado</th></tr><tr><td>Canela</td><td>3 oct.</td><td>${chip('med','En revisión por el refugio')}</td></tr></table></div>
+<div class="card">${mk(6)}<h4>Seguimiento posadopción</h4><div class="mute" style="font-size:14px">Cuando adoptes, aquí verás tus controles a los 30, 90 y 180 días.</div><div class="row" style="margin-top:12px;gap:8px">${['30 días','90 días','180 días'].map(x=>chip('neu',x)).join('')}</div></div></div>`,'Cuenta de adoptante<br>Datos de ejemplo')}],
+notas:[
+[1,'Perfil del hogar','Datos que alimentan la recomendación: vivienda, convivientes, tiempo fuera y experiencia.','RF-08 · RN-10'],
+[2,'Restricciones duras','Explica cuántos animales se excluyeron y por qué, sin mostrarlos.','RN-05'],
+[3,'Recomendaciones explicadas','Cada animal tiene un puntaje y tres factores que lo justifican, en lenguaje sencillo.','RF-09 · RNF-09'],
+[4,'Solicitar adopción','Un botón por animal; el estado cambia al enviar la solicitud.','RF-27'],
+[5,'Mis solicitudes','Estado de cada solicitud: en revisión, visita, aprobada o rechazada con motivo.','RF-27 · RN-11'],
+[6,'Seguimientos','Los controles de 30, 90 y 180 días aparecen después de adoptar.','RF-10 · RN-12']]},
+{id:'administrador',nombre:'Administrador',tipo:'desk',quien:'Responsable técnico: cuentas, refugios, parámetros, bitácora y modelos de IA.',
+vistas:[{id:'P-11',nombre:'Administración',html:()=>desk(NAV_M,'Inicio','Administración de la plataforma','Estado general del sistema',['AD','Admin. de la plataforma'],`
+<div class="grid g4">${kpi(1,'Usuarios activos','58','12 veterinarios · 23 rescatistas')}${kpi(1,'Refugios','3','122 cupos en total')}${kpi(1,'Disponibilidad (30 días)','99,6 %','Meta ≥ 99 %')}${kpi(1,'Bloqueos de acceso','2','Tras 5 intentos fallidos')}</div>
+<div class="grid g21">
+<div class="card">${mk(2)}<h4>Parámetros del sistema<span class="r">Editar</span></h4><table class="t"><tr><th>Parámetro</th><th>Valor</th><th>Regla</th><th>Estado</th></tr>
+<tr><td>Umbral de confianza para “requiere revisión”</td><td><b>0,6</b></td><td>RN-02</td><td>${chip('med','Por validar')}</td></tr>
+<tr><td>Tiempo máximo del clasificador</td><td><b>10 s</b></td><td>RN-03</td><td>${chip('baj','Vigente')}</td></tr>
+<tr><td>Alerta de ocupación</td><td><b>90 %</b></td><td>RN-04</td><td>${chip('baj','Vigente')}</td></tr>
+<tr><td>Escalamiento sin aceptar (crítico / alto)</td><td><b>15 / 30 min</b></td><td>RF-23</td><td>${chip('med','Por validar')}</td></tr>
+<tr><td>Seguimientos posadopción</td><td><b>30 · 90 · 180 días</b></td><td>RN-12</td><td>${chip('baj','Vigente')}</td></tr>
+<tr><td>Retención de videos</td><td><b>90 días</b></td><td>RN-15</td><td>${chip('baj','Vigente')}</td></tr></table>
+<div class="tag" style="margin-top:8px">Los umbrales clínicos quedan “por validar” hasta tener concepto veterinario.</div></div>
+<div class="card">${mk(3)}<h4>Modelos de IA</h4>
+<div class="stack" style="font-size:14px">
+<div class="row" style="justify-content:space-between"><span><b>Triaje de texto · reglas v0</b><br><span class="tag">En uso desde v0.1.0</span></span>${chip('baj','Activo')}</div>
+<div class="row" style="justify-content:space-between"><span><b>Triaje de texto · Transformer</b><br><span class="tag">Reemplazará las reglas (DT-04)</span></span>${chip('med','En preparación')}</div>
+<div class="row" style="justify-content:space-between"><span><b>Análisis de marcha en video</b><br><span class="tag">Incremento 6</span></span>${chip('rev','Planeado')}</div>
+<div><div class="row" style="justify-content:space-between"><span>Recall de la clase crítica (meta ≥ 0,95)</span><b>Sin medir</b></div><div class="tag">Se mide cuando exista el conjunto validado por veterinarios.</div></div></div></div></div>
+<div class="card">${mk(4)}<h4>Bitácora reciente<span class="r">Ver toda la bitácora</span></h4><table class="t"><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Antes → Después</th></tr>
+<tr><td>05/10 10:11</td><td>Dra. Valentina R.</td><td>Confirmó prioridad de F2HW5RTB</td><td>Crítica sugerida → Crítica confirmada</td></tr>
+<tr><td>05/10 09:47</td><td>Carlos M.</td><td>Registró ingreso de Nala</td><td>Ocupación 35 → 36</td></tr>
+<tr><td>05/10 08:30</td><td>Admin.</td><td>Suspendió una cuenta de rescatista</td><td>Activa → Suspendida</td></tr></table>
+<div class="tag" style="margin-top:8px">La bitácora no se puede editar ni borrar.</div></div>`,'Acceso restringido<br>Datos de ejemplo')}],
+notas:[
+[1,'Salud de la plataforma','Usuarios, refugios, disponibilidad del módulo de reportes y bloqueos por intentos fallidos.','RF-13 · RF-14 · RNF-04 · RNF-05'],
+[2,'Parámetros configurables','Los valores de las reglas de negocio en un solo lugar, con su estado de validación.','RN-02 · RN-03 · RN-04 · RF-23'],
+[3,'Estado de los modelos','Qué modelo está activo, cuál está en preparación y la métrica de seguridad clínica.','RF-20 · RNF-03 · DT-04'],
+[4,'Bitácora inmutable','Quién hizo qué, cuándo y con qué valores antes y después.','RF-32 · RNF-12']]},
+{id:'alcaldia',nombre:'Alcaldía (consulta)',tipo:'desk',quien:'Actor potencial (sin acuerdo vigente): consulta indicadores agregados y anonimizados de la ciudad.',
+vistas:[{id:'P-12',nombre:'Indicadores de ciudad',html:()=>desk(NAV_L,'Indicadores','Indicadores de bienestar animal · Cúcuta','Septiembre de 2026 · datos agregados y anonimizados',['BA','Bienestar Animal'],`
+<div class="grid g4">${kpi(1,'Reportes del mes','312','+8 % frente a agosto')}${kpi(1,'Atendidos','87 %','272 de 312')}${kpi(1,'Adopciones','41','3 devoluciones')}${kpi(1,'Ocupación de refugios','84 %','3 refugios registrados')}</div>
+<div class="grid g2">
+<div class="card">${mk(2)}<h4>Tiempo de respuesta por prioridad (min)</h4>${bars([22,41,95,180],200,['Crítica','Alta','Media','Baja'],560,190,[0])}</div>
+<div class="card">${mk(3)}<h4>Reportes por comuna</h4>${bars([54,31,47,62,28,41,23,26],70,['C1','C2','C3','C4','C5','C6','C7','C8'],560,190)}</div></div>
+<div class="grid g21">
+<div class="card">${mk(4)}<h4>Adopciones por mes</h4>${line([24,29,33,31,38,41],50,['abr','may','jun','jul','ago','sep'],700,170)}</div>
+<div class="card">${mk(5)}<h4>Exportar</h4><div class="stack"><span class="btn">${ic('doc',18)} Indicadores en CSV</span><span class="btn">${ic('doc',18)} Informe mensual en PDF</span></div>
+<div class="card" style="margin-top:12px;padding:12px;font-size:13.5px;background:#F4F8F6">${ic('lock',16)} Solo datos agregados. Sin nombres, contactos ni ubicaciones exactas.</div></div></div>`,'Consulta institucional<br>Datos de ejemplo')}],
+notas:[
+[1,'Cifras de ciudad','Volumen de reportes, porcentaje atendido, adopciones y ocupación de los refugios.','RF-30'],
+[2,'Respuesta por prioridad','Mide si los casos críticos se atienden primero.','RF-30 · RNF-03'],
+[3,'Reportes por comuna','Muestra dónde se concentran las emergencias, para campañas y esterilizaciones.','RF-30'],
+[4,'Tendencia de adopciones','Evolución mensual de las adopciones.','RF-30 · RF-10'],
+[5,'Exportación anonimizada','CSV y PDF sin datos personales, porque el destinatario es externo.','RF-31 · RNF-08 · RN-14']]},
+{id:'sistema',nombre:'Sistema de diseño',tipo:'desk',quien:'Colores, tipografía, componentes y estados que comparten todas las pantallas.',
+vistas:[{id:'S-01',nombre:'Sistema de diseño',html:()=>`<div class="scr board">
+<div class="card">${mk(1)}<h4>Colores de la marca y de la interfaz</h4><div class="sw-row">${[['Verde refugio','#0F4F47','Barra lateral y encabezados'],['Verde acción','#0F6B5E','Botones y enlaces'],['Ámbar','#F2A65A','Logo y contadores'],['Fondo','#F6F5F1','Lienzo de trabajo'],['Superficie','#FFFFFF','Tarjetas y tablas'],['Texto','#1C2B2D','Texto principal'],['Texto secundario','#5B6670','Etiquetas y ayudas']].map(([n,h,u])=>`<div class="swc"><div class="sq" style="background:${h}"></div><b>${n}</b><span class="mono">${h}</span><span class="tag">${u}</span></div>`).join('')}</div></div>
+<div class="grid g2">
+<div class="card">${mk(2)}<h4>Colores de prioridad</h4><div class="stack">${[['cri','Crítica','Riesgo vital: trauma, hemorragia, convulsiones'],['alt','Alta','Herida o dolor importante'],['med','Media','Requiere atención en el día'],['baj','Baja','Sin riesgo inmediato'],['rev','Requiere revisión','Confianza menor a 0,6: decide el veterinario']].map(([c,n,d])=>`<div class="row">${chip(c,n)}<span style="font-size:14px">${d}</span></div>`).join('')}</div>
+<div class="tag" style="margin-top:10px">El color nunca va solo: cada prioridad lleva su nombre escrito.</div></div>
+<div class="card">${mk(3)}<h4>Tipografía</h4><div class="stack">
+<div><div style="font-size:32px;font-weight:800;letter-spacing:-.02em">36 / 40</div><span class="tag">Cifra destacada · Figtree 32 px · 800</span></div>
+<div><div style="font-size:24px;font-weight:800">Panel del refugio</div><span class="tag">Título de pantalla · Figtree 24 px · 800</span></div>
+<div><div style="font-size:15px;font-weight:800">Reportes recientes</div><span class="tag">Título de tarjeta · Figtree 15 px · 800</span></div>
+<div><div style="font-size:15px">El reporte quedó en la cola del refugio.</div><span class="tag">Cuerpo · Figtree 15 px · 400</span></div>
+<div><div class="mono" style="font-size:15px">F2HW5RTB · RN-04</div><span class="tag">Códigos e identificadores · JetBrains Mono</span></div></div></div></div>
+<div class="card">${mk(4)}<h4>Componentes</h4><div class="row" style="flex-wrap:wrap;gap:14px;align-items:flex-start">
+<div class="stack" style="gap:8px"><span class="btn pri">Confirmar crítica</span><span class="tag">Botón principal</span></div>
+<div class="stack" style="gap:8px"><span class="btn">Ajustar prioridad…</span><span class="tag">Botón secundario</span></div>
+<div class="stack" style="gap:8px"><span class="btn warn">Liberar rescate</span><span class="tag">Acción sensible</span></div>
+<div class="stack" style="gap:8px;width:220px"><div class="in">Barrio San Rafael</div><span class="tag">Campo de texto</span></div>
+<div class="stack" style="gap:8px"><span class="sw"></span><span class="tag">Interruptor</span></div>
+<div class="card kpi" style="width:210px;padding:14px"><div class="l">Reportes hoy</div><div class="v" style="font-size:26px">14</div><div class="s">3 críticos</div></div>
+<div class="stack" style="gap:8px;width:220px"><div class="pb"><span style="width:60%"></span></div><div class="pb"><span class="hot" style="width:92%"></span></div><span class="tag">Barra de cupo (≥ 90 % en rojo)</span></div></div></div>
+</div>`},
+{id:'S-02',nombre:'Estados obligatorios',html:()=>`<div class="scr board"><div class="grid g4">
+${[
+[5,'Cargando','<div class="stack" style="gap:8px"><div class="sk" style="width:70%"></div><div class="sk"></div><div class="sk" style="width:85%"></div><div class="sk" style="width:50%"></div></div>','Esqueleto con la forma real de la lista; nunca una pantalla en blanco.'],
+[6,'Vacío','<div class="es"><div class="ph art" style="width:70px;height:70px;border-radius:50%;background:none">'+cat('#9AA0A6','#6F757B','#ECEAF4')+'</div><b>No hay reportes en la cola</b><span class="tag">Te avisaremos cuando llegue uno nuevo.</span></div>','Explica qué aparecerá y cuándo.'],
+[7,'Error de conexión','<div class="es">'+ic('bell',30)+'<b>No pudimos cargar la cola</b><span class="tag">Revisa tu conexión.</span><span class="btn" style="padding:6px 12px">Reintentar</span></div>','Dice qué pasó y cómo seguir.'],
+[8,'Sin conexión (PWA)','<div class="es">'+ic('cam',30)+'<b>Reporte guardado en tu teléfono</b><span class="tag">Se enviará solo al volver la señal.</span></div>','El ciudadano no pierde el reporte (RF-12).'],
+[9,'Validación','<div class="f">¿Qué le pasa al animal?<div class="in" style="border-color:#9B1C1C">Perro herido</div><span style="color:#9B1C1C;font-size:13px;font-weight:600">Escribe al menos 20 caracteres (llevas 12).</span></div>','El error va junto al campo y dice cómo corregirlo (RN-01).'],
+[10,'Bloqueado por regla','<div class="es">'+ic('lock',30)+'<b>El refugio está lleno (40 / 40)</b><span class="tag">Registra un egreso o propone un traslado.</span><span class="btn pri" style="padding:6px 12px">Proponer traslado</span></div>','La regla dura se explica con su salida (RN-04).'],
+[11,'Sin permiso','<div class="es">'+ic('shield',30)+'<b>Esta sección es para veterinarios</b><span class="tag">Tu rol no permite confirmar prioridades.</span></div>','Respuesta al control de roles (RN-06, RF-13).'],
+[12,'Éxito','<div class="es"><div class="ph art" style="width:70px;height:70px;border-radius:50%;background:none">'+dog()+'</div><b>Prioridad confirmada</b><span class="tag">Se avisó a 5 rescatistas cercanos.</span></div>','Confirma la acción y su efecto.']
+].map(([n,t,b,d])=>`<div class="card">${mk(n)}<h4>${t}</h4><div style="min-height:150px;display:flex;flex-direction:column;justify-content:center">${b}</div><div class="tag" style="margin-top:10px">${d}</div></div>`).join('')}
+</div></div>`}],
+notas:[
+[1,'Paleta','Verde de refugio para la estructura, verde de acción para lo que se puede tocar y ámbar como acento de marca. El texto cumple contraste AA sobre el fondo.','RNF-11'],
+[2,'Prioridades','Cinco estados con color y nombre, siempre juntos. Cambian a contorno en el wireframe.','RF-02 · RN-02 · RNF-11'],
+[3,'Tipografía','Figtree para la interfaz y una monoespaciada para códigos y requisitos, para distinguir datos del sistema.','RNF-06'],
+[4,'Componentes','Botones, campos, interruptores, indicadores y barras de cupo reutilizados en todas las pantallas.','RNF-06'],
+[5,'Cargando','Esqueleto de carga.','RNF-01'],[6,'Vacío','Estado sin datos con explicación.','RNF-06'],[7,'Error','Error de red con reintento.','RNF-04'],
+[8,'Sin conexión','Guardado local del reporte en la PWA.','RF-12'],[9,'Validación','Error de formulario junto al campo.','RN-01'],
+[10,'Bloqueado','Regla de negocio que impide la acción y ofrece una salida.','RN-04'],[11,'Sin permiso','Control de acceso por rol.','RF-13 · RN-06'],[12,'Éxito','Confirmación de la acción.','RF-04 · RF-05']]}
+];
+const st={rol:'coordinador',modo:'mk'};
+const tabs=document.getElementById('tabs'),sc=document.getElementById('sc'),vp=document.getElementById('vp');
+R.forEach(r=>{const b=document.createElement('button');b.className='tab';b.textContent=r.nombre;b.id='t-'+r.id;b.onclick=()=>{st.rol=r.id;draw()};tabs.appendChild(b)});
+document.getElementById('m-wf').onclick=()=>{st.modo='wf';draw()};
+document.getElementById('m-mk').onclick=()=>{st.modo='mk';draw()};
+function fit(){const w=vp.clientWidth;sc.style.width='max-content';sc.style.transform='none';const nat=sc.scrollWidth;sc.style.width=nat+'px';const s=Math.min(1,w/nat);sc.style.transform=`scale(${s})`;vp.style.height=(sc.scrollHeight*s)+'px'}
+function draw(){
+const r=R.find(x=>x.id===st.rol);
+R.forEach(x=>document.getElementById('t-'+x.id).setAttribute('aria-pressed',x.id===st.rol));
+document.getElementById('m-wf').setAttribute('aria-pressed',st.modo==='wf');document.getElementById('m-mk').setAttribute('aria-pressed',st.modo==='mk');
+document.querySelector('.stage').classList.toggle('wf',st.modo==='wf');
+sc.innerHTML=r.vistas.map(v=>`<section class="vista" data-id="${v.id}"><div class="vh"><span class="mono">${v.id}</span> ${v.nombre}</div><div class="vb">${v.html()}</div></section>`).join('');
+document.getElementById('meta').innerHTML=`<span><b>${r.nombre}.</b> ${r.quien}</span><span>Dispositivo: <b>${r.tipo==='desk'?'computador':'celular (PWA)'}</b></span>`;
+document.getElementById('legend').textContent=st.modo==='wf'?'Wireframe: estructura en escala de grises. Los círculos numerados corresponden a las fichas de abajo.':'Mockup: diseño final con la identidad de Patitas en Casa. Cambia a Wireframe para ver las zonas numeradas.';
+document.getElementById('notes').innerHTML=r.notas.map(([n,t,p,tr])=>`<article class="note"><span class="n">${n}</span><div><h3>${t}</h3><p>${p}</p><p style="margin-top:6px">${tr.split(' · ').map(x=>`<code>${x}</code>`).join(' ')}</p></div></article>`).join('');
+requestAnimationFrame(fit);
+try{history.replaceState(null,'','#'+st.rol+(st.modo==='wf'?'-wf':''))}catch(e){}
+}
+const h=(location.hash||'').slice(1);
+if(h){const p=h.split('-');if(R.some(r=>r.id===p[0]))st.rol=p[0];if(p.includes('wf'))st.modo='wf';if(p.includes('shot'))document.body.classList.add('shot')}
+window.addEventListener('resize',fit);
+draw();
+if(document.fonts)document.fonts.ready.then(fit);
+</script>
+</body>
+</html>
