@@ -1,5 +1,7 @@
 # Patitas en Casa
 
+[![CI](https://github.com/Brizad/patitas-en-casa/actions/workflows/ci.yml/badge.svg)](https://github.com/Brizad/patitas-en-casa/actions/workflows/ci.yml)
+
 Plataforma web inteligente para la gestión logística de refugios animales en Cúcuta
 (Norte de Santander): triaje de emergencias de perros y gatos, control de cupos y,
 en próximos incrementos, recomendación de adopciones.
@@ -29,3 +31,13 @@ uvicorn app.api.main:app --reload  # documentación interactiva en http://127.0.
 GitHub Flow: ramas cortas (`feature/`, `fix/`, `refactor/`, `chore/`, `docs/`) desde `main`,
 integración por Pull Request con CI en verde y versiones etiquetadas según SemVer.
 Ver `CHANGELOG.md` y `DEUDA_TECNICA.md`.
+
+## Seguimiento del proyecto
+
+Tablero Scrum (GitHub Projects): https://github.com/users/Brizad/projects/1
+
+Backlog con historias de usuario, bug y deuda técnica: https://github.com/Brizad/patitas-en-casa/issues
+
+Versión publicada: https://github.com/Brizad/patitas-en-casa/releases/tag/v0.1.0
+
+La rama `main` está protegida: todo cambio entra por Pull Request y solo se integra con el check `build-lint-test` en verde.
