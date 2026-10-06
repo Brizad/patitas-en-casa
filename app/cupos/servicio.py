@@ -1,6 +1,7 @@
 """Gestión de cupos del refugio (RF-06 y RF-07)."""
 from __future__ import annotations
 
+import threading
 from typing import Protocol
 
 from app import config
@@ -20,15 +21,19 @@ class ServicioCupos:
         self._refugio = refugio
         self._notificador = notificador
         self.animales: list[Animal] = []
+        # BUG-04: comprobar el cupo y ocuparlo es una sola operación.
+        self._candado = threading.Lock()
 
     def registrar_ingreso(self, animal: Animal) -> Refugio:
         if not animal.nombre or not animal.estado_salud:
             raise ValueError("La ficha clínica exige nombre y estado de salud.")
-        if not self._refugio.tiene_cupo():
-            raise CupoAgotado(f"{self._refugio.nombre} no tiene cupos disponibles.")
-        self.animales.append(animal)
-        self._refugio.ocupados += 1
-        if self._refugio.porcentaje_ocupacion() >= config.ALERTA_OCUPACION:
+        with self._candado:
+            if not self._refugio.tiene_cupo():
+                raise CupoAgotado(f"{self._refugio.nombre} no tiene cupos disponibles.")
+            self.animales.append(animal)
+            self._refugio.ocupados += 1
+            alertar = self._refugio.porcentaje_ocupacion() >= config.ALERTA_OCUPACION
+        if alertar:
             umbral = int(config.ALERTA_OCUPACION * 100)
             self._notificador.enviar(
                 "coordinadores", f"Ocupación sobre el {umbral} % en {self._refugio.nombre}"
