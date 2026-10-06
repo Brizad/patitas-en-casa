@@ -1,3 +1,5 @@
+import pytest
+
 from app.dominio.modelos import Prioridad
 from app.triaje.clasificador import clasificar
 
@@ -31,3 +33,20 @@ def test_bug01_senales_con_tilde_se_detectan():
     r = clasificar("El perro tuvo una convulsión y después vómito con sangre")
     assert r.prioridad == Prioridad.CRITICA
     assert any("convulsion" in e for e in r.evidencias)
+
+
+@pytest.mark.parametrize("texto", [
+    "el perro del vecino atropellado en la calle",
+    "un gato atropellado en el camino",
+    "un perrito pequeño atropellado",
+])
+def test_bug02_palabras_terminadas_en_no_no_niegan_la_senal(texto):
+    """Regresión BUG-02 (#16): 'vecino', 'camino' o 'pequeño' no son la palabra 'no'."""
+    r = clasificar(texto)
+    assert r.prioridad == Prioridad.CRITICA
+
+
+def test_bug02_senal_repetida_cuenta_si_una_aparicion_no_esta_negada():
+    """Regresión BUG-02 (#16): antes solo se revisaba la primera aparición de la señal."""
+    r = clasificar("no sangra por la boca, pero sí sangra mucho por la pata")
+    assert any("sangr" in e for e in r.evidencias)
