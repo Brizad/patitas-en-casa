@@ -1,3 +1,4 @@
+import time
 from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock
 
@@ -52,5 +53,36 @@ def test_confianza_baja_con_prioridad_critica_no_se_degrada():
     """Camino 4 de V(G)=4: la baja confianza solo exige revisión en prioridades media o baja."""
     servicio = ServicioTriaje(clasificador=stub(Prioridad.CRITICA, 0.5))
     r = servicio.evaluar(nuevo_reporte("perro convulsionando"))
+    assert r.estado == EstadoReporte.CLASIFICADO
+    assert r.prioridad == Prioridad.CRITICA
+
+
+def clasificador_colgado(segundos):
+    """Simula un modelo que no responde a tiempo."""
+    def clasificar_lento(_texto):
+        time.sleep(segundos)
+        return Resultado(Prioridad.BAJA, 0.9, ["tarde"])
+    return clasificar_lento
+
+
+def test_tiempo_agotado_aplica_falla_segura():
+    """PA-02 / RN-03: si el clasificador no responde a tiempo, el reporte sube a alta."""
+    servicio = ServicioTriaje(clasificador=clasificador_colgado(1.0), tiempo_max_s=0.1)
+    r = servicio.evaluar(nuevo_reporte())
+    assert r.estado == EstadoReporte.SIN_CLASIFICAR
+    assert r.prioridad == Prioridad.ALTA
+
+
+def test_bug03_clasificaciones_colgadas_no_bloquean_reportes_siguientes():
+    """Regresión BUG-03 (#17): dos clasificaciones colgadas agotaban los dos hilos del pool."""
+    def clasificador(texto):
+        if "colgado" in texto:
+            time.sleep(1.0)
+        return Resultado(Prioridad.CRITICA, 0.8, ["señal crítica"])
+
+    servicio = ServicioTriaje(clasificador=clasificador, tiempo_max_s=0.2)
+    servicio.evaluar(nuevo_reporte("reporte colgado número uno"))
+    servicio.evaluar(nuevo_reporte("reporte colgado número dos"))
+    r = servicio.evaluar(nuevo_reporte("perro atropellado que no respira"))
     assert r.estado == EstadoReporte.CLASIFICADO
     assert r.prioridad == Prioridad.CRITICA

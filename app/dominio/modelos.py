@@ -71,6 +71,13 @@ class Refugio:
     capacidad: int
     ocupados: int = 0
 
+    def __post_init__(self) -> None:
+        # BUG-04: invariante del refugio (DAD 7.2).
+        if self.capacidad <= 0:
+            raise ValueError("La capacidad del refugio debe ser mayor que cero.")
+        if not 0 <= self.ocupados <= self.capacidad:
+            raise ValueError("Los cupos ocupados deben estar entre 0 y la capacidad.")
+
     def tiene_cupo(self) -> bool:
         return self.ocupados < self.capacidad
 

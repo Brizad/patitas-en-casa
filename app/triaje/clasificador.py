@@ -5,6 +5,7 @@ veterinario, antes de entrenar el modelo Transformer (incremento 2).
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from app.dominio.modelos import Prioridad
@@ -45,7 +46,6 @@ CONFIANZA_SIN_SENALES = 0.3
 CONFIANZA_BASE = 0.5
 CONFIANZA_POR_SENAL = 0.15
 CONFIANZA_MAXIMA = 0.95
-VENTANA_NEGACION = 4
 
 
 def clasificar(texto: str) -> Resultado:
@@ -62,13 +62,14 @@ def detectar_senales(texto: str) -> list[str]:
 
 
 def _aparece_sin_negacion(senal: str, texto: str) -> bool:
-    posicion = texto.find(senal)
-    if posicion == -1:
-        return False
+    """True si alguna aparición de la señal no va precedida por la palabra "no" (BUG-02)."""
     if senal.startswith("no "):
-        return True  # la señal ya contiene la negación ("no respira")
-    antes = texto[max(0, posicion - VENTANA_NEGACION):posicion]
-    return "no " not in antes
+        return senal in texto  # la señal ya contiene la negación ("no respira")
+    for coincidencia in re.finditer(re.escape(senal), texto):
+        palabras_previas = texto[:coincidencia.start()].split()
+        if not palabras_previas or palabras_previas[-1] != "no":
+            return True
+    return False
 
 
 def prioridad_mas_grave(senales: list[str]) -> Prioridad:
