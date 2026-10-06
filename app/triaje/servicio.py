@@ -1,6 +1,7 @@
-"""Política de decisión del Motor de Triaje (RNF-03 y flujo E1 del UC-01)."""
+"""Política de decisión del Motor de Triaje (RN-02, RN-03 y flujo E1 del UC-01)."""
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as TiempoAgotado
@@ -12,6 +13,9 @@ from app.triaje.clasificador import Resultado, clasificar
 Clasificador = Callable[[str], Resultado]
 
 TIEMPO_MAX_CLASIFICACION_S = 10
+HILOS_CLASIFICACION = 2
+
+log = logging.getLogger(__name__)
 
 
 class ServicioTriaje:
@@ -19,20 +23,21 @@ class ServicioTriaje:
                  tiempo_max_s: float = TIEMPO_MAX_CLASIFICACION_S) -> None:
         self._clasificador = clasificador
         self._tiempo_max_s = tiempo_max_s
-        self._ejecutor = ThreadPoolExecutor(max_workers=2)
+        self._ejecutor = ThreadPoolExecutor(max_workers=HILOS_CLASIFICACION)
 
     def evaluar(self, reporte: Reporte) -> Reporte:
         """Asigna prioridad sugerida aplicando la política de seguridad clínica."""
         try:
             futuro = self._ejecutor.submit(self._clasificador, reporte.descripcion)
             resultado = futuro.result(timeout=self._tiempo_max_s)
-        except (TiempoAgotado, Exception):
-            # Falla segura: sin clasificación, el reporte sube a prioridad alta.
-            reporte.prioridad = Prioridad.ALTA
-            reporte.confianza = 0.0
-            reporte.estado = EstadoReporte.SIN_CLASIFICAR
-            reporte.evidencias = ["clasificador no disponible: revisar manualmente"]
-            return reporte
+        except TiempoAgotado:
+            log.warning("Triaje del reporte %s sin respuesta en %s s",
+                        reporte.codigo, self._tiempo_max_s)
+            self._descartar_ejecutor(futuro)
+            return self._falla_segura(reporte)
+        except Exception:
+            log.exception("Falla del clasificador en el reporte %s", reporte.codigo)
+            return self._falla_segura(reporte)
 
         reporte.prioridad = resultado.prioridad
         reporte.confianza = resultado.confianza
@@ -44,6 +49,21 @@ class ServicioTriaje:
             reporte.estado = EstadoReporte.REQUIERE_REVISION
         else:
             reporte.estado = EstadoReporte.CLASIFICADO
+        return reporte
+
+    def _descartar_ejecutor(self, futuro) -> None:
+        """BUG-03: una clasificación colgada no debe ocupar los hilos de los reportes siguientes."""
+        if not futuro.cancel():
+            self._ejecutor.shutdown(wait=False, cancel_futures=True)
+            self._ejecutor = ThreadPoolExecutor(max_workers=HILOS_CLASIFICACION)
+
+    @staticmethod
+    def _falla_segura(reporte: Reporte) -> Reporte:
+        """Sin clasificación, el reporte sube a prioridad alta y exige revisión manual (RN-03)."""
+        reporte.prioridad = Prioridad.ALTA
+        reporte.confianza = 0.0
+        reporte.estado = EstadoReporte.SIN_CLASIFICAR
+        reporte.evidencias = ["clasificador no disponible: revisar manualmente"]
         return reporte
 
 
