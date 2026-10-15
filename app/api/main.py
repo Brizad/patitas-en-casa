@@ -6,21 +6,28 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Annotated
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
-from app.ajustes import cargar_ajustes
+from app.ajustes import cargar_ajustes, cargar_ajustes_seguridad
+from app.api.seguridad import crear_dependencia_usuario, no_autenticado
 from app.bd.migraciones import verificar_migraciones
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, ServicioCupos
-from app.dominio.modelos import Animal, Especie, Ubicacion
+from app.dominio.modelos import Animal, Especie, Ubicacion, Usuario
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
+from app.seguridad.tokens import EmisorTokens
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
+from app.usuarios.repositorio import RepositorioUsuarios
+from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
+from app.usuarios.servicio import ServicioUsuarios
 
 ROLES_COLA = {"veterinario", "coordinador"}
 
@@ -58,14 +65,25 @@ def motor_desde_entorno() -> Engine:
     return motor
 
 
+def emisor_desde_entorno() -> EmisorTokens:
+    ajustes = cargar_ajustes_seguridad()
+    return EmisorTokens(ajustes.jwt_secreto.get_secret_value(), minutos=ajustes.jwt_minutos)
+
+
 def crear_app(repositorio: RepositorioReportes | None = None,
-              repositorio_cupos: RepositorioCupos | None = None) -> FastAPI:
-    """Sin repositorios usa PostgreSQL; las pruebas pueden inyectar los de memoria."""
+              repositorio_cupos: RepositorioCupos | None = None, *,
+              repositorio_usuarios: RepositorioUsuarios | None = None,
+              emisor_tokens: EmisorTokens | None = None) -> FastAPI:
+    """Sin argumentos usa PostgreSQL y la clave JWT del .env; las pruebas inyectan dobles."""
+    emisor_tokens = emisor_tokens or emisor_desde_entorno()
     motor = None
-    if repositorio is None or repositorio_cupos is None:
+    if repositorio is None or repositorio_cupos is None or repositorio_usuarios is None:
         motor = motor_desde_entorno()
         repositorio = repositorio or RepositorioPostgres(motor)
         repositorio_cupos = repositorio_cupos or RepositorioCuposPostgres.primer_refugio(motor)
+        repositorio_usuarios = repositorio_usuarios or RepositorioUsuariosPostgres(motor)
+    usuarios = ServicioUsuarios(repositorio_usuarios)
+    usuario_actual = Depends(crear_dependencia_usuario(repositorio_usuarios, emisor_tokens))
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -76,6 +94,20 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
     cupos = ServicioCupos(repositorio_cupos, NotificadorConsola())
+
+    @app.post("/auth/token")
+    def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()]):
+        """Inicio de sesión del personal: username = correo (DT-02)."""
+        usuario = usuarios.autenticar(formulario.username, formulario.password)
+        if usuario is None:
+            # Mismo mensaje exista o no el correo: no se revela qué cuentas existen.
+            raise no_autenticado("Correo o contraseña incorrectos.")
+        return {"access_token": emisor_tokens.emitir(usuario), "token_type": "bearer",
+                "expira_en": emisor_tokens.minutos * 60}
+
+    @app.get("/auth/yo")
+    def mi_cuenta(usuario: Usuario = usuario_actual):
+        return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value}
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada):

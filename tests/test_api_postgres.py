@@ -11,6 +11,8 @@ from app.bd.migraciones import (
 )
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.reportes.repositorio_postgres import RepositorioPostgres
+from app.seguridad.tokens import EmisorTokens
+from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
 from tests.conftest import preparar_refugio
 
 pytestmark = pytest.mark.postgres
@@ -18,19 +20,21 @@ pytestmark = pytest.mark.postgres
 CRITICO = {"descripcion": "Perro atropellado en la avenida, está sangrando mucho",
            "latitud": 7.8939, "longitud": -72.5078}
 LEVE = {"descripcion": "Gato con sarna en el andén del barrio", "direccion": "Calle 10 # 5-30"}
-
-
 INGRESO = {"nombre": "Canela", "especie": "gato", "estado_salud": "desnutrición leve"}
+SECRETO_PRUEBAS = "secreto-de-pruebas-con-mas-de-32-caracteres"  # falso
 
 
 def cliente(motor):
     return TestClient(crear_app(RepositorioPostgres(motor),
-                                RepositorioCuposPostgres.primer_refugio(motor)))
+                                RepositorioCuposPostgres.primer_refugio(motor),
+                                repositorio_usuarios=RepositorioUsuariosPostgres(motor),
+                                emisor_tokens=EmisorTokens(SECRETO_PRUEBAS)))
 
 
 def usar_base_de_pruebas(monkeypatch):
-    """crear_app() sin argumentos lee POSTGRES_DB: se apunta a la base de pruebas."""
+    """crear_app() sin argumentos lee el entorno: base de pruebas y clave JWT falsa."""
     monkeypatch.setenv("POSTGRES_DB", cargar_ajustes().db_pruebas)
+    monkeypatch.setenv("PATITAS_JWT_SECRETO", SECRETO_PRUEBAS)
 
 
 def test_reporte_sobrevive_a_un_reinicio_de_la_app(bd_limpia):
