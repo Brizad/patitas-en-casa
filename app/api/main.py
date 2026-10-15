@@ -4,16 +4,19 @@ Se inicia con: uvicorn --factory app.api.main:crear_app
 """
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
+from app import config
 from app.ajustes import cargar_ajustes, cargar_ajustes_correo, cargar_ajustes_seguridad
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
 from app.bd.migraciones import verificar_migraciones
@@ -43,6 +46,7 @@ from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
+from app.rescates.escalamiento import vigilar_escalamientos
 from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
 from app.rescates.repositorio_postgres import RepositorioRescatesPostgres
 from app.rescates.servicio import PasoInvalido, RescateNoOfrecido, ServicioRescates
@@ -73,6 +77,16 @@ class ReporteEntrada(BaseModel):
     direccion: str | None = None
     video_segundos: int | None = Field(default=None, ge=0)
     video_mb: float | None = Field(default=None, ge=0)
+    comuna: int | None = Field(default=None, ge=1, le=10)  # HU-06: comunas de Cúcuta
+
+
+Comuna = Annotated[int, Field(ge=1, le=10)]
+
+
+class ZonaEntrada(BaseModel):
+    """Comunas que cubre el rescatista; lista vacía = toda la ciudad (#46)."""
+
+    comunas: list[Comuna] = Field(max_length=10)
 
 
 class ConfirmacionEntrada(BaseModel):
@@ -99,7 +113,8 @@ def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
         datos["descripcion"] = reporte.descripcion
         datos["ubicacion"] = {"latitud": reporte.ubicacion.latitud,
                               "longitud": reporte.ubicacion.longitud,
-                              "direccion": reporte.ubicacion.direccion}
+                              "direccion": reporte.ubicacion.direccion,
+                              "comuna": reporte.ubicacion.comuna}
     return datos
 
 
@@ -133,10 +148,13 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               emisor_tokens: EmisorTokens | None = None,
               notificador: Notificador | None = None,
               limite_intentos: LimiteIntentos | None = None,
-              repositorio_rescates: RepositorioRescates | None = None) -> FastAPI:
+              repositorio_rescates: RepositorioRescates | None = None,
+              revisar_escalamientos_cada_s: float | None =
+              config.REVISION_ESCALAMIENTOS_SEGUNDOS) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
-    fallidos se cuentan en memoria."""
+    fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
+    cada «revisar_escalamientos_cada_s» segundos (None: no se revisan)."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
     notificador = notificador or crear_notificador(cargar_ajustes_correo())
     motor = None
@@ -163,14 +181,23 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
+        vigilancia = None
+        if revisar_escalamientos_cada_s:
+            # HU-06 (RF-23): rescates sin aceptar a tiempo → aviso al coordinador.
+            vigilancia = asyncio.create_task(
+                vigilar_escalamientos(rescates.escalar_vencidos, revisar_escalamientos_cada_s))
         yield
+        if vigilancia is not None:
+            vigilancia.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await vigilancia
         if motor is not None:
             motor.dispose()
 
     app = FastAPI(title="Patitas en Casa", version="0.2.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
     confirmaciones = ServicioConfirmacion(repositorio)
-    rescates = ServicioRescates(repositorio, repositorio_rescates)
+    rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador)
     cupos = ServicioCupos(repositorio_cupos, notificador)
 
     @app.post("/auth/token")
@@ -208,7 +235,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada):
-        ubicacion = Ubicacion(datos.latitud, datos.longitud, datos.direccion)
+        ubicacion = Ubicacion(datos.latitud, datos.longitud, datos.direccion, datos.comuna)
         try:
             r = reportes.registrar(datos.descripcion, ubicacion,
                                    datos.video_segundos, datos.video_mb)
@@ -248,9 +275,12 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         ]
 
     @app.post("/reportes/{codigo}/confirmacion")
-    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada,
+    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada, tareas: BackgroundTasks,
                             veterinario: Usuario = veterinaria):
-        """HU-02: el veterinario confirma la prioridad sugerida o la ajusta con justificación."""
+        """HU-02: el veterinario confirma la prioridad sugerida o la ajusta con justificación.
+
+        HU-06 (RF-05): si queda crítica o alta, se avisa por correo a los rescatistas de la
+        zona después de responder, para que el veterinario no espere al SMTP."""
         try:
             decision = confirmaciones.confirmar(codigo.upper(), veterinario,
                                                 datos.prioridad, datos.justificacion)
@@ -260,6 +290,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             raise HTTPException(status_code=409, detail=str(error)) from error
         except AjusteSinJustificacion as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+        tareas.add_task(rescates.alertar_confirmado, decision.codigo)
         return {"codigo": decision.codigo, "estado": EstadoReporte.CONFIRMADO.value,
                 "prioridad": decision.prioridad_final.value, "ajustada": decision.ajustada}
 
@@ -278,11 +309,27 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         rescates.cambiar_disponibilidad(rescatista, datos.disponible)
         return {"disponible": datos.disponible}
 
+    @app.put("/rescatistas/yo/zona")
+    def cambiar_zona(datos: ZonaEntrada, rescatista: Usuario = rescatista_actual):
+        """#46: comunas de Cúcuta que cubre; lista vacía = toda la ciudad."""
+        comunas = frozenset(datos.comunas)
+        rescates.cambiar_zona(rescatista, comunas)
+        return {"comunas": sorted(comunas)}
+
+    @app.get("/rescatistas/yo")
+    def mi_estado_de_rescatista(rescatista: Usuario = rescatista_actual):
+        return {"disponible": rescates.esta_disponible(rescatista),
+                "comunas": sorted(rescates.zona(rescatista))}
+
     @app.get("/rescates/ofertas")
     def ofertas_de_rescate(rescatista: Usuario = rescatista_actual):
-        """Sin ubicación exacta: se muestra al aceptar. Zona o radio: pendiente del #46."""
+        """Solo la comuna (ubicación aproximada); la dirección exacta se muestra al aceptar.
+        «escalado»: nadie lo aceptó a tiempo y se ofrece en toda la ciudad (RF-23)."""
+        escalados = rescates.escalados()
         return [{"codigo": r.codigo, "prioridad": r.prioridad.value,
-                 "descripcion": r.descripcion, "esperando_desde": r.creado_en.isoformat()}
+                 "descripcion": r.descripcion, "comuna": r.ubicacion.comuna,
+                 "escalado": r.codigo in escalados,
+                 "esperando_desde": r.creado_en.isoformat()}
                 for r in rescates.ofertas(rescatista)]
 
     @app.get("/rescates/mio")

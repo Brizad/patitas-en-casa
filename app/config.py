@@ -18,3 +18,13 @@ MIN_CARACTERES_JUSTIFICACION = 10
 INTENTOS_MAXIMOS = 5
 INTENTOS_MAXIMOS_POR_IP = 20
 VENTANA_INTENTOS_MINUTOS = 15
+
+# HU-06 (#46): la zona del rescatista se elige por comunas. El área urbana de Cúcuta tiene
+# 10 comunas.
+COMUNAS_CUCUTA = tuple(range(1, 11))
+
+# HU-06 (#46, RF-23): minutos sin aceptar, desde la confirmación, antes de avisar al
+# coordinador y ofrecer el caso en toda la ciudad. Crítico 15 (decisión del autor); alto 30
+# (tabla de configuración del prototipo).
+ESCALAMIENTO_MINUTOS = {"critica": 15, "alta": 30}
+REVISION_ESCALAMIENTOS_SEGUNDOS = 60

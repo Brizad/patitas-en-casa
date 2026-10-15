@@ -1,6 +1,7 @@
 """Adaptadores de la interfaz Notificador (DT-03, HU-06).
 
-- NotificadorCorreo: envía un correo por SMTP a un grupo (por ejemplo, "coordinadores").
+- NotificadorCorreo: envía un correo por SMTP a un grupo (por ejemplo, "coordinadores") o,
+  si el destinatario es un correo, a esa persona (alertas a rescatistas, HU-06).
 - NotificadorRegistro: escribe la alerta en el log; se usa si no hay SMTP configurado.
 
 Una falla del correo nunca deshace el ingreso que la causó: se registra en el log.
@@ -37,7 +38,8 @@ class NotificadorCorreo:
         self._starttls = starttls
 
     def enviar(self, destinatario: str, mensaje: str) -> None:
-        correos = self._grupos.get(destinatario, [])
+        # HU-06: un destinatario con @ es una persona (rescatista); si no, es un grupo.
+        correos = [destinatario] if "@" in destinatario else self._grupos.get(destinatario, [])
         if not correos:
             log.warning("No hay correos configurados para %s; alerta no enviada: %s",
                         destinatario, mensaje)

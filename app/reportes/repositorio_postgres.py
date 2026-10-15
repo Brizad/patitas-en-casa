@@ -78,6 +78,7 @@ def _a_fila(reporte: Reporte) -> dict:
         "latitud": reporte.ubicacion.latitud,
         "longitud": reporte.ubicacion.longitud,
         "direccion": reporte.ubicacion.direccion,
+        "comuna": reporte.ubicacion.comuna,
         "video_segundos": reporte.video_segundos,
         "estado": reporte.estado.value,
         "prioridad": reporte.prioridad.value if reporte.prioridad else None,
@@ -91,7 +92,8 @@ def _a_reporte(fila: RowMapping) -> Reporte:
     return Reporte(
         codigo=fila["codigo"],
         descripcion=fila["descripcion"],
-        ubicacion=Ubicacion(fila["latitud"], fila["longitud"], fila["direccion"]),
+        ubicacion=Ubicacion(fila["latitud"], fila["longitud"], fila["direccion"],
+                            fila["comuna"]),
         video_segundos=fila["video_segundos"],
         estado=EstadoReporte(fila["estado"]),
         prioridad=Prioridad(fila["prioridad"]) if fila["prioridad"] else None,

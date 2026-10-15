@@ -48,8 +48,10 @@ veterinarios y control de cupos del refugio.
   se confirma una sola vez y sale de la cola.
 - **RN-08** (HU-06): un rescate tiene un solo rescatista y un rescatista un solo rescate activo
   (índices únicos parciales en `rescates`). Se ofrecen solo confirmados críticos o altos, a
-  rescatistas disponibles. Zona/radio, canal de alerta y escalamiento: pendientes del issue #46
-  (decisión del autor; no inventar valores).
+  rescatistas disponibles. Decisión del autor (#46): zona por comunas de Cúcuta (1 a 10; vacío =
+  toda la ciudad; reporte sin comuna = a todos), alerta por correo y escalamiento al coordinador
+  sin aceptar a los 15 min (crítico) o 30 min (alto, prototipo): el caso pasa a toda la ciudad.
+  Valores en `app/config.py`; el aviso sale una sola vez (tabla `escalamientos`).
 - **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
   código, los pasos y sus fechas; nunca descripción, ubicación, prioridad ni correos.
 

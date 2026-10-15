@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     Integer,
     MetaData,
+    SmallInteger,
     String,
     Table,
     Text,
@@ -20,7 +21,7 @@ from sqlalchemy import (
     text,
     true,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from app.dominio.modelos import (
     Especie,
@@ -52,7 +53,9 @@ reportes = Table(
     Column("confianza", Double),
     Column("evidencias", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
     Column("creado_en", DateTime(timezone=True), nullable=False),
+    Column("comuna", SmallInteger),  # HU-06: comuna de Cúcuta, opcional
     CheckConstraint(f"estado IN ({_valores(EstadoReporte)})", name="ck_reportes_estado"),
+    CheckConstraint("comuna BETWEEN 1 AND 10", name="ck_reportes_comuna"),
     CheckConstraint(f"prioridad IN ({_valores(Prioridad)})", name="ck_reportes_prioridad"),
     CheckConstraint("confianza BETWEEN 0 AND 1", name="ck_reportes_confianza"),
     CheckConstraint("video_segundos >= 0", name="ck_reportes_video"),
@@ -146,6 +149,10 @@ rescatistas = Table(
     Column("correo", Text, primary_key=True),
     Column("disponible", Boolean, nullable=False, server_default=false()),
     Column("actualizado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    # HU-06 (#46): comunas que cubre; vacío = toda la ciudad.
+    Column("comunas", ARRAY(SmallInteger), nullable=False, server_default=text("'{}'")),
+    CheckConstraint("comunas <@ ARRAY[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]::smallint[]",
+                    name="ck_rescatistas_comunas"),
 )
 
 rescates = Table(
@@ -171,3 +178,12 @@ Index("uq_rescates_reporte_vigente", rescates.c.reporte_codigo, unique=True,
       postgresql_where=text("estado <> 'liberado'"))
 Index("uq_rescates_rescatista_activo", rescates.c.rescatista, unique=True,
       postgresql_where=text("estado IN ('en_camino', 'en_sitio')"))
+
+# HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a tiempo. La
+# llave primaria garantiza un solo aviso aunque varios procesos revisen a la vez.
+escalamientos = Table(
+    "escalamientos",
+    metadata,
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), primary_key=True),
+    Column("escalado_en", DateTime(timezone=True), nullable=False),
+)
