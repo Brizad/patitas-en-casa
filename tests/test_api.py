@@ -84,14 +84,31 @@ def test_cp07a_ingreso_actualiza_ocupacion():
     assert respuesta.json()["ocupacion"] == "1/40"
 
 
-@pytest.mark.parametrize("metodo, ruta", [
-    ("get", "/cola"), ("post", "/refugio/ingresos"), ("get", "/refugio/ocupacion"),
+@pytest.mark.parametrize("metodo, ruta, correo", [
+    ("get", "/cola", "vet@patitas.co"),
+    ("post", "/refugio/ingresos", "coord@patitas.co"),
+    ("get", "/refugio/ocupacion", "vet@patitas.co"),
 ])
-def test_endpoints_del_personal_exigen_sesion(metodo, ruta):
+def test_endpoints_del_personal_exigen_sesion(metodo, ruta, correo):
     c = cliente()
     kwargs = {"json": INGRESO} if metodo == "post" else {}
     assert getattr(c, metodo)(ruta, **kwargs).status_code == 401
-    assert getattr(c, metodo)(ruta, headers=sesion(c), **kwargs).status_code in (200, 201)
+    assert getattr(c, metodo)(ruta, headers=sesion(c, correo), **kwargs).status_code in (200, 201)
+
+
+def test_veterinario_no_puede_registrar_ingresos():
+    """P-06 "Registrar ingreso" es del coordinador (docs/prototipo): 403 y el cupo no cambia."""
+    c = cliente()
+    respuesta = c.post("/refugio/ingresos", json=INGRESO, headers=sesion(c, "vet@patitas.co"))
+    assert respuesta.status_code == 403
+    assert c.get("/refugio/ocupacion", headers=sesion(c)).json()["ocupacion"] == "0/40"
+
+
+@pytest.mark.parametrize("correo", ["vet@patitas.co", "coord@patitas.co"])
+@pytest.mark.parametrize("ruta", ["/cola", "/refugio/ocupacion"])
+def test_cola_y_ocupacion_siguen_abiertas_a_ambos_roles(ruta, correo):
+    c = cliente()
+    assert c.get(ruta, headers=sesion(c, correo)).status_code == 200
 
 
 def test_ingreso_sin_sesion_no_ocupa_cupo():

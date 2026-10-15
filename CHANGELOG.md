@@ -21,6 +21,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - DT-03 (#12): la alerta de ocupación del 90 % (RN-04) se envía por correo SMTP a los coordinadores (`PATITAS_CORREOS_COORDINADORES`); sin SMTP configurado queda en el log. Una falla del correo no deshace el ingreso (167 pruebas).
 - DT-06 (#41): `POST /auth/token` limita los intentos fallidos: 5 por correo o 20 por IP en 15 minutos; después responde 429 con `Retry-After`, incluso con la contraseña correcta. Los fallos se guardan en PostgreSQL (tabla `intentos_fallidos`, migración `0004`) y un inicio correcto reinicia el contador del correo (190 pruebas).
 ### Cambiado
+- **Incompatible:** `POST /refugio/ingresos` queda solo para el rol coordinador; un veterinario con sesión recibe 403 y el cupo no cambia. Así lo indica la pantalla P-06 "Registrar ingreso" del prototipo (#45). `GET /cola` y `GET /refugio/ocupacion` siguen para ambos roles (195 pruebas).
 - **Incompatible:** `GET /cola`, `POST /refugio/ingresos` y `GET /refugio/ocupacion` exigen el encabezado `Authorization: Bearer <token>` de una cuenta de personal (401 sin sesión, 403 sin permiso). Se elimina `X-Rol` (DT-02, #40).
 - La API se inicia con `uvicorn --factory app.api.main:crear_app`; `crear_app()` recibe el repositorio (las pruebas inyectan el de memoria) y el módulo ya no crea la app al importarse (#29).
 ### Deuda técnica

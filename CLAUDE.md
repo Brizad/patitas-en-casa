@@ -67,7 +67,10 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
   `POST /auth/token`. Todo lo demás exige `Authorization: Bearer` de personal
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
-- Endpoint nuevo del personal → `dependencies=[personal]` y una prueba de 401 sin sesión.
+- `POST /refugio/ingresos` es solo del coordinador (`dependencies=[coordinacion]`, 403 para el
+  veterinario; pantalla P-06 del prototipo). `GET /cola` y `GET /refugio/ocupacion` usan `personal`.
+- Endpoint nuevo del personal → `dependencies=[personal]` (o `[coordinacion]`) y una prueba de
+  401 sin sesión.
 - DT-06: `POST /auth/token` cuenta los fallos por correo y por IP (`LimiteIntentos` en
   `app/usuarios/intentos.py`, tabla `intentos_fallidos`); bloqueado responde 429 con `Retry-After`.
 
