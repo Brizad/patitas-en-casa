@@ -9,7 +9,9 @@ from app.bd.migraciones import (
     aplicar_migraciones,
     revertir_migraciones,
 )
+from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.reportes.repositorio_postgres import RepositorioPostgres
+from tests.conftest import preparar_refugio
 
 pytestmark = pytest.mark.postgres
 
@@ -18,8 +20,12 @@ CRITICO = {"descripcion": "Perro atropellado en la avenida, está sangrando much
 LEVE = {"descripcion": "Gato con sarna en el andén del barrio", "direccion": "Calle 10 # 5-30"}
 
 
+INGRESO = {"nombre": "Canela", "especie": "gato", "estado_salud": "desnutrición leve"}
+
+
 def cliente(motor):
-    return TestClient(crear_app(RepositorioPostgres(motor)))
+    return TestClient(crear_app(RepositorioPostgres(motor),
+                                RepositorioCuposPostgres.primer_refugio(motor)))
 
 
 def usar_base_de_pruebas(monkeypatch):
@@ -47,7 +53,25 @@ def test_crear_app_sin_argumentos_usa_postgres(bd_limpia, monkeypatch):
     usar_base_de_pruebas(monkeypatch)
     with TestClient(crear_app()) as c:
         codigo = c.post("/reportes", json=CRITICO).json()["codigo"]
+        c.post("/refugio/ingresos", json=INGRESO)
     assert RepositorioPostgres(bd_limpia).buscar(codigo) is not None
+    assert RepositorioCuposPostgres.primer_refugio(bd_limpia).refugio().ocupados == 1
+
+
+def test_ocupacion_sobrevive_a_un_reinicio_de_la_app(bd_limpia):
+    """DT-05: antes la ocupación volvía a 0/40 al reiniciar."""
+    assert cliente(bd_limpia).post("/refugio/ingresos", json=INGRESO).json() == {
+        "ocupacion": "1/40"}
+    respuesta = cliente(bd_limpia).get("/refugio/ocupacion")  # otra instancia de la app
+    assert respuesta.json() == {"ocupacion": "1/40", "porcentaje": 2.5}
+
+
+def test_refugio_lleno_rechaza_el_ingreso_con_409(bd_limpia):
+    """RN-04 con la base: sin cupo el ingreso se rechaza y la ocupación no cambia."""
+    preparar_refugio(bd_limpia, 40, 40)
+    c = cliente(bd_limpia)
+    assert c.post("/refugio/ingresos", json=INGRESO).status_code == 409
+    assert c.get("/refugio/ocupacion").json()["ocupacion"] == "40/40"
 
 
 def test_el_arranque_falla_si_la_base_no_esta_migrada(motor_pruebas, monkeypatch):

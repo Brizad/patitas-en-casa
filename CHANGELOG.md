@@ -14,10 +14,11 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - DT-01, paso 2 (#25): pruebas de contrato de `RepositorioReportes`, parametrizadas por implementación (52 pruebas).
 - DT-01, paso 3 (#27): `RepositorioPostgres` con SQLAlchemy y psycopg, tabla `reportes` creada por la migración de Alembic `0001` y CI con un servicio PostgreSQL 17 (79 pruebas).
 - DT-01, paso 4 (#29): la API usa PostgreSQL al ejecutarse; los reportes sobreviven a un reinicio. Al arrancar se comprueba que la base esté en la última migración (83 pruebas).
+- DT-05 (#30): los cupos del refugio y los animales ingresados se guardan en PostgreSQL (migración `0002`, que crea el refugio demo de 40 cupos). El cupo se toma con un `UPDATE` condicional, seguro aunque haya varios procesos (100 pruebas).
 ### Cambiado
 - La API se inicia con `uvicorn --factory app.api.main:crear_app`; `crear_app()` recibe el repositorio (las pruebas inyectan el de memoria) y el módulo ya no crea la app al importarse (#29).
 ### Deuda técnica
-- DT-01 pagada (#10). Registrada DT-05 (#30): los cupos del refugio siguen en memoria.
+- DT-01 pagada (#10). DT-05 registrada y pagada (#30).
 
 ## [0.1.0] - 2026-09-29
 ### Agregado

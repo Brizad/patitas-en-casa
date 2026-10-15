@@ -2,6 +2,8 @@
 from fastapi.testclient import TestClient
 
 from app.api.main import crear_app
+from app.cupos.repositorio import RepositorioCuposEnMemoria
+from app.dominio.modelos import Refugio
 from app.reportes.repositorio import RepositorioEnMemoria
 
 REPORTE = {"descripcion": "Perro atropellado en la avenida, está sangrando mucho",
@@ -9,8 +11,9 @@ REPORTE = {"descripcion": "Perro atropellado en la avenida, está sangrando much
 
 
 def cliente():
-    """Repositorio en memoria: estas pruebas no necesitan base de datos."""
-    return TestClient(crear_app(RepositorioEnMemoria()))
+    """Repositorios en memoria: estas pruebas no necesitan base de datos."""
+    cupos = RepositorioCuposEnMemoria(Refugio("Refugio demo Cúcuta", capacidad=40))
+    return TestClient(crear_app(RepositorioEnMemoria(), cupos))
 
 
 def test_cp01a_reporte_sin_cuenta_devuelve_codigo():

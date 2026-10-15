@@ -1,10 +1,10 @@
 """Gestión de cupos del refugio (RF-06 y RF-07)."""
 from __future__ import annotations
 
-import threading
 from typing import Protocol
 
 from app import config
+from app.cupos.repositorio import RepositorioCupos, RepositorioCuposEnMemoria
 from app.dominio.modelos import Animal, Refugio
 
 
@@ -17,31 +17,29 @@ class CupoAgotado(Exception):
 
 
 class ServicioCupos:
-    def __init__(self, refugio: Refugio, notificador: Notificador) -> None:
-        self._refugio = refugio
+    def __init__(self, repositorio: RepositorioCupos | Refugio, notificador: Notificador) -> None:
+        # Un Refugio suelto se guarda en memoria (pruebas unitarias y compatibilidad).
+        if isinstance(repositorio, Refugio):
+            repositorio = RepositorioCuposEnMemoria(repositorio)
+        self._repositorio = repositorio
         self._notificador = notificador
-        self.animales: list[Animal] = []
-        # BUG-04: comprobar el cupo y ocuparlo es una sola operación.
-        self._candado = threading.Lock()
 
     def registrar_ingreso(self, animal: Animal) -> Refugio:
         if not animal.nombre or not animal.estado_salud:
             raise ValueError("La ficha clínica exige nombre y estado de salud.")
-        with self._candado:
-            if not self._refugio.tiene_cupo():
-                raise CupoAgotado(f"{self._refugio.nombre} no tiene cupos disponibles.")
-            self.animales.append(animal)
-            self._refugio.ocupados += 1
-            alertar = self._refugio.porcentaje_ocupacion() >= config.ALERTA_OCUPACION
-        if alertar:
+        refugio = self._repositorio.ocupar_cupo(animal)
+        if refugio is None:
+            nombre = self._repositorio.refugio().nombre
+            raise CupoAgotado(f"{nombre} no tiene cupos disponibles.")
+        if refugio.porcentaje_ocupacion() >= config.ALERTA_OCUPACION:
             umbral = int(config.ALERTA_OCUPACION * 100)
             self._notificador.enviar(
-                "coordinadores", f"Ocupación sobre el {umbral} % en {self._refugio.nombre}"
+                "coordinadores", f"Ocupación sobre el {umbral} % en {refugio.nombre}"
             )
-        return self._refugio
+        return refugio
 
     def porcentaje_ocupacion(self) -> float:
-        return self._refugio.porcentaje_ocupacion()
+        return self._repositorio.refugio().porcentaje_ocupacion()
 
     def texto_ocupacion(self) -> str:
-        return self._refugio.texto_ocupacion()
+        return self._repositorio.refugio().texto_ocupacion()

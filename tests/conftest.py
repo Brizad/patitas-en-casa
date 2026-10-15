@@ -40,9 +40,21 @@ def motor_pruebas():
     motor.dispose()
 
 
+REFUGIO_DEMO = ("Refugio demo Cúcuta", 40)
+
+
 @pytest.fixture
 def bd_limpia(motor_pruebas):
-    """Cada prueba empieza con la tabla vacía."""
+    """Cada prueba empieza con las tablas vacías y solo el refugio demo (0/40)."""
     with motor_pruebas.begin() as conexion:
-        conexion.execute(text("TRUNCATE TABLE reportes"))
+        conexion.execute(text("TRUNCATE TABLE reportes, animales, refugios RESTART IDENTITY"))
+        conexion.execute(text("INSERT INTO refugios (nombre, capacidad) VALUES (:n, :c)"),
+                         {"n": REFUGIO_DEMO[0], "c": REFUGIO_DEMO[1]})
     return motor_pruebas
+
+
+def preparar_refugio(motor, capacidad: int, ocupados: int) -> None:
+    """Ajusta el refugio demo (id 1) para una prueba."""
+    with motor.begin() as conexion:
+        conexion.execute(text("UPDATE refugios SET capacidad = :c, ocupados = :o WHERE id = 1"),
+                         {"c": capacidad, "o": ocupados})
