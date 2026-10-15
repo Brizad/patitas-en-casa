@@ -1,12 +1,22 @@
-"""API REST del MVP de Patitas en Casa (FastAPI)."""
+"""API REST del MVP de Patitas en Casa (FastAPI).
+
+Se inicia con: uvicorn --factory app.api.main:crear_app
+"""
 from __future__ import annotations
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import Engine, create_engine
 
+from app.ajustes import cargar_ajustes
+from app.bd.migraciones import verificar_migraciones
 from app.cupos.servicio import CupoAgotado, ServicioCupos
 from app.dominio.modelos import Animal, Especie, Refugio, Ubicacion
-from app.reportes.repositorio import RepositorioEnMemoria
+from app.reportes.repositorio import RepositorioReportes
+from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
 
@@ -35,9 +45,31 @@ class IngresoEntrada(BaseModel):
     esterilizado: bool = False
 
 
-def crear_app() -> FastAPI:
-    app = FastAPI(title="Patitas en Casa", version="0.1.0")
-    repositorio = RepositorioEnMemoria()
+def motor_desde_entorno() -> Engine:
+    """Conexión a PostgreSQL con la configuración del .env; exige la base migrada (DT-01)."""
+    motor = create_engine(cargar_ajustes().url(), pool_pre_ping=True)
+    try:
+        verificar_migraciones(motor)
+    except Exception:
+        motor.dispose()
+        raise
+    return motor
+
+
+def crear_app(repositorio: RepositorioReportes | None = None) -> FastAPI:
+    """Sin repositorio usa PostgreSQL; las pruebas pueden inyectar RepositorioEnMemoria."""
+    motor = None
+    if repositorio is None:
+        motor = motor_desde_entorno()
+        repositorio = RepositorioPostgres(motor)
+
+    @asynccontextmanager
+    async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
+        yield
+        if motor is not None:
+            motor.dispose()
+
+    app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
     cupos = ServicioCupos(Refugio("Refugio demo Cúcuta", capacidad=40, ocupados=0),
                           NotificadorConsola())
@@ -85,6 +117,3 @@ def crear_app() -> FastAPI:
                 "porcentaje": round(cupos.porcentaje_ocupacion() * 100, 1)}
 
     return app
-
-
-app = crear_app()

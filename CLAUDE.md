@@ -18,10 +18,13 @@ veterinarios y control de cupos del refugio.
 | Ruta | Contenido |
 |------|-----------|
 | `app/dominio/modelos.py` | Entidades: `Reporte`, `Ubicacion`, `Animal`, `Refugio`, enums `Prioridad`, `EstadoReporte`, `Especie`. |
-| `app/reportes/` | `RepositorioReportes` (Protocol), `RepositorioEnMemoria` y `ServicioReportes` (RF-01). |
+| `app/reportes/` | `RepositorioReportes` (Protocol), `RepositorioEnMemoria`, `RepositorioPostgres` y `ServicioReportes` (RF-01). |
+| `app/ajustes.py` | Conexión a PostgreSQL leída del entorno o `.env` (`AjustesBD`). |
+| `app/bd/` | Tablas (`esquema.py`) y aplicar/verificar migraciones desde Python (`migraciones.py`). |
+| `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
 | `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
 | `app/cupos/servicio.py` | `ServicioCupos`: ingresos, cupos y alerta de ocupación (RF-06, RF-07). |
-| `app/api/main.py` | `crear_app()`: endpoints REST y armado de dependencias. |
+| `app/api/main.py` | `crear_app(repositorio=None)`: endpoints REST; sin argumento usa PostgreSQL. |
 | `app/config.py` | Parámetros de negocio (umbral de confianza, alerta, límites del video). |
 | `tests/` | Pruebas pytest (unitarias y de caja negra de la API). |
 | `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API). |
@@ -45,9 +48,13 @@ con el autor.
 ```bash
 pip install -r requirements-dev.txt
 ruff check .
-pytest --cov=app
-uvicorn app.api.main:app --reload
+alembic upgrade head                   # base patitas
+pytest --cov=app                       # PATITAS_EXIGIR_POSTGRES=1 para no omitir las de base
+uvicorn --factory app.api.main:crear_app --reload
 ```
+
+Las pruebas con base usan el marcador `postgres` y la fixture `bd_limpia` de `tests/conftest.py`;
+las pruebas de API sin base inyectan `RepositorioEnMemoria` en `crear_app()`.
 
 El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta Ruff y pytest con cobertura
 mínima del 70 %.
@@ -66,7 +73,10 @@ mínima del 70 %.
 1. **Cada cambio sigue el flujo**: issue en GitHub → rama propia desde `main`
    (`feat/`, `fix/`, `refactor/`, `chore/`, `docs/`, `test/`) → **pruebas primero** →
    Pull Request que referencia el issue, con CI en verde.
-2. **El autor aprueba y hace los merges.** El asistente nunca integra a `main` ni hace push a `main`.
+2. **Merges:** el asistente puede integrar un PR (`gh pr merge --squash --delete-branch`) solo
+   con el CI en verde y sin `.env`, contraseñas reales ni tokens en el diff (las contraseñas
+   falsas en pruebas están permitidas). Después de cada merge, resume en 2 líneas qué cambió y
+   por qué. Nunca hace push directo a `main`.
 3. **Nunca subir contraseñas, tokens ni el archivo `.env`.** Las credenciales se leen de
    variables de entorno / `.env` (ignorado por git). En el repositorio solo va `.env.example`
    con valores de ejemplo.
@@ -78,6 +88,6 @@ mínima del 70 %.
 
 ## Deuda técnica abierta
 
-Ver `DEUDA_TECNICA.md`: DT-01 (repositorio en memoria → PostgreSQL), DT-02 (rol en encabezado
-`X-Rol` → OAuth2/JWT + Argon2id), DT-03 (notificaciones en consola), DT-04 (clasificador por
-reglas → modelo Transformer).
+Ver `DEUDA_TECNICA.md`: DT-02 (rol en encabezado `X-Rol` → OAuth2/JWT + Argon2id), DT-03
+(notificaciones en consola), DT-04 (clasificador por reglas → modelo Transformer) y DT-05 (cupos
+del refugio en memoria). DT-01 (PostgreSQL) está pagada.

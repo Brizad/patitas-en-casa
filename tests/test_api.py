@@ -2,13 +2,15 @@
 from fastapi.testclient import TestClient
 
 from app.api.main import crear_app
+from app.reportes.repositorio import RepositorioEnMemoria
 
 REPORTE = {"descripcion": "Perro atropellado en la avenida, está sangrando mucho",
            "latitud": 7.8939, "longitud": -72.5078}
 
 
 def cliente():
-    return TestClient(crear_app())
+    """Repositorio en memoria: estas pruebas no necesitan base de datos."""
+    return TestClient(crear_app(RepositorioEnMemoria()))
 
 
 def test_cp01a_reporte_sin_cuenta_devuelve_codigo():

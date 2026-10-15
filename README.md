@@ -18,13 +18,21 @@ Autor: Brayan David Amado Ramírez.
 
 ## Cómo ejecutarlo
 
+Requisitos: Python 3.11+ y PostgreSQL 17 con dos bases vacías, `patitas` (aplicación) y
+`patitas_test` (pruebas: se vacía en cada ejecución).
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate          # en Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-pytest --cov=app                   # pruebas con cobertura
-uvicorn app.api.main:app --reload  # documentación interactiva en http://127.0.0.1:8000/docs
+cp .env.example .env               # en Windows: copy .env.example .env  (y escribe tu contraseña)
+alembic upgrade head               # crea las tablas en la base patitas
+pytest --cov=app                   # pruebas con cobertura (sin PostgreSQL, las de base se omiten)
+uvicorn --factory app.api.main:crear_app --reload  # documentación en http://127.0.0.1:8000/docs
 ```
+
+El archivo `.env` nunca se sube al repositorio. Cada cambio en `app/bd/esquema.py` necesita una
+migración nueva en `migraciones/versions/`.
 
 ## Flujo de trabajo
 
