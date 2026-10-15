@@ -1,4 +1,4 @@
-/* PWA ciudadana (HU-08, #59). Colores y piezas del prototipo (docs/prototipo/index.html, .scr).
+/* PWA ciudadana (HU-08, #59 y #61). Colores y piezas del prototipo (docs/prototipo/index.html, .scr).
    Sin fuentes externas: la PWA abre sin señal y solo usa recursos del propio servidor. */
 :root {
   --p-bg: #F6F5F1; --p-side: #0F4F47; --p-card: #FFFFFF; --p-line: #E4E4DE;
@@ -43,15 +43,19 @@ h1 { font-size: 20px; margin: 4px 0; }
 .f { font-size: 14px; font-weight: 700; }
 .in {
   border: 1px solid var(--p-line); background: var(--p-in); color: var(--p-ink);
-  border-radius: 10px; padding: 11px 12px; font-size: 16px; text-transform: uppercase;
-  width: 100%;
+  border-radius: 10px; padding: 11px 12px; font: 16px var(--f-ui); width: 100%;
 }
-.in:focus-visible, .btn:focus-visible { outline: 3px solid var(--p-acc); outline-offset: 2px; }
+.in.mono { font-family: var(--f-mono); text-transform: uppercase; }
+.in.area { min-height: 96px; resize: vertical; }
+.in[aria-invalid="true"] { border-color: var(--p-err); }
+.in:focus-visible, .btn:focus-visible, .pestanas a:focus-visible { outline: 3px solid var(--p-acc); outline-offset: 2px; }
 .btn {
   display: inline-flex; justify-content: center; align-items: center; border-radius: 10px;
   padding: 12px 14px; font: 700 15px var(--f-ui); border: 1px solid var(--p-line);
-  cursor: pointer;
+  cursor: pointer; background: var(--p-card); color: var(--p-ink); text-decoration: none;
 }
+.btn.chico { padding: 6px 10px; font-size: 13px; }
+.btn.grande { padding: 13px; }
 .btn.pri { background: var(--p-teal); border-color: var(--p-teal); color: var(--p-on-teal); }
 .btn:disabled { opacity: .6; cursor: progress; }
 .mono { font-family: var(--f-mono); letter-spacing: .02em; }
@@ -81,3 +85,25 @@ h1 { font-size: 20px; margin: 4px 0; }
 }
 .tl li:last-child::after { display: none; }
 .tl .detalle { display: block; }
+
+/* #61: pestañas, formulario de reporte y código de seguimiento (.big del prototipo). */
+.pestanas {
+  display: flex; background: var(--p-side); padding: 0 8px; gap: 4px;
+}
+.pestanas a {
+  flex: 1; text-align: center; color: #fff; opacity: .75; text-decoration: none;
+  padding: 10px 8px 9px; font-weight: 700; font-size: 14px; border-bottom: 3px solid transparent;
+}
+.pestanas a[aria-current="page"] { opacity: 1; border-bottom-color: var(--p-acc); }
+.pila { display: flex; flex-direction: column; gap: 12px; }
+.fila { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.centro { text-align: center; }
+.err-campo { color: var(--p-err); font-size: 13px; }
+.msg.aviso { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.gracias { padding-top: 12px; }
+.gracias h1 { margin: 12px 0 4px; }
+.big {
+  font-family: var(--f-mono); font-size: 30px; letter-spacing: .12em; font-weight: 500;
+  text-align: center; background: var(--p-card); border: 2px dashed var(--p-acc);
+  border-radius: 14px; padding: 16px 8px; margin-top: 6px; overflow-wrap: anywhere;
+}

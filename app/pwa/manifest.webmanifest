@@ -1,7 +1,7 @@
 {
   "name": "Patitas en Casa",
   "short_name": "Patitas",
-  "description": "Consulta el estado de tu reporte de un animal en emergencia en Cúcuta.",
+  "description": "Reporta un animal en emergencia en Cúcuta y consulta el estado de tu reporte.",
   "lang": "es",
   "start_url": "/app/",
   "scope": "/app/",

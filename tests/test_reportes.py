@@ -37,3 +37,28 @@ def test_limite_de_duracion_del_video(segundos, aceptado):
     else:
         with pytest.raises(ReporteInvalido, match="60 segundos"):
             s.registrar(TEXTO, Ubicacion(direccion="Calle 10"), video_segundos=segundos)
+
+
+# --- RF-12 (#61): la PWA reenvía el reporte guardado sin señal -------------------------
+
+CALLE_10 = Ubicacion(direccion="Calle 10")
+
+
+def test_registrar_una_vez_con_la_misma_clave_devuelve_el_mismo_reporte():
+    s = servicio()
+    primero, nuevo = s.registrar_una_vez("clave-de-la-pwa-0001", TEXTO, CALLE_10)
+    otra_vez, repetido = s.registrar_una_vez("clave-de-la-pwa-0001", TEXTO, CALLE_10)
+    assert (nuevo, repetido) == (True, False)
+    assert otra_vez.codigo == primero.codigo
+
+
+def test_registrar_una_vez_con_claves_distintas_crea_dos_reportes():
+    s = servicio()
+    a, _ = s.registrar_una_vez("clave-de-la-pwa-0001", TEXTO, CALLE_10)
+    b, _ = s.registrar_una_vez("clave-de-la-pwa-0002", TEXTO, CALLE_10)
+    assert a.codigo != b.codigo
+
+
+def test_registrar_una_vez_sigue_validando_rn01():
+    with pytest.raises(ReporteInvalido):
+        servicio().registrar_una_vez("clave-de-la-pwa-0001", "perro herido", CALLE_10)

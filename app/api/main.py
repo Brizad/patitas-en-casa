@@ -13,7 +13,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -97,6 +106,9 @@ class ReporteEntrada(BaseModel):
 
 
 Comuna = Annotated[int, Field(ge=1, le=10)]
+# RF-12 (#61): la PWA la genera al crear el reporte (32 caracteres hex) y la repite al reenviar.
+ClaveIdempotencia = Annotated[str | None, Header(alias="Idempotency-Key", min_length=16,
+                                                 max_length=64, pattern=r"^[A-Za-z0-9_-]+$")]
 
 
 class ZonaEntrada(BaseModel):
@@ -250,11 +262,19 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value}
 
     @app.post("/reportes", status_code=201)
-    def crear_reporte(datos: ReporteEntrada):
+    def crear_reporte(datos: ReporteEntrada, respuesta: Response,
+                      clave: ClaveIdempotencia = None):
+        """RF-01. RF-12 (#61): con Idempotency-Key, reenviar el mismo reporte devuelve el mismo
+        código con 200 en vez de crear otro; sin el encabezado funciona como antes."""
         ubicacion = Ubicacion(datos.latitud, datos.longitud, datos.direccion, datos.comuna)
+        video = (datos.video_segundos, datos.video_mb)
         try:
-            r = reportes.registrar(datos.descripcion, ubicacion,
-                                   datos.video_segundos, datos.video_mb)
+            if clave is None:
+                r = reportes.registrar(datos.descripcion, ubicacion, *video)
+            else:
+                r, nuevo = reportes.registrar_una_vez(clave, datos.descripcion, ubicacion, *video)
+                if not nuevo:
+                    respuesta.status_code = status.HTTP_200_OK
         except ReporteInvalido as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"codigo": r.codigo, "estado": r.estado.value}

@@ -98,3 +98,50 @@ def test_el_service_worker_no_guarda_respuestas_de_la_api():
     sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
     assert "/reportes/" in sw  # la regla que excluye la API está escrita
     assert "cache.put" not in sw
+
+
+# --- #61: pantalla Reportar emergencia y envío sin conexión (RF-12) --------------------
+
+def test_la_pwa_sirve_el_formulario_de_reporte(c):
+    html = c.get("/app/").text
+    assert "Reportar emergencia" in html
+    assert 'id="reporte"' in html
+    assert 'id="descripcion"' in html and 'minlength="20"' in html  # RN-01
+    assert 'id="direccion"' in html and 'id="usar-gps"' in html
+    assert 'id="comuna"' in html
+    assert "TU CÓDIGO DE SEGUIMIENTO" in html
+    assert 'src="reportar.js"' in html
+
+
+def test_la_comuna_ofrece_solo_las_10_de_cucuta(c):
+    html = c.get("/app/").text
+    lista = html.split('id="comuna"')[1].split("</select>")[0]
+    opciones = re.findall(r'<option value="(\d*)"', lista)
+    assert opciones == [""] + [str(n) for n in range(1, 11)]
+
+
+def test_el_html_no_usa_estilos_ni_scripts_en_linea(c):
+    """La CSP bloquea style="" y <script> sin src: si se usaran, la pantalla se rompería."""
+    html = c.get("/app/").text
+    assert "style=" not in html
+    assert not re.search(r"<script(?![^>]*\ssrc=)", html)
+    assert not re.search(r"\son[a-z]+=", html)  # onclick="…"
+
+
+def test_reportar_js_envia_con_clave_de_idempotencia():
+    js = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
+    assert "innerHTML" not in js
+    assert "'/reportes'" in js and "Idempotency-Key" in js
+    assert "crypto.getRandomValues" in js  # la clave la genera el navegador
+
+
+def test_reportar_js_guarda_sin_senal_y_reintenta_al_volver():
+    js = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
+    assert "localStorage" in js
+    assert "'online'" in js  # evento al volver la conexión
+
+
+def test_el_service_worker_guarda_la_nueva_pantalla():
+    sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+    assert "'reportar.js'" in sw
+    assert "patitas-pwa-v1'" not in sw  # versión nueva: los teléfonos bajan la interfaz nueva

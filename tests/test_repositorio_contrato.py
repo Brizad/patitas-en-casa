@@ -122,3 +122,51 @@ def test_dos_veterinarios_a_la_vez_solo_uno_confirma(repositorio):
         h.join()
     assert sorted(resultados) == [False, True]
     assert len(repositorio.decisiones("ABCD1234")) == 1
+
+
+# --- RF-12 (#61): reenvío sin duplicados con clave de idempotencia ---------------------
+
+CLAVE_PWA = "reenvio-de-la-pwa-0001"
+
+
+def test_guardar_con_clave_nueva_guarda_el_reporte(repositorio):
+    guardado = repositorio.guardar_con_clave(reporte_completo(), CLAVE_PWA)
+    assert guardado == reporte_completo()
+    assert repositorio.buscar("ABCD1234") == reporte_completo()
+    assert repositorio.buscar_por_clave(CLAVE_PWA) == reporte_completo()
+
+
+def test_guardar_con_clave_repetida_devuelve_el_primero_sin_duplicar(repositorio):
+    """La PWA reenvía el mismo reporte al volver la señal: no se crea otro."""
+    repositorio.guardar_con_clave(reporte_completo("PRIMERO1"), CLAVE_PWA)
+    devuelto = repositorio.guardar_con_clave(reporte_completo("SEGUNDO2"), CLAVE_PWA)
+    assert devuelto.codigo == "PRIMERO1"
+    assert [r.codigo for r in repositorio.todos()] == ["PRIMERO1"]
+
+
+def test_buscar_por_clave_inexistente_devuelve_none(repositorio):
+    assert repositorio.buscar_por_clave(CLAVE_PWA) is None
+
+
+def test_volver_a_guardar_el_reporte_conserva_su_clave(repositorio):
+    """La confirmación del veterinario no borra la clave: un reenvío tardío no duplica."""
+    repositorio.guardar_con_clave(reporte_completo(), CLAVE_PWA)
+    repositorio.guardar(reporte_completo())
+    assert repositorio.buscar_por_clave(CLAVE_PWA).codigo == "ABCD1234"
+
+
+def test_dos_reenvios_a_la_vez_guardan_un_solo_reporte(repositorio):
+    salida = threading.Barrier(2)
+    codigos = []
+
+    def reenviar(codigo):
+        salida.wait()
+        codigos.append(repositorio.guardar_con_clave(reporte_completo(codigo), CLAVE_PWA).codigo)
+
+    hilos = [threading.Thread(target=reenviar, args=(c,)) for c in ("HILO0001", "HILO0002")]
+    for h in hilos:
+        h.start()
+    for h in hilos:
+        h.join()
+    assert len(repositorio.todos()) == 1
+    assert codigos[0] == codigos[1] == repositorio.todos()[0].codigo

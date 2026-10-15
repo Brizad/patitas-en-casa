@@ -4,35 +4,106 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0F4F47">
-<meta name="description" content="Consulta el estado de tu reporte de Patitas en Casa con el código de seguimiento.">
+<meta name="description" content="Reporta un animal en emergencia en Cúcuta y consulta el estado con tu código de seguimiento.">
 <title>Patitas en Casa</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
 <link rel="stylesheet" href="estilos.css">
 <script src="app.js" defer></script>
+<script src="reportar.js" defer></script>
 </head>
 <body>
-<!-- HU-08 (#59): pantalla P-03 "Estado del reporte" del prototipo (docs/prototipo). -->
 <header class="phd"><img src="icono.svg" alt="" width="28" height="28">Patitas en Casa</header>
+<nav class="pestanas" aria-label="Pantallas">
+  <a href="#reportar" data-pantalla="reportar">Reportar</a>
+  <a href="#estado" data-pantalla="estado">Consultar</a>
+</nav>
 <main class="pbd">
-  <h1>Estado del reporte</h1>
-  <form id="consulta" class="card" novalidate>
-    <label class="f" for="codigo">Código de seguimiento</label>
-    <input class="in mono" id="codigo" name="codigo" placeholder="Ej.: F2HW5RTB" maxlength="9"
-           autocomplete="off" autocapitalize="characters" spellcheck="false" required>
-    <span class="tag">Son 8 letras o números. Lo recibiste al enviar el reporte.</span>
-    <button class="btn pri" type="submit">Consultar</button>
-  </form>
-  <div id="mensaje" class="msg" role="status" aria-live="polite" hidden></div>
-  <section id="resultado" aria-live="polite" hidden>
-    <div class="card">
-      <div class="tag rotulo">CÓDIGO</div>
-      <div class="mono codigo" id="res-codigo"></div>
-      <div class="mute pequeno" id="res-ultimo"></div>
-    </div>
-    <div class="card"><ol class="tl" id="res-pasos"></ol></div>
+  <!-- #61: pantalla P-01 "Reportar emergencia" del prototipo (docs/prototipo). -->
+  <section id="pantalla-reportar" class="pantalla" aria-labelledby="titulo-reportar">
+    <h1 id="titulo-reportar">Reportar emergencia</h1>
+    <div id="pendientes" class="msg aviso" role="status" aria-live="polite" hidden></div>
+    <form id="reporte" class="pila" novalidate>
+      <div class="card">
+        <label class="f" for="descripcion">¿Qué le pasa al animal?</label>
+        <textarea class="in area" id="descripcion" name="descripcion" minlength="20"
+                  maxlength="500" required
+                  placeholder="Ej.: perro atropellado en la avenida, no se levanta y sangra"></textarea>
+        <span class="tag" id="contador">Mínimo 20 caracteres · 0/500</span>
+        <span class="err-campo" id="error-descripcion" hidden></span>
+      </div>
+      <div class="card">
+        <label class="f" for="direccion">Ubicación</label>
+        <input class="in" id="direccion" name="direccion" maxlength="200" autocomplete="street-address"
+               placeholder="Barrio o dirección">
+        <div class="fila">
+          <button class="btn chico" type="button" id="usar-gps">Usar mi GPS</button>
+          <span class="tag" id="estado-gps">o escribe la dirección</span>
+        </div>
+        <span class="err-campo" id="error-ubicacion" hidden></span>
+      </div>
+      <div class="card">
+        <label class="f" for="comuna">Comuna (opcional)</label>
+        <select class="in" id="comuna" name="comuna">
+          <option value="">No sé</option>
+          <option value="1">Comuna 1</option>
+          <option value="2">Comuna 2</option>
+          <option value="3">Comuna 3</option>
+          <option value="4">Comuna 4</option>
+          <option value="5">Comuna 5</option>
+          <option value="6">Comuna 6</option>
+          <option value="7">Comuna 7</option>
+          <option value="8">Comuna 8</option>
+          <option value="9">Comuna 9</option>
+          <option value="10">Comuna 10</option>
+        </select>
+        <span class="tag">Ayuda a avisar primero a los rescatistas de esa zona.</span>
+      </div>
+      <button class="btn pri grande" type="submit" id="enviar">Enviar reporte</button>
+      <div id="mensaje-reporte" class="msg" role="status" aria-live="polite" hidden></div>
+      <p class="mute pequeno centro">Sin conexión, el reporte se guarda y se envía solo al volver la señal.</p>
+    </form>
   </section>
-  <p class="mute pequeno">Por privacidad no se muestran la dirección exacta ni datos de otras personas.</p>
+
+  <!-- #61: pantalla P-02 "Código de seguimiento". -->
+  <section id="pantalla-codigo" class="pantalla pila" aria-labelledby="titulo-codigo" hidden>
+    <div class="centro gracias">
+      <img src="icono.svg" alt="" width="96" height="96">
+      <h1 id="titulo-codigo">¡Gracias por avisar!</h1>
+      <div class="mute">Tu reporte ya está en la cola del refugio.</div>
+    </div>
+    <div>
+      <div class="tag rotulo centro">TU CÓDIGO DE SEGUIMIENTO</div>
+      <div class="big" id="codigo-grande"></div>
+    </div>
+    <div class="card"><span><b>Guárdalo:</b> con este código consultas el estado sin dar tu nombre ni tu número.</span></div>
+    <div id="mensaje-codigo" class="msg" role="status" aria-live="polite" hidden></div>
+    <button class="btn" type="button" id="copiar">Copiar código</button>
+    <button class="btn pri" type="button" id="ver-estado">Ver estado del reporte</button>
+    <a class="btn" href="#reportar" id="otro-reporte">Reportar otra emergencia</a>
+  </section>
+
+  <!-- HU-08 (#59): pantalla P-03 "Estado del reporte". -->
+  <section id="pantalla-estado" class="pantalla pila" aria-labelledby="titulo-estado" hidden>
+    <h1 id="titulo-estado">Estado del reporte</h1>
+    <form id="consulta" class="card" novalidate>
+      <label class="f" for="codigo">Código de seguimiento</label>
+      <input class="in mono" id="codigo" name="codigo" placeholder="Ej.: F2HW5RTB" maxlength="9"
+             autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+      <span class="tag">Son 8 letras o números. Lo recibiste al enviar el reporte.</span>
+      <button class="btn pri" type="submit">Consultar</button>
+    </form>
+    <div id="mensaje" class="msg" role="status" aria-live="polite" hidden></div>
+    <section id="resultado" class="pila" aria-live="polite" hidden>
+      <div class="card">
+        <div class="tag rotulo">CÓDIGO</div>
+        <div class="mono codigo" id="res-codigo"></div>
+        <div class="mute pequeno" id="res-ultimo"></div>
+      </div>
+      <div class="card"><ol class="tl" id="res-pasos"></ol></div>
+    </section>
+    <p class="mute pequeno">Por privacidad no se muestran la dirección exacta ni datos de otras personas.</p>
+  </section>
 </main>
 </body>
 </html>

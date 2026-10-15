@@ -14,12 +14,16 @@ Autor: Brayan David Amado Ramírez.
 Públicos (el ciudadano no necesita cuenta):
 - `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional y `comuna`
   opcional de Cúcuta, 1 a 10).
+  Encabezado opcional `Idempotency-Key` (16 a 64 letras, números, `-` o `_`): si se reenvía
+  con la misma clave responde 200 con el mismo código en vez de crear otro reporte (RF-12).
 - `GET /reportes/{codigo}`: estado del reporte con el código de seguimiento.
 - `GET /reportes/{codigo}/seguimiento`: línea de tiempo (recibido → revisado → rescatista en
   camino o atención programada → atendido → cerrado) y fecha del último cambio, sin datos
   personales (HU-08, RN-14).
-- `GET /app/`: PWA ciudadana (HTML y JavaScript sencillos con el diseño del prototipo) con la
-  pantalla "Estado del reporte". `/` redirige ahí. Por ahora solo local (#47).
+- `GET /app/`: PWA ciudadana (HTML y JavaScript sencillos con el diseño del prototipo) con las
+  pantallas "Reportar emergencia" (GPS o dirección y comuna opcional), "Código de seguimiento"
+  y "Estado del reporte". Sin señal, el reporte queda guardado en el teléfono y se envía solo
+  al volver la conexión, sin duplicarse (RF-12). `/` redirige ahí. Por ahora solo local (#47).
 
 Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
 - `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`). Tras 5 fallos del mismo correo (o 20 de la misma IP) en 15 minutos responde 429 con `Retry-After` (DT-06).
