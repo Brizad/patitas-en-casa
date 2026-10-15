@@ -29,6 +29,35 @@ jobs:
     steps:
       - name: Descargar el código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # historial completo: gitleaks revisa todos los commits
+
+      # Detección de secretos (#33). Versión fija de la imagen oficial de gitleaks.
+      - name: Secretos (auto-prueba de gitleaks)
+        run: |
+          # Un token falso, generado aquí y nunca guardado, DEBE ser detectado.
+          docker pull --quiet "$GITLEAKS_IMAGEN"
+          mkdir -p "$RUNNER_TEMP/senuelo"
+          echo "token = \"ghp_$(openssl rand -hex 18)\"" > "$RUNNER_TEMP/senuelo/config.txt"
+          set +e
+          docker run --rm -v "$RUNNER_TEMP/senuelo:/scan" "$GITLEAKS_IMAGEN" \
+            dir /scan --redact --no-banner --exit-code 7
+          codigo=$?
+          set -e
+          # 7 = encontró el secreto; cualquier otro código es un error o un falso negativo.
+          if [ "$codigo" -ne 7 ]; then
+            echo "::error::gitleaks no detectó el token de prueba (código $codigo)"; exit 1
+          fi
+          echo "Auto-prueba correcta: gitleaks detecta secretos."
+        env:
+          GITLEAKS_IMAGEN: ghcr.io/gitleaks/gitleaks:v8.30.1
+
+      - name: Secretos (gitleaks sobre todo el historial)
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" "$GITLEAKS_IMAGEN" \
+            git /repo --redact --no-banner --verbose
+        env:
+          GITLEAKS_IMAGEN: ghcr.io/gitleaks/gitleaks:v8.30.1
 
       - name: Preparar Python 3.11
         uses: actions/setup-python@v5

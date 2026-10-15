@@ -56,8 +56,8 @@ uvicorn --factory app.api.main:crear_app --reload
 Las pruebas con base usan el marcador `postgres` y la fixture `bd_limpia` de `tests/conftest.py`;
 las pruebas de API sin base inyectan `RepositorioEnMemoria` en `crear_app()`.
 
-El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta Ruff y pytest con cobertura
-mínima del 70 %.
+El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta gitleaks (secretos en todo el
+historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Base de datos (Incremento 2, DT-01)
 
