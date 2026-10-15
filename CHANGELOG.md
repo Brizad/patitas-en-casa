@@ -4,6 +4,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 ### Agregado
+- HU-08, parte 2 (#59, decisión del #47): PWA ciudadana en `/app/` (HTML, CSS y JavaScript sencillos con el diseño del prototipo, servida por la API) con la pantalla "Estado del reporte": código en minúsculas o con espacio, línea de tiempo y mensajes de código inexistente o sin conexión. Manifiesto instalable, service worker que guarda solo la interfaz (nunca respuestas de la API), modo oscuro y `Content-Security-Policy` estricta; `/` redirige a `/app/` (315 pruebas).
 - HU-06, parte 2 (#57, decisión del #46): zona por comunas de Cúcuta (`comuna` opcional en el reporte, `PUT /rescatistas/yo/zona`, `GET /rescatistas/yo`), alerta por correo a los rescatistas disponibles de la comuna al confirmar un crítico o alto, y escalamiento: sin aceptar a los 15 min (crítico) o 30 min (alto) se avisa a los coordinadores una sola vez y el caso se ofrece en toda la ciudad. Migración `0007` (tabla `escalamientos`). Las ofertas muestran la comuna y si el caso está escalado (302 pruebas).
 
 ## [0.2.0] - 2026-10-15

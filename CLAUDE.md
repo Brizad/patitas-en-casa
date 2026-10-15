@@ -31,7 +31,8 @@ veterinarios y control de cupos del refugio.
 | `app/api/main.py` | `crear_app(repositorio=None, repositorio_cupos=None)`: endpoints REST; sin argumentos usa PostgreSQL. |
 | `app/config.py` | Parámetros de negocio (umbral de confianza, alerta, límites del video). |
 | `tests/` | Pruebas pytest (unitarias y de caja negra de la API). |
-| `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API). |
+| `app/pwa/` | PWA ciudadana (HU-08, #47): HTML, CSS y JS sencillos servidos en `/app/` con CSP estricta; sin recursos externos ni `innerHTML` con datos; el service worker solo guarda la interfaz. |
+| `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API; la PWA reutiliza su diseño). |
 
 ## Reglas de negocio vigentes (no romper)
 
