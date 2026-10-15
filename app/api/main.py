@@ -13,13 +13,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
-from app.ajustes import cargar_ajustes, cargar_ajustes_seguridad
+from app.ajustes import cargar_ajustes, cargar_ajustes_correo, cargar_ajustes_seguridad
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
 from app.bd.migraciones import verificar_migraciones
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
-from app.cupos.servicio import CupoAgotado, ServicioCupos
+from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
 from app.dominio.modelos import Animal, Especie, Rol, Ubicacion, Usuario
+from app.notificaciones.correo import crear_notificador
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
@@ -31,11 +32,6 @@ from app.usuarios.servicio import ServicioUsuarios
 
 # Pueden usar /cola y /refugio. Públicos (RF-01): POST /reportes y GET /reportes/{codigo}.
 ROLES_PERSONAL = (Rol.VETERINARIO, Rol.COORDINADOR)
-
-
-class NotificadorConsola:
-    def enviar(self, destinatario: str, mensaje: str) -> None:
-        print(f"[notificación a {destinatario}] {mensaje}")
 
 
 class ReporteEntrada(BaseModel):
@@ -74,9 +70,12 @@ def emisor_desde_entorno() -> EmisorTokens:
 def crear_app(repositorio: RepositorioReportes | None = None,
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
-              emisor_tokens: EmisorTokens | None = None) -> FastAPI:
-    """Sin argumentos usa PostgreSQL y la clave JWT del .env; las pruebas inyectan dobles."""
+              emisor_tokens: EmisorTokens | None = None,
+              notificador: Notificador | None = None) -> FastAPI:
+    """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
+    dobles."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
+    notificador = notificador or crear_notificador(cargar_ajustes_correo())
     motor = None
     if repositorio is None or repositorio_cupos is None or repositorio_usuarios is None:
         motor = motor_desde_entorno()
@@ -97,7 +96,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
-    cupos = ServicioCupos(repositorio_cupos, NotificadorConsola())
+    cupos = ServicioCupos(repositorio_cupos, notificador)
 
     @app.post("/auth/token")
     def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()]):

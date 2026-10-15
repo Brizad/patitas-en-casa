@@ -26,6 +26,7 @@ veterinarios y control de cupos del refugio.
 | `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |
 | `app/seguridad/tokens.py`, `app/api/seguridad.py` | Tokens JWT (`EmisorTokens`) y la dependencia de FastAPI que exige sesión. |
+| `app/notificaciones/correo.py` | Adaptadores de `Notificador` (DT-03): correo SMTP o, sin SMTP configurado, el log. |
 | `app/api/main.py` | `crear_app(repositorio=None, repositorio_cupos=None)`: endpoints REST; sin argumentos usa PostgreSQL. |
 | `app/config.py` | Parámetros de negocio (umbral de confianza, alerta, límites del video). |
 | `tests/` | Pruebas pytest (unitarias y de caja negra de la API). |
@@ -102,6 +103,6 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Deuda técnica abierta
 
-Ver `DEUDA_TECNICA.md`: DT-03 (notificaciones en consola), DT-04 (clasificador por reglas →
-modelo Transformer) y DT-06 (sin límite de intentos de inicio de sesión). Pagadas: DT-01
-(reportes en PostgreSQL), DT-02 (JWT + Argon2id) y DT-05 (cupos en PostgreSQL).
+Ver `DEUDA_TECNICA.md`: DT-04 (clasificador por reglas → modelo Transformer) y DT-06 (sin
+límite de intentos de inicio de sesión). Pagadas: DT-01 (reportes en PostgreSQL), DT-02 (JWT +
+Argon2id), DT-03 (notificador por correo) y DT-05 (cupos en PostgreSQL).
