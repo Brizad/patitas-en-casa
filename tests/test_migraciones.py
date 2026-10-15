@@ -74,3 +74,26 @@ def test_la_base_rechaza_codigos_repetidos(bd_limpia):
     insertar(bd_limpia)
     with pytest.raises(IntegrityError):
         insertar(bd_limpia)
+
+
+def test_la_migracion_crea_el_refugio_demo(motor_pruebas):
+    """La revisión 0002 deja un refugio listo para usar la app recién instalada."""
+    revertir_migraciones(motor_pruebas, "0001")
+    aplicar_migraciones(motor_pruebas)
+    with motor_pruebas.connect() as conexion:
+        filas = conexion.execute(text("SELECT nombre, capacidad, ocupados FROM refugios")).all()
+    assert [tuple(f) for f in filas] == [("Refugio demo Cúcuta", 40, 0)]
+
+
+@pytest.mark.parametrize("capacidad, ocupados", [(0, 0), (10, -1), (10, 11)])
+def test_la_base_rechaza_refugios_invalidos(bd_limpia, capacidad, ocupados):
+    """Invariante de BUG-04 también en la base: 0 <= ocupados <= capacidad, capacidad > 0."""
+    with pytest.raises(IntegrityError), bd_limpia.begin() as conexion:
+        conexion.execute(text("INSERT INTO refugios (nombre, capacidad, ocupados) "
+                              "VALUES ('Otro', :c, :o)"), {"c": capacidad, "o": ocupados})
+
+
+def test_la_base_rechaza_especies_desconocidas(bd_limpia):
+    with pytest.raises(IntegrityError), bd_limpia.begin() as conexion:
+        conexion.execute(text("INSERT INTO animales (refugio_id, nombre, especie, estado_salud) "
+                              "VALUES (1, 'Piolín', 'canario', 'sano')"))

@@ -13,8 +13,10 @@ from sqlalchemy import Engine, create_engine
 
 from app.ajustes import cargar_ajustes
 from app.bd.migraciones import verificar_migraciones
+from app.cupos.repositorio import RepositorioCupos
+from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, ServicioCupos
-from app.dominio.modelos import Animal, Especie, Refugio, Ubicacion
+from app.dominio.modelos import Animal, Especie, Ubicacion
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
@@ -56,12 +58,14 @@ def motor_desde_entorno() -> Engine:
     return motor
 
 
-def crear_app(repositorio: RepositorioReportes | None = None) -> FastAPI:
-    """Sin repositorio usa PostgreSQL; las pruebas pueden inyectar RepositorioEnMemoria."""
+def crear_app(repositorio: RepositorioReportes | None = None,
+              repositorio_cupos: RepositorioCupos | None = None) -> FastAPI:
+    """Sin repositorios usa PostgreSQL; las pruebas pueden inyectar los de memoria."""
     motor = None
-    if repositorio is None:
+    if repositorio is None or repositorio_cupos is None:
         motor = motor_desde_entorno()
-        repositorio = RepositorioPostgres(motor)
+        repositorio = repositorio or RepositorioPostgres(motor)
+        repositorio_cupos = repositorio_cupos or RepositorioCuposPostgres.primer_refugio(motor)
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -71,8 +75,7 @@ def crear_app(repositorio: RepositorioReportes | None = None) -> FastAPI:
 
     app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
-    cupos = ServicioCupos(Refugio("Refugio demo Cúcuta", capacidad=40, ocupados=0),
-                          NotificadorConsola())
+    cupos = ServicioCupos(repositorio_cupos, NotificadorConsola())
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada):

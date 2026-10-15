@@ -23,8 +23,8 @@ veterinarios y control de cupos del refugio.
 | `app/bd/` | Tablas (`esquema.py`) y aplicar/verificar migraciones desde Python (`migraciones.py`). |
 | `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
 | `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
-| `app/cupos/servicio.py` | `ServicioCupos`: ingresos, cupos y alerta de ocupación (RF-06, RF-07). |
-| `app/api/main.py` | `crear_app(repositorio=None)`: endpoints REST; sin argumento usa PostgreSQL. |
+| `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
+| `app/api/main.py` | `crear_app(repositorio=None, repositorio_cupos=None)`: endpoints REST; sin argumentos usa PostgreSQL. |
 | `app/config.py` | Parámetros de negocio (umbral de confianza, alerta, límites del video). |
 | `tests/` | Pruebas pytest (unitarias y de caja negra de la API). |
 | `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API). |
@@ -89,5 +89,5 @@ mínima del 70 %.
 ## Deuda técnica abierta
 
 Ver `DEUDA_TECNICA.md`: DT-02 (rol en encabezado `X-Rol` → OAuth2/JWT + Argon2id), DT-03
-(notificaciones en consola), DT-04 (clasificador por reglas → modelo Transformer) y DT-05 (cupos
-del refugio en memoria). DT-01 (PostgreSQL) está pagada.
+(notificaciones en consola) y DT-04 (clasificador por reglas → modelo Transformer). Pagadas:
+DT-01 (reportes en PostgreSQL) y DT-05 (cupos en PostgreSQL).

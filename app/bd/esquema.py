@@ -2,20 +2,24 @@
 from __future__ import annotations
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Column,
     DateTime,
     Double,
+    ForeignKey,
     Integer,
     MetaData,
     String,
     Table,
     Text,
+    false,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app.dominio.modelos import EstadoReporte, Prioridad
+from app.dominio.modelos import Especie, EstadoReporte, Prioridad
 
 
 def _valores(enum) -> str:
@@ -47,4 +51,30 @@ reportes = Table(
         "(latitud IS NOT NULL AND longitud IS NOT NULL) OR direccion IS NOT NULL",
         name="ck_reportes_ubicacion",
     ),
+)
+
+# DT-05: la ocupación vive en la base; el cupo se toma con un UPDATE condicional (RN-04).
+refugios = Table(
+    "refugios",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("nombre", Text, nullable=False),
+    Column("capacidad", Integer, nullable=False),
+    Column("ocupados", Integer, nullable=False, server_default=text("0")),
+    CheckConstraint("capacidad > 0", name="ck_refugios_capacidad"),
+    CheckConstraint("ocupados BETWEEN 0 AND capacidad", name="ck_refugios_ocupados"),
+)
+
+animales = Table(
+    "animales",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("refugio_id", Integer, ForeignKey("refugios.id"), nullable=False),
+    Column("nombre", Text, nullable=False),
+    Column("especie", String(10), nullable=False),
+    Column("estado_salud", Text, nullable=False),
+    Column("vacunado", Boolean, nullable=False, server_default=false()),
+    Column("esterilizado", Boolean, nullable=False, server_default=false()),
+    Column("ingresado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    CheckConstraint(f"especie IN ({_valores(Especie)})", name="ck_animales_especie"),
 )
