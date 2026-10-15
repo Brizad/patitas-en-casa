@@ -56,6 +56,29 @@ class AjustesSeguridad(BaseSettings):
         return valor
 
 
+class AjustesCorreo(BaseSettings):
+    """Servidor SMTP de las notificaciones (DT-03). Sin PATITAS_SMTP_HOST se usa el log."""
+
+    model_config = SettingsConfigDict(env_prefix="PATITAS_", extra="ignore")
+
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_usuario: str | None = None
+    smtp_contrasena: SecretStr | None = None
+    smtp_remitente: str | None = None
+    smtp_starttls: bool = True
+    correos_coordinadores: str = ""  # separados por comas
+
+    @field_validator("smtp_host", "smtp_usuario", "smtp_contrasena", "smtp_remitente",
+                     mode="before")
+    @classmethod
+    def _vacio_es_ninguno(cls, valor):
+        return None if isinstance(valor, str) and not valor.strip() else valor
+
+    def coordinadores(self) -> list[str]:
+        return [c.strip() for c in self.correos_coordinadores.split(",") if c.strip()]
+
+
 def _cargar(clase, prefijo: str, archivo_env: str | None):
     try:
         return clase(_env_file=archivo_env)
@@ -72,3 +95,7 @@ def cargar_ajustes(archivo_env: str | None = ".env") -> AjustesBD:
 
 def cargar_ajustes_seguridad(archivo_env: str | None = ".env") -> AjustesSeguridad:
     return _cargar(AjustesSeguridad, "PATITAS_", archivo_env)
+
+
+def cargar_ajustes_correo(archivo_env: str | None = ".env") -> AjustesCorreo:
+    return _cargar(AjustesCorreo, "PATITAS_", archivo_env)
