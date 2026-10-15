@@ -10,6 +10,9 @@ ALERTA_OCUPACION = 0.90  # línea base v1.1 (RF-07)
 VIDEO_MAX_SEGUNDOS = 60
 VIDEO_MAX_MB = 50
 
+# RN-16: ajustar la prioridad sugerida exige justificación (prototipo, P-04 "Ajustar").
+MIN_CARACTERES_JUSTIFICACION = 10
+
 # DT-06: intentos fallidos de inicio de sesión permitidos dentro de la ventana. Por IP el
 # máximo es mayor porque el personal de un refugio suele compartir la misma IP pública.
 INTENTOS_MAXIMOS = 5
