@@ -97,3 +97,22 @@ def test_la_base_rechaza_especies_desconocidas(bd_limpia):
     with pytest.raises(IntegrityError), bd_limpia.begin() as conexion:
         conexion.execute(text("INSERT INTO animales (refugio_id, nombre, especie, estado_salud) "
                               "VALUES (1, 'Piolín', 'canario', 'sano')"))
+
+@pytest.mark.parametrize("final, justificacion, valido", [
+    ("critica", None, True),                   # confirma la sugerida: sin justificación
+    ("alta", "Camina con dificultad", True),   # ajuste justificado
+    ("alta", None, False),                     # ajuste sin justificación (RN-16)
+    ("alta", "  corta  ", False),              # menos de 10 caracteres sin espacios
+])
+def test_la_base_exige_justificacion_al_ajustar(bd_limpia, final, justificacion, valido):
+    insertar(bd_limpia)
+    sentencia = text(
+        "INSERT INTO decisiones_triaje (reporte_codigo, veterinario, prioridad_sugerida, "
+        "prioridad_final, justificacion) VALUES ('ABCD1234', 'vet@patitas.co', 'critica', "
+        ":final, :justificacion)")
+    if valido:
+        with bd_limpia.begin() as conexion:
+            conexion.execute(sentencia, {"final": final, "justificacion": justificacion})
+    else:
+        with pytest.raises(IntegrityError), bd_limpia.begin() as conexion:
+            conexion.execute(sentencia, {"final": final, "justificacion": justificacion})

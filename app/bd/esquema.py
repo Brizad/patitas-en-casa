@@ -108,3 +108,26 @@ intentos_fallidos = Table(
     CheckConstraint("clave <> ''", name="ck_intentos_fallidos_clave"),
     Index("ix_intentos_fallidos_clave_ocurrido_en", "clave", "ocurrido_en"),
 )
+
+# HU-02: bitácora de confirmaciones y ajustes de prioridad (RN-06, RN-16).
+decisiones_triaje = Table(
+    "decisiones_triaje",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), nullable=False),
+    Column("veterinario", Text, nullable=False),
+    Column("prioridad_sugerida", String(10), nullable=False),
+    Column("prioridad_final", String(10), nullable=False),
+    Column("justificacion", Text),
+    Column("decidido_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    CheckConstraint(f"prioridad_sugerida IN ({_valores(Prioridad)})",
+                    name="ck_decisiones_prioridad_sugerida"),
+    CheckConstraint(f"prioridad_final IN ({_valores(Prioridad)})",
+                    name="ck_decisiones_prioridad_final"),
+    # RN-16 también en la base: cambiar la prioridad exige justificación de 10+ caracteres.
+    # El IS NOT NULL importa: un CHECK que da NULL deja pasar la fila.
+    CheckConstraint("prioridad_final = prioridad_sugerida OR (justificacion IS NOT NULL "
+                    "AND char_length(btrim(justificacion)) >= 10)",
+                    name="ck_decisiones_justificacion"),
+    UniqueConstraint("reporte_codigo", name="uq_decisiones_reporte"),
+)

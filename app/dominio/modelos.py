@@ -65,6 +65,25 @@ class Animal:
     esterilizado: bool = False
 
 
+@dataclass
+class DecisionTriaje:
+    """Confirmación o ajuste de la prioridad por un veterinario (HU-02, RN-06, RN-16).
+
+    Queda en la bitácora: quién decidió, qué sugería el triaje y por qué se cambió.
+    """
+
+    codigo: str
+    veterinario: str  # correo de la cuenta
+    prioridad_sugerida: Prioridad
+    prioridad_final: Prioridad
+    justificacion: str | None = None
+    decidido_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+    @property
+    def ajustada(self) -> bool:
+        return self.prioridad_final != self.prioridad_sugerida
+
+
 class Rol(StrEnum):
     """Roles del personal con cuenta (DT-02). El ciudadano reporta sin cuenta (RF-01)."""
 

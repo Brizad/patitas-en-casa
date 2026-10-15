@@ -1,11 +1,12 @@
 """Persistencia de reportes en PostgreSQL (DT-01), detrás de RepositorioReportes."""
 from __future__ import annotations
 
-from sqlalchemy import Engine, RowMapping, select
+from sqlalchemy import Engine, RowMapping, select, update
+from sqlalchemy import insert as insertar
 from sqlalchemy.dialects.postgresql import insert
 
-from app.bd.esquema import reportes
-from app.dominio.modelos import EstadoReporte, Prioridad, Reporte, Ubicacion
+from app.bd.esquema import decisiones_triaje, reportes
+from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Reporte, Ubicacion
 
 
 class RepositorioPostgres:
@@ -34,6 +35,40 @@ class RepositorioPostgres:
         with self._motor.connect() as conexion:
             filas = conexion.execute(select(reportes).order_by(reportes.c.creado_en)).mappings()
             return [_a_reporte(fila) for fila in filas]
+
+    def confirmar(self, decision: DecisionTriaje) -> bool:
+        """UPDATE condicional: si dos veterinarios confirman a la vez, PostgreSQL bloquea la
+        fila y el segundo ya no cumple "estado <> confirmado" (mismo patrón que DT-05)."""
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(
+                update(reportes)
+                .where(reportes.c.codigo == decision.codigo,
+                       reportes.c.estado != EstadoReporte.CONFIRMADO.value)
+                .values(estado=EstadoReporte.CONFIRMADO.value,
+                        prioridad=decision.prioridad_final.value)
+            )
+            if cambio.rowcount == 0:
+                return False
+            conexion.execute(insertar(decisiones_triaje).values(
+                reporte_codigo=decision.codigo, veterinario=decision.veterinario,
+                prioridad_sugerida=decision.prioridad_sugerida.value,
+                prioridad_final=decision.prioridad_final.value,
+                justificacion=decision.justificacion, decidido_en=decision.decidido_en,
+            ))
+        return True
+
+    def decisiones(self, codigo: str) -> list[DecisionTriaje]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(
+                select(decisiones_triaje).where(decisiones_triaje.c.reporte_codigo == codigo)
+                .order_by(decisiones_triaje.c.decidido_en)
+            ).mappings()
+            return [DecisionTriaje(
+                codigo=f["reporte_codigo"], veterinario=f["veterinario"],
+                prioridad_sugerida=Prioridad(f["prioridad_sugerida"]),
+                prioridad_final=Prioridad(f["prioridad_final"]),
+                justificacion=f["justificacion"], decidido_en=f["decidido_en"],
+            ) for f in filas]
 
 
 def _a_fila(reporte: Reporte) -> dict:

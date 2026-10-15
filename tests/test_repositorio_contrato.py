@@ -3,12 +3,13 @@
 Toda implementación del repositorio debe pasar exactamente las mismas pruebas: la de
 memoria y la de PostgreSQL (paso 3), que usa la base de pruebas de tests/conftest.py.
 """
+import threading
 from copy import deepcopy
 from datetime import UTC, datetime
 
 import pytest
 
-from app.dominio.modelos import EstadoReporte, Prioridad, Reporte, Ubicacion
+from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Reporte, Ubicacion
 from app.reportes.repositorio import RepositorioEnMemoria
 from app.reportes.repositorio_postgres import RepositorioPostgres
 
@@ -73,3 +74,51 @@ def test_guardar_el_mismo_codigo_actualiza_sin_duplicar(repositorio):
     assert len(repositorio.todos()) == 1
     guardado = repositorio.buscar("ABCD1234")
     assert (guardado.estado, guardado.prioridad) == (EstadoReporte.CONFIRMADO, Prioridad.ALTA)
+
+# --- HU-02: confirmación con bitácora (RN-06, RN-16) ---------------------
+
+def decision(codigo="ABCD1234", final=Prioridad.ALTA, justificacion="Camina con dificultad"):
+    return DecisionTriaje(codigo=codigo, veterinario="vet@patitas.co",
+                          prioridad_sugerida=Prioridad.CRITICA, prioridad_final=final,
+                          justificacion=justificacion,
+                          decidido_en=datetime(2026, 10, 15, 8, 30, tzinfo=UTC))
+
+
+def test_confirmar_cambia_estado_y_prioridad_y_guarda_la_decision(repositorio):
+    repositorio.guardar(reporte_completo())
+    assert repositorio.confirmar(decision()) is True
+    guardado = repositorio.buscar("ABCD1234")
+    assert (guardado.estado, guardado.prioridad) == (EstadoReporte.CONFIRMADO, Prioridad.ALTA)
+    assert repositorio.decisiones("ABCD1234") == [decision()]
+
+
+def test_confirmar_un_reporte_ya_confirmado_devuelve_false_y_no_cambia_nada(repositorio):
+    repositorio.guardar(reporte_completo())
+    repositorio.confirmar(decision())
+    assert repositorio.confirmar(decision(final=Prioridad.BAJA)) is False
+    assert repositorio.buscar("ABCD1234").prioridad == Prioridad.ALTA
+    assert len(repositorio.decisiones("ABCD1234")) == 1
+
+
+def test_decisiones_de_un_reporte_sin_confirmar_es_lista_vacia(repositorio):
+    repositorio.guardar(reporte_completo())
+    assert repositorio.decisiones("ABCD1234") == []
+
+
+def test_dos_veterinarios_a_la_vez_solo_uno_confirma(repositorio):
+    repositorio.guardar(reporte_completo())
+    salida = threading.Barrier(2)
+    resultados = []
+
+    def confirmar(final):
+        salida.wait()
+        resultados.append(repositorio.confirmar(decision(final=final)))
+
+    hilos = [threading.Thread(target=confirmar, args=(p,)) for p in (Prioridad.ALTA,
+                                                                      Prioridad.MEDIA)]
+    for h in hilos:
+        h.start()
+    for h in hilos:
+        h.join()
+    assert sorted(resultados) == [False, True]
+    assert len(repositorio.decisiones("ABCD1234")) == 1

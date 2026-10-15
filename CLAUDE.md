@@ -18,7 +18,7 @@ veterinarios y control de cupos del refugio.
 | Ruta | Contenido |
 |------|-----------|
 | `app/dominio/modelos.py` | Entidades: `Reporte`, `Ubicacion`, `Animal`, `Refugio`, enums `Prioridad`, `EstadoReporte`, `Especie`. |
-| `app/reportes/` | `RepositorioReportes` (Protocol), `RepositorioEnMemoria`, `RepositorioPostgres` y `ServicioReportes` (RF-01). |
+| `app/reportes/` | `RepositorioReportes` (Protocol), `RepositorioEnMemoria`, `RepositorioPostgres`, `ServicioReportes` (RF-01) y `ServicioConfirmacion` (HU-02). |
 | `app/ajustes.py` | Conexión a PostgreSQL leída del entorno o `.env` (`AjustesBD`). |
 | `app/bd/` | Tablas (`esquema.py`) y aplicar/verificar migraciones desde Python (`migraciones.py`). |
 | `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
@@ -42,6 +42,12 @@ veterinarios y control de cupos del refugio.
   estado "sin clasificar", revisión manual.
 - **RN-04**: alerta a coordinadores al llegar al 90 % de ocupación; sin cupo, el ingreso se
   rechaza (409).
+- **RN-06 / RN-16** (HU-02): solo el veterinario confirma la prioridad; ajustarla exige una
+  justificación de 10 caracteres o más y queda en la bitácora `decisiones_triaje`. Un reporte
+  se confirma una sola vez y sale de la cola.
+
+Fuente de las reglas que no están en el código: `docs/prototipo/interaccion.js` (encabezado y
+acciones). Ese prototipo es un entregable calificado: se lee, no se modifica.
 
 Toda prueba existente debe seguir pasando. Si una regla de negocio cambia, se acuerda antes
 con el autor.

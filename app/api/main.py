@@ -20,8 +20,14 @@ from app.bd.migraciones import verificar_migraciones
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
-from app.dominio.modelos import Animal, Especie, Rol, Ubicacion, Usuario
+from app.dominio.modelos import Animal, Especie, EstadoReporte, Prioridad, Rol, Ubicacion, Usuario
 from app.notificaciones.correo import crear_notificador
+from app.reportes.confirmacion import (
+    AjusteSinJustificacion,
+    ReporteNoEncontrado,
+    ReporteYaConfirmado,
+    ServicioConfirmacion,
+)
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
@@ -52,6 +58,14 @@ class ReporteEntrada(BaseModel):
     direccion: str | None = None
     video_segundos: int | None = Field(default=None, ge=0)
     video_mb: float | None = Field(default=None, ge=0)
+
+
+class ConfirmacionEntrada(BaseModel):
+    """Sin prioridad se confirma la sugerida; con otra distinta, la justificación es
+    obligatoria (RN-16)."""
+
+    prioridad: Prioridad | None = None
+    justificacion: str | None = Field(default=None, max_length=1000)
 
 
 class IngresoEntrada(BaseModel):
@@ -105,6 +119,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     # DT-02: el personal se identifica con su token; X-Rol ya no existe.
     personal = exigir_rol(dependencia_usuario, *ROLES_PERSONAL)
     coordinacion = exigir_rol(dependencia_usuario, Rol.COORDINADOR)
+    veterinaria = exigir_rol(dependencia_usuario, Rol.VETERINARIO)  # RN-06
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -114,6 +129,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
+    confirmaciones = ServicioConfirmacion(repositorio)
     cupos = ServicioCupos(repositorio_cupos, notificador)
 
     @app.post("/auth/token")
@@ -168,11 +184,36 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     @app.get("/cola", dependencies=[personal])
     def cola():
+        """Reportes pendientes de confirmar (HU-02); los confirmados salen de la cola."""
+        pendientes = [r for r in repositorio.todos() if r.estado != EstadoReporte.CONFIRMADO]
         return [
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
              "confianza": r.confianza, "evidencias": r.evidencias}
-            for r in ordenar_cola(repositorio.todos())
+            for r in ordenar_cola(pendientes)
         ]
+
+    @app.post("/reportes/{codigo}/confirmacion")
+    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada,
+                            veterinario: Usuario = veterinaria):
+        """HU-02: el veterinario confirma la prioridad sugerida o la ajusta con justificación."""
+        try:
+            decision = confirmaciones.confirmar(codigo.upper(), veterinario,
+                                                datos.prioridad, datos.justificacion)
+        except ReporteNoEncontrado as error:
+            raise HTTPException(status_code=404, detail="Reporte no encontrado.") from error
+        except ReporteYaConfirmado as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except AjusteSinJustificacion as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"codigo": decision.codigo, "estado": EstadoReporte.CONFIRMADO.value,
+                "prioridad": decision.prioridad_final.value, "ajustada": decision.ajustada}
+
+    @app.get("/reportes/{codigo}/decisiones", dependencies=[personal])
+    def bitacora_de_triaje(codigo: str):
+        return [{"veterinario": d.veterinario, "prioridad_sugerida": d.prioridad_sugerida.value,
+                 "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion,
+                 "decidido_en": d.decidido_en.isoformat()}
+                for d in repositorio.decisiones(codigo.upper())]
 
     @app.post("/refugio/ingresos", status_code=201, dependencies=[coordinacion])
     def registrar_ingreso(datos: IngresoEntrada):
