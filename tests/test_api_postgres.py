@@ -1,4 +1,6 @@
 """La API conectada a PostgreSQL (DT-01, paso 4): los reportes sobreviven a un reinicio."""
+from datetime import UTC, datetime
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -10,7 +12,7 @@ from app.bd.migraciones import (
     revertir_migraciones,
 )
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
-from app.dominio.modelos import Rol
+from app.dominio.modelos import DecisionTriaje, Prioridad, Rol
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.seguridad.tokens import EmisorTokens
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
@@ -103,3 +105,17 @@ def test_el_arranque_falla_si_la_base_no_esta_migrada(motor_pruebas, monkeypatch
             crear_app()
     finally:
         aplicar_migraciones(motor_pruebas)
+
+
+def test_seguimiento_con_postgres_en_utc(bd_limpia):
+    """HU-08: las fechas de la base (con zona horaria) salen normalizadas a UTC."""
+    c = cliente(bd_limpia)
+    codigo = c.post("/reportes", json=CRITICO).json()["codigo"]
+    RepositorioPostgres(bd_limpia).confirmar(DecisionTriaje(
+        codigo=codigo, veterinario="vet@patitas.co", prioridad_sugerida=Prioridad.CRITICA,
+        prioridad_final=Prioridad.CRITICA, decidido_en=datetime.now(UTC)))
+    datos = cliente(bd_limpia).get(f"/reportes/{codigo}/seguimiento").json()
+    assert [p["estado"] for p in datos["pasos"]][:3] == ["hecho", "hecho", "actual"]
+    assert datos["pasos"][2]["detalle"] == "Buscando rescatista disponible"
+    assert datos["ultimo_cambio"].endswith("+00:00")
+    assert datos["ultimo_cambio"] == datos["pasos"][1]["fecha"]

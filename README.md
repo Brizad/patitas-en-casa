@@ -14,6 +14,9 @@ Autor: Brayan David Amado Ramírez.
 Públicos (el ciudadano no necesita cuenta):
 - `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional).
 - `GET /reportes/{codigo}`: estado del reporte con el código de seguimiento.
+- `GET /reportes/{codigo}/seguimiento`: línea de tiempo (recibido → revisado → rescatista en
+  camino o atención programada → atendido → cerrado) y fecha del último cambio, sin datos
+  personales (HU-08, RN-14).
 
 Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
 - `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`). Tras 5 fallos del mismo correo (o 20 de la misma IP) en 15 minutos responde 429 con `Retry-After` (DT-06).

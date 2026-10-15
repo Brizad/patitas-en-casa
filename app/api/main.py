@@ -41,6 +41,7 @@ from app.reportes.confirmacion import (
 )
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
+from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
 from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
 from app.rescates.repositorio_postgres import RepositorioRescatesPostgres
@@ -221,6 +222,20 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         if r is None:
             raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
         return {"codigo": r.codigo, "estado": r.estado.value}
+
+    @app.get("/reportes/{codigo}/seguimiento")
+    def seguimiento_del_reporte(codigo: str):
+        """HU-08 (público): línea de tiempo sin datos personales (RN-14)."""
+        codigo = normalizar_codigo(codigo)
+        reporte = repositorio.buscar(codigo)
+        if reporte is None:
+            raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
+        decisiones = repositorio.decisiones(codigo)
+        pasos, ultimo_cambio = linea_de_tiempo(
+            reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo))
+        return {"codigo": codigo, "ultimo_cambio": ultimo_cambio.isoformat(),
+                "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
+                           "fecha": p.fecha.isoformat() if p.fecha else None} for p in pasos]}
 
     @app.get("/cola", dependencies=[personal])
     def cola():
