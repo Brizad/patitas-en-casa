@@ -5,15 +5,20 @@ from app.api.main import crear_app
 from app.cupos.repositorio import RepositorioCuposEnMemoria
 from app.dominio.modelos import Refugio
 from app.reportes.repositorio import RepositorioEnMemoria
+from app.seguridad.tokens import EmisorTokens
+from app.usuarios.repositorio import RepositorioUsuariosEnMemoria
 
 REPORTE = {"descripcion": "Perro atropellado en la avenida, está sangrando mucho",
            "latitud": 7.8939, "longitud": -72.5078}
+SECRETO_PRUEBAS = "secreto-de-pruebas-con-mas-de-32-caracteres"  # falso
 
 
 def cliente():
     """Repositorios en memoria: estas pruebas no necesitan base de datos."""
     cupos = RepositorioCuposEnMemoria(Refugio("Refugio demo Cúcuta", capacidad=40))
-    return TestClient(crear_app(RepositorioEnMemoria(), cupos))
+    return TestClient(crear_app(RepositorioEnMemoria(), cupos,
+                                repositorio_usuarios=RepositorioUsuariosEnMemoria(),
+                                emisor_tokens=EmisorTokens(SECRETO_PRUEBAS)))
 
 
 def test_cp01a_reporte_sin_cuenta_devuelve_codigo():
