@@ -10,7 +10,7 @@ veterinarios y control de cupos del refugio.
 
 - Proyecto integrador de Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 - Autor: Brayan David Amado Ramírez. Repositorio: https://github.com/Brizad/patitas-en-casa
-- Versión publicada: v0.1.0. En curso: **Incremento 2 — "Fundación segura"**.
+- Versión publicada: v0.2.0 (incremento 2, "Fundación segura").
 - Idioma: todo (código, pruebas, commits, documentación) en **español**.
 
 ## Estructura
