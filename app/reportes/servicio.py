@@ -29,6 +29,25 @@ class ServicioReportes:
 
     def registrar(self, descripcion: str, ubicacion: Ubicacion,
                   video_segundos: int | None = None, video_mb: float | None = None) -> Reporte:
+        reporte = self._nuevo(descripcion, ubicacion, video_segundos, video_mb)
+        self._repositorio.guardar(reporte)
+        return reporte
+
+    def registrar_una_vez(self, clave: str, descripcion: str, ubicacion: Ubicacion,
+                          video_segundos: int | None = None,
+                          video_mb: float | None = None) -> tuple[Reporte, bool]:
+        """RF-12 (#61): la PWA reenvía con la misma clave el reporte guardado sin señal.
+        Devuelve el reporte y si es nuevo; con una clave ya usada devuelve el primero, sin
+        volver a clasificarlo ni compararlo con los datos nuevos."""
+        self._validar(descripcion, ubicacion, video_segundos, video_mb)
+        anterior = self._repositorio.buscar_por_clave(clave)
+        if anterior is not None:
+            return anterior, False
+        reporte = self._nuevo(descripcion, ubicacion, video_segundos, video_mb)
+        guardado = self._repositorio.guardar_con_clave(reporte, clave)
+        return guardado, guardado.codigo == reporte.codigo
+
+    def _nuevo(self, descripcion, ubicacion, video_segundos, video_mb) -> Reporte:
         self._validar(descripcion, ubicacion, video_segundos, video_mb)
         codigo = generar_codigo()
         while self._repositorio.buscar(codigo) is not None:
@@ -36,7 +55,6 @@ class ServicioReportes:
         reporte = Reporte(codigo=codigo, descripcion=descripcion.strip(),
                           ubicacion=ubicacion, video_segundos=video_segundos)
         self._triaje.evaluar(reporte)
-        self._repositorio.guardar(reporte)
         return reporte
 
     @staticmethod

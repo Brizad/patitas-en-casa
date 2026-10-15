@@ -19,11 +19,19 @@ class RepositorioReportes(Protocol):
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]: ...
 
+    def guardar_con_clave(self, reporte: Reporte, clave: str) -> Reporte:
+        """RF-12 (#61): guarda el reporte ligado a la clave de idempotencia de la PWA. Si la
+        clave ya tiene un reporte, no guarda nada y devuelve ese (el reenvío no duplica)."""
+        ...
+
+    def buscar_por_clave(self, clave: str) -> Reporte | None: ...
+
 
 class RepositorioEnMemoria:
     def __init__(self) -> None:
         self._datos: dict[str, Reporte] = {}
         self._decisiones: dict[str, list[DecisionTriaje]] = {}
+        self._claves: dict[str, str] = {}  # clave de idempotencia -> código
         self._candado = threading.Lock()
 
     def guardar(self, reporte: Reporte) -> None:
@@ -47,3 +55,15 @@ class RepositorioEnMemoria:
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
         return list(self._decisiones.get(codigo, []))
+
+    def guardar_con_clave(self, reporte: Reporte, clave: str) -> Reporte:
+        with self._candado:
+            if clave in self._claves:
+                return self._datos[self._claves[clave]]
+            self._claves[clave] = reporte.codigo
+            self._datos[reporte.codigo] = reporte
+            return reporte
+
+    def buscar_por_clave(self, clave: str) -> Reporte | None:
+        codigo = self._claves.get(clave)
+        return None if codigo is None else self._datos.get(codigo)

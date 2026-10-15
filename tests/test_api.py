@@ -129,3 +129,48 @@ def test_exigir_rol_responde_403_al_rol_no_permitido():
     respuesta = TestClient(app).get("/solo-coordinacion",
                                     headers={"Authorization": f"Bearer {token}"})
     assert respuesta.status_code == 403
+
+
+# --- RF-12 (#61): Idempotency-Key en POST /reportes ------------------------------------
+
+# Clave inventada por la "PWA" de la prueba (no es un secreto).
+REENVIO = "reenvio-de-la-pwa-0001"
+CLAVE_PWA = {"Idempotency-Key": REENVIO}
+
+
+def test_rf12_reenvio_con_la_misma_clave_devuelve_el_mismo_codigo():
+    c = cliente()
+    primero = c.post("/reportes", json=REPORTE, headers=CLAVE_PWA)
+    reenvio = c.post("/reportes", json=REPORTE, headers=CLAVE_PWA)
+    assert primero.status_code == 201
+    assert reenvio.status_code == 200  # ya existía: no se crea otro
+    assert reenvio.json() == primero.json()
+    assert len(c.get("/cola", headers=sesion(c)).json()) == 1
+
+
+def test_rf12_claves_distintas_son_reportes_distintos():
+    c = cliente()
+    a = c.post("/reportes", json=REPORTE, headers={"Idempotency-Key": "reporte-uno-pwa-01"}).json()
+    b = c.post("/reportes", json=REPORTE, headers={"Idempotency-Key": "reporte-dos-pwa-02"}).json()
+    assert a["codigo"] != b["codigo"]
+
+
+def test_rf12_sin_clave_funciona_como_antes():
+    """Compatible hacia atrás: sin el encabezado cada POST crea un reporte."""
+    c = cliente()
+    assert c.post("/reportes", json=REPORTE).status_code == 201
+    assert c.post("/reportes", json=REPORTE).status_code == 201
+    assert len(c.get("/cola", headers=sesion(c)).json()) == 2
+
+
+@pytest.mark.parametrize("clave", ["corta", "x" * 65, "con espacios en la clave",
+                                   "clave/con/barras/0001"])
+def test_rf12_clave_con_formato_invalido_se_rechaza(clave):
+    assert cliente().post("/reportes", json=REPORTE,
+                          headers={"Idempotency-Key": clave}).status_code == 422
+
+
+def test_rf12_reenvio_de_un_reporte_invalido_sigue_siendo_422():
+    respuesta = cliente().post("/reportes", json={**REPORTE, "descripcion": "perro"},
+                               headers=CLAVE_PWA)
+    assert respuesta.status_code == 422

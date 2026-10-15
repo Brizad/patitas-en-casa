@@ -1,8 +1,9 @@
-/* Service worker de la PWA ciudadana (HU-08, #59).
-   Guarda solo la interfaz (/app/) para que abra sin señal. Las consultas a /reportes/ siempre
-   van a la red y nunca se guardan: por privacidad y para mostrar el estado actual. */
-const VERSION = 'patitas-pwa-v1';
-const INTERFAZ = ['./', 'index.html', 'estilos.css', 'app.js', 'icono.svg', 'manifest.webmanifest'];
+/* Service worker de la PWA ciudadana (HU-08, #59 y #61).
+   Guarda solo la interfaz (/app/) para que abra sin señal. Las peticiones a /reportes/ siempre
+   van a la red y nunca se guardan: por privacidad y para mostrar el estado actual. El reporte
+   hecho sin señal lo guarda reportar.js en localStorage, no el service worker (RF-12). */
+const VERSION = 'patitas-pwa-v2';  // #61: pantalla Reportar
+const INTERFAZ = ['./', 'index.html', 'estilos.css', 'app.js', 'reportar.js', 'icono.svg', 'manifest.webmanifest'];
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(INTERFAZ)));

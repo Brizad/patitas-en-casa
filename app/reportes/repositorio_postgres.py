@@ -36,6 +36,27 @@ class RepositorioPostgres:
             filas = conexion.execute(select(reportes).order_by(reportes.c.creado_en)).mappings()
             return [_a_reporte(fila) for fila in filas]
 
+    def guardar_con_clave(self, reporte: Reporte, clave: str) -> Reporte:
+        """ON CONFLICT DO NOTHING sobre la columna única: si dos reenvíos llegan a la vez,
+        PostgreSQL hace esperar al segundo, que no inserta y lee el reporte del primero."""
+        sentencia = (insert(reportes).values(**_a_fila(reporte), clave_idempotencia=clave)
+                     .on_conflict_do_nothing(index_elements=[reportes.c.clave_idempotencia])
+                     .returning(reportes.c.codigo))
+        with self._motor.begin() as conexion:
+            if conexion.execute(sentencia).first() is not None:
+                return reporte
+            fila = conexion.execute(
+                select(reportes).where(reportes.c.clave_idempotencia == clave)
+            ).mappings().one()
+        return _a_reporte(fila)
+
+    def buscar_por_clave(self, clave: str) -> Reporte | None:
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(
+                select(reportes).where(reportes.c.clave_idempotencia == clave)
+            ).mappings().first()
+        return None if fila is None else _a_reporte(fila)
+
     def confirmar(self, decision: DecisionTriaje) -> bool:
         """UPDATE condicional: si dos veterinarios confirman a la vez, PostgreSQL bloquea la
         fila y el segundo ya no cumple "estado <> confirmado" (mismo patrón que DT-05)."""

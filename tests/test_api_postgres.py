@@ -119,3 +119,14 @@ def test_seguimiento_con_postgres_en_utc(bd_limpia):
     assert datos["pasos"][2]["detalle"] == "Buscando rescatista disponible"
     assert datos["ultimo_cambio"].endswith("+00:00")
     assert datos["ultimo_cambio"] == datos["pasos"][1]["fecha"]
+
+
+def test_rf12_reenvio_tras_reiniciar_la_app_no_duplica(bd_limpia):
+    """La clave vive en PostgreSQL: el reenvío funciona aunque la API se haya reiniciado."""
+    reenvio = "reenvio-de-la-pwa-0001"  # clave inventada, no es un secreto
+    clave = {"Idempotency-Key": reenvio}
+    primero = cliente(bd_limpia).post("/reportes", json=CRITICO, headers=clave)
+    reenvio = cliente(bd_limpia).post("/reportes", json=CRITICO, headers=clave)
+    assert (primero.status_code, reenvio.status_code) == (201, 200)
+    assert reenvio.json()["codigo"] == primero.json()["codigo"]
+    assert len(RepositorioPostgres(bd_limpia).todos()) == 1
