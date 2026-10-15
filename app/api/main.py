@@ -20,7 +20,18 @@ from app.bd.migraciones import verificar_migraciones
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
-from app.dominio.modelos import Animal, Especie, EstadoReporte, Prioridad, Rol, Ubicacion, Usuario
+from app.dominio.modelos import (
+    Animal,
+    Especie,
+    EstadoReporte,
+    Prioridad,
+    Reporte,
+    Rescate,
+    ResultadoRescate,
+    Rol,
+    Ubicacion,
+    Usuario,
+)
 from app.notificaciones.correo import crear_notificador
 from app.reportes.confirmacion import (
     AjusteSinJustificacion,
@@ -31,6 +42,9 @@ from app.reportes.confirmacion import (
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
+from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
+from app.rescates.repositorio_postgres import RepositorioRescatesPostgres
+from app.rescates.servicio import PasoInvalido, RescateNoOfrecido, ServicioRescates
 from app.seguridad.tokens import EmisorTokens
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
 from app.usuarios.intentos import (
@@ -68,6 +82,26 @@ class ConfirmacionEntrada(BaseModel):
     justificacion: str | None = Field(default=None, max_length=1000)
 
 
+class DisponibilidadEntrada(BaseModel):
+    disponible: bool
+
+
+class ResultadoEntrada(BaseModel):
+    resultado: ResultadoRescate
+
+
+def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
+    datos = {"codigo": rescate.codigo, "estado": rescate.estado.value}
+    if reporte is not None:
+        # La ubicación exacta solo la ve quien aceptó el rescate.
+        datos["prioridad"] = reporte.prioridad.value
+        datos["descripcion"] = reporte.descripcion
+        datos["ubicacion"] = {"latitud": reporte.ubicacion.latitud,
+                              "longitud": reporte.ubicacion.longitud,
+                              "direccion": reporte.ubicacion.direccion}
+    return datos
+
+
 class IngresoEntrada(BaseModel):
     nombre: str
     especie: Especie
@@ -97,7 +131,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               repositorio_usuarios: RepositorioUsuarios | None = None,
               emisor_tokens: EmisorTokens | None = None,
               notificador: Notificador | None = None,
-              limite_intentos: LimiteIntentos | None = None) -> FastAPI:
+              limite_intentos: LimiteIntentos | None = None,
+              repositorio_rescates: RepositorioRescates | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria."""
@@ -113,6 +148,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     limite_intentos = limite_intentos or LimiteIntentos(
         RepositorioIntentosPostgres(motor) if motor is not None
         else RepositorioIntentosEnMemoria())
+    repositorio_rescates = repositorio_rescates or (
+        RepositorioRescatesPostgres(motor) if motor is not None
+        else RepositorioRescatesEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
     usuario_actual = Depends(dependencia_usuario)
@@ -120,6 +158,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     personal = exigir_rol(dependencia_usuario, *ROLES_PERSONAL)
     coordinacion = exigir_rol(dependencia_usuario, Rol.COORDINADOR)
     veterinaria = exigir_rol(dependencia_usuario, Rol.VETERINARIO)  # RN-06
+    rescatista_actual = exigir_rol(dependencia_usuario, Rol.RESCATISTA)  # HU-06
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -130,6 +169,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
     confirmaciones = ServicioConfirmacion(repositorio)
+    rescates = ServicioRescates(repositorio, repositorio_rescates)
     cupos = ServicioCupos(repositorio_cupos, notificador)
 
     @app.post("/auth/token")
@@ -214,6 +254,55 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                  "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion,
                  "decidido_en": d.decidido_en.isoformat()}
                 for d in repositorio.decisiones(codigo.upper())]
+
+    # --- HU-06: rescatistas (RF-05, RF-15, RN-08) --------------------------------------
+
+    @app.put("/rescatistas/yo/disponibilidad")
+    def cambiar_disponibilidad(datos: DisponibilidadEntrada,
+                               rescatista: Usuario = rescatista_actual):
+        rescates.cambiar_disponibilidad(rescatista, datos.disponible)
+        return {"disponible": datos.disponible}
+
+    @app.get("/rescates/ofertas")
+    def ofertas_de_rescate(rescatista: Usuario = rescatista_actual):
+        """Sin ubicación exacta: se muestra al aceptar. Zona o radio: pendiente del #46."""
+        return [{"codigo": r.codigo, "prioridad": r.prioridad.value,
+                 "descripcion": r.descripcion, "esperando_desde": r.creado_en.isoformat()}
+                for r in rescates.ofertas(rescatista)]
+
+    @app.get("/rescates/mio")
+    def mi_rescate(rescatista: Usuario = rescatista_actual):
+        actual = rescates.mio(rescatista)
+        return None if actual is None else _rescate(*actual)
+
+    def _paso(accion, *args):
+        try:
+            return accion(*args)
+        except RescateNoOfrecido as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except PasoInvalido as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post("/rescates/{codigo}/aceptar")
+    def aceptar_rescate(codigo: str, rescatista: Usuario = rescatista_actual):
+        return _rescate(*_paso(rescates.aceptar, rescatista, codigo.upper()))
+
+    @app.post("/rescates/{codigo}/llegue")
+    def llegue_al_sitio(codigo: str, rescatista: Usuario = rescatista_actual):
+        _paso(rescates.llegue, rescatista, codigo.upper())
+        return {"codigo": codigo.upper(), "estado": "en_sitio"}
+
+    @app.post("/rescates/{codigo}/liberar")
+    def liberar_rescate(codigo: str, rescatista: Usuario = rescatista_actual):
+        _paso(rescates.liberar, rescatista, codigo.upper())
+        return {"codigo": codigo.upper(), "estado": "liberado"}
+
+    @app.post("/rescates/{codigo}/resultado")
+    def resultado_del_rescate(codigo: str, datos: ResultadoEntrada,
+                              rescatista: Usuario = rescatista_actual):
+        _paso(rescates.registrar_resultado, rescatista, codigo.upper(), datos.resultado)
+        return {"codigo": codigo.upper(), "estado": "atendido",
+                "resultado": datos.resultado.value}
 
     @app.post("/refugio/ingresos", status_code=201, dependencies=[coordinacion])
     def registrar_ingreso(datos: IngresoEntrada):

@@ -25,6 +25,13 @@ Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
 - `POST /refugio/ingresos`: registro de ingresos, solo para el rol coordinador (403 para el veterinario).
 - `GET /refugio/ocupacion`: ocupación del refugio (veterinario y coordinador).
 
+Rescatista (HU-06), con `Authorization: Bearer <token>`:
+- `PUT /rescatistas/yo/disponibilidad` `{"disponible": true}`: solo quien está disponible ve ofertas.
+- `GET /rescates/ofertas`: reportes confirmados críticos o altos sin rescatista.
+- `POST /rescates/{codigo}/aceptar`, `/llegue`, `/liberar` y `/resultado`
+  (`trasladado`, `atendido_en_sitio`, `no_encontrado`, `fallecido`); `GET /rescates/mio`.
+  RN-08: un rescate tiene un solo rescatista y un rescatista un solo rescate activo.
+
 ## Cómo ejecutarlo
 
 Requisitos: Python 3.11+ y PostgreSQL 17 con dos bases vacías, `patitas` (aplicación) y

@@ -89,6 +89,35 @@ class Rol(StrEnum):
 
     VETERINARIO = "veterinario"
     COORDINADOR = "coordinador"
+    RESCATISTA = "rescatista"  # HU-06: voluntario que atiende rescates en campo
+
+
+class EstadoRescate(StrEnum):
+    """Ciclo del rescate (HU-06, prototipo P-07 a P-09)."""
+
+    EN_CAMINO = "en_camino"
+    EN_SITIO = "en_sitio"
+    ATENDIDO = "atendido"
+    LIBERADO = "liberado"  # el rescatista lo soltó: vuelve a ofrecerse
+
+
+class ResultadoRescate(StrEnum):
+    TRASLADADO = "trasladado"  # trasladado a refugio
+    ATENDIDO_EN_SITIO = "atendido_en_sitio"
+    NO_ENCONTRADO = "no_encontrado"
+    FALLECIDO = "fallecido"
+
+
+@dataclass
+class Rescate:
+    """Un rescatista atendiendo un reporte confirmado (RN-08: uno por rescate y por persona)."""
+
+    codigo: str
+    rescatista: str  # correo de la cuenta
+    estado: EstadoRescate
+    aceptado_en: datetime
+    actualizado_en: datetime
+    resultado: ResultadoRescate | None = None
 
 
 @dataclass

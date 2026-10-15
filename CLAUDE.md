@@ -19,6 +19,7 @@ veterinarios y control de cupos del refugio.
 |------|-----------|
 | `app/dominio/modelos.py` | Entidades: `Reporte`, `Ubicacion`, `Animal`, `Refugio`, enums `Prioridad`, `EstadoReporte`, `Especie`. |
 | `app/reportes/` | `RepositorioReportes` (Protocol), `RepositorioEnMemoria`, `RepositorioPostgres`, `ServicioReportes` (RF-01) y `ServicioConfirmacion` (HU-02). |
+| `app/rescates/` | `ServicioRescates` y repositorios (memoria y PostgreSQL) del rescatista (HU-06, RN-08). |
 | `app/ajustes.py` | Conexión a PostgreSQL leída del entorno o `.env` (`AjustesBD`). |
 | `app/bd/` | Tablas (`esquema.py`) y aplicar/verificar migraciones desde Python (`migraciones.py`). |
 | `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
@@ -45,6 +46,10 @@ veterinarios y control de cupos del refugio.
 - **RN-06 / RN-16** (HU-02): solo el veterinario confirma la prioridad; ajustarla exige una
   justificación de 10 caracteres o más y queda en la bitácora `decisiones_triaje`. Un reporte
   se confirma una sola vez y sale de la cola.
+- **RN-08** (HU-06): un rescate tiene un solo rescatista y un rescatista un solo rescate activo
+  (índices únicos parciales en `rescates`). Se ofrecen solo confirmados críticos o altos, a
+  rescatistas disponibles. Zona/radio, canal de alerta y escalamiento: pendientes del issue #46
+  (decisión del autor; no inventar valores).
 
 Fuente de las reglas que no están en el código: `docs/prototipo/interaccion.js` (encabezado y
 acciones). Ese prototipo es un entregable calificado: se lee, no se modifica.
