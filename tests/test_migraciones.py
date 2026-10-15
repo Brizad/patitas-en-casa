@@ -58,7 +58,7 @@ def test_la_base_acepta_todas_las_prioridades_del_dominio(bd_limpia, prioridad):
 
 @pytest.mark.parametrize("cambios", [
     {"estado": "inventado"},
-    {"prioridad": "urgentisima"},
+    {"prioridad": "urgente"},  # cabe en la columna: lo rechaza el CHECK, no el largo
     {"confianza": 1.5},
     {"confianza": -0.1},
     {"video_segundos": -1},
