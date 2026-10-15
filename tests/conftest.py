@@ -47,7 +47,8 @@ REFUGIO_DEMO = ("Refugio demo Cúcuta", 40)
 def bd_limpia(motor_pruebas):
     """Cada prueba empieza con las tablas vacías y solo el refugio demo (0/40)."""
     with motor_pruebas.begin() as conexion:
-        conexion.execute(text("TRUNCATE TABLE reportes, animales, refugios RESTART IDENTITY"))
+        conexion.execute(text(
+            "TRUNCATE TABLE reportes, animales, refugios, usuarios RESTART IDENTITY"))
         conexion.execute(text("INSERT INTO refugios (nombre, capacidad) VALUES (:n, :c)"),
                          {"n": REFUGIO_DEMO[0], "c": REFUGIO_DEMO[1]})
     return motor_pruebas
