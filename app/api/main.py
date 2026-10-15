@@ -40,7 +40,8 @@ from app.usuarios.servicio import ServicioUsuarios, normalizar_correo
 
 logger = logging.getLogger(__name__)
 
-# Pueden usar /cola y /refugio. Públicos (RF-01): POST /reportes y GET /reportes/{codigo}.
+# Pueden usar /cola y /refugio/ocupacion. Públicos (RF-01): POST /reportes y
+# GET /reportes/{codigo}. POST /refugio/ingresos es solo del coordinador (P-06 del prototipo).
 ROLES_PERSONAL = (Rol.VETERINARIO, Rol.COORDINADOR)
 
 
@@ -103,6 +104,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     usuario_actual = Depends(dependencia_usuario)
     # DT-02: el personal se identifica con su token; X-Rol ya no existe.
     personal = exigir_rol(dependencia_usuario, *ROLES_PERSONAL)
+    coordinacion = exigir_rol(dependencia_usuario, Rol.COORDINADOR)
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -172,7 +174,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             for r in ordenar_cola(repositorio.todos())
         ]
 
-    @app.post("/refugio/ingresos", status_code=201, dependencies=[personal])
+    @app.post("/refugio/ingresos", status_code=201, dependencies=[coordinacion])
     def registrar_ingreso(datos: IngresoEntrada):
         try:
             cupos.registrar_ingreso(Animal(**datos.model_dump()))

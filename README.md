@@ -19,7 +19,8 @@ Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
 - `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`). Tras 5 fallos del mismo correo (o 20 de la misma IP) en 15 minutos responde 429 con `Retry-After` (DT-06).
 - `GET /auth/yo`: datos de la sesión.
 - `GET /cola`: cola priorizada de reportes.
-- `POST /refugio/ingresos` y `GET /refugio/ocupacion`: cupos del refugio.
+- `POST /refugio/ingresos`: registro de ingresos, solo para el rol coordinador (403 para el veterinario).
+- `GET /refugio/ocupacion`: ocupación del refugio (veterinario y coordinador).
 
 ## Cómo ejecutarlo
 
