@@ -18,6 +18,8 @@ Públicos (el ciudadano no necesita cuenta):
 - `GET /reportes/{codigo}/seguimiento`: línea de tiempo (recibido → revisado → rescatista en
   camino o atención programada → atendido → cerrado) y fecha del último cambio, sin datos
   personales (HU-08, RN-14).
+- `GET /app/`: PWA ciudadana (HTML y JavaScript sencillos con el diseño del prototipo) con la
+  pantalla "Estado del reporte". `/` redirige ahí. Por ahora solo local (#47).
 
 Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
 - `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`). Tras 5 fallos del mismo correo (o 20 de la misma IP) en 15 minutos responde 429 con `Retry-After` (DT-06).
@@ -55,6 +57,7 @@ cp .env.example .env               # en Windows: copy .env.example .env  (y escr
 alembic upgrade head               # crea las tablas en la base patitas
 pytest --cov=app                   # pruebas con cobertura (sin PostgreSQL, las de base se omiten)
 uvicorn --factory app.api.main:crear_app --reload  # documentación en http://127.0.0.1:8000/docs
+# PWA ciudadana en http://127.0.0.1:8000/app/
 ```
 
 El archivo `.env` nunca se sube al repositorio. Además de la contraseña de PostgreSQL necesita

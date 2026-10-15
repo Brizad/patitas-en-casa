@@ -7,12 +7,16 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
@@ -64,6 +68,18 @@ from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
 from app.usuarios.servicio import ServicioUsuarios, normalizar_correo
 
 logger = logging.getLogger(__name__)
+
+# HU-08 (#47): la PWA ciudadana (HTML + JS sencillos) la sirve la misma API en /app/.
+CARPETA_PWA = Path(__file__).resolve().parents[1] / "pwa"
+# Windows puede asociar .js a text/plain en el registro; el navegador exige estos tipos.
+for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
+                          ("application/manifest+json", ".webmanifest"),
+                          ("image/svg+xml", ".svg")):
+    mimetypes.add_type(_tipo, _extension)
+# Solo recursos del propio servidor: sin scripts en línea ni de terceros (XSS).
+POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
+                "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
+                "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 
 # Pueden usar /cola y /refugio/ocupacion. Públicos (RF-01): POST /reportes y
 # GET /reportes/{codigo}. POST /refugio/ingresos es solo del coordinador (P-06 del prototipo).
@@ -365,6 +381,23 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         _paso(rescates.registrar_resultado, rescatista, codigo.upper(), datos.resultado)
         return {"codigo": codigo.upper(), "estado": "atendido",
                 "resultado": datos.resultado.value}
+
+    # --- HU-08: PWA ciudadana (#59) --------------------------------------------------
+
+    @app.middleware("http")
+    async def cabeceras_de_la_pwa(peticion: Request, siguiente):
+        respuesta = await siguiente(peticion)
+        if peticion.url.path.startswith("/app"):
+            respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
+            respuesta.headers["X-Content-Type-Options"] = "nosniff"
+            respuesta.headers["Referrer-Policy"] = "no-referrer"
+        return respuesta
+
+    @app.get("/", include_in_schema=False)
+    def inicio():
+        return RedirectResponse("/app/")
+
+    app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")
 
     @app.post("/refugio/ingresos", status_code=201, dependencies=[coordinacion])
     def registrar_ingreso(datos: IngresoEntrada):

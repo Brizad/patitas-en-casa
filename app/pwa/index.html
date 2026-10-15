@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F4F47">
+<meta name="description" content="Consulta el estado de tu reporte de Patitas en Casa con el código de seguimiento.">
+<title>Patitas en Casa</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="estilos.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<!-- HU-08 (#59): pantalla P-03 "Estado del reporte" del prototipo (docs/prototipo). -->
+<header class="phd"><img src="icono.svg" alt="" width="28" height="28">Patitas en Casa</header>
+<main class="pbd">
+  <h1>Estado del reporte</h1>
+  <form id="consulta" class="card" novalidate>
+    <label class="f" for="codigo">Código de seguimiento</label>
+    <input class="in mono" id="codigo" name="codigo" placeholder="Ej.: F2HW5RTB" maxlength="9"
+           autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+    <span class="tag">Son 8 letras o números. Lo recibiste al enviar el reporte.</span>
+    <button class="btn pri" type="submit">Consultar</button>
+  </form>
+  <div id="mensaje" class="msg" role="status" aria-live="polite" hidden></div>
+  <section id="resultado" aria-live="polite" hidden>
+    <div class="card">
+      <div class="tag rotulo">CÓDIGO</div>
+      <div class="mono codigo" id="res-codigo"></div>
+      <div class="mute pequeno" id="res-ultimo"></div>
+    </div>
+    <div class="card"><ol class="tl" id="res-pasos"></ol></div>
+  </section>
+  <p class="mute pequeno">Por privacidad no se muestran la dirección exacta ni datos de otras personas.</p>
+</main>
+</body>
+</html>
