@@ -13,13 +13,15 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    UniqueConstraint,
     false,
     func,
     text,
+    true,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app.dominio.modelos import Especie, EstadoReporte, Prioridad
+from app.dominio.modelos import Especie, EstadoReporte, Prioridad, Rol
 
 
 def _valores(enum) -> str:
@@ -77,4 +79,20 @@ animales = Table(
     Column("esterilizado", Boolean, nullable=False, server_default=false()),
     Column("ingresado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
     CheckConstraint(f"especie IN ({_valores(Especie)})", name="ck_animales_especie"),
+)
+
+# DT-02: cuentas del personal. Solo se guarda el hash Argon2id de la contraseña.
+usuarios = Table(
+    "usuarios",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("correo", Text, nullable=False),
+    Column("nombre", Text, nullable=False),
+    Column("rol", String(20), nullable=False),
+    Column("hash_contrasena", Text, nullable=False),
+    Column("activo", Boolean, nullable=False, server_default=true()),
+    Column("creado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    UniqueConstraint("correo", name="uq_usuarios_correo"),
+    CheckConstraint("correo = lower(correo)", name="ck_usuarios_correo_minusculas"),
+    CheckConstraint(f"rol IN ({_valores(Rol)})", name="ck_usuarios_rol"),
 )

@@ -65,6 +65,22 @@ class Animal:
     esterilizado: bool = False
 
 
+class Rol(StrEnum):
+    """Roles del personal con cuenta (DT-02). El ciudadano reporta sin cuenta (RF-01)."""
+
+    VETERINARIO = "veterinario"
+    COORDINADOR = "coordinador"
+
+
+@dataclass
+class Usuario:
+    correo: str
+    nombre: str
+    rol: Rol
+    hash_contrasena: str = field(repr=False)  # Argon2id; nunca la contraseña
+    activo: bool = True
+
+
 @dataclass
 class Refugio:
     nombre: str
