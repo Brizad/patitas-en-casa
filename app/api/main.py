@@ -8,18 +8,18 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app.ajustes import cargar_ajustes, cargar_ajustes_seguridad
-from app.api.seguridad import crear_dependencia_usuario, no_autenticado
+from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
 from app.bd.migraciones import verificar_migraciones
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, ServicioCupos
-from app.dominio.modelos import Animal, Especie, Ubicacion, Usuario
+from app.dominio.modelos import Animal, Especie, Rol, Ubicacion, Usuario
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
@@ -29,7 +29,8 @@ from app.usuarios.repositorio import RepositorioUsuarios
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
 from app.usuarios.servicio import ServicioUsuarios
 
-ROLES_COLA = {"veterinario", "coordinador"}
+# Pueden usar /cola y /refugio. Públicos (RF-01): POST /reportes y GET /reportes/{codigo}.
+ROLES_PERSONAL = (Rol.VETERINARIO, Rol.COORDINADOR)
 
 
 class NotificadorConsola:
@@ -83,7 +84,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         repositorio_cupos = repositorio_cupos or RepositorioCuposPostgres.primer_refugio(motor)
         repositorio_usuarios = repositorio_usuarios or RepositorioUsuariosPostgres(motor)
     usuarios = ServicioUsuarios(repositorio_usuarios)
-    usuario_actual = Depends(crear_dependencia_usuario(repositorio_usuarios, emisor_tokens))
+    dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
+    usuario_actual = Depends(dependencia_usuario)
+    # DT-02: el personal se identifica con su token; X-Rol ya no existe.
+    personal = exigir_rol(dependencia_usuario, *ROLES_PERSONAL)
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -126,17 +130,15 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
         return {"codigo": r.codigo, "estado": r.estado.value}
 
-    @app.get("/cola")
-    def cola(x_rol: str = Header(default="")):
-        if x_rol not in ROLES_COLA:
-            raise HTTPException(status_code=403, detail="Solo veterinarios y coordinadores.")
+    @app.get("/cola", dependencies=[personal])
+    def cola():
         return [
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
              "confianza": r.confianza, "evidencias": r.evidencias}
             for r in ordenar_cola(repositorio.todos())
         ]
 
-    @app.post("/refugio/ingresos", status_code=201)
+    @app.post("/refugio/ingresos", status_code=201, dependencies=[personal])
     def registrar_ingreso(datos: IngresoEntrada):
         try:
             cupos.registrar_ingreso(Animal(**datos.model_dump()))
@@ -146,7 +148,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"ocupacion": cupos.texto_ocupacion()}
 
-    @app.get("/refugio/ocupacion")
+    @app.get("/refugio/ocupacion", dependencies=[personal])
     def ocupacion():
         return {"ocupacion": cupos.texto_ocupacion(),
                 "porcentaje": round(cupos.porcentaje_ocupacion() * 100, 1)}

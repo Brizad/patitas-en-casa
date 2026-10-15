@@ -56,7 +56,17 @@ uvicorn --factory app.api.main:crear_app --reload
 ```
 
 Las pruebas con base usan el marcador `postgres` y la fixture `bd_limpia` de `tests/conftest.py`;
-las pruebas de API sin base inyectan `RepositorioEnMemoria` en `crear_app()`.
+las pruebas de API sin base inyectan repositorios en memoria y un `EmisorTokens` con clave falsa
+en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
+`tests/test_api.py`).
+
+## Seguridad (DT-02)
+
+- Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01) y
+  `POST /auth/token`. Todo lo demás exige `Authorization: Bearer` de personal
+  (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
+- Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
+- Endpoint nuevo del personal → `dependencies=[personal]` y una prueba de 401 sin sesión.
 
 El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta gitleaks (secretos en todo el
 historial), Ruff y pytest con cobertura mínima del 70 %.
@@ -92,6 +102,6 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Deuda técnica abierta
 
-Ver `DEUDA_TECNICA.md`: DT-02 (rol en encabezado `X-Rol` → OAuth2/JWT + Argon2id), DT-03
-(notificaciones en consola) y DT-04 (clasificador por reglas → modelo Transformer). Pagadas:
-DT-01 (reportes en PostgreSQL) y DT-05 (cupos en PostgreSQL).
+Ver `DEUDA_TECNICA.md`: DT-03 (notificaciones en consola), DT-04 (clasificador por reglas →
+modelo Transformer) y DT-06 (sin límite de intentos de inicio de sesión). Pagadas: DT-01
+(reportes en PostgreSQL), DT-02 (JWT + Argon2id) y DT-05 (cupos en PostgreSQL).
