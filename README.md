@@ -9,7 +9,7 @@ en próximos incrementos, recomendación de adopciones.
 Proyecto integrador — Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 Autor: Brayan David Amado Ramírez.
 
-## Estado: v0.1.0 publicada; incremento 2 ("Fundación segura") en `main`
+## Estado: v0.2.0 publicada (incremento 2, "Fundación segura")
 
 Públicos (el ciudadano no necesita cuenta):
 - `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional).
@@ -79,6 +79,6 @@ Tablero Scrum (GitHub Projects): https://github.com/users/Brizad/projects/1
 
 Backlog con historias de usuario, bug y deuda técnica: https://github.com/Brizad/patitas-en-casa/issues
 
-Versión publicada: https://github.com/Brizad/patitas-en-casa/releases/tag/v0.1.0
+Versión publicada: https://github.com/Brizad/patitas-en-casa/releases/tag/v0.2.0
 
 La rama `main` está protegida: todo cambio entra por Pull Request y solo se integra con el check `build-lint-test` en verde (gitleaks, Ruff y pytest con PostgreSQL).

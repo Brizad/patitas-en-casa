@@ -167,7 +167,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         if motor is not None:
             motor.dispose()
 
-    app = FastAPI(title="Patitas en Casa", version="0.1.0", lifespan=ciclo_de_vida)
+    app = FastAPI(title="Patitas en Casa", version="0.2.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
     confirmaciones = ServicioConfirmacion(repositorio)
     rescates = ServicioRescates(repositorio, repositorio_rescates)

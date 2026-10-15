@@ -3,6 +3,10 @@
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
+
+## [0.2.0] - 2026-10-15
+Incremento 2, "Fundación segura". Para actualizar una instalación: `alembic upgrade head` (migraciones `0001` a `0006`) y completar el `.env` desde `.env.example` (`PATITAS_JWT_SECRETO`).
+
 ### Corregido
 - BUG-02 (#16): la negación se detectaba por subcadena ("vecino", "camino", "pequeño") y degradaba casos críticos; ahora se compara la palabra anterior en cada aparición de la señal.
 - BUG-03 (#17): dos clasificaciones colgadas agotaban el pool del triaje; al agotarse el tiempo se descarta el ejecutor y el error queda registrado con logging.
