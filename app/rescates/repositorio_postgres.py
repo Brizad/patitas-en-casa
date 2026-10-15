@@ -12,7 +12,7 @@ from sqlalchemy import Engine, RowMapping, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 from sqlalchemy.exc import IntegrityError
 
-from app.bd.esquema import rescates, rescatistas
+from app.bd.esquema import escalamientos, rescates, rescatistas
 from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate
 from app.rescates.repositorio import ACTIVOS, RescateTomado, RescatistaOcupado
 
@@ -37,6 +37,42 @@ class RepositorioRescatesPostgres:
         with self._motor.connect() as conexion:
             return bool(conexion.execute(select(rescatistas.c.disponible)
                                          .where(rescatistas.c.correo == rescatista)).scalar())
+
+    def poner_zona(self, rescatista: str, comunas: frozenset[int]) -> None:
+        sentencia = insertar_o_actualizar(rescatistas).values(correo=rescatista,
+                                                              comunas=sorted(comunas))
+        sentencia = sentencia.on_conflict_do_update(
+            index_elements=[rescatistas.c.correo],
+            set_={"comunas": sentencia.excluded.comunas,
+                  "actualizado_en": sentencia.excluded.actualizado_en})
+        with self._motor.begin() as conexion:
+            conexion.execute(sentencia)
+
+    def zona(self, rescatista: str) -> frozenset[int]:
+        with self._motor.connect() as conexion:
+            comunas = conexion.execute(select(rescatistas.c.comunas)
+                                       .where(rescatistas.c.correo == rescatista)).scalar()
+        return frozenset(comunas or ())
+
+    def disponibles(self) -> dict[str, frozenset[int]]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(rescatistas.c.correo, rescatistas.c.comunas)
+                                     .where(rescatistas.c.disponible))
+            return {correo: frozenset(comunas) for correo, comunas in filas}
+
+    def marcar_escalado(self, codigo: str, momento: datetime) -> bool:
+        """INSERT ... ON CONFLICT DO NOTHING: si dos procesos escalan a la vez, solo uno
+        inserta la fila y solo ese avisa (RETURNING trae la fila solo si se insertó)."""
+        sentencia = (insertar_o_actualizar(escalamientos)
+                     .values(reporte_codigo=codigo, escalado_en=momento)
+                     .on_conflict_do_nothing(index_elements=[escalamientos.c.reporte_codigo])
+                     .returning(escalamientos.c.reporte_codigo))
+        with self._motor.begin() as conexion:
+            return conexion.execute(sentencia).scalar() is not None
+
+    def escalados(self) -> set[str]:
+        with self._motor.connect() as conexion:
+            return set(conexion.execute(select(escalamientos.c.reporte_codigo)).scalars())
 
     def aceptar(self, codigo: str, rescatista: str, momento: datetime) -> Rescate:
         try:

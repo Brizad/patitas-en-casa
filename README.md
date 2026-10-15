@@ -12,7 +12,8 @@ Autor: Brayan David Amado Ramírez.
 ## Estado: v0.2.0 publicada (incremento 2, "Fundación segura")
 
 Públicos (el ciudadano no necesita cuenta):
-- `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional).
+- `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional y `comuna`
+  opcional de Cúcuta, 1 a 10).
 - `GET /reportes/{codigo}`: estado del reporte con el código de seguimiento.
 - `GET /reportes/{codigo}/seguimiento`: línea de tiempo (recibido → revisado → rescatista en
   camino o atención programada → atendido → cerrado) y fecha del último cambio, sin datos
@@ -30,7 +31,13 @@ Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
 
 Rescatista (HU-06), con `Authorization: Bearer <token>`:
 - `PUT /rescatistas/yo/disponibilidad` `{"disponible": true}`: solo quien está disponible ve ofertas.
-- `GET /rescates/ofertas`: reportes confirmados críticos o altos sin rescatista.
+- `PUT /rescatistas/yo/zona` `{"comunas": [6, 7]}`: comunas que cubre (vacío = toda la ciudad);
+  `GET /rescatistas/yo` muestra disponibilidad y zona.
+- `GET /rescates/ofertas`: reportes confirmados críticos o altos sin rescatista de su zona, con la
+  comuna como ubicación aproximada.
+- Al confirmar un crítico o alto llega un correo a los rescatistas disponibles de la comuna. Si
+  nadie acepta en 15 min (crítico) o 30 min (alto), se avisa a los coordinadores y el caso se
+  ofrece en toda la ciudad (RF-23).
 - `POST /rescates/{codigo}/aceptar`, `/llegue`, `/liberar` y `/resultado`
   (`trasladado`, `atendido_en_sitio`, `no_encontrado`, `fallecido`); `GET /rescates/mio`.
   RN-08: un rescate tiene un solo rescatista y un rescatista un solo rescate activo.

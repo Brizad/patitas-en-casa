@@ -66,7 +66,8 @@ def test_ofertas_solo_de_confirmados_criticos_o_altos(c):
     c.post("/reportes", json={"descripcion": CRITICO, "direccion": "Calle 1"})  # pendiente
     ofertas = c.get("/rescates/ofertas", headers=disponible(c)).json()
     assert [o["codigo"] for o in ofertas] == [critico, alto]
-    assert set(ofertas[0]) == {"codigo", "prioridad", "descripcion", "esperando_desde"}
+    assert set(ofertas[0]) == {"codigo", "prioridad", "descripcion", "comuna", "escalado",
+                               "esperando_desde"}
 
 
 def test_ciclo_completo_aceptar_llegue_resultado(c):

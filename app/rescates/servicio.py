@@ -1,12 +1,17 @@
-"""Casos de uso del rescatista (HU-06, RF-05, RF-15, RN-08; prototipo P-07 a P-09).
+"""Casos de uso del rescatista (HU-06, RF-05, RF-15, RF-23, RN-08; prototipo P-07 a P-09).
 
-Pendiente del issue #46: filtro por zona o radio, canal de la alerta y escalamiento.
+Decisión del autor en #46: zona por comunas de Cúcuta, alerta por correo y escalamiento al
+coordinador si nadie acepta a tiempo (crítico 15 min; alto 30 min según el prototipo). Al
+escalar, el caso se ofrece en toda la ciudad ("se amplía el radio" del prototipo).
 """
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
+from app import config
+from app.cupos.servicio import Notificador
 from app.dominio.modelos import (
     EstadoReporte,
     EstadoRescate,
@@ -24,8 +29,22 @@ from app.rescates.repositorio import (
     RescatistaOcupado,
 )
 
+log = logging.getLogger(__name__)
+
 # Media y baja no se ofrecen a rescatistas: las programa el refugio (prototipo).
 PRIORIDADES_DE_RESCATE = (Prioridad.CRITICA, Prioridad.ALTA)
+NOMBRE_PRIORIDAD = {Prioridad.CRITICA: "crítico", Prioridad.ALTA: "alto"}
+
+
+def en_zona(reporte: Reporte, comunas: frozenset[int]) -> bool:
+    """Sin zona = toda la ciudad; un reporte sin comuna se ofrece a todos."""
+    comuna = reporte.ubicacion.comuna
+    return not comunas or comuna is None or comuna in comunas
+
+
+def _lugar(reporte: Reporte) -> str:
+    comuna = reporte.ubicacion.comuna
+    return f"en la comuna {comuna}" if comuna else "sin comuna indicada"
 
 
 class RescateNoOfrecido(LookupError):
@@ -37,10 +56,12 @@ class PasoInvalido(Exception):
 
 
 class ServicioRescates:
-    def __init__(self, reportes: RepositorioReportes, rescates: RepositorioRescates,
+    def __init__(self, reportes: RepositorioReportes, rescates: RepositorioRescates, *,
+                 notificador: Notificador | None = None,
                  reloj: Callable[[], datetime] | None = None) -> None:
         self._reportes = reportes
         self._rescates = rescates
+        self._notificador = notificador
         self._reloj = reloj or (lambda: datetime.now(UTC))
 
     @staticmethod
@@ -51,13 +72,28 @@ class ServicioRescates:
     def cambiar_disponibilidad(self, rescatista: Usuario, disponible: bool) -> None:
         self._rescates.poner_disponible(rescatista.correo, disponible)
 
+    def cambiar_zona(self, rescatista: Usuario, comunas: frozenset[int]) -> None:
+        if not comunas <= set(config.COMUNAS_CUCUTA):
+            raise ValueError("Las comunas de Cúcuta van de 1 a 10.")
+        self._rescates.poner_zona(rescatista.correo, comunas)
+
+    def zona(self, rescatista: Usuario) -> frozenset[int]:
+        return self._rescates.zona(rescatista.correo)
+
+    def esta_disponible(self, rescatista: Usuario) -> bool:
+        return self._rescates.esta_disponible(rescatista.correo)
+
     def ofertas(self, rescatista: Usuario) -> list[Reporte]:
-        """Confirmados críticos o altos sin rescatista, solo para quien está disponible."""
+        """Confirmados críticos o altos sin rescatista de su zona (o ya escalados), solo para
+        quien está disponible."""
         if not self._rescates.esta_disponible(rescatista.correo):
             return []
         tomados = self._rescates.codigos_tomados()
+        escalados = self._rescates.escalados()
+        zona = self._rescates.zona(rescatista.correo)
         libres = [r for r in self._reportes.todos()
-                  if self.se_ofrece(r) and r.codigo not in tomados]
+                  if self.se_ofrece(r) and r.codigo not in tomados
+                  and (r.codigo in escalados or en_zona(r, zona))]
         return sorted(libres, key=lambda r: (PRIORIDADES_DE_RESCATE.index(r.prioridad),
                                              r.creado_en))
 
@@ -102,6 +138,71 @@ class ServicioRescates:
                 and actual.estado == EstadoRescate.EN_CAMINO):
             raise PasoInvalido("Primero marca Llegué al sitio.")
         raise PasoInvalido("No tienes ese rescate activo.")
+
+    def escalados(self) -> set[str]:
+        return self._rescates.escalados()
+
+    # --- Alertas por correo (#46) ---------------------------------------------------
+
+    def _avisar(self, destinatario: str, mensaje: str) -> None:
+        """Una falla del correo nunca deshace la confirmación ni detiene el escalamiento."""
+        if self._notificador is None:
+            return
+        try:
+            self._notificador.enviar(destinatario, mensaje)
+        except Exception as error:
+            log.error("No se pudo avisar a %s (%s).", destinatario, type(error).__name__)
+
+    def _libres_para_avisar(self, condicion: Callable[[frozenset[int]], bool]) -> list[str]:
+        """Disponibles sin rescate activo (RN-08: no podrían aceptar) que cumplen la
+        condición sobre su zona."""
+        return sorted(correo for correo, zona in self._rescates.disponibles().items()
+                      if condicion(zona) and self._rescates.activo_de(correo) is None)
+
+    def alertar_confirmado(self, codigo: str) -> None:
+        """RF-05: al confirmar un crítico o alto se avisa a los rescatistas de la zona. El
+        correo no lleva la dirección: se entrega al aceptar."""
+        reporte = self._reportes.buscar(codigo)
+        if not self.se_ofrece(reporte):
+            return
+        mensaje = (f"Rescate {NOMBRE_PRIORIDAD[reporte.prioridad]} {codigo} {_lugar(reporte)}. "
+                   "Entra a Patitas en Casa para aceptarlo.")
+        for correo in self._libres_para_avisar(lambda zona: en_zona(reporte, zona)):
+            self._avisar(correo, mensaje)
+
+    def escalar_vencidos(self) -> list[str]:
+        """RF-23: sin aceptar a tiempo → aviso al coordinador (una vez) y oferta en toda la
+        ciudad, con aviso a los rescatistas de otras zonas. Devuelve los códigos escalados.
+
+        El tiempo cuenta desde la confirmación del veterinario."""
+        ahora = self._reloj()
+        tomados = self._rescates.codigos_tomados()
+        ya_escalados = self._rescates.escalados()
+        escalados = []
+        for reporte in self._reportes.todos():
+            if (not self.se_ofrece(reporte) or reporte.codigo in tomados
+                    or reporte.codigo in ya_escalados):
+                continue
+            decisiones = self._reportes.decisiones(reporte.codigo)
+            minutos = config.ESCALAMIENTO_MINUTOS[reporte.prioridad.value]
+            if not decisiones or ahora - decisiones[-1].decidido_en < timedelta(minutes=minutos):
+                continue
+            if not self._rescates.marcar_escalado(reporte.codigo, ahora):
+                continue  # otro proceso lo escaló primero
+            escalados.append(reporte.codigo)
+            self._avisar_escalamiento(reporte, minutos)
+        return escalados
+
+    def _avisar_escalamiento(self, reporte: Reporte, minutos: int) -> None:
+        nombre = NOMBRE_PRIORIDAD[reporte.prioridad]
+        self._avisar("coordinadores",
+                     f"Rescate {nombre} {reporte.codigo} sin aceptar hace {minutos} min "
+                     f"({_lugar(reporte)}). Se ofreció a todos los rescatistas disponibles.")
+        mensaje = (f"Rescate {nombre} {reporte.codigo} {_lugar(reporte)} sigue sin rescatista. "
+                   "Entra a Patitas en Casa para aceptarlo.")
+        # A los de la zona ya se les avisó al confirmar; ahora se amplía a los demás.
+        for correo in self._libres_para_avisar(lambda zona: not en_zona(reporte, zona)):
+            self._avisar(correo, mensaje)
 
     def mio(self, rescatista: Usuario) -> tuple[Rescate, Reporte] | None:
         rescate = self._rescates.activo_de(rescatista.correo)

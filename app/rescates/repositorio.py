@@ -23,6 +23,22 @@ class RepositorioRescates(Protocol):
     def poner_disponible(self, rescatista: str, disponible: bool) -> None: ...
     def esta_disponible(self, rescatista: str) -> bool: ...
 
+    def poner_zona(self, rescatista: str, comunas: frozenset[int]) -> None:
+        """Comunas que cubre (#46); vacío = toda la ciudad. No cambia la disponibilidad."""
+        ...
+
+    def zona(self, rescatista: str) -> frozenset[int]: ...
+
+    def disponibles(self) -> dict[str, frozenset[int]]:
+        """Correo y zona de cada rescatista disponible."""
+        ...
+
+    def marcar_escalado(self, codigo: str, momento: datetime) -> bool:
+        """True solo la primera vez: así el coordinador recibe un único aviso (RF-23)."""
+        ...
+
+    def escalados(self) -> set[str]: ...
+
     def aceptar(self, codigo: str, rescatista: str, momento: datetime) -> Rescate:
         """Asigna el rescate en una sola operación; lanza RescateTomado o RescatistaOcupado."""
         ...
@@ -44,6 +60,8 @@ class RepositorioRescates(Protocol):
 class RepositorioRescatesEnMemoria:
     def __init__(self) -> None:
         self._disponibles: set[str] = set()
+        self._zonas: dict[str, frozenset[int]] = {}
+        self._escalados: dict[str, datetime] = {}
         self._vigentes: dict[str, Rescate] = {}  # código -> rescate no liberado
         self._candado = threading.Lock()
 
@@ -52,6 +70,25 @@ class RepositorioRescatesEnMemoria:
 
     def esta_disponible(self, rescatista: str) -> bool:
         return rescatista in self._disponibles
+
+    def poner_zona(self, rescatista: str, comunas: frozenset[int]) -> None:
+        self._zonas[rescatista] = frozenset(comunas)
+
+    def zona(self, rescatista: str) -> frozenset[int]:
+        return self._zonas.get(rescatista, frozenset())
+
+    def disponibles(self) -> dict[str, frozenset[int]]:
+        return {correo: self.zona(correo) for correo in self._disponibles}
+
+    def marcar_escalado(self, codigo: str, momento: datetime) -> bool:
+        with self._candado:
+            if codigo in self._escalados:
+                return False
+            self._escalados[codigo] = momento
+            return True
+
+    def escalados(self) -> set[str]:
+        return set(self._escalados)
 
     def aceptar(self, codigo: str, rescatista: str, momento: datetime) -> Rescate:
         with self._candado:

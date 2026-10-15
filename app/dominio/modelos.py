@@ -33,6 +33,7 @@ class Ubicacion:
     latitud: float | None = None
     longitud: float | None = None
     direccion: str | None = None
+    comuna: int | None = None  # HU-06: comuna de Cúcuta (1 a 10); opcional
 
     def es_valida(self) -> bool:
         tiene_gps = self.latitud is not None and self.longitud is not None

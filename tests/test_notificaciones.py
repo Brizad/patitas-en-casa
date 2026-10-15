@@ -69,6 +69,13 @@ def test_envia_el_correo_a_todo_el_grupo():
     assert "Refugio demo Cúcuta" in mensaje.get_content()
 
 
+def test_un_destinatario_con_arroba_recibe_el_correo_directo():
+    """HU-06 (#46): la alerta de rescate va al correo de cada rescatista."""
+    correo().enviar("ana@rescate.co", "Rescate crítico F2HW5RTB en la comuna 6.")
+    (mensaje,) = SMTPFalso.enviados
+    assert mensaje["To"] == "ana@rescate.co"
+
+
 def test_usa_starttls_login_y_tiempo_maximo():
     correo().enviar("coordinadores", "Alerta")
     (conexion,) = SMTPFalso.conexiones
