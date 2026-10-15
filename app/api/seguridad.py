@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.dominio.modelos import Usuario
+from app.dominio.modelos import Rol, Usuario
 from app.seguridad.tokens import EmisorTokens, TokenInvalido
 from app.usuarios.repositorio import RepositorioUsuarios
 
@@ -35,3 +35,18 @@ def crear_dependencia_usuario(repositorio: RepositorioUsuarios,
         return usuario
 
     return usuario_actual
+
+
+def exigir_rol(usuario_actual: Callable[..., Usuario], *roles: Rol):
+    """Dependencia que deja pasar solo a los roles indicados: 401 sin sesión, 403 sin permiso."""
+    # Depends como valor por defecto: con "from __future__ import annotations" FastAPI no
+    # puede resolver una anotación que menciona una variable local (usuario_actual).
+    con_sesion = Depends(usuario_actual)
+
+    def verificar(usuario: Usuario = con_sesion) -> Usuario:
+        if usuario.rol not in roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Tu rol no permite esta acción.")
+        return usuario
+
+    return Depends(verificar)
