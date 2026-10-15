@@ -4,11 +4,12 @@ Se inicia con: uvicorn --factory app.api.main:crear_app
 """
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
@@ -26,9 +27,18 @@ from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
 from app.seguridad.tokens import EmisorTokens
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
+from app.usuarios.intentos import (
+    LimiteIntentos,
+    RepositorioIntentosEnMemoria,
+    clave_correo,
+    clave_ip,
+)
+from app.usuarios.intentos_postgres import RepositorioIntentosPostgres
 from app.usuarios.repositorio import RepositorioUsuarios
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
-from app.usuarios.servicio import ServicioUsuarios
+from app.usuarios.servicio import ServicioUsuarios, normalizar_correo
+
+logger = logging.getLogger(__name__)
 
 # Pueden usar /cola y /refugio. Públicos (RF-01): POST /reportes y GET /reportes/{codigo}.
 ROLES_PERSONAL = (Rol.VETERINARIO, Rol.COORDINADOR)
@@ -71,9 +81,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
               emisor_tokens: EmisorTokens | None = None,
-              notificador: Notificador | None = None) -> FastAPI:
+              notificador: Notificador | None = None,
+              limite_intentos: LimiteIntentos | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
-    dobles."""
+    dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
+    fallidos se cuentan en memoria."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
     notificador = notificador or crear_notificador(cargar_ajustes_correo())
     motor = None
@@ -82,6 +94,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         repositorio = repositorio or RepositorioPostgres(motor)
         repositorio_cupos = repositorio_cupos or RepositorioCuposPostgres.primer_refugio(motor)
         repositorio_usuarios = repositorio_usuarios or RepositorioUsuariosPostgres(motor)
+    # DT-06: con PostgreSQL el límite vale para todos los procesos y sobrevive a un reinicio.
+    limite_intentos = limite_intentos or LimiteIntentos(
+        RepositorioIntentosPostgres(motor) if motor is not None
+        else RepositorioIntentosEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
     usuario_actual = Depends(dependencia_usuario)
@@ -99,12 +115,31 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     cupos = ServicioCupos(repositorio_cupos, notificador)
 
     @app.post("/auth/token")
-    def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()]):
-        """Inicio de sesión del personal: username = correo (DT-02)."""
+    def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()],
+                       peticion: Request):
+        """Inicio de sesión del personal: username = correo (DT-02).
+
+        DT-06: con demasiados fallos recientes del correo o de la IP responde 429 sin mirar
+        la contraseña, ni siquiera la correcta: así el atacante no sabe si acertó.
+        """
+        # La IP es la de la conexión; X-Forwarded-For no se usa porque el cliente la inventa.
+        ip = peticion.client.host if peticion.client else "desconocida"
+        claves = [clave_correo(normalizar_correo(formulario.username)), clave_ip(ip)]
+        espera = limite_intentos.segundos_de_bloqueo(claves)
+        if espera:
+            # Sin correo ni contraseña en el log: solo la IP y la espera.
+            logger.warning("Inicio de sesión bloqueado por intentos fallidos (IP %s, %d s).",
+                           ip, espera)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Demasiados intentos fallidos. Intenta de nuevo en {espera} segundos.",
+                headers={"Retry-After": str(espera)})
         usuario = usuarios.autenticar(formulario.username, formulario.password)
         if usuario is None:
+            limite_intentos.registrar_fallo(claves)
             # Mismo mensaje exista o no el correo: no se revela qué cuentas existen.
             raise no_autenticado("Correo o contraseña incorrectos.")
+        limite_intentos.registrar_exito(claves[0])
         return {"access_token": emisor_tokens.emitir(usuario), "token_type": "bearer",
                 "expira_en": emisor_tokens.minutos * 60}
 

@@ -16,7 +16,7 @@ Públicos (el ciudadano no necesita cuenta):
 - `GET /reportes/{codigo}`: estado del reporte con el código de seguimiento.
 
 Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
-- `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`).
+- `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`). Tras 5 fallos del mismo correo (o 20 de la misma IP) en 15 minutos responde 429 con `Retry-After` (DT-06).
 - `GET /auth/yo`: datos de la sesión.
 - `GET /cola`: cola priorizada de reportes.
 - `POST /refugio/ingresos` y `GET /refugio/ocupacion`: cupos del refugio.

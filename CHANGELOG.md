@@ -19,11 +19,12 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - DT-02, parte 1 (#35): cuentas de personal (veterinario, coordinador) con contraseñas Argon2id, tabla `usuarios` (migración `0003`) y comando `python -m app.usuarios.crear_usuario` (130 pruebas).
 - DT-02, parte 2 (#37): inicio de sesión del personal con `POST /auth/token` (JWT HS256, 30 minutos) y `GET /auth/yo`. La clave de firma sale de `PATITAS_JWT_SECRETO` (149 pruebas).
 - DT-03 (#12): la alerta de ocupación del 90 % (RN-04) se envía por correo SMTP a los coordinadores (`PATITAS_CORREOS_COORDINADORES`); sin SMTP configurado queda en el log. Una falla del correo no deshace el ingreso (167 pruebas).
+- DT-06 (#41): `POST /auth/token` limita los intentos fallidos: 5 por correo o 20 por IP en 15 minutos; después responde 429 con `Retry-After`, incluso con la contraseña correcta. Los fallos se guardan en PostgreSQL (tabla `intentos_fallidos`, migración `0004`) y un inicio correcto reinicia el contador del correo (190 pruebas).
 ### Cambiado
 - **Incompatible:** `GET /cola`, `POST /refugio/ingresos` y `GET /refugio/ocupacion` exigen el encabezado `Authorization: Bearer <token>` de una cuenta de personal (401 sin sesión, 403 sin permiso). Se elimina `X-Rol` (DT-02, #40).
 - La API se inicia con `uvicorn --factory app.api.main:crear_app`; `crear_app()` recibe el repositorio (las pruebas inyectan el de memoria) y el módulo ya no crea la app al importarse (#29).
 ### Deuda técnica
-- DT-01 pagada (#10). DT-05 registrada y pagada (#30). DT-02 pagada (#11). DT-03 pagada (#12). Registrada DT-06 (#41): límite de intentos de inicio de sesión.
+- DT-01 pagada (#10). DT-05 registrada y pagada (#30). DT-02 pagada (#11). DT-03 pagada (#12). Registrada y pagada DT-06 (#41): límite de intentos de inicio de sesión.
 
 ## [0.1.0] - 2026-09-29
 ### Agregado
