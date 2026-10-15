@@ -25,6 +25,7 @@ veterinarios y control de cupos del refugio.
 | `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
 | `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |
+| `app/seguridad/tokens.py`, `app/api/seguridad.py` | Tokens JWT (`EmisorTokens`) y la dependencia de FastAPI que exige sesión. |
 | `app/api/main.py` | `crear_app(repositorio=None, repositorio_cupos=None)`: endpoints REST; sin argumentos usa PostgreSQL. |
 | `app/config.py` | Parámetros de negocio (umbral de confianza, alerta, límites del video). |
 | `tests/` | Pruebas pytest (unitarias y de caja negra de la API). |
@@ -68,6 +69,8 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 - Credenciales en `.env` (copiar de `.env.example`). La contraseña la escribe el autor; el
   asistente no la lee, no la escribe ni la imprime.
 - En el CI la contraseña del contenedor Postgres viene del secret `POSTGRES_TEST_PASSWORD`.
+- `PATITAS_JWT_SECRETO` (clave de firma de los tokens, ≥ 32 caracteres) vive solo en `.env`;
+  las pruebas usan una clave falsa propia y no la necesitan.
 
 ## Reglas de trabajo
 

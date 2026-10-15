@@ -17,6 +17,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - DT-05 (#30): los cupos del refugio y los animales ingresados se guardan en PostgreSQL (migración `0002`, que crea el refugio demo de 40 cupos). El cupo se toma con un `UPDATE` condicional, seguro aunque haya varios procesos (100 pruebas).
 - Detección de secretos en el CI con gitleaks v8.30.1 sobre todo el historial, con una auto-prueba que confirma que un token falso sí se detecta (#33).
 - DT-02, parte 1 (#35): cuentas de personal (veterinario, coordinador) con contraseñas Argon2id, tabla `usuarios` (migración `0003`) y comando `python -m app.usuarios.crear_usuario` (130 pruebas).
+- DT-02, parte 2 (#37): inicio de sesión del personal con `POST /auth/token` (JWT HS256, 30 minutos) y `GET /auth/yo`. La clave de firma sale de `PATITAS_JWT_SECRETO` (149 pruebas).
 ### Cambiado
 - La API se inicia con `uvicorn --factory app.api.main:crear_app`; `crear_app()` recibe el repositorio (las pruebas inyectan el de memoria) y el módulo ya no crea la app al importarse (#29).
 ### Deuda técnica
