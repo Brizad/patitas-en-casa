@@ -50,6 +50,8 @@ veterinarios y control de cupos del refugio.
   (índices únicos parciales en `rescates`). Se ofrecen solo confirmados críticos o altos, a
   rescatistas disponibles. Zona/radio, canal de alerta y escalamiento: pendientes del issue #46
   (decisión del autor; no inventar valores).
+- **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
+  código, los pasos y sus fechas; nunca descripción, ubicación, prioridad ni correos.
 
 Fuente de las reglas que no están en el código: `docs/prototipo/interaccion.js` (encabezado y
 acciones). Ese prototipo es un entregable calificado: se lee, no se modifica.
