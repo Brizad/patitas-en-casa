@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Double,
     ForeignKey,
+    Index,
     Integer,
     MetaData,
     String,
@@ -95,4 +96,15 @@ usuarios = Table(
     UniqueConstraint("correo", name="uq_usuarios_correo"),
     CheckConstraint("correo = lower(correo)", name="ck_usuarios_correo_minusculas"),
     CheckConstraint(f"rol IN ({_valores(Rol)})", name="ck_usuarios_rol"),
+)
+
+# DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
+intentos_fallidos = Table(
+    "intentos_fallidos",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("clave", Text, nullable=False),
+    Column("ocurrido_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint("clave <> ''", name="ck_intentos_fallidos_clave"),
+    Index("ix_intentos_fallidos_clave_ocurrido_en", "clave", "ocurrido_en"),
 )

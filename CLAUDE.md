@@ -68,6 +68,8 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
 - Endpoint nuevo del personal → `dependencies=[personal]` y una prueba de 401 sin sesión.
+- DT-06: `POST /auth/token` cuenta los fallos por correo y por IP (`LimiteIntentos` en
+  `app/usuarios/intentos.py`, tabla `intentos_fallidos`); bloqueado responde 429 con `Retry-After`.
 
 El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta gitleaks (secretos en todo el
 historial), Ruff y pytest con cobertura mínima del 70 %.
@@ -103,6 +105,6 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Deuda técnica abierta
 
-Ver `DEUDA_TECNICA.md`: DT-04 (clasificador por reglas → modelo Transformer) y DT-06 (sin
-límite de intentos de inicio de sesión). Pagadas: DT-01 (reportes en PostgreSQL), DT-02 (JWT +
-Argon2id), DT-03 (notificador por correo) y DT-05 (cupos en PostgreSQL).
+Ver `DEUDA_TECNICA.md`: DT-04 (clasificador por reglas → modelo Transformer). Pagadas: DT-01 (reportes en
+PostgreSQL), DT-02 (JWT + Argon2id), DT-03 (notificador por correo), DT-05 (cupos en
+PostgreSQL) y DT-06 (límite de intentos de inicio de sesión).
