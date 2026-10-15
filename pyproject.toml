@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["postgres: necesita la base de pruebas PostgreSQL (POSTGRES_DB_PRUEBAS)"]
 
 [tool.ruff]
 line-length = 100

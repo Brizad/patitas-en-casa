@@ -12,6 +12,20 @@ permissions:
 jobs:
   build-lint-test:
     runs-on: ubuntu-latest
+    services:
+      # Base de pruebas temporal (DT-01): se crea y se borra en cada ejecución.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD }}
+          POSTGRES_DB: patitas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Descargar el código
         uses: actions/checkout@v4
@@ -29,4 +43,9 @@ jobs:
         run: ruff check .
 
       - name: Test (pytest con cobertura)
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD }}
+          POSTGRES_DB_PRUEBAS: patitas_test
+          # Sin Postgres, las pruebas de base de datos fallan en vez de omitirse.
+          PATITAS_EXIGIR_POSTGRES: "1"
         run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70

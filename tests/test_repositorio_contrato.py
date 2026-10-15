@@ -1,7 +1,7 @@
 """Pruebas de contrato de RepositorioReportes (DT-01, paso 2).
 
-Toda implementación del repositorio debe pasar exactamente las mismas pruebas. Hoy solo
-existe la de memoria; RepositorioPostgres se agregará a REPOSITORIOS en el paso 3.
+Toda implementación del repositorio debe pasar exactamente las mismas pruebas: la de
+memoria y la de PostgreSQL (paso 3), que usa la base de pruebas de tests/conftest.py.
 """
 from copy import deepcopy
 from datetime import UTC, datetime
@@ -10,13 +10,14 @@ import pytest
 
 from app.dominio.modelos import EstadoReporte, Prioridad, Reporte, Ubicacion
 from app.reportes.repositorio import RepositorioEnMemoria
+from app.reportes.repositorio_postgres import RepositorioPostgres
 
-REPOSITORIOS = {"memoria": RepositorioEnMemoria}
 
-
-@pytest.fixture(params=list(REPOSITORIOS))
+@pytest.fixture(params=["memoria", pytest.param("postgres", marks=pytest.mark.postgres)])
 def repositorio(request):
-    return REPOSITORIOS[request.param]()
+    if request.param == "postgres":
+        return RepositorioPostgres(request.getfixturevalue("bd_limpia"))
+    return RepositorioEnMemoria()
 
 
 def reporte_completo(codigo="ABCD1234"):
