@@ -22,7 +22,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app.dominio.modelos import Especie, EstadoReporte, Prioridad, Rol
+from app.dominio.modelos import (
+    Especie,
+    EstadoReporte,
+    EstadoRescate,
+    Prioridad,
+    ResultadoRescate,
+    Rol,
+)
 
 
 def _valores(enum) -> str:
@@ -131,3 +138,36 @@ decisiones_triaje = Table(
                     name="ck_decisiones_justificacion"),
     UniqueConstraint("reporte_codigo", name="uq_decisiones_reporte"),
 )
+
+# HU-06: disponibilidad de los rescatistas (RF-15) y rescates (RN-08).
+rescatistas = Table(
+    "rescatistas",
+    metadata,
+    Column("correo", Text, primary_key=True),
+    Column("disponible", Boolean, nullable=False, server_default=false()),
+    Column("actualizado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+)
+
+rescates = Table(
+    "rescates",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), nullable=False),
+    Column("rescatista", Text, nullable=False),
+    Column("estado", String(12), nullable=False),
+    Column("resultado", String(20)),
+    Column("aceptado_en", DateTime(timezone=True), nullable=False),
+    Column("actualizado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"estado IN ({_valores(EstadoRescate)})", name="ck_rescates_estado"),
+    CheckConstraint(f"resultado IN ({_valores(ResultadoRescate)})",
+                    name="ck_rescates_resultado"),
+    # Hay resultado si y solo si el rescate se atendió.
+    CheckConstraint("(estado = 'atendido') = (resultado IS NOT NULL)",
+                    name="ck_rescates_resultado_al_atender"),
+)
+
+# RN-08 en la base: un rescate vigente por reporte y un rescate activo por rescatista.
+Index("uq_rescates_reporte_vigente", rescates.c.reporte_codigo, unique=True,
+      postgresql_where=text("estado <> 'liberado'"))
+Index("uq_rescates_rescatista_activo", rescates.c.rescatista, unique=True,
+      postgresql_where=text("estado IN ('en_camino', 'en_sitio')"))
