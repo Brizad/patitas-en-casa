@@ -78,3 +78,18 @@ jobs:
           # Sin Postgres, las pruebas de base de datos fallan en vez de omitirse.
           PATITAS_EXIGIR_POSTGRES: "1"
         run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+
+      # Panel del personal en React (#64): tipos, pruebas y compilación.
+      - name: Preparar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: panel/package-lock.json
+
+      - name: Panel (tipos, pruebas y build)
+        working-directory: panel
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build

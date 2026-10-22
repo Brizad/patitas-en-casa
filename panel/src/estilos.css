@@ -1,0 +1,18 @@
+/* Colores del prototipo de la Semana 3. Sin dependencias externas (CSP: solo 'self'). */
+:root { --verde: #0f4f47; --fondo: #f4f6f5; --texto: #1d2321; --error: #a12a1f; --borde: #d5dcd9; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--fondo); color: var(--texto); }
+button { font: inherit; cursor: pointer; border: 1px solid var(--borde); background: #fff;
+  border-radius: 8px; padding: 8px 14px; }
+button:disabled { opacity: .6; cursor: default; }
+button.principal { background: var(--verde); color: #fff; border-color: var(--verde); }
+input, select, textarea { font: inherit; padding: 8px; border: 1px solid var(--borde);
+  border-radius: 8px; width: 100%; margin-top: 4px; }
+label { display: block; margin: 10px 0; font-weight: 600; }
+.tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 12px; padding: 18px; }
+.inicio { max-width: 380px; margin: 10vh auto; }
+.error { color: var(--error); font-weight: 600; }
+.barra { display: flex; gap: 16px; align-items: center; padding: 12px 20px; background: var(--verde);
+  color: #fff; }
+.barra span { margin-left: auto; }
+.vacio { padding: 24px; color: #5a6461; }
