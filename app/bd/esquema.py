@@ -23,6 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
+from app.avisos.modelos import EstadoAviso
 from app.dominio.modelos import (
     Especie,
     EstadoReporte,
@@ -188,4 +189,27 @@ escalamientos = Table(
     metadata,
     Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), primary_key=True),
     Column("escalado_en", DateTime(timezone=True), nullable=False),
+)
+
+# #63 (outbox, D-03): avisos a rescatistas guardados en la misma transacción que la confirmación
+# y enviados después por el procesador de avisos.
+avisos = Table(
+    "avisos",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), nullable=False),
+    Column("destinatario", Text, nullable=False),
+    Column("mensaje", Text, nullable=False),
+    Column("estado", String(10), nullable=False),
+    Column("intentos", Integer, nullable=False, server_default=text("0")),
+    Column("ultimo_error", Text),
+    Column("creado_en", DateTime(timezone=True), nullable=False),
+    Column("proximo_intento_en", DateTime(timezone=True), nullable=False),
+    Column("reclamado_en", DateTime(timezone=True)),
+    Column("enviado_en", DateTime(timezone=True)),
+    CheckConstraint(f"estado IN ({_valores(EstadoAviso)})", name="ck_avisos_estado"),
+    CheckConstraint("intentos >= 0", name="ck_avisos_intentos"),
+    # Un aviso por rescatista y reporte: repetir la confirmación no duplica avisos.
+    UniqueConstraint("reporte_codigo", "destinatario", name="uq_avisos_reporte_destinatario"),
+    Index("ix_avisos_estado_proximo_intento", "estado", "proximo_intento_en"),
 )
