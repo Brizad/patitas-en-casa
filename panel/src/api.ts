@@ -49,3 +49,5 @@ export async function iniciarSesion(correo: string, clave: string): Promise<stri
 }
 
 export const miCuenta = (token: string) => pedir<Cuenta>("/auth/yo", {}, token);
+
+export const cola = (token: string) => pedir<ReporteEnCola[]>("/cola", {}, token);
