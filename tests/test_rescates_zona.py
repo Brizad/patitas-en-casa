@@ -347,6 +347,10 @@ def test_api_confirmar_un_critico_avisa_a_la_zona_y_la_oferta_muestra_la_comuna(
     confirmado = c.post(f"/reportes/{codigo}/confirmacion", json={},
                         headers=sesion(c, "vet@patitas.co"))
     assert confirmado.status_code == 200
+    # #63: confirmar ya no envía; deja el aviso pendiente y el procesador lo envía después.
+    assert confirmado.json()["avisos"] == {"programados": 1, "estado": "pendiente"}
+    assert notificador.enviados == []
+    c.app.state.procesador_avisos.procesar()
     assert [d for d, _ in notificador.enviados] == [ANA]
     ofertas = c.get("/rescates/ofertas", headers=ana).json()
     assert [(o["codigo"], o["comuna"], o["escalado"]) for o in ofertas] == [(codigo, 6, False)]

@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import (
-    BackgroundTasks,
     Depends,
     FastAPI,
     Header,
@@ -32,6 +31,9 @@ from sqlalchemy import Engine, create_engine
 from app import config
 from app.ajustes import cargar_ajustes, cargar_ajustes_correo, cargar_ajustes_seguridad
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
+from app.avisos.procesador import ProcesadorAvisos
+from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
+from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
 from app.bd.migraciones import verificar_migraciones
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
@@ -59,10 +61,15 @@ from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido, ServicioReportes
-from app.rescates.escalamiento import vigilar_escalamientos
+from app.rescates.escalamiento import repetir_cada, vigilar_escalamientos
 from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
 from app.rescates.repositorio_postgres import RepositorioRescatesPostgres
-from app.rescates.servicio import PasoInvalido, RescateNoOfrecido, ServicioRescates
+from app.rescates.servicio import (
+    PRIORIDADES_DE_RESCATE,
+    PasoInvalido,
+    RescateNoOfrecido,
+    ServicioRescates,
+)
 from app.seguridad.tokens import EmisorTokens
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
 from app.usuarios.intentos import (
@@ -178,11 +185,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               limite_intentos: LimiteIntentos | None = None,
               repositorio_rescates: RepositorioRescates | None = None,
               revisar_escalamientos_cada_s: float | None =
-              config.REVISION_ESCALAMIENTOS_SEGUNDOS) -> FastAPI:
+              config.REVISION_ESCALAMIENTOS_SEGUNDOS,
+              repositorio_avisos: RepositorioAvisos | None = None,
+              procesar_avisos_cada_s: float | None = config.REVISION_AVISOS_SEGUNDOS) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
-    cada «revisar_escalamientos_cada_s» segundos (None: no se revisan)."""
+    cada «revisar_escalamientos_cada_s» segundos (None: no se revisan) y se envían los avisos
+    pendientes cada «procesar_avisos_cada_s» (#63; None: solo a mano, como en las pruebas)."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
     notificador = notificador or crear_notificador(cargar_ajustes_correo())
     motor = None
@@ -198,6 +208,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     repositorio_rescates = repositorio_rescates or (
         RepositorioRescatesPostgres(motor) if motor is not None
         else RepositorioRescatesEnMemoria())
+    # #63: los avisos viven en la misma base que los reportes (la confirmación los guarda).
+    repositorio_avisos = repositorio_avisos or (
+        RepositorioAvisosPostgres(motor) if motor is not None
+        else getattr(repositorio, "avisos", None) or RepositorioAvisosEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
     usuario_actual = Depends(dependencia_usuario)
@@ -209,23 +223,28 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
-        vigilancia = None
+        tareas = []
         if revisar_escalamientos_cada_s:
             # HU-06 (RF-23): rescates sin aceptar a tiempo → aviso al coordinador.
-            vigilancia = asyncio.create_task(
-                vigilar_escalamientos(rescates.escalar_vencidos, revisar_escalamientos_cada_s))
+            tareas.append(asyncio.create_task(
+                vigilar_escalamientos(rescates.escalar_vencidos, revisar_escalamientos_cada_s)))
+        if procesar_avisos_cada_s:
+            tareas.append(asyncio.create_task(repetir_cada(
+                procesador.procesar, procesar_avisos_cada_s, "envío de avisos pendientes")))
         yield
-        if vigilancia is not None:
-            vigilancia.cancel()
+        for tarea in tareas:
+            tarea.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await vigilancia
+                await tarea
         if motor is not None:
             motor.dispose()
 
     app = FastAPI(title="Patitas en Casa", version="0.2.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
-    confirmaciones = ServicioConfirmacion(repositorio)
     rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador)
+    confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=rescates.avisos_para)
+    procesador = ProcesadorAvisos(repositorio_avisos, notificador)
+    app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     cupos = ServicioCupos(repositorio_cupos, notificador)
 
     @app.post("/auth/token")
@@ -311,24 +330,40 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         ]
 
     @app.post("/reportes/{codigo}/confirmacion")
-    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada, tareas: BackgroundTasks,
+    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada,
                             veterinario: Usuario = veterinaria):
         """HU-02: el veterinario confirma la prioridad sugerida o la ajusta con justificación.
 
-        HU-06 (RF-05): si queda crítica o alta, se avisa por correo a los rescatistas de la
-        zona después de responder, para que el veterinario no espere al SMTP."""
+        #63 (outbox): si queda crítica o alta, los avisos a los rescatistas de la zona se
+        guardan como pendientes en la misma transacción y el procesador los envía después.
+        La respuesta dice que el aviso está pendiente, nunca que llegó (D-05)."""
         try:
-            decision = confirmaciones.confirmar(codigo.upper(), veterinario,
-                                                datos.prioridad, datos.justificacion)
+            resultado = confirmaciones.confirmar_y_programar(
+                codigo.upper(), veterinario, datos.prioridad, datos.justificacion)
         except ReporteNoEncontrado as error:
             raise HTTPException(status_code=404, detail="Reporte no encontrado.") from error
         except ReporteYaConfirmado as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         except AjusteSinJustificacion as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-        tareas.add_task(rescates.alertar_confirmado, decision.codigo)
+        decision = resultado.decision
+        if decision.prioridad_final not in PRIORIDADES_DE_RESCATE:
+            estado_aviso = "no_aplica"  # media y baja las programa el refugio
+        else:
+            estado_aviso = "pendiente" if resultado.avisos else "sin_destinatarios"
         return {"codigo": decision.codigo, "estado": EstadoReporte.CONFIRMADO.value,
-                "prioridad": decision.prioridad_final.value, "ajustada": decision.ajustada}
+                "prioridad": decision.prioridad_final.value, "ajustada": decision.ajustada,
+                "avisos": {"programados": resultado.avisos, "estado": estado_aviso}}
+
+    @app.get("/reportes/{codigo}/avisos", dependencies=[personal])
+    def avisos_del_reporte(codigo: str):
+        """#63: estado real de los avisos de un reporte (pendiente, enviado, fallido…)."""
+        codigo = codigo.upper()
+        avisos = repositorio_avisos.de_reporte(codigo)
+        return {"codigo": codigo, "resumen": resumen(avisos),
+                "avisos": [{"destinatario": a.destinatario, "estado": a.estado.value,
+                            "intentos": a.intentos, "ultimo_error": a.ultimo_error}
+                           for a in avisos]}
 
     @app.get("/reportes/{codigo}/decisiones", dependencies=[personal])
     def bitacora_de_triaje(codigo: str):

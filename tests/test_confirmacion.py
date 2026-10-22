@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.main import crear_app
+from app.avisos.modelos import AvisoNuevo, EstadoAviso
 from app.cupos.repositorio import RepositorioCuposEnMemoria
 from app.dominio.modelos import EstadoReporte, Prioridad, Refugio, Reporte, Rol, Ubicacion, Usuario
 from app.reportes.confirmacion import (
@@ -134,8 +135,10 @@ def test_api_confirmar_y_la_cola_ya_no_lo_muestra():
     vet = sesion(c)
     respuesta = c.post(f"/reportes/{codigo}/confirmacion", json={}, headers=vet)
     assert respuesta.status_code == 200
+    # #63: campo nuevo «avisos» (cambio aditivo deliberado; ver CHANGELOG).
     assert respuesta.json() == {"codigo": codigo, "estado": "confirmado",
-                                "prioridad": "critica", "ajustada": False}
+                                "prioridad": "critica", "ajustada": False,
+                                "avisos": {"programados": 0, "estado": "sin_destinatarios"}}
     assert c.get("/cola", headers=vet).json() == []
 
 
@@ -196,3 +199,84 @@ def test_api_prioridad_desconocida_da_422():
                        json={"prioridad": "urgentisima", "justificacion": JUSTIFICACION},
                        headers=sesion(c))
     assert respuesta.status_code == 422
+
+
+# --- #63: la confirmación programa los avisos sin enviarlos --------------------------------
+
+class Planificador:
+    """Doble de ServicioRescates.avisos_para: registra con qué prioridad se le llamó."""
+
+    def __init__(self):
+        self.llamadas = []
+
+    def __call__(self, reporte, prioridad):
+        self.llamadas.append((reporte.codigo, prioridad))
+        if prioridad not in (Prioridad.CRITICA, Prioridad.ALTA):
+            return []
+        return [AvisoNuevo("ana@rescate.co", f"Rescate {prioridad.value} {reporte.codigo}")]
+
+
+def con_planificador(*reportes):
+    repositorio, planificador = RepositorioEnMemoria(), Planificador()
+    for r in reportes:
+        repositorio.guardar(r)
+    servicio = ServicioConfirmacion(repositorio, planificar_avisos=planificador)
+    return servicio, repositorio, planificador
+
+
+def test_confirmar_un_alto_deja_un_aviso_pendiente_y_lo_informa():
+    servicio, repositorio, planificador = con_planificador(reporte(prioridad=Prioridad.ALTA))
+    resultado = servicio.confirmar_y_programar("ABCD1234", VET)
+    assert resultado.avisos == 1 and resultado.decision.prioridad_final == Prioridad.ALTA
+    assert planificador.llamadas == [("ABCD1234", Prioridad.ALTA)]
+    (aviso,) = repositorio.avisos.de_reporte("ABCD1234")
+    assert aviso.estado == EstadoAviso.PENDIENTE
+
+
+def test_los_avisos_usan_la_prioridad_final_y_no_la_sugerida():
+    servicio, repositorio, planificador = con_planificador(reporte(prioridad=Prioridad.ALTA))
+    resultado = servicio.confirmar_y_programar("ABCD1234", VET, Prioridad.MEDIA, JUSTIFICACION)
+    assert resultado.avisos == 0 and repositorio.avisos.de_reporte("ABCD1234") == []
+    assert planificador.llamadas == [("ABCD1234", Prioridad.MEDIA)]
+
+
+def test_si_la_regla_falla_no_se_planifican_avisos():
+    servicio, repositorio, planificador = con_planificador(reporte(prioridad=Prioridad.MEDIA))
+    with pytest.raises(AjusteSinJustificacion):
+        servicio.confirmar_y_programar("ABCD1234", VET, Prioridad.CRITICA, "corta")
+    assert planificador.llamadas == [] and repositorio.avisos.de_reporte("ABCD1234") == []
+
+
+def test_una_segunda_confirmacion_no_agrega_avisos():
+    servicio, repositorio, _ = con_planificador(reporte(prioridad=Prioridad.CRITICA))
+    servicio.confirmar_y_programar("ABCD1234", VET)
+    with pytest.raises(ReporteYaConfirmado):
+        servicio.confirmar_y_programar("ABCD1234", VET)
+    assert len(repositorio.avisos.de_reporte("ABCD1234")) == 1
+
+
+# --- #63 en la API: la respuesta distingue la confirmación del envío -----------------------
+
+def test_api_confirmar_informa_el_estado_del_aviso_sin_afirmar_que_llego():
+    c = cliente()
+    vet = sesion(c)
+    critico = nuevo_reporte(c)
+    respuesta = c.post(f"/reportes/{critico}/confirmacion", json={}, headers=vet).json()
+    # Sin rescatistas disponibles no hay a quién avisar: el caso escalará al coordinador.
+    assert respuesta["estado"] == "confirmado"
+    assert respuesta["avisos"] == {"programados": 0, "estado": "sin_destinatarios"}
+    leve = nuevo_reporte(c, "Gato con sarna en el andén del barrio, se ve tranquilo")
+    respuesta = c.post(f"/reportes/{leve}/confirmacion", json={}, headers=vet).json()
+    assert respuesta["avisos"] == {"programados": 0, "estado": "no_aplica"}
+
+
+def test_api_resumen_de_avisos_solo_para_el_personal():
+    c = cliente()
+    codigo = nuevo_reporte(c)
+    c.post(f"/reportes/{codigo}/confirmacion", json={}, headers=sesion(c))
+    assert c.get(f"/reportes/{codigo}/avisos").status_code == 401
+    respuesta = c.get(f"/reportes/{codigo.lower()}/avisos", headers=sesion(c, "coord@patitas.co"))
+    assert respuesta.status_code == 200
+    assert respuesta.json() == {"codigo": codigo, "resumen": {"pendiente": 0, "enviando": 0,
+                                                              "enviado": 0, "fallido": 0},
+                                "avisos": []}

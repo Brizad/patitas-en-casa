@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import threading
+from collections.abc import Sequence
 from typing import Protocol
 
+from app.avisos.modelos import AvisoNuevo
+from app.avisos.repositorio import RepositorioAvisosEnMemoria
 from app.dominio.modelos import DecisionTriaje, EstadoReporte, Reporte
 
 
@@ -12,9 +15,10 @@ class RepositorioReportes(Protocol):
     def buscar(self, codigo: str) -> Reporte | None: ...
     def todos(self) -> list[Reporte]: ...
 
-    def confirmar(self, decision: DecisionTriaje) -> bool:
+    def confirmar(self, decision: DecisionTriaje, avisos: Sequence[AvisoNuevo] = ()) -> bool:
         """HU-02: si el reporte no está confirmado, lo confirma con la prioridad final y guarda
-        la decisión, todo en una sola operación. False si ya estaba confirmado."""
+        la decisión y sus avisos pendientes (#63), todo en una sola operación. False si ya
+        estaba confirmado (y entonces no guarda avisos)."""
         ...
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]: ...
@@ -33,6 +37,7 @@ class RepositorioEnMemoria:
         self._decisiones: dict[str, list[DecisionTriaje]] = {}
         self._claves: dict[str, str] = {}  # clave de idempotencia -> código
         self._candado = threading.Lock()
+        self.avisos = RepositorioAvisosEnMemoria()  # #63: la «misma base» de los avisos
 
     def guardar(self, reporte: Reporte) -> None:
         self._datos[reporte.codigo] = reporte
@@ -43,7 +48,7 @@ class RepositorioEnMemoria:
     def todos(self) -> list[Reporte]:
         return list(self._datos.values())
 
-    def confirmar(self, decision: DecisionTriaje) -> bool:
+    def confirmar(self, decision: DecisionTriaje, avisos: Sequence[AvisoNuevo] = ()) -> bool:
         with self._candado:
             reporte = self._datos.get(decision.codigo)
             if reporte is None or reporte.estado == EstadoReporte.CONFIRMADO:
@@ -51,6 +56,7 @@ class RepositorioEnMemoria:
             reporte.prioridad = decision.prioridad_final
             reporte.estado = EstadoReporte.CONFIRMADO
             self._decisiones.setdefault(decision.codigo, []).append(decision)
+            self.avisos.agregar(decision.codigo, avisos, decision.decidido_en)
             return True
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
