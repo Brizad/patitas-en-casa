@@ -17,19 +17,14 @@ import smtplib
 from email.message import EmailMessage
 
 from app.ajustes import AjustesCorreo, ConfiguracionIncompleta
+from app.notificaciones.canal import EntregaFallida
+
+__all__ = ["EntregaFallida", "NotificadorCorreo", "NotificadorRegistro", "crear_notificador"]
 
 log = logging.getLogger(__name__)
 
 TIEMPO_MAXIMO_SMTP_S = 10
 LARGO_MAXIMO_ASUNTO = 120
-
-
-class EntregaFallida(Exception):
-    """El canal no aceptó el mensaje. «permanente»: reintentar no ayudaría."""
-
-    def __init__(self, motivo: str, *, permanente: bool = False) -> None:
-        super().__init__(motivo)
-        self.permanente = permanente
 
 
 class NotificadorRegistro:
