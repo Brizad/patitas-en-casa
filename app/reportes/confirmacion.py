@@ -6,10 +6,12 @@ en la bitácora. La IA sugiere; la decisión es del veterinario.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app import config
-from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Rol, Usuario
+from app.avisos.modelos import AvisoNuevo
+from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Reporte, Rol, Usuario
 from app.reportes.repositorio import RepositorioReportes
 
 
@@ -32,14 +34,33 @@ def prioridad_sugerida(estado: EstadoReporte, prioridad: Prioridad | None) -> Pr
     return prioridad
 
 
+# Decide a quién avisar según el reporte y la prioridad final (ServicioRescates.avisos_para).
+PlanificadorAvisos = Callable[[Reporte, Prioridad], list[AvisoNuevo]]
+
+
+@dataclass(frozen=True)
+class ResultadoConfirmacion:
+    decision: DecisionTriaje
+    avisos: int  # avisos guardados como pendientes; enviarlos es trabajo del procesador
+
+
 class ServicioConfirmacion:
     def __init__(self, repositorio: RepositorioReportes,
-                 reloj: Callable[[], datetime] | None = None) -> None:
+                 reloj: Callable[[], datetime] | None = None, *,
+                 planificar_avisos: PlanificadorAvisos | None = None) -> None:
         self._repositorio = repositorio
         self._reloj = reloj or (lambda: datetime.now(UTC))
+        self._planificar = planificar_avisos or (lambda reporte, prioridad: [])
 
     def confirmar(self, codigo: str, veterinario: Usuario, prioridad: Prioridad | None = None,
                   justificacion: str | None = None) -> DecisionTriaje:
+        return self.confirmar_y_programar(codigo, veterinario, prioridad, justificacion).decision
+
+    def confirmar_y_programar(self, codigo: str, veterinario: Usuario,
+                              prioridad: Prioridad | None = None,
+                              justificacion: str | None = None) -> ResultadoConfirmacion:
+        """Aplica RN-06 y RN-16 y, si se cumplen, guarda la decisión y los avisos pendientes
+        juntos (#63). No envía nada: el resultado de negocio no depende del correo."""
         if veterinario.rol != Rol.VETERINARIO:
             raise PermissionError("Solo el veterinario confirma la prioridad (RN-06).")
         reporte = self._repositorio.buscar(codigo)
@@ -55,6 +76,7 @@ class ServicioConfirmacion:
         decision = DecisionTriaje(codigo=codigo, veterinario=veterinario.correo,
                                   prioridad_sugerida=sugerida, prioridad_final=final,
                                   justificacion=justificacion, decidido_en=self._reloj())
-        if not self._repositorio.confirmar(decision):
+        avisos = self._planificar(reporte, final)
+        if not self._repositorio.confirmar(decision, avisos):
             raise ReporteYaConfirmado(f"El reporte {codigo} ya fue confirmado.")
-        return decision
+        return ResultadoConfirmacion(decision, len(avisos))

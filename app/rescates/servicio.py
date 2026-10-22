@@ -11,6 +11,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from app import config
+from app.avisos.modelos import AvisoNuevo
 from app.cupos.servicio import Notificador
 from app.dominio.modelos import (
     EstadoReporte,
@@ -159,15 +160,15 @@ class ServicioRescates:
         return sorted(correo for correo, zona in self._rescates.disponibles().items()
                       if condicion(zona) and self._rescates.activo_de(correo) is None)
 
-    def avisos_para(self, reporte: Reporte, prioridad: Prioridad) -> list[tuple[str, str]]:
-        """RF-05: (destinatario, mensaje) para los rescatistas libres de la zona si el reporte
+    def avisos_para(self, reporte: Reporte, prioridad: Prioridad) -> list[AvisoNuevo]:
+        """RF-05: un aviso para cada uno de los rescatistas libres de la zona si el reporte
         queda crítico o alto con esa prioridad. El correo no lleva la dirección: se entrega al
         aceptar. No envía nada: decidir a quién avisar y enviar son pasos distintos (II-03)."""
         if prioridad not in PRIORIDADES_DE_RESCATE:
             return []
         mensaje = (f"Rescate {NOMBRE_PRIORIDAD[prioridad]} {reporte.codigo} {_lugar(reporte)}. "
                    "Entra a Patitas en Casa para aceptarlo.")
-        return [(correo, mensaje)
+        return [AvisoNuevo(correo, mensaje)
                 for correo in self._libres_para_avisar(lambda zona: en_zona(reporte, zona))]
 
     def alertar_confirmado(self, codigo: str) -> None:
@@ -175,8 +176,8 @@ class ServicioRescates:
         reporte = self._reportes.buscar(codigo)
         if not self.se_ofrece(reporte):
             return
-        for correo, mensaje in self.avisos_para(reporte, reporte.prioridad):
-            self._avisar(correo, mensaje)
+        for aviso in self.avisos_para(reporte, reporte.prioridad):
+            self._avisar(aviso.destinatario, aviso.mensaje)
 
     def escalar_vencidos(self) -> list[str]:
         """RF-23: sin aceptar a tiempo → aviso al coordinador (una vez) y oferta en toda la

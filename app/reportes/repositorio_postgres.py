@@ -1,10 +1,14 @@
 """Persistencia de reportes en PostgreSQL (DT-01), detrás de RepositorioReportes."""
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from sqlalchemy import Engine, RowMapping, select, update
 from sqlalchemy import insert as insertar
 from sqlalchemy.dialects.postgresql import insert
 
+from app.avisos.modelos import AvisoNuevo
+from app.avisos.repositorio_postgres import insertar_avisos
 from app.bd.esquema import decisiones_triaje, reportes
 from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Reporte, Ubicacion
 
@@ -57,9 +61,10 @@ class RepositorioPostgres:
             ).mappings().first()
         return None if fila is None else _a_reporte(fila)
 
-    def confirmar(self, decision: DecisionTriaje) -> bool:
+    def confirmar(self, decision: DecisionTriaje, avisos: Sequence[AvisoNuevo] = ()) -> bool:
         """UPDATE condicional: si dos veterinarios confirman a la vez, PostgreSQL bloquea la
-        fila y el segundo ya no cumple "estado <> confirmado" (mismo patrón que DT-05)."""
+        fila y el segundo ya no cumple "estado <> confirmado" (mismo patrón que DT-05).
+        #63: los avisos se insertan en la misma transacción; si algo falla, nada queda."""
         with self._motor.begin() as conexion:
             cambio = conexion.execute(
                 update(reportes)
@@ -76,6 +81,7 @@ class RepositorioPostgres:
                 prioridad_final=decision.prioridad_final.value,
                 justificacion=decision.justificacion, decidido_en=decision.decidido_en,
             ))
+            insertar_avisos(conexion, decision.codigo, avisos, decision.decidido_en)
         return True
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:

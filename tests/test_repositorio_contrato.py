@@ -8,7 +8,10 @@ from copy import deepcopy
 from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
+from app.avisos.modelos import AvisoNuevo, EstadoAviso
+from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
 from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Reporte, Ubicacion
 from app.reportes.repositorio import RepositorioEnMemoria
 from app.reportes.repositorio_postgres import RepositorioPostgres
@@ -170,3 +173,40 @@ def test_dos_reenvios_a_la_vez_guardan_un_solo_reporte(repositorio):
         h.join()
     assert len(repositorio.todos()) == 1
     assert codigos[0] == codigos[1] == repositorio.todos()[0].codigo
+
+
+# --- #63 (outbox): la confirmación y sus avisos se guardan juntos ------------------------
+
+def avisos_de(repositorio, codigo="ABCD1234"):
+    if isinstance(repositorio, RepositorioPostgres):
+        return RepositorioAvisosPostgres(repositorio._motor).de_reporte(codigo)
+    return repositorio.avisos.de_reporte(codigo)
+
+
+AVISOS = [AvisoNuevo("ana@rescate.co", "Rescate alto ABCD1234"),
+          AvisoNuevo("luis@rescate.co", "Rescate alto ABCD1234")]
+
+
+def test_confirmar_guarda_los_avisos_pendientes_en_la_misma_operacion(repositorio):
+    repositorio.guardar(reporte_completo())
+    assert repositorio.confirmar(decision(), AVISOS) is True
+    assert [(a.destinatario, a.estado) for a in avisos_de(repositorio)] == [
+        ("ana@rescate.co", EstadoAviso.PENDIENTE), ("luis@rescate.co", EstadoAviso.PENDIENTE)]
+
+
+def test_si_ya_estaba_confirmado_no_se_agregan_avisos(repositorio):
+    repositorio.guardar(reporte_completo())
+    repositorio.confirmar(decision())
+    assert repositorio.confirmar(decision(), AVISOS) is False
+    assert avisos_de(repositorio) == []
+
+
+@pytest.mark.postgres
+def test_si_falla_guardar_un_aviso_la_confirmacion_se_deshace(bd_limpia):
+    """Punto de interrupción antes de confirmar la transacción: no queda nada a medias."""
+    repositorio = RepositorioPostgres(bd_limpia)
+    repositorio.guardar(reporte_completo())
+    with pytest.raises(IntegrityError):
+        repositorio.confirmar(decision(), [AvisoNuevo("ana@rescate.co", None)])  # NOT NULL
+    assert repositorio.buscar("ABCD1234").estado == EstadoReporte.CLASIFICADO
+    assert repositorio.decisiones("ABCD1234") == [] and avisos_de(repositorio) == []
