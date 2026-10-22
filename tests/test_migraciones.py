@@ -116,3 +116,39 @@ def test_la_base_exige_justificacion_al_ajustar(bd_limpia, final, justificacion,
     else:
         with pytest.raises(IntegrityError), bd_limpia.begin() as conexion:
             conexion.execute(sentencia, {"final": final, "justificacion": justificacion})
+
+
+# --- #63: tabla avisos (outbox) ---------------------------------------------------------
+
+def insertar_aviso(motor, **cambios):
+    fila = {"reporte_codigo": "ABCD1234", "destinatario": "ana@rescate.co",
+            "mensaje": "Rescate crítico ABCD1234", "estado": "pendiente", "intentos": 0,
+            **cambios}
+    with motor.begin() as conexion:
+        conexion.execute(text(
+            "INSERT INTO avisos (reporte_codigo, destinatario, mensaje, estado, intentos, "
+            "creado_en, proximo_intento_en) VALUES (:reporte_codigo, :destinatario, "
+            ":mensaje, :estado, :intentos, now(), now())"), fila)
+
+
+def test_aviso_valido_se_inserta(bd_limpia):
+    insertar(bd_limpia)
+    insertar_aviso(bd_limpia)
+
+
+@pytest.mark.parametrize("cambios", [
+    {"estado": "perdido"},
+    {"intentos": -1},
+    {"reporte_codigo": "NOEXISTE"},  # FK: no hay aviso sin reporte
+])
+def test_la_base_rechaza_avisos_invalidos(bd_limpia, cambios):
+    insertar(bd_limpia)
+    with pytest.raises(IntegrityError):
+        insertar_aviso(bd_limpia, **cambios)
+
+
+def test_un_solo_aviso_por_rescatista_y_reporte(bd_limpia):
+    insertar(bd_limpia)
+    insertar_aviso(bd_limpia)
+    with pytest.raises(IntegrityError):
+        insertar_aviso(bd_limpia)
