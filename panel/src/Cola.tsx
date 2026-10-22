@@ -9,7 +9,8 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
   const [elegido, setElegido] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(true);
-  const [aviso, setAviso] = useState<{ codigo: string; texto: string } | null>(null);
+  const [aviso, setAviso] = useState<{ codigo: string; texto: string; estado?: string } | null>(
+    null);
 
   const recargar = useCallback(async () => {
     setCargando(true);
@@ -43,8 +44,9 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
         {aviso && (
           <div className="resultado" role="status">
             <p><code>{aviso.codigo}</code>: {aviso.texto}</p>
+            {aviso.estado && <p>{aviso.estado}</p>}
             <button onClick={async () => setAviso({ ...aviso,
-              texto: `${aviso.texto} ${await resumenAvisos(token, aviso.codigo)}` })}>
+              estado: await resumenAvisos(token, aviso.codigo) })}>
               Ver estado de los avisos</button>
           </div>)}
         {!cargando && !error && reportes.length === 0 && (
