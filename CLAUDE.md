@@ -31,6 +31,9 @@ veterinarios y control de cupos del refugio.
 | `app/api/main.py` | `crear_app(repositorio=None, repositorio_cupos=None)`: endpoints REST; sin argumentos usa PostgreSQL. |
 | `app/config.py` | Parámetros de negocio (umbral de confianza, alerta, límites del video). |
 | `tests/` | Pruebas pytest (unitarias y de caja negra de la API). |
+| `app/avisos/` | Outbox de avisos (#63): modelo, repositorios (memoria y PostgreSQL) y `ProcesadorAvisos` (reintentos, estado real). |
+| `app/notificaciones/canal.py` | Puerto `CanalAviso` y `EntregaFallida`; el procesador no conoce el SMTP. |
+| `panel/` | Panel del personal en React + TypeScript (Vite); se compila a `app/panel_web` (ignorado por git) y se sirve en `/panel/`. |
 | `app/pwa/` | PWA ciudadana (HU-08, #47): HTML, CSS y JS sencillos servidos en `/app/` con CSP estricta; sin recursos externos ni `innerHTML` con datos; el service worker solo guarda la interfaz. |
 | `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API; la PWA reutiliza su diseño). |
 
@@ -53,6 +56,8 @@ veterinarios y control de cupos del refugio.
   toda la ciudad; reporte sin comuna = a todos), alerta por correo y escalamiento al coordinador
   sin aceptar a los 15 min (crítico) o 30 min (alto, prototipo): el caso pasa a toda la ciudad.
   Valores en `app/config.py`; el aviso sale una sola vez (tabla `escalamientos`).
+- **Avisos (#63)**: confirmar guarda los avisos como pendientes en la misma transacción; el
+  envío es del procesador. Nunca decir que un aviso «se envió» o «llegó» si no está `enviado`.
 - **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
   código, los pasos y sus fechas; nunca descripción, ubicación, prioridad ni correos.
 
@@ -109,10 +114,11 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 1. **Cada cambio sigue el flujo**: issue en GitHub → rama propia desde `main`
    (`feat/`, `fix/`, `refactor/`, `chore/`, `docs/`, `test/`) → **pruebas primero** →
    Pull Request que referencia el issue, con CI en verde.
-2. **Merges:** el asistente puede integrar un PR (`gh pr merge --squash --delete-branch`) solo
-   con el CI en verde y sin `.env`, contraseñas reales ni tokens en el diff (las contraseñas
-   falsas en pruebas están permitidas). Después de cada merge, resume en 2 líneas qué cambió y
-   por qué. Nunca hace push directo a `main`.
+2. **Merges (desde II-02):** el asistente **no** integra un PR hasta que el autor deje en el PR
+   su comentario de revisión con la lista del acuerdo de terminado. Cada PR tiene 300 líneas
+   cambiadas o menos (sin contar archivos generados como `package-lock.json`); si un cambio
+   necesita más, se parte o se justifica antes de abrirlo. Siempre con el CI en verde y sin
+   `.env`, contraseñas reales ni tokens en el diff. Nunca hace push directo a `main`.
 3. **Nunca subir contraseñas, tokens ni el archivo `.env`.** Las credenciales se leen de
    variables de entorno / `.env` (ignorado por git). En el repositorio solo va `.env.example`
    con valores de ejemplo.

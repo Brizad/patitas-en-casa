@@ -48,6 +48,20 @@ Rescatista (HU-06), con `Authorization: Bearer <token>`:
   (`trasladado`, `atendido_en_sitio`, `no_encontrado`, `fallecido`); `GET /rescates/mio`.
   RN-08: un rescate tiene un solo rescatista y un rescatista un solo rescate activo.
 
+## Panel del personal y avisos (incremento 3, sin publicar)
+
+- `/panel/`: panel en React para el veterinario (inicio de sesión, cola, confirmar o ajustar).
+  Se compila con `cd panel && npm ci && npm run build` (queda en `app/panel_web`, que no se sube).
+- Al confirmar un crítico o alto, los avisos a los rescatistas quedan **pendientes** y el
+  procesador los envía cada 15 s con reintentos. `GET /reportes/{codigo}/avisos` muestra su estado.
+
+## Con Docker (un solo comando)
+
+```bash
+cp .env.example .env      # escribe POSTGRES_PASSWORD y PATITAS_JWT_SECRETO
+docker compose up --build # API en http://127.0.0.1:8000/docs, PWA en /app/, panel en /panel/
+```
+
 ## Cómo ejecutarlo
 
 Requisitos: Python 3.11+ y PostgreSQL 17 con dos bases vacías, `patitas` (aplicación) y
