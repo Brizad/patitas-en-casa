@@ -4,7 +4,11 @@
   si el destinatario es un correo, a esa persona (alertas a rescatistas, HU-06).
 - NotificadorRegistro: escribe la alerta en el log; se usa si no hay SMTP configurado.
 
-Una falla del correo nunca deshace el ingreso que la causó: se registra en el log.
+Dos formas de usarlos (#63):
+- enviar(): una falla se registra en el log y no se propaga (alerta de ocupación, RN-04: el
+  ingreso que la causó no se deshace).
+- entregar(): una falla lanza EntregaFallida para que el procesador de avisos (outbox) pueda
+  reintentar y dejar el estado real del aviso.
 """
 from __future__ import annotations
 
@@ -20,9 +24,22 @@ TIEMPO_MAXIMO_SMTP_S = 10
 LARGO_MAXIMO_ASUNTO = 120
 
 
+class EntregaFallida(Exception):
+    """El canal no aceptó el mensaje. «permanente»: reintentar no ayudaría."""
+
+    def __init__(self, motivo: str, *, permanente: bool = False) -> None:
+        super().__init__(motivo)
+        self.permanente = permanente
+
+
 class NotificadorRegistro:
-    def enviar(self, destinatario: str, mensaje: str) -> None:
+    """Sin SMTP: escribe en el log. Simula la entrega; no demuestra que alguien la reciba."""
+
+    def entregar(self, destinatario: str, mensaje: str) -> None:
         log.warning("Notificación para %s: %s", destinatario, mensaje)
+
+    def enviar(self, destinatario: str, mensaje: str) -> None:
+        self.entregar(destinatario, mensaje)
 
 
 class NotificadorCorreo:
@@ -37,13 +54,13 @@ class NotificadorCorreo:
         self._contrasena = contrasena
         self._starttls = starttls
 
-    def enviar(self, destinatario: str, mensaje: str) -> None:
+    def entregar(self, destinatario: str, mensaje: str) -> None:
+        """Lanza EntregaFallida si el servidor SMTP no acepta el mensaje."""
         # HU-06: un destinatario con @ es una persona (rescatista); si no, es un grupo.
         correos = [destinatario] if "@" in destinatario else self._grupos.get(destinatario, [])
         if not correos:
-            log.warning("No hay correos configurados para %s; alerta no enviada: %s",
-                        destinatario, mensaje)
-            return
+            raise EntregaFallida(f"No hay correos configurados para {destinatario}.",
+                                 permanente=True)
         correo = EmailMessage()
         correo["From"] = self._remitente
         correo["To"] = ", ".join(correos)
@@ -57,8 +74,17 @@ class NotificadorCorreo:
                     smtp.login(self._usuario, self._contrasena)
                 smtp.send_message(correo)
         except (smtplib.SMTPException, OSError) as error:
-            log.error("No se pudo enviar la notificación a %s (%s): %s",
-                      destinatario, type(error).__name__, mensaje)
+            # Solo el tipo de error: el texto del servidor podría incluir datos de la cuenta.
+            raise EntregaFallida(f"SMTP: {type(error).__name__}") from error
+
+    def enviar(self, destinatario: str, mensaje: str) -> None:
+        """Como entregar(), pero la falla queda en el log y no se propaga (contrato anterior)."""
+        try:
+            self.entregar(destinatario, mensaje)
+        except EntregaFallida as error:
+            nivel = logging.WARNING if error.permanente else logging.ERROR
+            log.log(nivel, "No se pudo enviar la notificación a %s (%s): %s",
+                    destinatario, error, mensaje)
 
 
 def crear_notificador(ajustes: AjustesCorreo) -> NotificadorCorreo | NotificadorRegistro:
