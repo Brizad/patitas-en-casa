@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 
 from app import config
 from app.avisos.repositorio import RepositorioAvisos
-from app.notificaciones.correo import EntregaFallida
+from app.notificaciones.canal import CanalAviso, EntregaFallida
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ ESPERA_MAXIMA = timedelta(hours=1)
 
 
 class ProcesadorAvisos:
-    def __init__(self, repositorio: RepositorioAvisos, canal, *,
+    def __init__(self, repositorio: RepositorioAvisos, canal: CanalAviso, *,
                  reloj: Callable[[], datetime] | None = None,
                  max_intentos: int = config.MAX_INTENTOS_AVISO,
                  espera_base_s: float = config.ESPERA_BASE_AVISO_S,
