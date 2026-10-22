@@ -7,7 +7,12 @@ import pytest
 from app.ajustes import cargar_ajustes_correo
 from app.cupos.servicio import ServicioCupos
 from app.dominio.modelos import Animal, Especie, Refugio
-from app.notificaciones.correo import NotificadorCorreo, NotificadorRegistro, crear_notificador
+from app.notificaciones.correo import (
+    EntregaFallida,
+    NotificadorCorreo,
+    NotificadorRegistro,
+    crear_notificador,
+)
 
 VARIABLES = ["PATITAS_SMTP_HOST", "PATITAS_SMTP_PORT", "PATITAS_SMTP_USUARIO",
              "PATITAS_SMTP_CONTRASENA", "PATITAS_SMTP_REMITENTE", "PATITAS_SMTP_STARTTLS",
@@ -162,3 +167,32 @@ def test_rn04_la_alerta_del_90_por_ciento_llega_por_correo():
     servicio.registrar_ingreso(Animal("Luna", Especie.PERRO, "herida en pata"))
     (mensaje,) = SMTPFalso.enviados
     assert "90 %" in mensaje["Subject"]
+
+
+# --- II-03 (#63): entregar() informa la falla para que el outbox pueda reintentar ---------
+
+def test_entregar_envia_igual_que_enviar():
+    correo().entregar("ana@rescate.co", "Rescate crítico F2HW5RTB en la comuna 6.")
+    (mensaje,) = SMTPFalso.enviados
+    assert mensaje["To"] == "ana@rescate.co"
+
+
+def test_entregar_lanza_entrega_fallida_si_el_smtp_falla_sin_exponer_la_clave(monkeypatch):
+    monkeypatch.setattr(smtplib, "SMTP", SMTPCaido)
+    with pytest.raises(EntregaFallida) as error:
+        correo().entregar("ana@rescate.co", "Alerta")
+    assert "OSError" in str(error.value)
+    assert "clave-falsa-smtp" not in str(error.value)
+
+
+def test_entregar_a_un_grupo_vacio_es_una_falla_permanente():
+    with pytest.raises(EntregaFallida) as error:
+        correo(grupos={}).entregar("coordinadores", "Alerta")
+    assert error.value.permanente
+    assert SMTPFalso.enviados == []
+
+
+def test_el_registro_entrega_sin_fallar_pero_solo_simula(caplog):
+    with caplog.at_level(logging.WARNING):
+        NotificadorRegistro().entregar("ana@rescate.co", "Rescate crítico")
+    assert "ana@rescate.co" in caplog.text
