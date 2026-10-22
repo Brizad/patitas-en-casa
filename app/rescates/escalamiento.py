@@ -12,11 +12,16 @@ from collections.abc import Callable
 log = logging.getLogger(__name__)
 
 
-async def vigilar_escalamientos(escalar: Callable[[], object], cada_s: float) -> None:
+async def repetir_cada(accion: Callable[[], object], cada_s: float, nombre: str) -> None:
+    """Ejecuta «accion» cada «cada_s» segundos en un hilo, sin detener las peticiones. Un
+    error se registra y la repetición sigue (base o SMTP caídos)."""
     while True:
         await asyncio.sleep(cada_s)
         try:
-            await asyncio.to_thread(escalar)
+            await asyncio.to_thread(accion)
         except Exception:
-            # La vigilancia no debe morir por un fallo puntual (base o SMTP caídos).
-            log.exception("Falló la revisión de rescates sin aceptar; se reintenta.")
+            log.exception("Falló la tarea periódica «%s»; se reintenta.", nombre)
+
+
+async def vigilar_escalamientos(escalar: Callable[[], object], cada_s: float) -> None:
+    await repetir_cada(escalar, cada_s, "revisión de rescates sin aceptar")
