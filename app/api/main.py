@@ -87,6 +87,8 @@ logger = logging.getLogger(__name__)
 
 # HU-08 (#47): la PWA ciudadana (HTML + JS sencillos) la sirve la misma API en /app/.
 CARPETA_PWA = Path(__file__).resolve().parents[1] / "pwa"
+# II-03 (#64): panel del personal en React; se compila con «npm run build» en panel/.
+CARPETA_PANEL = Path(__file__).resolve().parents[1] / "panel_web"
 # Windows puede asociar .js a text/plain en el registro; el navegador exige estos tipos.
 for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
                           ("application/manifest+json", ".webmanifest"),
@@ -442,7 +444,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     @app.middleware("http")
     async def cabeceras_de_la_pwa(peticion: Request, siguiente):
         respuesta = await siguiente(peticion)
-        if peticion.url.path.startswith("/app"):
+        if peticion.url.path.startswith(("/app", "/panel")):
             respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
             respuesta.headers["X-Content-Type-Options"] = "nosniff"
             respuesta.headers["Referrer-Policy"] = "no-referrer"
@@ -453,6 +455,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         return RedirectResponse("/app/")
 
     app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")
+    if (CARPETA_PANEL / "index.html").exists():  # sin compilar, /panel no existe
+        app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")
 
     @app.post("/refugio/ingresos", status_code=201, dependencies=[coordinacion])
     def registrar_ingreso(datos: IngresoEntrada):
