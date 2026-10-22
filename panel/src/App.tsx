@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Cuenta, iniciarSesion, miCuenta } from "./api";
+import Cola from "./Cola";
 import { textoError } from "./mensajes";
 
 export default function App() {
@@ -15,7 +16,7 @@ export default function App() {
         <span>{cuenta.nombre} · {cuenta.rol}</span>
         <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
       </header>
-      <p className="vacio">Sesión iniciada. La cola se agrega en el siguiente paso.</p>
+      <Cola token={token} cuenta={cuenta} />
     </main>
   );
 }

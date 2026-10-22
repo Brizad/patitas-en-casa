@@ -16,3 +16,14 @@ label { display: block; margin: 10px 0; font-weight: 600; }
   color: #fff; }
 .barra span { margin-left: auto; }
 .vacio { padding: 24px; color: #5a6461; }
+.cola { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 16px; padding: 16px; }
+@media (max-width: 760px) { .cola { grid-template-columns: 1fr; } }
+.cola ul { list-style: none; padding: 0; margin: 0; }
+.fila-titulo { display: flex; justify-content: space-between; align-items: center; }
+.item { width: 100%; display: grid; grid-template-columns: 7em 1fr 3em; gap: 8px; text-align: left;
+  margin: 4px 0; align-items: center; }
+.item.activo { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde) inset; }
+.chip { border-radius: 99px; padding: 2px 8px; font-size: .85em; font-weight: 600; background: #eef1f0; }
+.chip.critica { background: #fbe1de; color: #8c1d12; }
+.chip.alta { background: #fdebd3; color: #7a4510; }
+.nota { color: #5a6461; font-style: italic; }
