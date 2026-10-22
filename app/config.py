@@ -28,3 +28,10 @@ COMUNAS_CUCUTA = tuple(range(1, 11))
 # (tabla de configuración del prototipo).
 ESCALAMIENTO_MINUTOS = {"critica": 15, "alta": 30}
 REVISION_ESCALAMIENTOS_SEGUNDOS = 60
+
+# #63 (outbox): avisos a rescatistas. Reintentos con espera exponencial desde la base; un
+# reclamo que no termina en este tiempo (procesador detenido) se vuelve a tomar.
+MAX_INTENTOS_AVISO = 5
+ESPERA_BASE_AVISO_S = 60
+VENCIMIENTO_RECLAMO_AVISO_S = 300
+REVISION_AVISOS_SEGUNDOS = 15
