@@ -159,15 +159,23 @@ class ServicioRescates:
         return sorted(correo for correo, zona in self._rescates.disponibles().items()
                       if condicion(zona) and self._rescates.activo_de(correo) is None)
 
+    def avisos_para(self, reporte: Reporte, prioridad: Prioridad) -> list[tuple[str, str]]:
+        """RF-05: (destinatario, mensaje) para los rescatistas libres de la zona si el reporte
+        queda crítico o alto con esa prioridad. El correo no lleva la dirección: se entrega al
+        aceptar. No envía nada: decidir a quién avisar y enviar son pasos distintos (II-03)."""
+        if prioridad not in PRIORIDADES_DE_RESCATE:
+            return []
+        mensaje = (f"Rescate {NOMBRE_PRIORIDAD[prioridad]} {reporte.codigo} {_lugar(reporte)}. "
+                   "Entra a Patitas en Casa para aceptarlo.")
+        return [(correo, mensaje)
+                for correo in self._libres_para_avisar(lambda zona: en_zona(reporte, zona))]
+
     def alertar_confirmado(self, codigo: str) -> None:
-        """RF-05: al confirmar un crítico o alto se avisa a los rescatistas de la zona. El
-        correo no lleva la dirección: se entrega al aceptar."""
+        """Envío directo de los avisos de un reporte ya confirmado (camino anterior a #63)."""
         reporte = self._reportes.buscar(codigo)
         if not self.se_ofrece(reporte):
             return
-        mensaje = (f"Rescate {NOMBRE_PRIORIDAD[reporte.prioridad]} {codigo} {_lugar(reporte)}. "
-                   "Entra a Patitas en Casa para aceptarlo.")
-        for correo in self._libres_para_avisar(lambda zona: en_zona(reporte, zona)):
+        for correo, mensaje in self.avisos_para(reporte, reporte.prioridad):
             self._avisar(correo, mensaje)
 
     def escalar_vencidos(self) -> list[str]:
