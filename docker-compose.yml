@@ -1,0 +1,30 @@
+# Patitas en Casa con un solo comando (II-03, I1): docker compose up --build
+# Requiere el .env (copia de .env.example con tu contraseña y PATITAS_JWT_SECRETO).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en el .env}
+      POSTGRES_DB: ${POSTGRES_DB:-patitas}
+    volumes:
+      - datos:/var/lib/postgresql/data   # los datos sobreviven a reiniciar los contenedores
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db        # dentro de Compose la base se llama «db», no localhost
+      POSTGRES_PORT: "5432"
+    ports:
+      - "8000:8000"            # API en /docs, PWA en /app/ y panel en /panel/
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  datos:
