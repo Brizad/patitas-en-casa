@@ -36,3 +36,4 @@ class Aviso:
     proximo_intento_en: datetime
     enviado_en: datetime | None = None
     ultimo_error: str | None = None
+    reclamado_en: datetime | None = None
