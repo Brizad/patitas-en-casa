@@ -27,3 +27,8 @@ label { display: block; margin: 10px 0; font-weight: 600; }
 .chip.critica { background: #fbe1de; color: #8c1d12; }
 .chip.alta { background: #fdebd3; color: #7a4510; }
 .nota { color: #5a6461; font-style: italic; }
+.acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.ajuste { margin-top: 10px; padding: 12px; border-radius: 10px; background: #f7faf9;
+  border: 1px solid var(--borde); }
+.resultado { margin: 10px 0; padding: 10px 12px; border-radius: 10px; background: #e6f2ee;
+  border: 1px solid #b9d9cf; }

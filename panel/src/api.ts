@@ -51,3 +51,18 @@ export async function iniciarSesion(correo: string, clave: string): Promise<stri
 export const miCuenta = (token: string) => pedir<Cuenta>("/auth/yo", {}, token);
 
 export const cola = (token: string) => pedir<ReporteEnCola[]>("/cola", {}, token);
+
+export function confirmar(token: string, codigo: string, prioridad?: Prioridad,
+                          justificacion?: string) {
+  return pedir<RespuestaConfirmacion>(`/reportes/${codigo}/confirmacion`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prioridad: prioridad ?? null, justificacion: justificacion ?? null }),
+  }, token);
+}
+
+export interface Aviso { estado: string; intentos: number; ultimo_error: string | null }
+export interface ResumenAvisos { resumen: Record<string, number>; avisos: Aviso[] }
+
+export const estadoAvisos = (token: string, codigo: string) =>
+  pedir<ResumenAvisos>(`/reportes/${codigo}/avisos`, {}, token);
