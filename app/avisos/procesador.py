@@ -53,9 +53,13 @@ class ProcesadorAvisos:
                     log.error("Aviso %s del reporte %s fallido tras %s intentos: %s",
                               aviso.id, aviso.reporte_codigo, aviso.intentos, motivo)
                 else:
-                    self._repo.marcar_fallo(aviso.id, motivo,
-                                            self._proximo(aviso.intentos, self._reloj()))
+                    proximo = self._proximo(aviso.intentos, self._reloj())
+                    self._repo.marcar_fallo(aviso.id, motivo, proximo)
                     cuenta["reintentos"] += 1
+                    # Sin el correo del rescatista en el log: basta el id y el reporte.
+                    log.warning("Aviso %s del reporte %s falló (intento %s: %s); reintento a "
+                                "las %s.", aviso.id, aviso.reporte_codigo, aviso.intentos,
+                                motivo, proximo.isoformat(timespec="seconds"))
                 continue
             self._repo.marcar_enviado(aviso.id, self._reloj())
             cuenta["enviados"] += 1

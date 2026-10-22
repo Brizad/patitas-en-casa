@@ -1,4 +1,5 @@
 """Procesador de avisos (#63, outbox): envía los pendientes, reintenta y deja el estado real."""
+import logging
 from datetime import UTC, datetime, timedelta
 
 from app.avisos.modelos import AvisoNuevo, EstadoAviso
@@ -104,3 +105,11 @@ def test_un_canal_sin_entregar_usa_enviar():
     repo, _, procesador = preparar(canal)
     procesador.procesar()
     assert canal.enviados == ["ana@rescate.co"] and estado(repo)[0] == EstadoAviso.ENVIADO
+
+
+def test_cada_intento_fallido_queda_en_el_log_sin_el_correo(caplog):
+    _, _, procesador = preparar(Canal(fallas=1))
+    with caplog.at_level(logging.WARNING):
+        procesador.procesar()
+    assert "ABCD1234" in caplog.text and "intento 1" in caplog.text
+    assert "ana@rescate.co" not in caplog.text
