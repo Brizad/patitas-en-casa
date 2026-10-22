@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Cuenta, ReporteEnCola, cola } from "./api";
+import Confirmar, { resumenAvisos } from "./Confirmar";
 import { etiquetaEstado, textoError } from "./mensajes";
 
 /** Cola priorizada (RF-04): mismo orden que GET /cola; el detalle muestra las evidencias. */
@@ -8,6 +9,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
   const [elegido, setElegido] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(true);
+  const [aviso, setAviso] = useState<{ codigo: string; texto: string } | null>(null);
 
   const recargar = useCallback(async () => {
     setCargando(true);
@@ -24,6 +26,12 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
   useEffect(() => { void recargar(); }, [recargar]);
   const detalle = reportes.find((r) => r.codigo === elegido) ?? null;
 
+  function terminado(codigo: string, texto: string) {
+    setAviso({ codigo, texto });
+    setElegido(null);
+    void recargar();
+  }
+
   return (
     <section className="cola">
       <div className="lista tarjeta">
@@ -32,6 +40,13 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
           <button onClick={() => void recargar()} disabled={cargando}>Actualizar</button>
         </div>
         {error && <p className="error" role="alert">{error}</p>}
+        {aviso && (
+          <div className="resultado" role="status">
+            <p><code>{aviso.codigo}</code>: {aviso.texto}</p>
+            <button onClick={async () => setAviso({ ...aviso,
+              texto: `${aviso.texto} ${await resumenAvisos(token, aviso.codigo)}` })}>
+              Ver estado de los avisos</button>
+          </div>)}
         {!cargando && !error && reportes.length === 0 && (
           <p className="vacio">No hay reportes por confirmar.</p>)}
         <ul>
@@ -55,7 +70,10 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
             <h3>Evidencias del triaje</h3>
             {detalle.evidencias.length === 0 ? <p className="vacio">Sin evidencias.</p> : (
               <ol>{detalle.evidencias.map((ev) => <li key={ev}>{ev}</li>)}</ol>)}
-            {cuenta.rol !== "veterinario" && (
+            {cuenta.rol === "veterinario" ? (
+              <Confirmar key={detalle.codigo} token={token} reporte={detalle}
+                alTerminar={(texto) => terminado(detalle.codigo, texto)} />
+            ) : (
               <p className="nota">Solo un veterinario puede confirmar la prioridad (RN-06).</p>)}
           </>)}
       </div>
