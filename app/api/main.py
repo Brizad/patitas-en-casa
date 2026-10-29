@@ -531,7 +531,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         if motor is not None:
             motor.dispose()
 
-    app = FastAPI(title="Patitas en Casa", version="1.0.0", lifespan=ciclo_de_vida)
+    app = FastAPI(title="Patitas en Casa", version="1.1.0", lifespan=ciclo_de_vida)
     # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
     # en celulares con datos limitados (RNF-07).
     app.add_middleware(GZipMiddleware, minimum_size=1000)

@@ -184,10 +184,66 @@ la ocupación de «Indicadores» no ve los ingresos nuevos; con PostgreSQL (Rend
 **Lo que debes probar tú en Render** (con tu contraseña de demostración): el guion de
 `guion-demo.md`. Es el mismo recorrido que se probó en local.
 
+## Fase 6 · Análisis de video con trabajador local (#125, v1.1.0)
+
+Hugging Face ya cobra los Spaces Docker, así que el análisis corre en **tu PC**: un
+trabajador le pide los videos a la API de Render, los analiza y devuelve el resultado. Se
+integró en 17 PR pequeños (#126 a #142), cada uno con CI en verde y Render revisado después.
+Guía completa: `fase-6-video.md`; instalación: `servicios/video/README.md`.
+
+**Qué quedó funcionando:**
+
+- La PWA permite adjuntar un video (≤ 60 s, ≤ 50 MB) y lo sube después del reporte. En
+  Render ya está activo: `render.yaml` generó `PATITAS_VIDEO_TOKEN`.
+- La API guarda el video unos minutos, lo pone en la cola `analisis_video` y lo borra al
+  terminar. Si nadie lo analiza en 6 h, o se pierde, manda el texto (falla segura).
+- El trabajador (`servicios/video/`): MediaPipe Object Detector + DeepLabCut
+  SuperAnimal-Quadruped + medidas de la marcha + red neuronal pequeña con reglas de seguridad.
+- El panel muestra el análisis, la discrepancia con el texto y una tira de 3 cuadros.
+
+**Prueba de humo con modelos reales** (GitHub Actions, CPU): el perro con ataxia (CC0) y el galgo con polineuropatía (CC BY 2.5) salieron **media** con confianza 0,95 («cojea», «paso irregular»); el labradoodle sano salió **no concluyente** (puntos poco seguros: manda el texto). Cada video tardó de 36 a 82 s con 1,3 a 1,5 GB de memoria. Tabla y enlaces en `fase-6-video.md`.
+
+**Hallazgos que debes conocer:**
+
+1. **MediaPipe Pose no sirve para perros** (solo conoce personas): se usa MediaPipe para
+   encontrar al animal y DeepLabCut para sus puntos.
+2. **En tu Windows, DeepLabCut no arranca directo:** el Control inteligente de aplicaciones
+   bloqueó DLL de `torchvision` (y de algunas versiones de `scikit-learn` y `numba`). No lo
+   apagues; usa **WSL2** como dice el README.
+3. **Licencia de SuperAnimal:** solo académica y no comercial. Sirve para la universidad.
+4. **El modelo del video se entrenó con datos sintéticos** y los umbrales se calibraron con 3
+   videos públicos: hace falta validarlo con videos etiquetados por veterinarios (DT-04).
+   Por eso el video solo puede **subir** la prioridad.
+
+### Lo que debes hacer tú (paso a paso)
+
+1. **Instala WSL2** (PowerShell como administrador): `wsl --install -d Ubuntu-24.04`,
+   reinicia y abre «Ubuntu». Crea tu usuario de Linux cuando te lo pida.
+2. **Instala el trabajador** en Ubuntu, copiando los comandos de la sección «Instalar» de
+   `servicios/video/README.md` (unos 3 GB; la primera vez tarda).
+3. **Pruébalo con un video tuyo** (sección «Probar con un video tuyo»). Graba a un perro de
+   lado, caminando, 10 a 20 s, que se vea completo.
+4. **Copia el token de Render:** Render → servicio `patitas-en-casa` → *Environment* →
+   `PATITAS_VIDEO_TOKEN` → ojo para verlo → copiar. No lo pegues en ningún archivo del
+   repositorio ni en un chat.
+5. **Arranca el trabajador** en Ubuntu:
+   `export PATITAS_API_URL=https://patitas-en-casa-pnnk.onrender.com`,
+   `export PATITAS_VIDEO_TOKEN='<pega aquí>'` y `python -m patitas_video.trabajador`. Déjalo
+   abierto mientras quieras analizar videos (por ejemplo, durante la demostración).
+6. **Ensaya el paso 1b de `guion-demo.md`**: reporte con video desde el celular → en la
+   terminal aparece «trabajo N analizado» → en el panel, «Análisis de video: listo».
+7. **Si quieres apagar el video en producción**, borra `PATITAS_VIDEO_TOKEN` en Render: la PWA
+   dirá que el reporte se atiende con la descripción.
+8. Para mejorar el modelo: graba (o consigue) videos con la prioridad que les daría un
+   veterinario y reentrena con `servicios/video/entrenamiento/entrenar.py --datos`.
+
+Nota: el plan `PLAN_VIDEO_PARA_CLAUDE_CODE.md` que quedó en tu carpeta todavía describe
+Hugging Face; se siguió la arquitectura de tu mensaje (trabajador local).
+
 ## Resumen final para Brayan
 
-**Versión publicada: v1.0.0** (etiqueta `v1.0.0` y *release* en GitHub), desplegada en
-https://patitas-en-casa-pnnk.onrender.com.
+**Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis
+de video de la fase 6 sobre la v1.0.0), desplegada en https://patitas-en-casa-pnnk.onrender.com.
 
 **Qué quedó funcionando** (en `main`, desplegado y probado):
 
@@ -202,12 +258,13 @@ https://patitas-en-casa-pnnk.onrender.com.
   aprobación con restricciones duras, seguimientos 30/90/180, devoluciones y compromiso PDF.
 - Administración y control: seis roles, cuentas, suspensión, historial de acceso, indicadores,
   exportación anonimizada y bitácora inmutable.
-- Calidad: más de 600 pruebas con PostgreSQL real, 97 % de cobertura, complejidad ≤ 10,
+- Calidad: más de 650 pruebas con PostgreSQL real, 97 % de cobertura, complejidad ≤ 10,
   gitleaks, sondeo de disponibilidad y OWASP ZAP.
 
 **Qué no y por qué** (detalle en `trazabilidad.md`):
 
-- Subir y analizar videos (RF-01 en parte, RF-03, RNF-02): no caben en Render gratis.
+- Video (RF-03): funciona con el trabajador local, pero su modelo no está validado con
+  veterinarios y el trabajador debe estar encendido (fase 6, arriba).
 - Disponibilidad del 99 % (RNF-04): el plan gratis se duerme; hay sondeo, no garantía.
 - Recall con datos de veterinarios (RNF-03): el modelo se validó con datos sintéticos.
 - Usabilidad con personas (RNF-06): necesita participantes reales.
@@ -225,5 +282,5 @@ https://patitas-en-casa-pnnk.onrender.com.
 4. Responde las preguntas pendientes de `preguntas-para-brayan.md`: P-01 (pegar la regla 2 en
    `CLAUDE.md`), P-07 (respaldo), P-08 (correo real), P-09 (video) y P-10 (prueba con
    usuarios).
-5. Estudia en este orden: `00-mapa.md`, las cinco guías de fase (cada una con sus 5
+5. Estudia en este orden: `00-mapa.md`, las seis guías de fase (cada una con sus 5
    preguntas y respuestas), `preguntas-sustentacion.md` y `trazabilidad.md`.

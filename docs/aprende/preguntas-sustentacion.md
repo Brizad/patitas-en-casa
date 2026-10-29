@@ -146,7 +146,36 @@ abre el archivo que se indica.
     verde → revisión → merge. Registro en `CHANGELOG.md` y en `DEUDA_TECNICA.md`.
 
 30. **¿Qué quedó sin hacer y por qué?**
-    El análisis de video con MediaPipe (RF-03, RNF-02): no cabe en 512 MB de Render gratis. La
+    El video ya se analiza (fase 6) con un trabajador local, pero su modelo usa datos
+    sintéticos y no está validado con veterinarios (DT-04). La
     disponibilidad del 99 % (RNF-04) tampoco se garantiza en el plan gratis (el servicio se
     duerme). La prueba con usuarios reales (RNF-06) requiere participantes. Todo está en
     `docs/aprende/trazabilidad.md` con su motivo.
+
+## Análisis de video (fase 6, v1.1.0)
+
+31. **¿Cómo se analiza el video si Render gratis no tiene memoria para eso?**
+    Con un trabajador local en una PC del equipo. Render guarda el video unos minutos en su
+    disco temporal y lo pone en una cola (`analisis_video`). El trabajador pide trabajos cada
+    15 s con un token compartido, descarga el video, lo analiza y devuelve el resultado. No
+    abre puertos: él llama a Render.
+
+32. **¿Por qué no MediaPipe Pose?**
+    Porque solo detecta el cuerpo humano (33 puntos). Se usa MediaPipe Object Detector para
+    encontrar al perro o gato y DeepLabCut SuperAnimal-Quadruped (preentrenado, 39 puntos de
+    cuadrúpedos) para el cuerpo; con esos puntos se mide la marcha.
+
+33. **¿Qué mide el sistema en la marcha?**
+    Si el animal está de pie, si apoya las cuatro patas, la asimetría entre patas pareadas
+    (cojera), la regularidad del paso y cuánto se desplaza; todo dividido por el largo del
+    cuerpo para que no dependa de la distancia a la cámara. Cada umbral está en `marcha.py`.
+
+34. **¿Qué pasa si el video no sirve o el trabajador está apagado?**
+    Falla segura: si no se ve un perro o gato, o el cuerpo no se ve completo, el resultado es
+    «no concluyente»; si el video se pierde o nadie lo analiza en 6 h, «fallido». En todos los
+    casos el reporte sigue con la prioridad del texto y el video se borra.
+
+35. **¿Cómo se protege la privacidad del video?**
+    Solo el teléfono que creó el reporte puede subirlo (su clave de idempotencia, 30 min, una
+    vez). El video nunca se publica ni se guarda para siempre. Quedan las medidas, las
+    evidencias y una tira de 3 cuadros que solo ve el personal con sesión (RN-14, RNF-08).
