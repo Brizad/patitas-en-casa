@@ -6,6 +6,8 @@ requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# #125: el trabajador de video vive en servicios/video (paquete patitas_video).
+pythonpath = [".", "servicios/video"]
 markers = ["postgres: necesita la base de pruebas PostgreSQL (POSTGRES_DB_PRUEBAS)"]
 
 [tool.ruff]

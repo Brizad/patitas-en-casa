@@ -2,6 +2,12 @@
 
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
+## [Sin publicar]
+Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10).
+
+### Agregado
+- Medidas de la marcha a partir de los puntos clave del animal (`servicios/video/patitas_video/marcha.py`): de pie, pata sin apoyo, asimetría (cojera), regularidad del paso y desplazamiento, cada una con su umbral documentado.
+
 ## [1.0.0] - 2026-10-29
 Plan autónomo de cierre: incremento 3 y fases 1 a 5, más las brechas del ERS (PR #108 a
 #122). Publicada en https://patitas-en-casa-pnnk.onrender.com. Para actualizar una instalación:
