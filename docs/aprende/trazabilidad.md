@@ -62,7 +62,7 @@ Resumen: **RF: 32 hechos. RNF: 10 hechos, 5 parciales, 1 pendiente** (RNF-06), m
 | RNF-08 | Datos personales cifrados (AES-256); minimización | Parcial: el contacto del ciudadano va con AES-256-GCM y se piden datos mínimos; los correos del personal y los perfiles de adoptante no se cifran en la aplicación (nota 6) | `app/seguridad/cifrado.py` | #112 |
 | RNF-09 | ≥ 3 evidencias o factores | Hecho | `app/triaje/combinado.py`, `compatibilidad.py` | #96, #97 → #108 |
 | RNF-10 | Cobertura ≥ 70 %, complejidad ≤ 10, ruff | Hecho: cobertura del 97 %; complejidad ≤ 10 en el CI (ruff C901) | `pyproject.toml`, `.github/workflows/ci.yml` | #108 |
-| RNF-11 | WCAG 2.2 AA (contraste, teclado, lectores, objetivos ≥ 24 px) | Parcial: recorrido solo con teclado y objetivos ≥ 24 px revisados en la prueba de punta a punta (dos fallas corregidas en #122). Falta revisar con lector de pantalla y medir contraste con herramienta | `panel/src/`, `app/pwa/` | #84 → #108, #122 |
+| RNF-11 | WCAG 2.2 AA (contraste, teclado, lectores, objetivos ≥ 24 px) | Parcial: **medido** con axe-core y Lighthouse en cada PR (todas las pantallas y roles, claro, oscuro y 320 px): 0 fallas y Lighthouse 100 después de corregir 2 fallas del panel (`accesibilidad.md`). Teclado revisado a mano (#122). Falta escuchar el recorrido con un lector de pantalla | `panel/src/`, `app/pwa/` | #84 → #108, #122 |
 | RNF-12 | Bitácora con actor, fecha, valor anterior y nuevo, sin edición | Parcial: actor, fecha, acción y objeto, inmutable. El valor anterior y el nuevo están en las tablas de cada dominio (`decisiones_triaje`: sugerida → final; historial clínico; solicitudes), no en la bitácora general | `app/bitacora/` | #103 → #108 |
 | RNF-13 | Docker, PostgreSQL 16, configuración por entorno | Hecho (Redis no hace falta: el outbox usa PostgreSQL) | `Dockerfile`, `render.yaml` | #64 |
 | RNF-14 | 200 reportes/hora y 50 usuarios del panel | Hecho en local: ≈ 58.000 reportes/hora con 50 usuarios del panel a la vez | `scripts/operacion/prueba_carga.py` | #120 |
@@ -103,4 +103,5 @@ No son requisitos nuevos del ERS: mejoran la presentación y la operación de lo
 | Entregable | Requisito que apoya | Dónde | Pruebas | Issue / PR |
 |---|---|---|---|---|
 | Scripts del nodo de video (WSL/Ubuntu) | RF-03, RNF-02 | `servicios/video/instalar_nodo.sh`, `arrancar_nodo.sh` | `test_video_nodo.py` | #143 / #144 |
-| Página de inicio pública | RF-01 (entrada al reporte), RNF-07, RNF-11 | `app/inicio/` | `test_inicio.py` | #145 |
+| Página de inicio pública | RF-01 (entrada al reporte), RNF-07, RNF-11 | `app/inicio/` | `test_inicio.py` | #145 / #146 |
+| Revisión de accesibilidad en el CI | RNF-11 | `scripts/accesibilidad/`, paso «Accesibilidad» del CI | `revisar.mjs` (axe-core + Lighthouse) | #147 / #148 |
