@@ -1,0 +1,45 @@
+name: "Video: prueba de humo"
+
+# #125: corre el trabajador con los modelos reales (MediaPipe + DeepLabCut) sobre videos de
+# licencia libre. Se lanza a mano: instala ~3 GB y no hace falta en cada PR. No usa secretos
+# ni toca Render.
+on:
+  workflow_dispatch:
+    inputs:
+      videos:
+        description: "Enlaces de videos de licencia libre (CC0/CC-BY), separados por espacios"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  humo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar el trabajador
+        working-directory: servicios/video
+        run: |
+          pip install torch==2.14.1 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+
+      - name: Analizar cada video
+        working-directory: servicios/video
+        env:
+          VIDEOS: ${{ inputs.videos }}
+        run: |
+          i=0
+          for url in $VIDEOS; do
+            i=$((i + 1))
+            curl -sSL -A "patitas-en-casa-humo/1.1" -o "video$i" "$url"
+            echo "== $url"
+            /usr/bin/time -f "tiempo: %e s, memoria máxima: %M KB" \
+              python -m patitas_video.trabajador --video "video$i"
+          done

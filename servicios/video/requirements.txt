@@ -1,0 +1,11 @@
+# Trabajador local de video (#125). NO lo instala Render ni el CI de la API.
+# torch y torchvision van primero, desde el índice de CPU (ver README.md):
+#   pip install torch==2.14.1 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cpu
+deeplabcut==3.0.2
+mediapipe==1.2.0
+opencv-python-headless==5.0.0.93
+httpx==0.28.1
+# deeplabcut trae numba y scikit-learn; estas versiones sí cargaron en la prueba (otras más
+# nuevas fueron bloqueadas por el Control inteligente de aplicaciones de Windows).
+numba==0.62.1
+scikit-learn==1.7.2
