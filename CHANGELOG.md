@@ -2,8 +2,11 @@
 
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
-## [Sin publicar]
-Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10).
+## [1.1.0] - 2026-10-29
+Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10; PR #126 a
+#142). Para actualizar: `alembic upgrade head` (migración `0025`) y `PATITAS_VIDEO_TOKEN` en el
+entorno (Render lo genera con `render.yaml`); el trabajador se instala aparte
+(`servicios/video/README.md`). El modelo del video usa datos **sintéticos**.
 
 ### Agregado
 - Medidas de la marcha a partir de los puntos clave del animal (`servicios/video/patitas_video/marcha.py`): de pie, pata sin apoyo, asimetría (cojera), regularidad del paso y desplazamiento, cada una con su umbral documentado.

@@ -39,6 +39,24 @@ comuna 2 y pulsa **Enviar reporte**. Copia el código.
 - El contacto es opcional, pide autorización (Ley 1581) y se guarda cifrado con AES-256.
 - Pulsa «Ver estado»: solo pasos y fechas, nunca la descripción ni la dirección (RN-14).
 
+## 1b. (Opcional) El video del animal (1 min) · PWA + trabajador local
+
+**Antes:** el trabajador local debe estar corriendo (`servicios/video/README.md`) con el
+`PATITAS_VIDEO_TOKEN` de Render. Ten listo un video corto de un perro caminando de lado.
+
+**Qué hacer.** En el reporte del paso 1, elige el video en «Video del animal (opcional)»
+antes de enviar. Muestra «Video listo: 12 s · 8 MB» y, tras enviar, «Video recibido, se está
+analizando». En la terminal del trabajador aparece «trabajo N analizado en X s».
+
+**Qué explicar.**
+- MediaPipe Pose solo sirve para personas: se usa MediaPipe para encontrar al perro y
+  DeepLabCut SuperAnimal-Quadruped para sus 39 puntos; con ellos se mide la marcha.
+- Corre en una PC del equipo porque no cabe en Render gratis; la PC **pide** los videos y no
+  abre puertos. El video se borra al terminar (RNF-08).
+- Si el trabajador está apagado o el video no sirve, manda el texto (falla segura).
+- En el paso 2, el detalle del reporte muestra «Análisis de video: listo», sus evidencias, la
+  discrepancia con el texto (RF-19) y la tira de 3 cuadros.
+
 ## 2. La IA sugiere la prioridad (1 min) · panel como **veterinaria**
 
 **Qué hacer.** Entra con la veterinaria. En la **Cola de triaje** aparece tu reporte arriba,
@@ -127,9 +145,10 @@ quieres, entra con la Alcaldía para mostrar que solo ve esta pantalla.
 ## Cierre (30 s)
 
 «Todo esto corre en Render gratis desde un solo contenedor Docker; cada cambio pasó por un PR
-con CI (gitleaks, Ruff, más de 600 pruebas con PostgreSQL real y 97 % de cobertura). Lo que
-no cabe en el plan gratis —el análisis de video y la disponibilidad del 99 %— está
-documentado con su plan en `trazabilidad.md`.»
+con CI (gitleaks, Ruff, más de 650 pruebas con PostgreSQL real y 97 % de cobertura). El análisis
+de video corre en un trabajador local porque no cabe en el plan gratis; lo que sigue
+pendiente —la disponibilidad del 99 % y validar los modelos con veterinarios— está en
+`trazabilidad.md`.»
 
 ## Si algo falla en vivo
 

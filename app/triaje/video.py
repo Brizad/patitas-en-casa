@@ -6,10 +6,10 @@ alta. También `aplicar_video`, que actualiza un reporte ya clasificado cuando l
 resultado del video (el análisis es asíncrono: RNF-02 da hasta 3 minutos y el ciudadano no
 espera).
 
-Lo que NO está construido (DT-10 en DEUDA_TECNICA.md): el adaptador real con MediaPipe Pose.
-MediaPipe + OpenCV y el modelo de pose pasan de 150 MB instalados y, al procesar 60 s de
-video, la memoria no cabe junto a la API en los 512 MB del plan gratis de Render. Además el
-reporte todavía no sube el archivo (RF-01 solo valida duración y tamaño).
+Fase 6 (#125, DT-10 pagada): el análisis real lo hace un trabajador local fuera de Render
+(servicios/video: MediaPipe Object Detector + DeepLabCut SuperAnimal-Quadruped; MediaPipe Pose
+solo conoce personas). El resultado llega por la API y app/video/servicio.py llama
+`aplicar_video`. `AnalizadorVideo` queda como puerto para un analizador dentro del proceso.
 """
 from __future__ import annotations
 

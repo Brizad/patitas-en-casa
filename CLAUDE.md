@@ -10,7 +10,8 @@ veterinarios y control de cupos del refugio.
 
 - Proyecto integrador de Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 - Autor: Brayan David Amado Ramírez. Repositorio: https://github.com/Brizad/patitas-en-casa
-- Versión publicada: v1.0.0 (incremento 3, fases 1 a 5 y brechas del ERS; PR #108 a #122).
+- Versión publicada: v1.1.0 (v1.0.0: incremento 3, fases 1 a 5 y brechas del ERS, PR #108 a
+  #122; v1.1.0: análisis de video con trabajador local, fase 6, PR #126 a #142).
   En producción: https://patitas-en-casa-pnnk.onrender.com (Render, despliegue desde `main`).
 - Idioma: todo (código, pruebas, commits, documentación) en **español**.
 
@@ -43,6 +44,8 @@ veterinarios y control de cupos del refugio.
 | `app/avisos/` | Outbox de avisos (#63): modelo, repositorios (memoria y PostgreSQL) y `ProcesadorAvisos` (reintentos, estado real). |
 | `app/notificaciones/canal.py` | Puerto `CanalAviso` y `EntregaFallida`; el procesador no conoce el SMTP. |
 | `panel/` | Panel del personal en React + TypeScript (Vite); se compila a `app/panel_web` (ignorado por git) y se sirve en `/panel/`. |
+| `app/video/`, `app/api/video.py` | Video del reporte (#125): trabajos `analisis_video` (memoria y PostgreSQL), `ServicioVideo` (subida con la clave del reporte, RN-07, falla segura) y rutas del ciudadano, del trabajador (`X-Video-Token`) y del personal. |
+| `servicios/video/` | Trabajador local de video (no corre en Render): marcha, clasificador MLP, tubería, adaptadores MediaPipe + DeepLabCut y guía de instalación (WSL2). |
 | `app/pwa/` | PWA ciudadana (HU-08, #47): HTML, CSS y JS sencillos servidos en `/app/` con CSP estricta; sin recursos externos ni `innerHTML` con datos; el service worker solo guarda la interfaz. |
 | `docs/aprende/` | Guía de estudio: mapa y glosario, una guía por fase, avance y preguntas para el autor. |
 | `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API; la PWA reutiliza su diseño). |
@@ -149,6 +152,6 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 ## Deuda técnica abierta
 
 Ver `DEUDA_TECNICA.md`: DT-04 (pagada en parte: falta validar el modelo con datos reales),
-DT-07, DT-08, DT-09 (registro público sin límite por IP) y DT-10 (video sin MediaPipe). Pagadas: DT-01 (reportes en
+DT-07, DT-08, DT-09 (registro público sin límite por IP). Pagadas: DT-10 (video, fase 6), DT-01 (reportes en
 PostgreSQL), DT-02 (JWT + Argon2id), DT-03 (notificador por correo), DT-05 (cupos en
 PostgreSQL) y DT-06 (límite de intentos de inicio de sesión).
