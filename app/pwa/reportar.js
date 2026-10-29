@@ -165,7 +165,10 @@
       ? 'Indica la ubicación o usa el GPS (RN-01).' : '');
     if (corta) descripcion.focus();
     else if (sinUbicacion) direccion.focus();
-    return !corta && !sinUbicacion;
+    const sinPermiso = $('contacto').value.trim() !== '' && !$('autoriza-contacto').checked;
+    errorEn($('contacto'), 'error-contacto', sinPermiso
+      ? 'Marca la autorización o deja el contacto vacío.' : '');
+    return !corta && !sinUbicacion && !sinPermiso;
   }
 
   function datosDelFormulario() {
@@ -173,6 +176,11 @@
     if (direccion.value.trim()) datos.direccion = direccion.value.trim();
     if (gps) { datos.latitud = gps.latitud; datos.longitud = gps.longitud; }
     if (comuna.value) datos.comuna = Number(comuna.value);
+    // RF-18: el contacto solo viaja si la persona marcó la autorización.
+    if ($('contacto').value.trim() && $('autoriza-contacto').checked) {
+      datos.contacto = $('contacto').value.trim();
+      datos.autoriza_contacto = true;
+    }
     return datos;
   }
 

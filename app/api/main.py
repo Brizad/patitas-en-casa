@@ -8,6 +8,7 @@ import asyncio
 import contextlib
 import logging
 import mimetypes
+import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -60,10 +61,12 @@ from app.ajustes import (
     cargar_ajustes,
     cargar_ajustes_admin,
     cargar_ajustes_correo,
+    cargar_ajustes_datos,
     cargar_ajustes_demo,
     cargar_ajustes_seguridad,
 )
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
+from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
 from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
@@ -120,6 +123,7 @@ from app.rescates.servicio import (
     RescateNoOfrecido,
     ServicioRescates,
 )
+from app.seguridad.cifrado import PREFIJO_AVISO, CanalConDescifrado, Cifrador
 from app.seguridad.tokens import EmisorTokens, TokenInvalido
 from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
@@ -135,6 +139,7 @@ from app.usuarios.intentos_postgres import RepositorioIntentosPostgres
 from app.usuarios.repositorio import CorreoDuplicado, RepositorioUsuarios
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
 from app.usuarios.servicio import (
+    PATRON_CORREO,
     AutoSuspension,
     CuentaNoEncontrada,
     ServicioUsuarios,
@@ -170,6 +175,23 @@ class ReporteEntrada(BaseModel):
     video_segundos: int | None = Field(default=None, ge=0)
     video_mb: float | None = Field(default=None, ge=0)
     comuna: int | None = Field(default=None, ge=1, le=10)  # HU-06: comunas de Cúcuta
+    # RF-18 (#111): opcional y con autorización expresa; se guarda cifrado (RNF-08).
+    contacto: str | None = Field(default=None, max_length=120)
+    autoriza_contacto: bool = False
+
+
+PATRON_TELEFONO = re.compile(r"^\+?\d{7,15}$")
+
+
+def normalizar_contacto(contacto: str) -> str:
+    """Correo en minúsculas o teléfono solo con dígitos (y «+»); si no es ninguno, error."""
+    contacto = contacto.strip()
+    if PATRON_CORREO.match(contacto.lower()):
+        return contacto.lower()
+    telefono = re.sub(r"[\s()-]", "", contacto)
+    if PATRON_TELEFONO.match(telefono):
+        return telefono
+    raise ValueError("El contacto debe ser un correo o un teléfono.")
 
 
 Comuna = Annotated[int, Field(ge=1, le=10)]
@@ -381,7 +403,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_refugios: RepositorioRefugios | None = None,
               repositorio_adopciones: RepositorioAdopciones | None = None,
               repositorio_bitacora: RepositorioBitacora | None = None,
-              contrasena_demo: str | None = None) -> FastAPI:
+              contrasena_demo: str | None = None,
+              cifrador: Cifrador | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -422,6 +445,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     repositorio_bitacora = repositorio_bitacora or (
         RepositorioBitacoraPostgres(motor) if motor is not None
         else RepositorioBitacoraEnMemoria())
+    if cifrador is None and motor is not None:
+        clave_datos = cargar_ajustes_datos().clave_datos
+        cifrador = Cifrador(clave_datos.get_secret_value()) if clave_datos else None
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
@@ -461,8 +487,21 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     reportes = ServicioReportes(repositorio, ServicioTriaje(clasificador, version=version_triaje))
     rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador)
     descartes = ServicioDescarte(repositorio)
-    confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=rescates.avisos_para)
-    procesador = ProcesadorAvisos(repositorio_avisos, notificador)
+
+    def avisos_al_confirmar(reporte: Reporte, prioridad: Prioridad):
+        """Rescatistas de la zona (RF-05) y, si dejó un correo, el ciudadano (RF-18). El
+        destinatario del ciudadano va cifrado también en la tabla de avisos."""
+        avisos = rescates.avisos_para(reporte, prioridad)
+        if reporte.contacto_cifrado and cifrador is not None:
+            if "@" in cifrador.descifrar(reporte.contacto_cifrado):
+                avisos.append(AvisoNuevo(
+                    PREFIJO_AVISO + reporte.contacto_cifrado,
+                    f"Patitas en Casa: un veterinario revisó tu reporte {reporte.codigo}. "
+                    "Consulta cómo sigue con tu código en la página de seguimiento."))
+        return avisos
+
+    confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=avisos_al_confirmar)
+    procesador = ProcesadorAvisos(repositorio_avisos, CanalConDescifrado(notificador, cifrador))
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
     app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas
@@ -794,6 +833,19 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         código con 200 en vez de crear otro; sin el encabezado funciona como antes."""
         ubicacion = Ubicacion(datos.latitud, datos.longitud, datos.direccion, datos.comuna)
         video = (datos.video_segundos, datos.video_mb)
+        contacto = None
+        if datos.contacto and datos.contacto.strip():
+            if not datos.autoriza_contacto:
+                raise HTTPException(status_code=422, detail=(
+                    "Para guardar tu contacto debes autorizar que lo usemos solo para avisarte "
+                    "sobre este reporte (Ley 1581 de 2012)."))
+            if cifrador is None:
+                raise HTTPException(status_code=422, detail="Por ahora no podemos guardar "
+                                    "contactos; tu reporte se puede enviar sin él.")
+            try:
+                contacto = cifrador.cifrar(normalizar_contacto(datos.contacto))
+            except ValueError as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
         try:
             if clave is None:
                 r = reportes.registrar(datos.descripcion, ubicacion, *video)
@@ -803,6 +855,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                     respuesta.status_code = status.HTTP_200_OK
         except ReporteInvalido as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+        if contacto and r.contacto_cifrado is None:
+            r.contacto_cifrado = contacto
+            repositorio.guardar(r)
         return {"codigo": r.codigo, "estado": r.estado.value}
 
     @app.get("/reportes/{codigo}")
