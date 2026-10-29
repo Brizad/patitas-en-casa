@@ -7,6 +7,7 @@ Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10).
 
 ### Agregado
 - Medidas de la marcha a partir de los puntos clave del animal (`servicios/video/patitas_video/marcha.py`): de pie, pata sin apoyo, asimetría (cojera), regularidad del paso y desplazamiento, cada una con su umbral documentado.
+- Clasificador de la marcha (`servicios/video/patitas_video/clasificador.py`): red neuronal pequeña (MLP 5-8-4) entrenada con medidas **sintéticas** y leída del JSON con Python puro; al menos 3 evidencias en lenguaje claro y reglas de seguridad (sin apoyo o sin ponerse de pie nunca queda por debajo de alta). `entrenamiento/entrenar.py --datos` reentrena con medidas etiquetadas por veterinarios (DT-04).
 
 ## [1.0.0] - 2026-10-29
 Plan autónomo de cierre: incremento 3 y fases 1 a 5, más las brechas del ERS (PR #108 a
