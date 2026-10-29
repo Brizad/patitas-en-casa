@@ -34,6 +34,18 @@ def prioridad_sugerida(estado: EstadoReporte, prioridad: Prioridad | None) -> Pr
     return prioridad
 
 
+def validar_justificacion(texto: str | None, error: type[Exception]) -> None:
+    """RN-16 y D-07: 10 caracteres o más, y letras de verdad. Se cuentan letras (no palabras)
+    para aceptar motivos cortos y reales como «Sangra mucho»."""
+    texto = texto or ""
+    if len(texto) < config.MIN_CARACTERES_JUSTIFICACION:
+        raise error(f"Para cambiar la prioridad escribe por qué (mínimo "
+                    f"{config.MIN_CARACTERES_JUSTIFICACION} caracteres, RN-16).")
+    if sum(letra.isalpha() for letra in texto) < config.MIN_LETRAS_JUSTIFICACION:
+        raise error(f"La justificación debe explicar el motivo con palabras (mínimo "
+                    f"{config.MIN_LETRAS_JUSTIFICACION} letras, D-07).")
+
+
 # Decide a quién avisar según el reporte y la prioridad final (ServicioRescates.avisos_para).
 PlanificadorAvisos = Callable[[Reporte, Prioridad], list[AvisoNuevo]]
 
@@ -69,10 +81,8 @@ class ServicioConfirmacion:
         sugerida = prioridad_sugerida(reporte.estado, reporte.prioridad)
         final = prioridad or sugerida
         justificacion = (justificacion or "").strip() or None
-        if final != sugerida and len(justificacion or "") < config.MIN_CARACTERES_JUSTIFICACION:
-            raise AjusteSinJustificacion(
-                f"Para cambiar la prioridad escribe por qué (mínimo "
-                f"{config.MIN_CARACTERES_JUSTIFICACION} caracteres, RN-16).")
+        if final != sugerida:
+            validar_justificacion(justificacion, AjusteSinJustificacion)
         decision = DecisionTriaje(codigo=codigo, veterinario=veterinario.correo,
                                   prioridad_sugerida=sugerida, prioridad_final=final,
                                   justificacion=justificacion, decidido_en=self._reloj())

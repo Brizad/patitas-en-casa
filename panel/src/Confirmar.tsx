@@ -37,7 +37,7 @@ export default function Confirmar({ token, reporte, alTerminar }: {
   function guardarAjuste(evento: React.FormEvent) {
     evento.preventDefault();
     if (faltaJustificacion(propuesta, elegida, texto)) {
-      setError("Escribe por qué cambias la prioridad (mínimo 10 caracteres, RN-16).");
+      setError("Escribe con palabras por qué cambias la prioridad (mínimo 10 caracteres, RN-16).");
       return;
     }
     void enviar(elegida, elegida === propuesta ? undefined : texto.trim());

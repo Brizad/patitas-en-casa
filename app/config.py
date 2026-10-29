@@ -12,6 +12,8 @@ VIDEO_MAX_MB = 50
 
 # RN-16: ajustar la prioridad sugerida exige justificación (prototipo, P-04 "Ajustar").
 MIN_CARACTERES_JUSTIFICACION = 10
+# D-07 (#75): además, un mínimo de letras; «..........» o «1234567890» no explican nada.
+MIN_LETRAS_JUSTIFICACION = 5
 
 # DT-06: intentos fallidos de inicio de sesión permitidos dentro de la ventana. Por IP el
 # máximo es mayor porque el personal de un refugio suele compartir la misma IP pública.

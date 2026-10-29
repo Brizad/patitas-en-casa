@@ -10,6 +10,7 @@ import logging
 import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -155,6 +156,12 @@ class DisponibilidadEntrada(BaseModel):
 
 class ResultadoEntrada(BaseModel):
     resultado: ResultadoRescate
+
+
+def fecha_utc(fecha: datetime | None) -> str | None:
+    """D-06: toda fecha de la API sale en UTC («+00:00»). PostgreSQL devuelve la hora en la
+    zona de la sesión (en Cúcuta, -05:00): es el mismo instante, pero dos formatos confunden."""
+    return None if fecha is None else fecha.astimezone(UTC).isoformat()
 
 
 def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
@@ -426,9 +433,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         decisiones = repositorio.decisiones(codigo)
         pasos, ultimo_cambio = linea_de_tiempo(
             reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo))
-        return {"codigo": codigo, "ultimo_cambio": ultimo_cambio.isoformat(),
+        return {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
                 "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
-                           "fecha": p.fecha.isoformat() if p.fecha else None} for p in pasos]}
+                           "fecha": fecha_utc(p.fecha)} for p in pasos]}
 
     @app.get("/cola", dependencies=[personal])
     def cola():
@@ -480,7 +487,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     def bitacora_de_triaje(codigo: str):
         return [{"veterinario": d.veterinario, "prioridad_sugerida": d.prioridad_sugerida.value,
                  "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion,
-                 "decidido_en": d.decidido_en.isoformat()}
+                 "decidido_en": fecha_utc(d.decidido_en)}
                 for d in repositorio.decisiones(codigo.upper())]
 
     # --- HU-06: rescatistas (RF-05, RF-15, RN-08) --------------------------------------
@@ -511,7 +518,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         return [{"codigo": r.codigo, "prioridad": r.prioridad.value,
                  "descripcion": r.descripcion, "comuna": r.ubicacion.comuna,
                  "escalado": r.codigo in escalados,
-                 "esperando_desde": r.creado_en.isoformat()}
+                 "esperando_desde": fecha_utc(r.creado_en)}
                 for r in rescates.ofertas(rescatista)]
 
     @app.get("/rescates/mio")
