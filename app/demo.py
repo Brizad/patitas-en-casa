@@ -102,7 +102,9 @@ def cargar_demo(d: Dependencias, contrasena: str) -> bool:
     servicio = ServicioUsuarios(d.usuarios)
     cuentas = {u: servicio.registrar(correo(u), nombre, rol, contrasena)
                for u, nombre, rol in CUENTAS}
-    d.usuarios.vincular_refugio(correo("coordinador"), 1)
+    # El veterinario trabaja en el mismo refugio: ve sus fichas (manual de usuario, #156).
+    for usuario in ("coordinador", "veterinaria"):
+        d.usuarios.vincular_refugio(correo(usuario), 1)
     vet, resc = cuentas["veterinaria"], cuentas["rescatista"]
     d.rescates.cambiar_disponibilidad(resc, True)  # zona vacía = toda la ciudad
 
