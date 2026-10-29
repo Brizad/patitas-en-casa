@@ -3,6 +3,7 @@ import { Cuenta, iniciarSesion, miCuenta } from "./api";
 import Cola from "./Cola";
 import { textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
+import Refugio from "./Refugio";
 import Rescatista from "./Rescatista";
 
 export default function App() {
@@ -30,7 +31,7 @@ export default function App() {
         </nav>)}
       {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
       {pantalla === "rescates" && <Rescatista token={token} />}
-      {pantalla === "refugio" && <p className="vacio">Pantalla del refugio: siguiente PR.</p>}
+      {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
       {pantalla === null && <p className="vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>
   );
