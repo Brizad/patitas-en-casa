@@ -1,6 +1,6 @@
 // Llamadas del coordinador para la adopción (RF-25, RF-27, RF-10). Requieren su sesión.
 import { pedir } from "./api";
-import { Perfil } from "./apiAdopcion";
+import { Compatibilidad, Perfil } from "./apiAdopcion";
 
 export interface NuevaPublicacion {
   descripcion: string; tamano: "pequeno" | "mediano" | "grande";
@@ -10,6 +10,10 @@ export interface NuevaPublicacion {
 export interface SolicitudRefugio {
   id: number; animal_id: number; animal: string; adoptante: string; mensaje: string;
   estado: string; creada_en: string; perfil: Perfil | null;
+  compatibilidad: Compatibilidad | null;
+}
+export interface Pareja extends Compatibilidad {
+  adoptante: string; animal_id: number; animal: string; solicito_este_animal: boolean;
 }
 export interface SeguimientoRefugio {
   id: number; dia: number; programado_para: string; realizado_en: string | null;
@@ -27,6 +31,9 @@ export const solicitudesRefugio = (t: string) =>
 /** 409 con el motivo si hay una restricción dura (RN-05) o ya se decidió (RN-11). */
 export const decidir = (t: string, id: number, aprobar: boolean, razon?: string) =>
   pedir(`/refugio/solicitudes/${id}/decision`, enviar({ aprobar, razon: razon ?? null }), t);
+/** RF-28: propuesta de la jornada (no aprueba nada; RN-16). */
+export const propuestaJornada = (t: string) =>
+  pedir<Pareja[]>("/refugio/jornada/propuesta", {}, t);
 export const seguimientosRefugio = (t: string) =>
   pedir<SeguimientoRefugio[]>("/refugio/seguimientos", {}, t);
 export const registrarSeguimiento = (t: string, id: number, nota: string) =>

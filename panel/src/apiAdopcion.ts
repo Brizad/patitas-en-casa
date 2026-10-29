@@ -11,6 +11,12 @@ export interface AnimalPublicado {
   energia: string; edad_meses: number; apto_ninos: boolean; apto_otros_animales: boolean;
   necesita_patio: boolean;
 }
+/** RF-09: puntaje 0-100, por qué encaja, qué conversar y restricciones duras (RN-05). */
+export interface Compatibilidad {
+  puntaje: number; razones: string[]; alertas: string[]; restricciones: string[];
+}
+export type Recomendado = AnimalPublicado & Compatibilidad;
+
 export interface MiSolicitud { id: number; animal_id: number; estado: string; creada_en: string }
 
 export const PERFIL_VACIO: Perfil = {
@@ -39,6 +45,9 @@ export async function miPerfil(t: string): Promise<Perfil | null> {
 export const guardarPerfil = (t: string, p: Perfil) =>
   pedir("/adoptantes/yo/perfil", json("PUT", p), t);
 export const catalogo = () => pedir<AnimalPublicado[]>("/adopciones/animales");
+/** Solo con perfil: ordena por compatibilidad con el hogar y oculta las restricciones. */
+export const recomendaciones = (t: string) =>
+  pedir<Recomendado[]>("/adopciones/recomendaciones", {}, t);
 export const solicitar = (t: string, animal_id: number, mensaje: string) =>
   pedir("/adopciones/solicitudes", json("POST", { animal_id, mensaje }), t);
 export const misSolicitudes = (t: string) =>

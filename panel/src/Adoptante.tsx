@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  AnimalPublicado, MiSolicitud, PERFIL_VACIO, Perfil, catalogo, descargarCompromiso,
-  guardarPerfil, miPerfil, misSolicitudes, resumenAnimal, solicitar,
+  AnimalPublicado, MiSolicitud, PERFIL_VACIO, Perfil, Recomendado, catalogo,
+  descargarCompromiso, guardarPerfil, miPerfil, misSolicitudes, recomendaciones, resumenAnimal,
+  solicitar,
 } from "./apiAdopcion";
 import { textoError } from "./mensajes";
 
 /** Pantalla del adoptante: perfil (RF-08), catálogo y solicitudes (RF-27), compromiso (RF-29). */
 export default function Adoptante({ token }: { token: string }) {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [animales, setAnimales] = useState<AnimalPublicado[]>([]);
+  const [animales, setAnimales] = useState<(AnimalPublicado | Recomendado)[]>([]);
   const [mias, setMias] = useState<MiSolicitud[]>([]);
   const [mensaje, setMensaje] = useState("");
 
   const recargar = useCallback(async () => {
     try {
-      const [p, a, s] = await Promise.all([miPerfil(token), catalogo(), misSolicitudes(token)]);
+      const [p, s] = await Promise.all([miPerfil(token), misSolicitudes(token)]);
       setPerfil(p);
-      setAnimales(a);
+      // Con perfil, el catálogo llega ordenado por compatibilidad (RF-09).
+      setAnimales(p ? await recomendaciones(token) : await catalogo());
       setMias(s);
     } catch (e) {
       setMensaje(textoError(e));
@@ -42,12 +44,15 @@ export default function Adoptante({ token }: { token: string }) {
       <FormularioPerfil inicial={perfil ?? PERFIL_VACIO} nuevo={perfil === null}
         alGuardar={(p) => hacer(() => guardarPerfil(token, p), "Perfil guardado.")} />
       <div className="tarjeta">
-        <h2>Animales en adopción</h2>
+        <h2>{perfil ? "Recomendados para tu hogar" : "Animales en adopción"}</h2>
         {animales.length === 0 && <p className="vacio">No hay animales publicados ahora.</p>}
         <ul className="lista-simple">
           {animales.map((a) => (
             <li key={a.animal_id}>
               <b>{a.nombre}</b> · {resumenAnimal(a)}<p>{a.descripcion}</p>
+              {"puntaje" in a && (
+                <p className="nota">Compatibilidad {a.puntaje}/100: {a.razones.join("; ")}.
+                  {a.alertas.length > 0 && <> Para conversar: {a.alertas.join("; ")}.</>}</p>)}
               <button className="principal" onClick={() => void hacer(
                 () => solicitar(token, a.animal_id, ""),
                 `Solicitud enviada por ${a.nombre}. El refugio la revisará.`)}>

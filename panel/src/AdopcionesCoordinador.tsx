@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  NuevaPublicacion, SeguimientoRefugio, SolicitudRefugio, decidir, publicar,
-  registrarSeguimiento, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
+  NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, decidir, propuestaJornada,
+  publicar, registrarSeguimiento, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
 } from "./apiAdopcionCoordinador";
 import { FichaAnimal, animales } from "./apiRefugio";
 import { faltaJustificacion, textoError } from "./mensajes";
@@ -15,6 +15,7 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
   const [solicitudes, setSolicitudes] = useState<SolicitudRefugio[]>([]);
   const [seguimientos, setSeguimientos] = useState<SeguimientoRefugio[]>([]);
   const [mensaje, setMensaje] = useState("");
+  const [jornada, setJornada] = useState<Pareja[] | null>(null);
 
   const recargar = useCallback(async () => {
     try {
@@ -54,6 +55,17 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
         </ul>
       </div>
       <div className="tarjeta">
+        <h2>Jornada de adopción</h2>
+        <p className="nota">Propone quién con qué animal para que la compatibilidad total sea la
+          más alta (RF-28). Es una sugerencia: cada solicitud se aprueba aparte.</p>
+        <button onClick={() => void hacer(async () => setJornada(await propuestaJornada(token)),
+          "Propuesta calculada.")}>Calcular propuesta</button>
+        {jornada && (jornada.length === 0 ? <p className="vacio">Sin parejas posibles.</p> : (
+          <ul className="lista-simple">{jornada.map((p) => (
+            <li key={p.adoptante}>{p.adoptante} → <b>{p.animal}</b> · {p.puntaje}/100
+              {!p.solicito_este_animal && " · no lo pidió: conversarlo"}</li>))}</ul>))}
+      </div>
+      <div className="tarjeta">
         <h2>Seguimientos (30, 90 y 180 días)</h2>
         <ul className="lista-simple">
           {seguimientos.map((x) => (
@@ -76,6 +88,11 @@ function Solicitud({ s, token, hacer }: { s: SolicitudRefugio; token: string; ha
   return (
     <li>
       <b>{s.animal}</b> · {s.adoptante}<br /><small>{resumenPerfil(s.perfil)}</small>
+      {s.compatibilidad && (
+        <p className="nota">Compatibilidad {s.compatibilidad.puntaje}/100
+          {[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].length > 0 &&
+            `: ${[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].join("; ")}`}
+        </p>)}
       {s.mensaje && <p>«{s.mensaje}»</p>}
       <div className="acciones">
         <button className="principal" onClick={() => void hacer(() => decidir(token, s.id, true),
