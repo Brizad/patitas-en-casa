@@ -30,6 +30,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
+from app.adopciones.modelos import PerfilAdoptante, Vivienda
+from app.adopciones.repositorio import RepositorioAdopciones, RepositorioAdopcionesEnMemoria
+from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
 from app.ajustes import (
     cargar_ajustes,
     cargar_ajustes_admin,
@@ -236,6 +239,25 @@ class EgresoEntrada(BaseModel):
     motivo: MotivoEgreso
 
 
+class RegistroAdoptante(BaseModel):
+    """RF-08: registro público. Sin autorizar el tratamiento de datos no hay cuenta."""
+
+    correo: str = Field(max_length=254)
+    nombre: str = Field(max_length=120)
+    contrasena: str = Field(max_length=128)
+    autoriza_datos: bool  # Ley 1581 de 2012
+
+
+class PerfilEntrada(BaseModel):
+    vivienda: Vivienda
+    tiene_patio: bool
+    hay_ninos: bool
+    otros_animales: bool
+    horas_solo_al_dia: int = Field(ge=0, le=24)
+    experiencia: bool
+    acepta_seguimiento: bool
+
+
 class NotaEntrada(BaseModel):
     tipo: TipoNota
     texto: str = Field(max_length=2000)
@@ -276,7 +298,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               config.REVISION_ESCALAMIENTOS_SEGUNDOS,
               repositorio_avisos: RepositorioAvisos | None = None,
               procesar_avisos_cada_s: float | None = config.REVISION_AVISOS_SEGUNDOS,
-              repositorio_refugios: RepositorioRefugios | None = None) -> FastAPI:
+              repositorio_refugios: RepositorioRefugios | None = None,
+              repositorio_adopciones: RepositorioAdopciones | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -311,6 +334,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             demo = repositorio_cupos.refugio()
             repositorio_refugios = RepositorioRefugiosEnMemoria(
                 [Refugio(demo.nombre, demo.capacidad, demo.ocupados, id=1)])
+    repositorio_adopciones = repositorio_adopciones or (
+        RepositorioAdopcionesPostgres(motor) if motor is not None
+        else RepositorioAdopcionesEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
     usuario_actual = Depends(dependencia_usuario)
@@ -320,6 +346,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     veterinaria = exigir_rol(dependencia_usuario, Rol.VETERINARIO)  # RN-06
     rescatista_actual = exigir_rol(dependencia_usuario, Rol.RESCATISTA)  # HU-06
     administracion = exigir_rol(dependencia_usuario, Rol.ADMINISTRADOR)  # #67
+    adoptante_actual = exigir_rol(dependencia_usuario, Rol.ADOPTANTE)  # #85
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -440,6 +467,39 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         if not repositorio_usuarios.vincular_refugio(correo, datos.refugio_id):
             raise HTTPException(status_code=404, detail="No existe una cuenta con ese correo.")
         return {"correo": correo, "refugio_id": datos.refugio_id}
+
+    # --- Fase 3 (#85): adoptante (RF-08) ---------------------------------------------
+
+    @app.post("/adoptantes", status_code=201)
+    def registrar_adoptante(datos: RegistroAdoptante):
+        """Público, como el reporte: el adoptante no es personal y crea su propia cuenta.
+        El rol siempre es adoptante; nadie puede registrarse como personal por aquí."""
+        if not datos.autoriza_datos:
+            raise HTTPException(status_code=422, detail=(
+                "Para crear la cuenta debes autorizar el tratamiento de tus datos "
+                "(Ley 1581 de 2012)."))
+        try:
+            nueva = usuarios.registrar(datos.correo, datos.nombre, Rol.ADOPTANTE,
+                                       datos.contrasena)
+        except CorreoDuplicado as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except (ContrasenaInvalida, ValueError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"correo": nueva.correo, "rol": nueva.rol.value}
+
+    @app.get("/adoptantes/yo/perfil")
+    def mi_perfil(adoptante: Usuario = adoptante_actual):
+        perfil = repositorio_adopciones.perfil(adoptante.correo)
+        if perfil is None:
+            raise HTTPException(status_code=404, detail="Aún no has llenado tu perfil.")
+        return {**{k: v for k, v in vars(perfil).items() if k != "actualizado_en"},
+                "actualizado_en": fecha_utc(perfil.actualizado_en)}
+
+    @app.put("/adoptantes/yo/perfil")
+    def guardar_mi_perfil(datos: PerfilEntrada, adoptante: Usuario = adoptante_actual):
+        repositorio_adopciones.guardar_perfil(
+            PerfilAdoptante(correo=adoptante.correo, **datos.model_dump()))
+        return {"correo": adoptante.correo, "guardado": True}
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,

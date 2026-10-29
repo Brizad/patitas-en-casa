@@ -149,6 +149,7 @@ class Rol(StrEnum):
     COORDINADOR = "coordinador"
     RESCATISTA = "rescatista"  # HU-06: voluntario que atiende rescates en campo
     ADMINISTRADOR = "administrador"  # #67: refugios y cuentas (RF-14, RF-16)
+    ADOPTANTE = "adoptante"  # #85 (RF-08): se registra solo; no es personal del refugio
 
 
 class EstadoRescate(StrEnum):

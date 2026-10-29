@@ -23,6 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
+from app.adopciones.modelos import Vivienda
 from app.avisos.modelos import EstadoAviso
 from app.dominio.modelos import (
     Especie,
@@ -136,6 +137,23 @@ usuarios = Table(
     UniqueConstraint("correo", name="uq_usuarios_correo"),
     CheckConstraint("correo = lower(correo)", name="ck_usuarios_correo_minusculas"),
     CheckConstraint(f"rol IN ({_valores(Rol)})", name="ck_usuarios_rol"),
+)
+
+# RF-08 (#85): perfil del adoptante, uno por cuenta. Datos mínimos (RNF-08, RNF-16).
+perfiles_adoptante = Table(
+    "perfiles_adoptante",
+    metadata,
+    Column("correo", Text, ForeignKey("usuarios.correo"), primary_key=True),
+    Column("vivienda", String(12), nullable=False),
+    Column("tiene_patio", Boolean, nullable=False),
+    Column("hay_ninos", Boolean, nullable=False),
+    Column("otros_animales", Boolean, nullable=False),
+    Column("horas_solo_al_dia", SmallInteger, nullable=False),
+    Column("experiencia", Boolean, nullable=False),
+    Column("acepta_seguimiento", Boolean, nullable=False),
+    Column("actualizado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"vivienda IN ({_valores(Vivienda)})", name="ck_perfiles_vivienda"),
+    CheckConstraint("horas_solo_al_dia BETWEEN 0 AND 24", name="ck_perfiles_horas"),
 )
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
