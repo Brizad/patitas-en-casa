@@ -53,7 +53,8 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [registro, setRegistro] = useState(false);
+  // El botón «Adoptar» de la página de inicio abre /panel/#registro (#145).
+  const [registro, setRegistro] = useState(() => window.location.hash === "#registro");
   const [aviso, setAviso] = useState("");
 
   async function entrar(evento: React.FormEvent) {

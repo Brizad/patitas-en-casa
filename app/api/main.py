@@ -29,7 +29,7 @@ from fastapi import (
     status,
 )
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -170,6 +170,8 @@ logger = logging.getLogger(__name__)
 
 # HU-08 (#47): la PWA ciudadana (HTML + JS sencillos) la sirve la misma API en /app/.
 CARPETA_PWA = Path(__file__).resolve().parents[1] / "pwa"
+# Página de inicio pública (#145): HTML y CSS sin JavaScript, en la raíz del sitio.
+CARPETA_INICIO = Path(__file__).resolve().parents[1] / "inicio"
 # II-03 (#64): panel del personal en React; se compila con «npm run build» en panel/.
 CARPETA_PANEL = Path(__file__).resolve().parents[1] / "panel_web"
 # Windows puede asociar .js a text/plain en el registro; el navegador exige estos tipos.
@@ -1144,7 +1146,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS
         respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
-        if peticion.url.path.startswith(("/app", "/panel")):
+        if peticion.url.path == "/" or peticion.url.path.startswith(("/app", "/panel",
+                                                                  "/inicio")):
             respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
             respuesta.headers["Referrer-Policy"] = "no-referrer"
         return respuesta
@@ -1232,10 +1235,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
 
     @app.get("/", include_in_schema=False)
     def inicio():
-        return RedirectResponse("/app/")
+        return FileResponse(CARPETA_INICIO / "index.html", media_type="text/html")
 
     app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal))
     app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")
+    app.mount("/inicio", StaticFiles(directory=CARPETA_INICIO), name="inicio")
     if (CARPETA_PANEL / "index.html").exists():  # sin compilar, /panel no existe
         app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")
 

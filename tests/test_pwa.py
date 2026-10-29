@@ -28,12 +28,6 @@ def c():
         emisor_tokens=EmisorTokens("secreto-de-pruebas-con-mas-de-32-caracteres")))
 
 
-def test_la_raiz_lleva_a_la_pwa(c):
-    respuesta = c.get("/", follow_redirects=False)
-    assert respuesta.status_code in (302, 307)
-    assert respuesta.headers["location"] == "/app/"
-
-
 def test_la_pwa_sirve_la_pantalla_de_consulta(c):
     respuesta = c.get("/app/")
     assert respuesta.status_code == 200

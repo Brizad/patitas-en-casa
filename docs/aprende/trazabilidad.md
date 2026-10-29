@@ -95,3 +95,12 @@ Resumen: **RF: 32 hechos. RNF: 10 hechos, 5 parciales, 1 pendiente** (RNF-06), m
    cifrada con AES-256, con prueba de restauración), pero **no se integró**: saca una copia
    de los datos reales fuera de Render y esa decisión es de Brayan. Además, Render anuncia que sus
    bases gratis vencen al poco tiempo de creadas (revisa el aviso en tu panel de Render). Ver `preguntas-para-brayan.md` (P-07).
+
+## Entregables de las tareas de cierre (después de la v1.1.0)
+
+No son requisitos nuevos del ERS: mejoran la presentación y la operación de los que ya están.
+
+| Entregable | Requisito que apoya | Dónde | Pruebas | Issue / PR |
+|---|---|---|---|---|
+| Scripts del nodo de video (WSL/Ubuntu) | RF-03, RNF-02 | `servicios/video/instalar_nodo.sh`, `arrancar_nodo.sh` | `test_video_nodo.py` | #143 / #144 |
+| Página de inicio pública | RF-01 (entrada al reporte), RNF-07, RNF-11 | `app/inicio/` | `test_inicio.py` | #145 |

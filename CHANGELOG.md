@@ -5,7 +5,11 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Página de inicio pública en la raíz del sitio (#145, `app/inicio/`): explica el problema en Cúcuta, el flujo reporte → IA de texto y video → veterinario → rescate → refugio → adopción, los siete roles y la tecnología, con botones grandes a «Reportar emergencia» (`/app/`), «Adoptar» (`/panel/#registro`, abre el registro de adoptante) y «Entrar como personal». Sin JavaScript, con la misma CSP de la PWA, una columna en celular y modo oscuro.
 - Scripts del nodo de video para Ubuntu/WSL2 (#143): `servicios/video/instalar_nodo.sh` instala todo y `arrancar_nodo.sh` pide el token sin mostrarlo (opción de guardarlo con permisos 600). README con 3 pasos para quien nunca usó Linux y `.gitattributes` con fin de línea LF para los `.sh`.
+
+### Cambiado
+- `GET /` muestra la página de inicio en vez de redirigir a la PWA (#145).
 
 ## [1.1.0] - 2026-10-29
 Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10; PR #126 a

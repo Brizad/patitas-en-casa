@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F4F47">
+<meta name="description" content="Patitas en Casa: reporte de animales en emergencia en Cúcuta, triaje con IA, rescate, refugio y adopción.">
+<title>Patitas en Casa · Cúcuta</title>
+<link rel="icon" href="/app/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/inicio/inicio.css">
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<header class="cabecera">
+  <img src="/app/icono.svg" alt="" width="32" height="32">
+  <span>Patitas en Casa</span>
+</header>
+
+<main id="contenido">
+  <!-- #145: página de inicio pública. Sin JavaScript: la misma CSP estricta de la PWA. -->
+  <section class="portada" aria-labelledby="titulo">
+    <h1 id="titulo">Un animal herido en Cúcuta no debería esperar a que alguien conteste un chat.</h1>
+    <p class="entrada">Patitas en Casa conecta a quien lo encuentra con el veterinario, el
+      rescatista y el refugio, en orden de gravedad. Sin crear cuenta.</p>
+    <nav class="acciones" aria-label="Acciones principales">
+      <a class="boton urgente" href="/app/#reportar">Reportar emergencia</a>
+      <a class="boton" href="/panel/#registro">Adoptar</a>
+      <a class="boton secundario" href="/panel/">Entrar como personal</a>
+    </nav>
+  </section>
+
+  <section aria-labelledby="titulo-problema">
+    <h2 id="titulo-problema">El problema</h2>
+    <p>Hoy un reporte llega por redes o mensajes, sin ubicación precisa, mezclado con otros y
+      sin saber qué tan grave es. El refugio no sabe si tiene cupo hasta que el animal ya está
+      en la puerta, y las adopciones dependen de la suerte.</p>
+  </section>
+
+  <section aria-labelledby="titulo-como">
+    <h2 id="titulo-como">Cómo funciona</h2>
+    <ol class="pasos">
+      <li><strong>Reporte.</strong> Cualquier persona describe la emergencia, comparte su
+        ubicación y, si puede, un video corto. Recibe un código para seguir el caso.</li>
+      <li><strong>IA de texto y video.</strong> Sugiere una prioridad (crítica, alta, media o
+        baja) con su confianza y sus razones. Si duda, pide revisión; si falla, trata el caso
+        como alto.</li>
+      <li><strong>Veterinario.</strong> Confirma o corrige la prioridad. La IA nunca decide sola.</li>
+      <li><strong>Rescate.</strong> El caso urgente se ofrece a los rescatistas de la zona; si
+        nadie lo acepta a tiempo, se avisa al coordinador.</li>
+      <li><strong>Refugio.</strong> El animal ingresa solo si hay cupo y queda con su ficha
+        clínica. Al 90 % de ocupación se alerta a coordinación.</li>
+      <li><strong>Adopción.</strong> Se recomiendan animales según el hogar del adoptante, con
+        compromiso firmado y seguimientos a 30, 90 y 180 días.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="titulo-roles">
+    <h2 id="titulo-roles">Quién hace qué</h2>
+    <dl class="roles">
+      <div><dt>Ciudadano</dt><dd>Reporta y consulta el estado con su código, sin cuenta.</dd></div>
+      <div><dt>Veterinario</dt><dd>Atiende la cola por prioridad y lleva la ficha clínica.</dd></div>
+      <div><dt>Rescatista</dt><dd>Acepta rescates de su comuna y cuenta cómo terminaron.</dd></div>
+      <div><dt>Coordinador</dt><dd>Maneja cupos, ingresos, egresos y adopciones.</dd></div>
+      <div><dt>Adoptante</dt><dd>Crea su perfil, recibe recomendaciones y solicita adoptar.</dd></div>
+      <div><dt>Administrador</dt><dd>Crea cuentas y refugios; revisa la bitácora.</dd></div>
+      <div><dt>Alcaldía</dt><dd>Consulta indicadores anonimizados de la ciudad.</dd></div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="titulo-tecnologia">
+    <h2 id="titulo-tecnologia">Tecnología</h2>
+    <ul class="tecnologia">
+      <li>API en Python con FastAPI y base de datos PostgreSQL.</li>
+      <li>App ciudadana instalable (PWA) que funciona con mala señal.</li>
+      <li>Panel del personal en React y TypeScript.</li>
+      <li>IA de texto (reglas + TF-IDF) y de video (MediaPipe + DeepLabCut en un equipo local).</li>
+      <li>Contraseñas con Argon2id, sesiones con JWT y datos de contacto cifrados (AES-256).</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="pie">
+  <p>Proyecto integrador de Ingeniería de Software II, Universidad de Pamplona.
+    Código abierto en <a href="https://github.com/Brizad/patitas-en-casa">GitHub</a> ·
+    <a href="/docs">Documentación de la API</a></p>
+</footer>
+</body>
+</html>

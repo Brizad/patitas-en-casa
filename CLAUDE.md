@@ -47,6 +47,7 @@ veterinarios y control de cupos del refugio.
 | `app/video/`, `app/api/video.py` | Video del reporte (#125): trabajos `analisis_video` (memoria y PostgreSQL), `ServicioVideo` (subida con la clave del reporte, RN-07, falla segura) y rutas del ciudadano, del trabajador (`X-Video-Token`) y del personal. |
 | `servicios/video/` | Trabajador local de video (no corre en Render): marcha, clasificador MLP, tubería, adaptadores MediaPipe + DeepLabCut y guía de instalación (WSL2). |
 | `app/pwa/` | PWA ciudadana (HU-08, #47): HTML, CSS y JS sencillos servidos en `/app/` con CSP estricta; sin recursos externos ni `innerHTML` con datos; el service worker solo guarda la interfaz. |
+| `app/inicio/` | Página de inicio pública en `/` (#145): HTML y CSS sin JavaScript, con la CSP de la PWA. |
 | `docs/aprende/` | Guía de estudio: mapa y glosario, una guía por fase, avance y preguntas para el autor. |
 | `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API; la PWA reutiliza su diseño). |
 
