@@ -1,5 +1,34 @@
 # Trabajador local de video (#125)
 
+## En 3 pasos (si nunca usaste Linux)
+
+No necesitas saber Linux: solo vas a copiar y pegar dos líneas. Para pegar en la ventana de
+Ubuntu usa **clic derecho** (Ctrl+V no siempre funciona ahí).
+
+1. **Instala Ubuntu dentro de Windows (una sola vez).** Abre el menú Inicio, escribe
+   `PowerShell`, clic derecho → *Ejecutar como administrador* y pega:
+   `wsl --install -d Ubuntu-24.04`. Reinicia la PC. Abre la app **Ubuntu** desde el menú
+   Inicio y elige un usuario y una contraseña (la contraseña no se ve al escribirla; es normal).
+2. **Instala el trabajador (una sola vez, unos 20 min y 3 GB).** En la ventana de Ubuntu pega:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/Brizad/patitas-en-casa/main/servicios/video/instalar_nodo.sh | bash
+   ```
+   Te pedirá la contraseña de Ubuntu del paso 1. Termina con «Listo».
+3. **Arráncalo cada vez que quieras analizar videos.** Abre Ubuntu y pega:
+   ```bash
+   bash ~/patitas/servicios/video/arrancar_nodo.sh
+   ```
+   Te pide el token: en Render → servicio `patitas-en-casa` → *Environment* →
+   `PATITAS_VIDEO_TOKEN` → ojo → copiar, y pégalo con clic derecho (no se verá). Puedes
+   guardarlo para no pegarlo otra vez. Deja la ventana abierta; **Ctrl+C** la detiene.
+
+Para probar con un video tuyo sin token (está en `C:\Users\<tú>\Videos\perro.mp4`):
+`bash ~/patitas/servicios/video/arrancar_nodo.sh --video /mnt/c/Users/<tú>/Videos/perro.mp4`.
+Para actualizar el trabajador, repite el paso 2. Para olvidar el token guardado:
+`rm ~/.patitas-video/token`.
+
+## Cómo funciona
+
 El análisis de video no cabe en Render gratis (512 MB) y Hugging Face ya cobra los Spaces
 Docker. Por eso corre en una PC del equipo: el trabajador **le pide** los videos a la API de
 Render (no abre puertos ni recibe conexiones), los analiza y devuelve el resultado.
@@ -27,9 +56,9 @@ esa protección (en Windows 11 no se puede volver a encender sin reinstalar). La
 1. PowerShell como administrador: `wsl --install -d Ubuntu-24.04` y reinicia.
 2. Abre «Ubuntu» y sigue los pasos de Linux de abajo.
 
-## Instalar (Linux o WSL2)
+## Instalar a mano (Linux o WSL2)
 
-Usa una ruta corta (en Windows las rutas largas también fallaron al instalar).
+Es lo mismo que hace `instalar_nodo.sh`. Usa una ruta corta (en Windows las rutas largas también fallaron al instalar).
 
 ```bash
 sudo apt install -y python3-venv git libegl1 libgles2   # MediaPipe necesita libEGL

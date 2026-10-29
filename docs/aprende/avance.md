@@ -219,17 +219,16 @@ Guía completa: `fase-6-video.md`; instalación: `servicios/video/README.md`.
 
 1. **Instala WSL2** (PowerShell como administrador): `wsl --install -d Ubuntu-24.04`,
    reinicia y abre «Ubuntu». Crea tu usuario de Linux cuando te lo pida.
-2. **Instala el trabajador** en Ubuntu, copiando los comandos de la sección «Instalar» de
-   `servicios/video/README.md` (unos 3 GB; la primera vez tarda).
+2. **Instala el trabajador** en Ubuntu con el script `instalar_nodo.sh` (paso 2 de
+   `servicios/video/README.md`; unos 3 GB, la primera vez tarda).
 3. **Pruébalo con un video tuyo** (sección «Probar con un video tuyo»). Graba a un perro de
    lado, caminando, 10 a 20 s, que se vea completo.
 4. **Copia el token de Render:** Render → servicio `patitas-en-casa` → *Environment* →
    `PATITAS_VIDEO_TOKEN` → ojo para verlo → copiar. No lo pegues en ningún archivo del
    repositorio ni en un chat.
-5. **Arranca el trabajador** en Ubuntu:
-   `export PATITAS_API_URL=https://patitas-en-casa-pnnk.onrender.com`,
-   `export PATITAS_VIDEO_TOKEN='<pega aquí>'` y `python -m patitas_video.trabajador`. Déjalo
-   abierto mientras quieras analizar videos (por ejemplo, durante la demostración).
+5. **Arranca el trabajador** en Ubuntu: `bash ~/patitas/servicios/video/arrancar_nodo.sh`.
+   Pide el token sin mostrarlo (pégalo con clic derecho). Déjalo abierto mientras quieras
+   analizar videos (por ejemplo, durante la demostración).
 6. **Ensaya el paso 1b de `guion-demo.md`**: reporte con video desde el celular → en la
    terminal aparece «trabajo N analizado» → en el panel, «Análisis de video: listo».
 7. **Si quieres apagar el video en producción**, borra `PATITAS_VIDEO_TOKEN` en Render: la PWA
@@ -239,6 +238,23 @@ Guía completa: `fase-6-video.md`; instalación: `servicios/video/README.md`.
 
 Nota: el plan `PLAN_VIDEO_PARA_CLAUDE_CODE.md` que quedó en tu carpeta todavía describe
 Hugging Face; se siguió la arquitectura de tu mensaje (trabajador local).
+
+## Tareas de cierre del 29 de octubre de 2026
+
+Seis tareas pedidas por Brayan, cada una en PR pequeños con CI en verde.
+
+### 1. Scripts del nodo de video (#143)
+
+- `servicios/video/instalar_nodo.sh`: instala todo en Ubuntu/WSL2 (programas del sistema,
+  código, entorno de Python, librerías de IA) y comprueba que carguen. Se puede repetir para
+  actualizar.
+- `servicios/video/arrancar_nodo.sh`: pide el token con `read -s` (no se ve), quita el fin
+  de línea de Windows si lo pegas desde allá, ofrece guardarlo en `~/.patitas-video/token`
+  con permisos solo para tu usuario y nunca lo imprime. `--video archivo` analiza sin token.
+- El README empieza con 3 pasos para quien nunca usó Linux. `.gitattributes` obliga a que
+  los `.sh` queden con fin de línea de Linux aunque se editen en Windows.
+- Pruebas: `tests/test_video_nodo.py` (sintaxis, el token no aparece en la salida, se
+  guarda solo si se pide). No se probó en un Ubuntu real: el paso 2 lo vas a correr tú.
 
 ## Resumen final para Brayan
 
