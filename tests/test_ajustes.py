@@ -4,7 +4,7 @@ import pytest
 from app.ajustes import ConfiguracionIncompleta, cargar_ajustes
 
 VARIABLES = ["POSTGRES_HOST", "POSTGRES_PORT", "POSTGRES_USER", "POSTGRES_PASSWORD",
-             "POSTGRES_DB", "POSTGRES_DB_PRUEBAS"]
+             "POSTGRES_DB", "POSTGRES_DB_PRUEBAS", "POSTGRES_SSLMODE"]
 
 
 @pytest.fixture(autouse=True)
@@ -52,3 +52,11 @@ def test_url_de_la_aplicacion_y_de_las_pruebas(monkeypatch):
 def test_url_escapa_caracteres_especiales_de_la_contrasena(monkeypatch):
     a = ajustes(monkeypatch, POSTGRES_PASSWORD="p@ss:w/rd#1")
     assert "p%40ss%3Aw%2Frd%231@localhost" in a.url()
+
+
+def test_sin_sslmode_la_url_no_cambia_y_con_neon_exige_tls(monkeypatch):
+    """#154: Neon solo acepta conexiones cifradas."""
+    local = ajustes(monkeypatch, POSTGRES_PASSWORD="clave")
+    assert "sslmode" not in local.url()
+    neon = ajustes(monkeypatch, POSTGRES_PASSWORD="clave", POSTGRES_SSLMODE="require")
+    assert neon.url().endswith("/patitas?sslmode=require")
