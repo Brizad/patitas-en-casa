@@ -60,6 +60,7 @@ from app.ajustes import (
     cargar_ajustes,
     cargar_ajustes_admin,
     cargar_ajustes_correo,
+    cargar_ajustes_demo,
     cargar_ajustes_seguridad,
 )
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
@@ -73,6 +74,7 @@ from app.cupos.fichas import AnimalNoEncontrado, NotaInvalida, ServicioFichas
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
+from app.demo import Dependencias, cargar_demo
 from app.documentos.pdf import generar_pdf
 from app.dominio.modelos import (
     DECIDIDOS,
@@ -378,7 +380,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               procesar_avisos_cada_s: float | None = config.REVISION_AVISOS_SEGUNDOS,
               repositorio_refugios: RepositorioRefugios | None = None,
               repositorio_adopciones: RepositorioAdopciones | None = None,
-              repositorio_bitacora: RepositorioBitacora | None = None) -> FastAPI:
+              repositorio_bitacora: RepositorioBitacora | None = None,
+              contrasena_demo: str | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -463,6 +466,18 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
     app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas
+    # #109: datos de demostración. Con PostgreSQL se leen del entorno (Render no tiene
+    # consola); las pruebas pasan la contraseña. Un error aquí no impide que la API arranque.
+    if motor is not None:
+        contrasena_demo = contrasena_demo or cargar_ajustes_demo().contrasena_si_activa()
+    servicios_demo = (reportes, confirmaciones, rescates, repositorio_cupos,
+                      repositorio_adopciones)
+    app.state.demo_servicios = servicios_demo
+    if contrasena_demo:
+        try:
+            cargar_demo(Dependencias(repositorio_usuarios, *servicios_demo), contrasena_demo)
+        except Exception:
+            logger.exception("No se pudieron cargar los datos de demostración.")
 
     def cupos_de(usuario: Usuario) -> ServicioCupos:
         """#75: los cupos del refugio de la persona; sin vínculo, el primer refugio (como

@@ -36,3 +36,9 @@ services:
         sync: false
       - key: PATITAS_ADMIN_CONTRASENA
         sync: false
+      # Datos de demostración (#109): «true» los carga una vez; la contraseña de las
+      # cuentas *@demo.patitas.co la escribe Brayan en Render (docs/aprende/avance.md).
+      - key: PATITAS_DEMO_ACTIVA
+        sync: false
+      - key: PATITAS_DEMO_CONTRASENA
+        sync: false
