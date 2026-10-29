@@ -25,6 +25,7 @@ veterinarios y control de cupos del refugio.
 | `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
 | `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
 | `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
+| `app/refugios/` | `RepositorioRefugios` (memoria y PostgreSQL): refugios que registra el administrador (RF-14). |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |
 | `app/seguridad/tokens.py`, `app/api/seguridad.py` | Tokens JWT (`EmisorTokens`) y la dependencia de FastAPI que exige sesión. |
 | `app/notificaciones/correo.py` | Adaptadores de `Notificador` (DT-03): correo SMTP o, sin SMTP configurado, el log. |
@@ -95,6 +96,9 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
   401 sin sesión.
 - DT-06: `POST /auth/token` cuenta los fallos por correo y por IP (`LimiteIntentos` en
   `app/usuarios/intentos.py`, tabla `intentos_fallidos`); bloqueado responde 429 con `Retry-After`.
+- Fase 1 (#67): `/admin/*` es solo del rol `administrador` (`dependencies` o parámetro
+  `administracion`). La primera cuenta sale de `PATITAS_ADMIN_CORREO`/`PATITAS_ADMIN_CONTRASENA`
+  y nunca se reemplaza.
 
 El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta gitleaks (secretos en todo el
 historial), Ruff y pytest con cobertura mínima del 70 %.
