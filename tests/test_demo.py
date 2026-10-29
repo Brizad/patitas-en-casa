@@ -35,6 +35,7 @@ def test_carga_una_cuenta_por_rol_y_datos_para_cada_pantalla():
     assert len(c.get("/rescates/ofertas", headers=h(c, "rescatista")).json()) == 1
     assert len(c.get("/adopciones/animales").json()) == 3
     assert len(c.get("/refugio/animales", headers=h(c, "coordinador")).json()) == 4
+    assert len(c.get("/refugio/animales", headers=h(c, "veterinaria")).json()) == 4
     recomendados = c.get("/adopciones/recomendaciones", headers=h(c, "adoptante")).json()
     assert recomendados and all(len(r["razones"]) == 3 for r in recomendados)
 

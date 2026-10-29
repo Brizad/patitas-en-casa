@@ -38,6 +38,7 @@ const resultados = [];
 
 async function revisar(pagina, nombre) {
   await pagina.waitForLoadState("networkidle");
+  await pagina.waitForTimeout(700);  // React pide los datos después de pintar la pestaña
   const { violations, incomplete, passes } =
     await new AxeBuilder({ page: pagina }).withTags(ETIQUETAS).analyze();
   const tema = await pagina.evaluate(() =>

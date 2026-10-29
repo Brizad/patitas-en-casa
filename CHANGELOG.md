@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Manual de usuario (#156, `docs/manual-usuario.md`): qué hace cada rol (ciudadano, veterinario, rescatista, coordinador, adoptante, administrador y Alcaldía) en lenguaje sencillo, con 17 capturas de los datos de demostración. `scripts/accesibilidad/capturas.mjs` las vuelve a tomar solas.
 - Migración a Neon preparada (#154): `POSTGRES_SSLMODE` opcional en la conexión (Neon exige TLS), `scripts/operacion/migrar_a_neon.py` (pide las dos direcciones sin mostrarlas, copia con `pg_dump`/`pg_restore` sin poner la contraseña en la línea de comandos, compara las filas de cada tabla e imprime las variables para Render) y la guía `docs/aprende/migrar-a-neon.md`. No se ejecutó contra Render ni Neon: necesita las cuentas de Brayan.
 - Accesibilidad medida (RNF-11, #147): `scripts/accesibilidad/revisar.mjs` recorre la página de inicio, la PWA y cada pestaña de los 6 roles con axe-core 4.14 (WCAG 2.2 A/AA y buenas prácticas, en claro, oscuro y celular de 320 px) y Lighthouse 13.6 (puntaje mínimo 100), más el reflujo a 320 px. Corre en el CI con un servidor de demostración en memoria (`servidor_demo.py`, contraseña aleatoria por corrida). Informe en `docs/aprende/accesibilidad.md`.
 - Página de inicio pública en la raíz del sitio (#145, `app/inicio/`): explica el problema en Cúcuta, el flujo reporte → IA de texto y video → veterinario → rescate → refugio → adopción, los siete roles y la tecnología, con botones grandes a «Reportar emergencia» (`/app/`), «Adoptar» (`/panel/#registro`, abre el registro de adoptante) y «Entrar como personal». Sin JavaScript, con la misma CSP de la PWA, una columna en celular y modo oscuro.
@@ -16,6 +17,8 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - DT-09 pagada (#149): `POST /adoptantes` admite 5 registros por IP cada 15 minutos (429 con `Retry-After`; cuentan también los intentos fallidos) y responde exactamente igual si el correo ya tenía cuenta (antes: 409, que revelaba quién está registrado). La cuenta existente no cambia. El panel muestra un mensaje que cubre los dos casos.
 
 ### Cambiado
+- Datos de demostración: la veterinaria también queda vinculada al refugio de demostración y ve sus fichas (#156).
+- `revisar.mjs` espera a que cada pestaña cargue sus datos antes de medir (antes podía medir la pantalla vacía); el resultado sigue en 0 fallas (#156).
 - Panel: el inicio de sesión y el registro de adoptante van dentro de `<main>`, y la barra con sesión tiene un título de nivel 1 (axe `landmark-one-main`, `region`, `page-has-heading-one`; Lighthouse pasó de 96 a 100) (#147).
 - `GET /` muestra la página de inicio en vez de redirigir a la PWA (#145).
 
