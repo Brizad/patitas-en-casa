@@ -64,3 +64,5 @@ button.enlace { border: 0; background: none; padding: 0; color: var(--verde);
 .barras dd { margin: 0; display: flex; align-items: center; gap: 6px; }
 .barras dd span { display: inline-block; height: 12px; border-radius: 6px;
   background: var(--verde); min-width: 2px; }
+.foto { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 3;
+  object-fit: cover; border-radius: 10px; margin-bottom: 8px; }

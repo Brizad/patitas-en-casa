@@ -49,6 +49,8 @@ export default function Adoptante({ token }: { token: string }) {
         <ul className="lista-simple">
           {animales.map((a) => (
             <li key={a.animal_id}>
+              {a.foto && <img className="foto" src={a.foto} alt={`Foto de ${a.nombre}`}
+                loading="lazy" />}
               <b>{a.nombre}</b> · {resumenAnimal(a)}<p>{a.descripcion}</p>
               {"puntaje" in a && (
                 <p className="nota">Compatibilidad {a.puntaje}/100: {a.razones.join("; ")}.

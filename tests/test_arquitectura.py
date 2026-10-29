@@ -23,7 +23,7 @@ NUCLEO = ["dominio/modelos.py", "avisos/modelos.py", "avisos/repositorio.py",
           "adopciones/repositorio.py", "adopciones/servicio.py",
           "adopciones/reglas.py", "adopciones/compromiso.py", "documentos/pdf.py",
           "adopciones/compatibilidad.py", "adopciones/asignacion.py",
-          "bitacora/repositorio.py", "indicadores/calculo.py",
+          "bitacora/repositorio.py", "adopciones/fotos.py", "indicadores/calculo.py",
           "indicadores/exportar.py"]
 
 

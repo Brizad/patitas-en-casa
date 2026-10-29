@@ -18,10 +18,12 @@ from typing import Annotated
 from fastapi import (
     Depends,
     FastAPI,
+    File,
     Header,
     HTTPException,
     Request,
     Response,
+    UploadFile,
     status,
 )
 from fastapi.responses import RedirectResponse
@@ -35,6 +37,14 @@ from app import config
 from app.adopciones.asignacion import asignar
 from app.adopciones.compatibilidad import Compatibilidad, calcular, recomendar
 from app.adopciones.compromiso import lineas_compromiso
+from app.adopciones.fotos import MAX_BYTES as MAX_BYTES_FOTO
+from app.adopciones.fotos import (
+    FotoInvalida,
+    RepositorioFotos,
+    RepositorioFotosEnMemoria,
+    tipo_de_imagen,
+)
+from app.adopciones.fotos_postgres import RepositorioFotosPostgres
 from app.adopciones.modelos import (
     Energia,
     EstadoSolicitud,
@@ -324,8 +334,9 @@ class PublicacionEntrada(BaseModel):
     necesita_patio: bool
 
 
-def _publicacion(p: Publicacion) -> dict:
-    return {"animal_id": p.animal_id, "nombre": p.nombre, "especie": p.especie,
+def _publicacion(p: Publicacion, con_foto: set[int] = frozenset()) -> dict:
+    foto = f"/adopciones/animales/{p.animal_id}/foto" if p.animal_id in con_foto else None
+    return {"foto": foto,"animal_id": p.animal_id, "nombre": p.nombre, "especie": p.especie,
             "descripcion": p.descripcion, "tamano": p.tamano.value, "energia": p.energia.value,
             "edad_meses": p.edad_meses, "apto_ninos": p.apto_ninos,
             "apto_otros_animales": p.apto_otros_animales, "necesita_patio": p.necesita_patio,
@@ -409,7 +420,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_adopciones: RepositorioAdopciones | None = None,
               repositorio_bitacora: RepositorioBitacora | None = None,
               contrasena_demo: str | None = None,
-              cifrador: Cifrador | None = None) -> FastAPI:
+              cifrador: Cifrador | None = None,
+              repositorio_fotos: RepositorioFotos | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -453,6 +465,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     if cifrador is None and motor is not None:
         clave_datos = cargar_ajustes_datos().clave_datos
         cifrador = Cifrador(clave_datos.get_secret_value()) if clave_datos else None
+    repositorio_fotos = repositorio_fotos or (
+        RepositorioFotosPostgres(motor) if motor is not None else RepositorioFotosEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
@@ -682,7 +696,33 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     @app.get("/adopciones/animales")
     def catalogo_de_adopcion():
         """Público: animales disponibles. Sin datos del refugio ni de personas (RN-14)."""
-        return [_publicacion(p) for p in repositorio_adopciones.disponibles()]
+        con_foto = repositorio_fotos.con_foto()
+        return [_publicacion(p, con_foto) for p in repositorio_adopciones.disponibles()]
+
+    @app.get("/adopciones/animales/{animal_id}/foto")
+    def foto_del_animal(animal_id: int):
+        """Pública, como el catálogo. Se envía con el tipo verificado y nosniff: el navegador
+        no intenta adivinar otro tipo (no se puede colar un HTML como imagen)."""
+        foto = repositorio_fotos.foto(animal_id)
+        if foto is None:
+            raise HTTPException(status_code=404, detail="Este animal no tiene foto.")
+        return Response(foto[1], media_type=foto[0], headers={
+            "X-Content-Type-Options": "nosniff", "Cache-Control": "public, max-age=3600"})
+
+    @app.post("/refugio/animales/{animal_id}/foto", status_code=201)
+    async def subir_foto(animal_id: int, foto: Annotated[UploadFile, File()],
+                         coordinador: Usuario = coordinacion):
+        """RF-25: foto del animal de su refugio (JPEG, PNG o WebP de hasta 300 KB)."""
+        if fichas_de(coordinador).animal(animal_id) is None:
+            raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
+        datos = await foto.read(MAX_BYTES_FOTO + 1)  # no lee más de lo permitido
+        try:
+            tipo = tipo_de_imagen(datos)
+        except FotoInvalida as error:
+            raise HTTPException(status_code=413 if "KB" in str(error) else 415,
+                                detail=str(error)) from error
+        await run_in_threadpool(repositorio_fotos.guardar, animal_id, tipo, datos)
+        return {"foto": f"/adopciones/animales/{animal_id}/foto", "tipo": tipo}
 
     @app.get("/adopciones/recomendaciones")
     def recomendaciones(adoptante: Usuario = adoptante_actual):

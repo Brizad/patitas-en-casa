@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, decidir, pedirVisita,
-  propuestaJornada, publicar, registrarDevolucion, registrarSeguimiento, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
+  propuestaJornada, publicar, registrarDevolucion, registrarSeguimiento, subirFoto, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
 } from "./apiAdopcionCoordinador";
 import { FichaAnimal, animales } from "./apiRefugio";
 import { faltaJustificacion, textoError } from "./mensajes";
@@ -49,6 +49,8 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
       {mensaje && <p className="resultado" role="status">{mensaje}</p>}
       <Publicar presentes={presentes} alPublicar={(id, p) =>
         hacer(() => publicar(token, id, p), "Animal publicado en el catálogo.")} />
+      <Foto presentes={presentes} alSubir={(id, archivo) =>
+        hacer(() => subirFoto(token, id, archivo), "Foto guardada: ya se ve en el catálogo.")} />
       <div className="tarjeta">
         <h2>Solicitudes pendientes ({pendientes.length})</h2>
         <ul className="lista-simple">
@@ -188,6 +190,30 @@ function Publicar({ presentes, alPublicar }: {
       {marca("apto_otros_animales", "Convive con otros animales")}
       {marca("necesita_patio", "Necesita patio")}
       <p><button className="principal">Publicar</button></p>
+    </form>
+  );
+}
+
+/** RF-25: una foto por animal (reemplaza la anterior). */
+function Foto({ presentes, alSubir }: {
+  presentes: FichaAnimal[]; alSubir: (id: number, archivo: File) => void;
+}) {
+  const [id, setId] = useState<number | "">("");
+  const [archivo, setArchivo] = useState<File | null>(null);
+  return (
+    <form className="tarjeta" onSubmit={(e) => {
+      e.preventDefault();
+      if (id !== "" && archivo) alSubir(id, archivo);
+    }}>
+      <h2>Foto para el catálogo</h2>
+      <label>Animal<select required value={id} onChange={(e) => setId(Number(e.target.value))}>
+        <option value="">Elige un animal</option>
+        {presentes.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+      </select></label>
+      <label>Foto (JPEG, PNG o WebP, máximo 300 KB)
+        <input type="file" accept="image/jpeg,image/png,image/webp" required
+          onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} /></label>
+      <button className="principal">Subir foto</button>
     </form>
   );
 }
