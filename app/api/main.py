@@ -93,6 +93,7 @@ from app.dominio.modelos import (
 )
 from app.indicadores.calculo import Datos
 from app.indicadores.calculo import calcular as calcular_indicadores
+from app.indicadores.exportar import a_csv, filas_anonimizadas, resumen_pdf
 from app.notificaciones.correo import crear_notificador
 from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
 from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
@@ -984,6 +985,22 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         """RF-30: conteos, porcentajes y tiempos; ningún dato personal. Se calculan al pedirlos
         (pocos datos: no hace falta un almacén aparte)."""
         return calcular_indicadores(datos_para_indicadores(), datetime.now(UTC))
+
+    @app.get("/indicadores/reportes.csv", dependencies=[gestion])
+    def exportar_reportes_csv():
+        """RF-31: una fila por reporte, sin descripción, dirección, GPS, hora ni código."""
+        d = datos_para_indicadores()
+        return Response(a_csv(filas_anonimizadas(d.reportes, d.decisiones)),
+                        media_type="text/csv; charset=utf-8", headers={
+                            "Content-Disposition": 'attachment; filename="reportes.csv"'})
+
+    @app.get("/indicadores/resumen.pdf", dependencies=[gestion])
+    def exportar_resumen_pdf():
+        ahora = datetime.now(UTC)
+        pdf = resumen_pdf(calcular_indicadores(datos_para_indicadores(), ahora),
+                          ahora.strftime("%Y-%m-%d %H:%M"))
+        return Response(pdf, media_type="application/pdf", headers={
+            "Content-Disposition": 'attachment; filename="indicadores.pdf"'})
 
     @app.get("/bitacora")
     def ver_bitacora(limite: int = 100, _admin: Usuario = administracion):
