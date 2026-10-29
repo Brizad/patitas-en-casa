@@ -25,6 +25,10 @@ class RepositorioAdopciones(Protocol):
 
     def perfil(self, correo: str) -> PerfilAdoptante | None: ...
 
+    def perfiles(self) -> list[PerfilAdoptante]:
+        """Todos los perfiles (RNF-16: tasa de recomendación por segmento)."""
+        ...
+
     def publicar(self, publicacion: Publicacion) -> bool:
         """RF-25. False si el animal ya tiene una publicación (una por animal)."""
         ...
@@ -86,6 +90,9 @@ class RepositorioAdopcionesEnMemoria:
 
     def guardar_perfil(self, perfil: PerfilAdoptante) -> None:
         self._perfiles[perfil.correo] = replace(perfil)
+
+    def perfiles(self) -> list[PerfilAdoptante]:
+        return [replace(p) for p in self._perfiles.values()]
 
     def perfil(self, correo: str) -> PerfilAdoptante | None:
         encontrado = self._perfiles.get(correo)

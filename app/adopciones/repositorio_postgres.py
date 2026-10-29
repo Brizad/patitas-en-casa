@@ -59,13 +59,12 @@ class RepositorioAdopcionesPostgres:
         with self._motor.connect() as conexion:
             f = conexion.execute(select(perfiles_adoptante).where(
                 perfiles_adoptante.c.correo == correo)).mappings().first()
-        if f is None:
-            return None
-        return PerfilAdoptante(
-            correo=f["correo"], vivienda=Vivienda(f["vivienda"]), tiene_patio=f["tiene_patio"],
-            hay_ninos=f["hay_ninos"], otros_animales=f["otros_animales"],
-            horas_solo_al_dia=f["horas_solo_al_dia"], experiencia=f["experiencia"],
-            acepta_seguimiento=f["acepta_seguimiento"], actualizado_en=f["actualizado_en"])
+        return None if f is None else _perfil(f)
+
+    def perfiles(self) -> list[PerfilAdoptante]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(perfiles_adoptante)).mappings()
+            return [_perfil(f) for f in filas]
 
     def publicar(self, publicacion: Publicacion) -> bool:
         # La llave primaria (animal_id) garantiza una publicación por animal, aunque dos
@@ -216,6 +215,14 @@ def _seguimiento(f) -> Seguimiento:
         except SinCupo:
             return None
         return True
+
+
+def _perfil(f) -> PerfilAdoptante:
+    return PerfilAdoptante(
+        correo=f["correo"], vivienda=Vivienda(f["vivienda"]), tiene_patio=f["tiene_patio"],
+        hay_ninos=f["hay_ninos"], otros_animales=f["otros_animales"],
+        horas_solo_al_dia=f["horas_solo_al_dia"], experiencia=f["experiencia"],
+        acepta_seguimiento=f["acepta_seguimiento"], actualizado_en=f["actualizado_en"])
 
 
 def _solicitud(f) -> Solicitud:

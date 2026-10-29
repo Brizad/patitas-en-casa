@@ -109,7 +109,7 @@ from app.dominio.modelos import (
 )
 from app.indicadores.calculo import Datos
 from app.indicadores.calculo import calcular as calcular_indicadores
-from app.indicadores.exportar import a_csv, filas_anonimizadas, resumen_pdf
+from app.indicadores.exportar import a_csv, fichas_csv, filas_anonimizadas, resumen_pdf
 from app.notificaciones.correo import crear_notificador
 from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
 from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
@@ -1146,7 +1146,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         solicitudes_ = repositorio_adopciones.solicitudes()
         seguimientos_ = [x for s in solicitudes_ for x in repositorio_adopciones.seguimientos(s.id)]
         return Datos(reportes_, decisiones, rescates_, repositorio_refugios.todos(),
-                     solicitudes_, seguimientos_)
+                     solicitudes_, seguimientos_, tuple(repositorio_adopciones.perfiles()),
+                     tuple(repositorio_adopciones.disponibles()))
 
     @app.get("/indicadores", dependencies=[gestion])
     def indicadores():
@@ -1161,6 +1162,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         return Response(a_csv(filas_anonimizadas(d.reportes, d.decisiones)),
                         media_type="text/csv; charset=utf-8", headers={
                             "Content-Disposition": 'attachment; filename="reportes.csv"'})
+
+    @app.get("/indicadores/fichas.csv")
+    def exportar_fichas_csv(usuario: Usuario = gestion):
+        """RF-31: fichas del refugio de la persona, sin el texto de las notas clínicas."""
+        repo = fichas_de(usuario)
+        filas = [(a, len(repo.historial(a.id))) for a in repo.animales()]
+        return Response(fichas_csv(filas), media_type="text/csv; charset=utf-8", headers={
+            "Content-Disposition": 'attachment; filename="fichas.csv"'})
 
     @app.get("/indicadores/resumen.pdf", dependencies=[gestion])
     def exportar_resumen_pdf():

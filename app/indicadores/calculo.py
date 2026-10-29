@@ -14,7 +14,14 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from statistics import median
 
-from app.adopciones.modelos import EstadoSolicitud, Seguimiento, Solicitud
+from app.adopciones.compatibilidad import calcular as compatibilidad
+from app.adopciones.modelos import (
+    EstadoSolicitud,
+    PerfilAdoptante,
+    Publicacion,
+    Seguimiento,
+    Solicitud,
+)
 from app.dominio.modelos import DecisionTriaje, Refugio, Reporte, Rescate
 
 
@@ -26,6 +33,47 @@ class Datos:
     refugios: list[Refugio]
     solicitudes: list[Solicitud]
     seguimientos: list[Seguimiento]
+    perfiles: tuple[PerfilAdoptante, ...] = ()  # RNF-16
+    disponibles: tuple[Publicacion, ...] = ()
+
+
+def _mediana(valores: list[float]) -> float | None:
+    return round(median(valores), 1) if valores else None
+
+
+def _por_prioridad(d: Datos) -> dict[str, dict[str, float | None]]:
+    """RF-30: tiempo de respuesta por prioridad confirmada: hasta confirmar y, en críticos y
+    altos, desde la confirmación hasta que un rescatista aceptó."""
+    por_codigo = {r.codigo: r for r in d.reportes}
+    rescates = {r.codigo: r for r in d.rescates}
+    grupos: dict[str, dict[str, list[float]]] = {}
+    for c, dec in d.decisiones.items():
+        if c not in por_codigo:
+            continue
+        g = grupos.setdefault(dec.prioridad_final.value, {"confirmar": [], "aceptar": []})
+        g["confirmar"].append((dec.decidido_en - por_codigo[c].creado_en).total_seconds() / 60)
+        if c in rescates:
+            g["aceptar"].append((rescates[c].aceptado_en - dec.decidido_en).total_seconds() / 60)
+    return {p: {"mediana_minutos_hasta_confirmar": _mediana(g["confirmar"]),
+                "mediana_minutos_hasta_aceptar_rescate": _mediana(g["aceptar"])}
+            for p, g in sorted(grupos.items())}
+
+
+def _tasa_por_segmento(d: Datos) -> dict[str, dict[str, float | int]]:
+    """RNF-16: qué fracción del catálogo se le recomienda, en promedio, a cada grupo de
+    hogares. Una diferencia grande entre grupos es una señal para revisar los pesos. Los
+    grupos son características del hogar (no de la persona: no hay atributos protegidos)."""
+    if not d.disponibles:
+        return {}
+    segmentos: dict[str, list[float]] = {}
+    for p in d.perfiles:
+        tasa = sum(compatibilidad(p, a).recomendable for a in d.disponibles) / len(d.disponibles)
+        for clave in (f"vivienda: {p.vivienda.value}",
+                      "con niños" if p.hay_ninos else "sin niños",
+                      "con otros animales" if p.otros_animales else "sin otros animales"):
+            segmentos.setdefault(clave, []).append(tasa)
+    return {k: {"perfiles": len(v), "tasa_recomendacion": round(sum(v) / len(v), 3)}
+            for k, v in sorted(segmentos.items())}
 
 
 def _contar(valores: Iterable) -> dict[str, int]:
@@ -50,6 +98,7 @@ def calcular(d: Datos, ahora) -> dict:
             "minutos_hasta_confirmar": {
                 "mediana": round(median(minutos), 1) if minutos else None,
                 "promedio": round(sum(minutos) / len(minutos), 1) if minutos else None},
+            "tiempos_por_prioridad": _por_prioridad(d),
             "acuerdo_por_version_modelo": {
                 v: {"decisiones": len(x), "confirmadas_sin_cambio": round(sum(x) / len(x), 3)}
                 for v, x in sorted(acuerdo.items())},
@@ -64,6 +113,8 @@ def calcular(d: Datos, ahora) -> dict:
         "adopciones": {
             "solicitudes_por_estado": _contar(s.estado.value for s in d.solicitudes),
             "aprobadas": sum(s.estado == EstadoSolicitud.APROBADA for s in d.solicitudes),
+            "devoluciones": sum(s.estado == EstadoSolicitud.DEVUELTA for s in d.solicitudes),
+            "tasa_recomendacion_por_segmento": _tasa_por_segmento(d),
             "seguimientos": {
                 "hechos": len(d.seguimientos) - len(pendientes),
                 "pendientes": sum(s.programado_para >= ahora for s in pendientes),
