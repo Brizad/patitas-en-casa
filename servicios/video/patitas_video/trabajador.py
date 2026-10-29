@@ -87,17 +87,20 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     from patitas_video.adaptadores import analizador_completo  # pesado: solo aquí
 
-    analizar = analizador_completo()
-    if opciones.video:
-        resultado = analizar(opciones.video)
-        resultado.pop("tira", None)
-        print(resultado)
-        return
     url, token = os.environ.get("PATITAS_API_URL"), os.environ.get("PATITAS_VIDEO_TOKEN")
-    if not url or not token:
+    if not opciones.video and (not url or not token):
         raise SystemExit("Faltan PATITAS_API_URL o PATITAS_VIDEO_TOKEN (ver README.md).")
-    logger.info("trabajando contra %s", url)  # nunca se imprime el token
-    trabajar(ClienteApi(url, token), analizar, una_vez=opciones.una_vez)
+    analizar = analizador_completo()
+    try:
+        if opciones.video:
+            resultado = analizar(opciones.video)
+            resultado.pop("tira", None)
+            print(resultado)
+            return
+        logger.info("trabajando contra %s", url)  # nunca se imprime el token
+        trabajar(ClienteApi(url, token), analizar, una_vez=opciones.una_vez)
+    finally:
+        analizar.cerrar()
 
 
 if __name__ == "__main__":

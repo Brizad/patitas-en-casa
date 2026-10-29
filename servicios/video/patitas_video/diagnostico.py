@@ -40,6 +40,7 @@ def main() -> None:
     otros = sorted(set(confianzas) - set(PRINCIPALES))
     medianas = (f"{n} {statistics.median(confianzas[n]):.2f}" for n in otros)
     print("  otros puntos:", ", ".join(medianas))
+    detector.cerrar()
 
 
 if __name__ == "__main__":
