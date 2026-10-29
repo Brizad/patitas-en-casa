@@ -22,7 +22,7 @@ NUCLEO = ["dominio/modelos.py", "avisos/modelos.py", "avisos/repositorio.py",
           "cupos/servicio.py", "cupos/fichas.py", "adopciones/modelos.py",
           "adopciones/repositorio.py", "adopciones/servicio.py",
           "adopciones/reglas.py", "adopciones/compromiso.py", "documentos/pdf.py",
-          "adopciones/compatibilidad.py"]
+          "adopciones/compatibilidad.py", "adopciones/asignacion.py"]
 
 
 def importaciones(ruta: Path) -> set[str]:

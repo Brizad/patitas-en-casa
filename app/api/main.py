@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
+from app.adopciones.asignacion import asignar
 from app.adopciones.compatibilidad import Compatibilidad, calcular, recomendar
 from app.adopciones.compromiso import lineas_compromiso
 from app.adopciones.modelos import (
@@ -644,6 +645,28 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                 "compatibilidad": None if perfil is None else _compatibilidad(
                     calcular(perfil, repositorio_adopciones.publicacion(s.animal_id)))})
         return respuesta
+
+    @app.get("/refugio/jornada/propuesta")
+    def propuesta_de_jornada(coordinador: Usuario = coordinacion):
+        """RF-28: con los adoptantes que tienen solicitudes pendientes en su refugio y los
+        animales disponibles de su refugio, la combinación que maximiza la compatibilidad
+        total. Es una propuesta: no aprueba nada (RN-16)."""
+        animales = fichas_de(coordinador)
+        disponibles = [a for a in repositorio_adopciones.disponibles()
+                       if animales.animal(a.animal_id) is not None]
+        pendientes = [s for s in repositorio_adopciones.solicitudes()
+                      if s.estado == EstadoSolicitud.PENDIENTE
+                      and animales.animal(s.animal_id) is not None]
+        adoptantes = list(dict.fromkeys(s.adoptante for s in pendientes))
+        perfiles = [repositorio_adopciones.perfil(c) for c in adoptantes]
+        if not disponibles or not adoptantes:
+            return []
+        tabla = [[calcular(p, a) for a in disponibles] for p in perfiles]
+        pidio = {(s.adoptante, s.animal_id) for s in pendientes}
+        return [{"adoptante": adoptantes[i], "animal_id": disponibles[j].animal_id,
+                 "animal": disponibles[j].nombre, **_compatibilidad(tabla[i][j]),
+                 "solicito_este_animal": (adoptantes[i], disponibles[j].animal_id) in pidio}
+                for i, j in asignar([[c.puntaje for c in fila] for fila in tabla])]
 
     @app.post("/refugio/solicitudes/{solicitud_id}/decision")
     def decidir_solicitud(solicitud_id: int, datos: DecisionEntrada,
