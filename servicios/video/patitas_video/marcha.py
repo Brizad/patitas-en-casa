@@ -22,7 +22,9 @@ PATAS = {"front_left_paw": "delantera izquierda", "front_right_paw": "delantera 
 PARES = (("front_left_paw", "front_right_paw"), ("back_left_paw", "back_right_paw"))
 
 # Un punto con menos confianza que esta se ignora (el modelo no está seguro de dónde está).
-UMBRAL_PUNTO = 0.5
+# Calibrado con la prueba de humo (#125): en videos reales los puntos de SuperAnimal rondan
+# 0,3 a 0,6 de confianza mediana; con 0,5 casi ningún cuadro servía.
+UMBRAL_PUNTO = 0.3
 # Hacen falta al menos 2 s útiles (10 cuadros a 5 por segundo) y la mitad del video útil.
 MIN_CUADROS = 10
 MIN_FRACCION_UTIL = 0.5
@@ -69,7 +71,10 @@ def _confiable(cuadro: Cuadro, nombre: str) -> Punto | None:
 def _util(cuadro: Cuadro) -> dict | None:
     """Datos normalizados de un cuadro, o None si no se ve el cuerpo."""
     cuello, cola = _confiable(cuadro, "neck_base"), _confiable(cuadro, "tail_base")
-    lomo = _confiable(cuadro, "back_middle")
+    # «back_middle» fue el punto más dudoso en la prueba de humo (mediana 0,08 a 0,36). Si
+    # falta, se usa el punto medio entre cuello y cola, que están sobre la misma línea del lomo.
+    lomo = _confiable(cuadro, "back_middle") or (
+        cuello and cola and ((cuello[0] + cola[0]) / 2, (cuello[1] + cola[1]) / 2, 1.0))
     patas = {p: _confiable(cuadro, p) for p in PATAS}
     patas = {p: v for p, v in patas.items() if v is not None}
     if not (cuello and cola and lomo) or len(patas) < 3:

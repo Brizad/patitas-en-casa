@@ -11,7 +11,6 @@ los instala. Las versiones probadas están fijadas en requirements.txt.
 """
 from __future__ import annotations
 
-import atexit
 import urllib.request
 from collections.abc import Iterator
 from pathlib import Path
@@ -70,9 +69,11 @@ class DetectorMediaPipe:
         self._detector = ObjectDetector.create_from_options(ObjectDetectorOptions(
             base_options=BaseOptions(model_asset_path=str(modelo)), score_threshold=umbral,
             category_allowlist=["dog", "cat"], max_results=1))
-        # Se cierra antes de que Python apague el intérprete: si no, MediaPipe falla en su
-        # __del__ con «'NoneType' object is not callable» (visto en la prueba de humo).
-        atexit.register(self._detector.close)
+
+    def cerrar(self) -> None:
+        """Hay que llamarlo antes de salir: si MediaPipe se cierra solo mientras Python se
+        apaga, falla con «'NoneType' object is not callable» (visto en la prueba de humo)."""
+        self._detector.close()
 
     def detectar(self, imagen: np.ndarray) -> Caja | None:
         resultado = self._detector.detect(self._mp.Image(
@@ -133,8 +134,19 @@ class DibujanteOpenCV:
             tira = cv2.resize(tira, None, fx=0.8, fy=0.8)
 
 
-def analizador_completo():
-    lector, detector = LectorOpenCV(), DetectorMediaPipe()
-    estimador, clasificador = EstimadorDeepLabCut(), ClasificadorMarcha.desde_json()
-    dibujante = DibujanteOpenCV()
-    return lambda ruta: analizar(ruta, lector, detector, estimador, clasificador, dibujante)
+class AnalizadorCompleto:
+    def __init__(self) -> None:
+        self.lector, self.detector = LectorOpenCV(), DetectorMediaPipe()
+        self.estimador, self.clasificador = EstimadorDeepLabCut(), ClasificadorMarcha.desde_json()
+        self.dibujante = DibujanteOpenCV()
+
+    def __call__(self, ruta: str) -> dict:
+        return analizar(ruta, self.lector, self.detector, self.estimador, self.clasificador,
+                        self.dibujante)
+
+    def cerrar(self) -> None:
+        self.detector.cerrar()
+
+
+def analizador_completo() -> AnalizadorCompleto:
+    return AnalizadorCompleto()

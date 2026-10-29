@@ -48,3 +48,21 @@ def test_sin_puntos_confiables_el_video_no_es_concluyente():
     assert not m.concluyente
     assert not medir(caminar(segundos=1)).concluyente  # muy pocos cuadros
     assert not medir([]).concluyente
+
+
+def test_si_el_medio_del_lomo_es_dudoso_se_usa_el_punto_medio_entre_cuello_y_cola():
+    """Prueba de humo (#125): con videos reales, «back_middle» salió con confianza mediana de
+    0,08 a 0,36. Sin él no se perdía solo ese punto sino el cuadro entero."""
+    cuadros = [c | {"back_middle": (0.0, 0.0, 0.05)} for c in caminar()]
+    m = medir(cuadros)
+    assert m.cuadros_utiles == 1.0
+    assert m.de_pie == 1.0  # el lomo sale de cuello y cola, a la misma altura
+
+
+def test_umbral_de_confianza_calibrado_con_la_prueba_de_humo():
+    """Los puntos de SuperAnimal en videos reales rondan 0,3 a 0,6: con 0,5 casi ningún cuadro
+    servía. Un punto con 0,35 cuenta; uno con 0,2 no."""
+    medio = [{k: (x, y, 0.35) for k, (x, y, _c) in c.items()} for c in caminar()]
+    assert medir(medio).concluyente
+    bajo = [{k: (x, y, 0.2) for k, (x, y, _c) in c.items()} for c in caminar()]
+    assert not medir(bajo).concluyente
