@@ -64,6 +64,7 @@ class Reporte:
     evidencias: list[str] = field(default_factory=list)
     creado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
     version_modelo: str | None = None  # RF-20: quién sugirió; None en falla segura (RN-03)
+    contacto_cifrado: str | None = None  # RF-18: opcional, autorizado y cifrado (RNF-08)
 
 
 @dataclass

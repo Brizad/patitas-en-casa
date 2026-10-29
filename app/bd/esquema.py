@@ -69,6 +69,7 @@ reportes = Table(
     # RF-12 (#61): clave que genera la PWA; el reenvío con la misma clave no duplica.
     Column("clave_idempotencia", String(64), unique=True),
     Column("version_modelo", String(40)),  # RF-20 (#75)
+    Column("contacto_cifrado", Text),  # RF-18 (#111): AES-256-GCM, nunca en claro
     CheckConstraint(f"estado IN ({_valores(EstadoReporte)})", name="ck_reportes_estado"),
     CheckConstraint("comuna BETWEEN 1 AND 10", name="ck_reportes_comuna"),
     CheckConstraint(f"prioridad IN ({_valores(Prioridad)})", name="ck_reportes_prioridad"),

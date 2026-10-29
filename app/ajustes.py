@@ -94,6 +94,19 @@ class AjustesAdmin(BaseSettings):
         return None if isinstance(valor, str) and not valor.strip() else valor
 
 
+class AjustesDatos(BaseSettings):
+    """RNF-08 (#111): clave para cifrar datos personales. Vacía = no se aceptan contactos."""
+
+    model_config = SettingsConfigDict(env_prefix="PATITAS_", extra="ignore")
+
+    clave_datos: SecretStr | None = None
+
+    @field_validator("clave_datos", mode="before")
+    @classmethod
+    def _vacio_es_ninguno(cls, valor):
+        return None if isinstance(valor, str) and not valor.strip() else valor
+
+
 class AjustesDemo(BaseSettings):
     """Datos de demostración (#109). Desactivados salvo PATITAS_DEMO_ACTIVA=true."""
 
@@ -141,3 +154,7 @@ def cargar_ajustes_admin(archivo_env: str | None = ".env") -> AjustesAdmin:
 
 def cargar_ajustes_demo(archivo_env: str | None = ".env") -> AjustesDemo:
     return _cargar(AjustesDemo, "PATITAS_DEMO_", archivo_env)
+
+
+def cargar_ajustes_datos(archivo_env: str | None = ".env") -> AjustesDatos:
+    return _cargar(AjustesDatos, "PATITAS_", archivo_env)

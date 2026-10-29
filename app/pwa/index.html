@@ -59,6 +59,15 @@
         </select>
         <span class="tag">Ayuda a avisar primero a los rescatistas de esa zona.</span>
       </div>
+      <div class="card">
+        <label class="f" for="contacto">Tu correo o teléfono (opcional)</label>
+        <input class="in" id="contacto" name="contacto" autocomplete="email" maxlength="120"
+               aria-describedby="error-contacto" placeholder="Para avisarte cuando lo revisen">
+        <label class="f"><input type="checkbox" id="autoriza-contacto">
+          Autorizo usar este dato solo para avisarme sobre este reporte (Ley 1581 de 2012).
+          Se guarda cifrado.</label>
+        <span class="err-campo" id="error-contacto" hidden></span>
+      </div>
       <button class="btn pri grande" type="submit" id="enviar">Enviar reporte</button>
       <div id="mensaje-reporte" class="msg" role="status" aria-live="polite" hidden></div>
       <p class="mute pequeno centro">Sin conexión, el reporte se guarda y se envía solo al volver la señal.</p>

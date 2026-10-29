@@ -150,6 +150,7 @@ def _a_fila(reporte: Reporte) -> dict:
         "evidencias": list(reporte.evidencias),
         "creado_en": reporte.creado_en,
         "version_modelo": reporte.version_modelo,
+        "contacto_cifrado": reporte.contacto_cifrado,
     }
 
 
@@ -166,4 +167,5 @@ def _a_reporte(fila: RowMapping) -> Reporte:
         evidencias=list(fila["evidencias"]),
         creado_en=fila["creado_en"],
         version_modelo=fila["version_modelo"],
+        contacto_cifrado=fila["contacto_cifrado"],
     )

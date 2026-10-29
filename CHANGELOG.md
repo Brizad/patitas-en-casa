@@ -4,6 +4,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 ### Agregado
+- RF-18 y RNF-08 (#111): contacto opcional del ciudadano (correo o teléfono) con autorización expresa, guardado con AES-256-GCM (`PATITAS_CLAVE_DATOS`, migración `0022`); si es un correo, recibe un aviso cuando un veterinario revisa su reporte, por el mismo outbox y con el destinatario cifrado también en la tabla de avisos. Campo nuevo en la PWA.
 - Datos de demostración (#109): con `PATITAS_DEMO_ACTIVA=true` y `PATITAS_DEMO_CONTRASENA`, al arrancar se cargan una vez una cuenta por rol (`*@demo.patitas.co`), reportes en 7 comunas de Cúcuta, un rescate completo, una oferta abierta, cuatro animales con historial y tres en adopción. La contraseña nunca está en el código.
 
 ## [1.0.0] - 2026-10-29
