@@ -23,7 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
-from app.adopciones.modelos import Vivienda
+from app.adopciones.modelos import Energia, EstadoPublicacion, Tamano, Vivienda
 from app.avisos.modelos import EstadoAviso
 from app.dominio.modelos import (
     Especie,
@@ -154,6 +154,27 @@ perfiles_adoptante = Table(
     Column("actualizado_en", DateTime(timezone=True), nullable=False),
     CheckConstraint(f"vivienda IN ({_valores(Vivienda)})", name="ck_perfiles_vivienda"),
     CheckConstraint("horas_solo_al_dia BETWEEN 0 AND 24", name="ck_perfiles_horas"),
+)
+
+# RF-25 (#85): animales publicados para adopción; una publicación por animal.
+publicaciones = Table(
+    "publicaciones",
+    metadata,
+    Column("animal_id", Integer, ForeignKey("animales.id"), primary_key=True),
+    Column("descripcion", Text, nullable=False),
+    Column("tamano", String(10), nullable=False),
+    Column("energia", String(10), nullable=False),
+    Column("edad_meses", SmallInteger, nullable=False),
+    Column("apto_ninos", Boolean, nullable=False),
+    Column("apto_otros_animales", Boolean, nullable=False),
+    Column("necesita_patio", Boolean, nullable=False),
+    Column("estado", String(12), nullable=False),
+    Column("publicado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"tamano IN ({_valores(Tamano)})", name="ck_publicaciones_tamano"),
+    CheckConstraint(f"energia IN ({_valores(Energia)})", name="ck_publicaciones_energia"),
+    CheckConstraint(f"estado IN ({_valores(EstadoPublicacion)})",
+                    name="ck_publicaciones_estado"),
+    CheckConstraint("edad_meses BETWEEN 0 AND 360", name="ck_publicaciones_edad"),
 )
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".

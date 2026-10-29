@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
-from app.adopciones.modelos import PerfilAdoptante, Vivienda
+from app.adopciones.modelos import Energia, PerfilAdoptante, Publicacion, Tamano, Vivienda
 from app.adopciones.repositorio import RepositorioAdopciones, RepositorioAdopcionesEnMemoria
 from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
 from app.ajustes import (
@@ -256,6 +256,24 @@ class PerfilEntrada(BaseModel):
     horas_solo_al_dia: int = Field(ge=0, le=24)
     experiencia: bool
     acepta_seguimiento: bool
+
+
+class PublicacionEntrada(BaseModel):
+    descripcion: str = Field(min_length=20, max_length=1000)
+    tamano: Tamano
+    energia: Energia
+    edad_meses: int = Field(ge=0, le=360)
+    apto_ninos: bool
+    apto_otros_animales: bool
+    necesita_patio: bool
+
+
+def _publicacion(p: Publicacion) -> dict:
+    return {"animal_id": p.animal_id, "nombre": p.nombre, "especie": p.especie,
+            "descripcion": p.descripcion, "tamano": p.tamano.value, "energia": p.energia.value,
+            "edad_meses": p.edad_meses, "apto_ninos": p.apto_ninos,
+            "apto_otros_animales": p.apto_otros_animales, "necesita_patio": p.necesita_patio,
+            "estado": p.estado.value, "publicado_en": fecha_utc(p.publicado_en)}
 
 
 class NotaEntrada(BaseModel):
@@ -500,6 +518,26 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         repositorio_adopciones.guardar_perfil(
             PerfilAdoptante(correo=adoptante.correo, **datos.model_dump()))
         return {"correo": adoptante.correo, "guardado": True}
+
+    @app.post("/refugio/animales/{animal_id}/publicacion", status_code=201)
+    def publicar_animal(animal_id: int, datos: PublicacionEntrada,
+                        coordinador: Usuario = coordinacion):
+        """RF-25: el coordinador publica un animal de su refugio que sigue allí."""
+        animal = fichas_de(coordinador).animal(animal_id)
+        if animal is None:
+            raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
+        if animal.egresado_en is not None:
+            raise HTTPException(status_code=409, detail=f"{animal.nombre} ya egresó.")
+        publicacion = Publicacion(animal_id=animal_id, nombre=animal.nombre,
+                                  especie=animal.especie.value, **datos.model_dump())
+        if not repositorio_adopciones.publicar(publicacion):
+            raise HTTPException(status_code=409, detail=f"{animal.nombre} ya está publicado.")
+        return _publicacion(publicacion)
+
+    @app.get("/adopciones/animales")
+    def catalogo_de_adopcion():
+        """Público: animales disponibles. Sin datos del refugio ni de personas (RN-14)."""
+        return [_publicacion(p) for p in repositorio_adopciones.disponibles()]
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,

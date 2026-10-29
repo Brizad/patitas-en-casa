@@ -1,4 +1,4 @@
-"""Entidades de la adopción (fase 3, #85): perfil del adoptante (RF-08)."""
+"""Entidades de la adopción (fase 3, #85): perfil (RF-08) y publicación (RF-25)."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -33,3 +33,41 @@ class PerfilAdoptante:
     def habilitado(self) -> bool:
         """RN-10: solo solicita quien acepta el seguimiento posterior."""
         return self.acepta_seguimiento
+
+
+class Tamano(StrEnum):
+    PEQUENO = "pequeno"
+    MEDIANO = "mediano"
+    GRANDE = "grande"
+
+
+class Energia(StrEnum):
+    BAJA = "baja"
+    MEDIA = "media"
+    ALTA = "alta"
+
+
+class EstadoPublicacion(StrEnum):
+    DISPONIBLE = "disponible"
+    ADOPTADO = "adoptado"
+
+
+@dataclass
+class Publicacion:
+    """RF-25: un animal del refugio ofrecido en adopción, con lo que necesita su nuevo hogar.
+
+    nombre y especie se leen de la ficha del animal (no se escriben dos veces).
+    """
+
+    animal_id: int
+    descripcion: str
+    tamano: Tamano
+    energia: Energia
+    edad_meses: int
+    apto_ninos: bool
+    apto_otros_animales: bool
+    necesita_patio: bool
+    nombre: str = ""
+    especie: str = ""
+    estado: EstadoPublicacion = EstadoPublicacion.DISPONIBLE
+    publicado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
