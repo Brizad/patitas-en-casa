@@ -32,6 +32,7 @@ from app.dominio.modelos import (
     Prioridad,
     ResultadoRescate,
     Rol,
+    TipoNota,
 )
 
 
@@ -95,6 +96,21 @@ animales = Table(
     Column("esterilizado", Boolean, nullable=False, server_default=false()),
     Column("ingresado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
     CheckConstraint(f"especie IN ({_valores(Especie)})", name="ck_animales_especie"),
+)
+
+# RF-24 (#75): historial clínico; las notas solo se insertan.
+historial_clinico = Table(
+    "historial_clinico",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("animal_id", Integer, ForeignKey("animales.id"), nullable=False),
+    Column("autor", Text, nullable=False),
+    Column("tipo", String(15), nullable=False),
+    Column("texto", Text, nullable=False),
+    Column("registrada_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"tipo IN ({_valores(TipoNota)})", name="ck_historial_tipo"),
+    CheckConstraint("btrim(texto) <> ''", name="ck_historial_texto"),
+    Index("ix_historial_clinico_animal", "animal_id"),
 )
 
 # DT-02: cuentas del personal. Solo se guarda el hash Argon2id de la contraseña.

@@ -75,6 +75,28 @@ class Animal:
     estado_salud: str
     vacunado: bool = False
     esterilizado: bool = False
+    id: int | None = None  # #75: lo asigna el repositorio al ingresar
+    ingresado_en: datetime | None = None
+
+
+class TipoNota(StrEnum):
+    """Tipos de nota del historial clínico (RF-24)."""
+
+    OBSERVACION = "observacion"
+    TRATAMIENTO = "tratamiento"
+    VACUNA = "vacuna"
+    PROCEDIMIENTO = "procedimiento"
+
+
+@dataclass
+class NotaClinica:
+    """Una entrada del historial clínico (RF-24): solo se agrega, nunca se edita."""
+
+    animal_id: int
+    autor: str  # correo del veterinario
+    tipo: TipoNota
+    texto: str
+    registrada_en: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass

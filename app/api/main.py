@@ -41,6 +41,7 @@ from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
 from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
 from app.bd.migraciones import verificar_migraciones
+from app.cupos.fichas import AnimalNoEncontrado, NotaInvalida, ServicioFichas
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
@@ -56,6 +57,7 @@ from app.dominio.modelos import (
     Rescate,
     ResultadoRescate,
     Rol,
+    TipoNota,
     Ubicacion,
     Usuario,
 )
@@ -229,6 +231,17 @@ class IngresoEntrada(BaseModel):
     esterilizado: bool = False
 
 
+class NotaEntrada(BaseModel):
+    tipo: TipoNota
+    texto: str = Field(max_length=2000)
+
+
+def _ficha(animal: Animal) -> dict:
+    return {"id": animal.id, "nombre": animal.nombre, "especie": animal.especie.value,
+            "estado_salud": animal.estado_salud, "vacunado": animal.vacunado,
+            "esterilizado": animal.esterilizado, "ingresado_en": fecha_utc(animal.ingresado_en)}
+
+
 def motor_desde_entorno() -> Engine:
     """Conexión a PostgreSQL con la configuración del .env; exige la base migrada (DT-01)."""
     motor = create_engine(cargar_ajustes().url(), pool_pre_ping=True)
@@ -333,6 +346,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         if usuario.refugio_id is None:
             return ServicioCupos(repositorio_cupos, notificador)
         return ServicioCupos(repositorio_cupos.para_refugio(usuario.refugio_id), notificador)
+
+    def fichas_de(usuario: Usuario) -> RepositorioCupos:
+        return (repositorio_cupos if usuario.refugio_id is None
+                else repositorio_cupos.para_refugio(usuario.refugio_id))
 
     @app.post("/auth/token")
     def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -625,6 +642,35 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"ocupacion": cupos.texto_ocupacion()}
+
+    # --- Fase 2 (#75): ficha clínica e historial (RF-06, RF-24) -----------------------
+
+    @app.get("/refugio/animales")
+    def animales_del_refugio(usuario: Usuario = personal):
+        return [_ficha(a) for a in fichas_de(usuario).animales()]
+
+    @app.get("/refugio/animales/{animal_id}")
+    def ficha_clinica(animal_id: int, usuario: Usuario = personal):
+        repo = fichas_de(usuario)
+        animal = repo.animal(animal_id)
+        if animal is None:
+            raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
+        return {**_ficha(animal), "historial": [
+            {"tipo": n.tipo.value, "texto": n.texto, "autor": n.autor,
+             "registrada_en": fecha_utc(n.registrada_en)} for n in repo.historial(animal_id)]}
+
+    @app.post("/refugio/animales/{animal_id}/historial", status_code=201)
+    def agregar_nota_clinica(animal_id: int, datos: NotaEntrada,
+                             veterinario: Usuario = veterinaria):
+        try:
+            nota = ServicioFichas(fichas_de(veterinario)).agregar_nota(
+                animal_id, veterinario, datos.tipo, datos.texto)
+        except AnimalNoEncontrado as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except NotaInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"tipo": nota.tipo.value, "texto": nota.texto, "autor": nota.autor,
+                "registrada_en": fecha_utc(nota.registrada_en)}
 
     @app.get("/refugio/ocupacion")
     def ocupacion(usuario: Usuario = personal):

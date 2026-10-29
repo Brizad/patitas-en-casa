@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from sqlalchemy import Engine, insert, select, update
 
-from app.bd.esquema import animales, refugios
-from app.dominio.modelos import Animal, Refugio
+from app.bd.esquema import animales, historial_clinico, refugios
+from app.dominio.modelos import Animal, Especie, NotaClinica, Refugio, TipoNota
 
 
 class RepositorioCuposPostgres:
@@ -50,9 +50,45 @@ class RepositorioCuposPostgres:
             ).first()
             if fila is None:
                 return None
-            conexion.execute(insert(animales).values(
+            nuevo = conexion.execute(insert(animales).values(
                 refugio_id=self._refugio_id, nombre=animal.nombre,
                 especie=animal.especie.value, estado_salud=animal.estado_salud,
                 vacunado=animal.vacunado, esterilizado=animal.esterilizado,
-            ))
+            ).returning(animales.c.id, animales.c.ingresado_en)).one()
+        animal.id, animal.ingresado_en = nuevo.id, nuevo.ingresado_en
         return Refugio(fila.nombre, fila.capacidad, fila.ocupados)
+
+    def animales(self) -> list[Animal]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(animales).where(
+                animales.c.refugio_id == self._refugio_id).order_by(animales.c.id)).mappings()
+            return [_animal(f) for f in filas]
+
+    def animal(self, animal_id: int) -> Animal | None:
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(select(animales).where(
+                animales.c.id == animal_id, animales.c.refugio_id == self._refugio_id)
+            ).mappings().first()
+        return None if fila is None else _animal(fila)
+
+    def agregar_nota(self, nota: NotaClinica) -> None:
+        with self._motor.begin() as conexion:
+            conexion.execute(insert(historial_clinico).values(
+                animal_id=nota.animal_id, autor=nota.autor, tipo=nota.tipo.value,
+                texto=nota.texto, registrada_en=nota.registrada_en))
+
+    def historial(self, animal_id: int) -> list[NotaClinica]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(historial_clinico).where(
+                historial_clinico.c.animal_id == animal_id).order_by(historial_clinico.c.id)
+            ).mappings()
+            return [NotaClinica(animal_id=f["animal_id"], autor=f["autor"],
+                                tipo=TipoNota(f["tipo"]), texto=f["texto"],
+                                registrada_en=f["registrada_en"]) for f in filas]
+
+
+def _animal(fila) -> Animal:
+    return Animal(nombre=fila["nombre"], especie=Especie(fila["especie"]),
+                  estado_salud=fila["estado_salud"], vacunado=fila["vacunado"],
+                  esterilizado=fila["esterilizado"], id=fila["id"],
+                  ingresado_en=fila["ingresado_en"])
