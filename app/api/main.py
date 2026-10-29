@@ -241,6 +241,7 @@ class ActivoEntrada(BaseModel):
 class RefugioEntrada(BaseModel):
     nombre: str = Field(max_length=120)
     capacidad: int = Field(gt=0, le=10_000)
+    direccion: str = Field(default="", max_length=200)  # #108 (RF-14)
 
 
 class VinculoEntrada(BaseModel):
@@ -249,7 +250,7 @@ class VinculoEntrada(BaseModel):
 
 def _refugio(refugio: Refugio) -> dict:
     return {"id": refugio.id, "nombre": refugio.nombre, "capacidad": refugio.capacidad,
-            "ocupados": refugio.ocupados}
+            "ocupados": refugio.ocupados, "direccion": refugio.direccion}
 
 
 def _cuenta(usuario: Usuario) -> dict:
@@ -428,7 +429,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     veterinaria = exigir_rol(dependencia_usuario, Rol.VETERINARIO)  # RN-06
     rescatista_actual = exigir_rol(dependencia_usuario, Rol.RESCATISTA)  # HU-06
     administracion = exigir_rol(dependencia_usuario, Rol.ADMINISTRADOR)  # #67
-    gestion = exigir_rol(dependencia_usuario, Rol.COORDINADOR, Rol.ADMINISTRADOR)  # #102
+    # #102 / #108: indicadores anonimizados; la Alcaldía solo ve esto (RF-13, RF-31).
+    gestion = exigir_rol(dependencia_usuario, Rol.COORDINADOR, Rol.ADMINISTRADOR,
+                         Rol.ALCALDIA)
     adoptante_actual = exigir_rol(dependencia_usuario, Rol.ADOPTANTE)  # #85
 
     @asynccontextmanager
@@ -459,13 +462,19 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     procesador = ProcesadorAvisos(repositorio_avisos, notificador)
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
+    app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas
 
     def cupos_de(usuario: Usuario) -> ServicioCupos:
         """#75: los cupos del refugio de la persona; sin vínculo, el primer refugio (como
         antes de RF-14). Así dos coordinadores de refugios distintos no se mezclan."""
         if usuario.refugio_id is None:
             return ServicioCupos(repositorio_cupos, notificador)
-        return ServicioCupos(repositorio_cupos.para_refugio(usuario.refugio_id), notificador)
+        # RF-07: la alerta del 90 % va a los coordinadores activos de ESE refugio.
+        coordinadores = [u.correo for u in repositorio_usuarios.todos()
+                         if u.rol == Rol.COORDINADOR and u.activo
+                         and u.refugio_id == usuario.refugio_id]
+        return ServicioCupos(repositorio_cupos.para_refugio(usuario.refugio_id), notificador,
+                             coordinadores)
 
     def fichas_de(usuario: Usuario) -> RepositorioCupos:
         return (repositorio_cupos if usuario.refugio_id is None
@@ -497,6 +506,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             # Mismo mensaje exista o no el correo: no se revela qué cuentas existen.
             raise no_autenticado("Correo o contraseña incorrectos.")
         limite_intentos.registrar_exito(claves[0])
+        # RF-16: historial de acceso de la cuenta (en la bitácora, también inmutable).
+        repositorio_bitacora.registrar(Evento(usuario.correo, "inicio de sesión", {}, 200))
         return {"access_token": emisor_tokens.emitir(usuario), "token_type": "bearer",
                 "expira_en": emisor_tokens.minutos * 60}
 
@@ -533,6 +544,12 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             raise HTTPException(status_code=404, detail=str(error)) from error
         return {"correo": normalizar_correo(correo), "activo": datos.activo}
 
+    @app.get("/admin/usuarios/{correo}/accesos")
+    def historial_de_acceso(correo: str, _admin: Usuario = administracion):
+        """RF-16: inicios de sesión de la cuenta, el más reciente primero."""
+        return [{"momento": fecha_utc(e.momento)} for e in repositorio_bitacora.de_actor(
+            normalizar_correo(correo), "inicio de sesión")]
+
     @app.get("/admin/refugios")
     def listar_refugios(_admin: Usuario = administracion):
         return [_refugio(r) for r in repositorio_refugios.todos()]
@@ -542,7 +559,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         """RF-14: el refugio nace sin animales; sus cupos los usa el coordinador."""
         if not datos.nombre.strip():
             raise HTTPException(status_code=422, detail="El nombre del refugio es obligatorio.")
-        return _refugio(repositorio_refugios.crear(datos.nombre.strip(), datos.capacidad))
+        return _refugio(repositorio_refugios.crear(datos.nombre.strip(), datos.capacidad,
+                                                   datos.direccion.strip()))
 
     @app.put("/admin/usuarios/{correo}/refugio")
     def vincular_a_refugio(correo: str, datos: VinculoEntrada,
@@ -749,7 +767,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         pdf = generar_pdf(lineas_compromiso(
             s, repositorio_adopciones.publicacion(s.animal_id),
             adoptante.nombre if adoptante else s.adoptante,
-            repositorio_adopciones.seguimientos(s.id)))
+            repositorio_adopciones.seguimientos(s.id),
+            repositorio_refugios.de_animal(s.animal_id)))
         return Response(pdf, media_type="application/pdf", headers={
             "Content-Disposition": f'attachment; filename="compromiso-{s.id}.pdf"'})
 

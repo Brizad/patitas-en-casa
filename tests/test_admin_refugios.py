@@ -45,11 +45,12 @@ def test_sin_sesion_responde_401_y_con_otro_rol_403(c, metodo, ruta):
 def test_lista_el_refugio_demo_y_registra_otro(c):
     h = sesion(c)
     assert c.get("/admin/refugios", headers=h).json() == [
-        {"id": 1, "nombre": "Refugio demo", "capacidad": 40, "ocupados": 0}]
+        {"id": 1, "nombre": "Refugio demo", "capacidad": 40, "ocupados": 0, "direccion": ""}]
     nuevo = c.post("/admin/refugios", json={"nombre": " Huellitas ", "capacidad": 25},
                    headers=h)
     assert nuevo.status_code == 201
-    assert nuevo.json() == {"id": 2, "nombre": "Huellitas", "capacidad": 25, "ocupados": 0}
+    assert nuevo.json() == {"id": 2, "nombre": "Huellitas", "capacidad": 25, "ocupados": 0,
+                           "direccion": ""}
     assert len(c.get("/admin/refugios", headers=h).json()) == 2
 
 

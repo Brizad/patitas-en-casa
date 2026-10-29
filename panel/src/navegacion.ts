@@ -20,6 +20,7 @@ const POR_ROL: Record<string, Pantalla[]> = {
   rescatista: ["rescates"],
   administrador: ["administracion", "indicadores"],
   adoptante: ["adopcion"], // #85: el adoptante no ve nada del personal
+  alcaldia: ["indicadores"], // #108 (RF-13): solo indicadores anonimizados
 };
 
 /** Pantallas del rol, la primera es la de inicio. Un rol desconocido no ve nada. */

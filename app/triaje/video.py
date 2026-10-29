@@ -41,6 +41,9 @@ def fusionar(texto: Resultado, video: Resultado | None) -> Resultado:
     if video is None:
         return texto
     evidencias = texto.evidencias + [f"video: {e}" for e in video.evidencias]
+    if video.prioridad != texto.prioridad:  # RF-19: la discrepancia queda registrada
+        evidencias.append(f"discrepancia: texto {texto.prioridad.value}, video "
+                          f"{video.prioridad.value}; gana la más alta (RN-07)")
     if ORDEN_GRAVEDAD.index(video.prioridad) < ORDEN_GRAVEDAD.index(texto.prioridad):
         return Resultado(video.prioridad, video.confianza, evidencias)
     return Resultado(texto.prioridad, texto.confianza, evidencias)

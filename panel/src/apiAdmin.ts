@@ -4,10 +4,12 @@ import { pedir } from "./api";
 export interface CuentaAdmin {
   correo: string; nombre: string; rol: string; activo: boolean; refugio_id: number | null;
 }
-export interface RefugioAdmin { id: number; nombre: string; capacidad: number; ocupados: number }
+export interface RefugioAdmin {
+  id: number; nombre: string; capacidad: number; ocupados: number; direccion: string;
+}
 export interface CuentaNueva { correo: string; nombre: string; rol: string; contrasena: string }
 
-export const ROLES = ["veterinario", "coordinador", "rescatista", "administrador"];
+export const ROLES = ["veterinario", "coordinador", "rescatista", "administrador", "alcaldia"];
 
 const enviar = (method: string, cuerpo: unknown): RequestInit => ({
   method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo),
@@ -22,8 +24,8 @@ export const vincular = (t: string, correo: string, refugio_id: number | null) =
   pedir(`/admin/usuarios/${encodeURIComponent(correo)}/refugio`,
         enviar("PUT", { refugio_id }), t);
 export const refugios = (t: string) => pedir<RefugioAdmin[]>("/admin/refugios", {}, t);
-export const crearRefugio = (t: string, nombre: string, capacidad: number) =>
-  pedir<RefugioAdmin>("/admin/refugios", enviar("POST", { nombre, capacidad }), t);
+export const crearRefugio = (t: string, nombre: string, capacidad: number, direccion: string) =>
+  pedir<RefugioAdmin>("/admin/refugios", enviar("POST", { nombre, capacidad, direccion }), t);
 
 /** Política de contraseñas igual a la del servidor (12 a 128): avisa antes de enviar. */
 export function problemaContrasena(clave: string): string | null {

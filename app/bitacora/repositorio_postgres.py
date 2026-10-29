@@ -23,3 +23,11 @@ class RepositorioBitacoraPostgres:
                                      .limit(limite)).mappings()
             return [Evento(actor=f["actor"], accion=f["accion"], objeto=dict(f["objeto"]),
                            estado_http=f["estado_http"], momento=f["momento"]) for f in filas]
+
+    def de_actor(self, actor: str, accion: str, limite: int = 50) -> list[Evento]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(bitacora).where(
+                bitacora.c.actor == actor, bitacora.c.accion == accion)
+                .order_by(bitacora.c.id.desc()).limit(limite)).mappings()
+            return [Evento(actor=f["actor"], accion=f["accion"], objeto=dict(f["objeto"]),
+                           estado_http=f["estado_http"], momento=f["momento"]) for f in filas]

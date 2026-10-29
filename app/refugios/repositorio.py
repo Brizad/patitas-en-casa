@@ -8,7 +8,7 @@ from app.dominio.modelos import Refugio
 
 
 class RepositorioRefugios(Protocol):
-    def crear(self, nombre: str, capacidad: int) -> Refugio:
+    def crear(self, nombre: str, capacidad: int, direccion: str = "") -> Refugio:
         """Guarda un refugio nuevo sin animales y lo devuelve con su id."""
         ...
 
@@ -18,13 +18,18 @@ class RepositorioRefugios(Protocol):
 
     def existe(self, refugio_id: int) -> bool: ...
 
+    def de_animal(self, animal_id: int) -> Refugio | None:
+        """El refugio donde ingresó ese animal (RF-29: datos del refugio en el compromiso)."""
+        ...
+
 
 class RepositorioRefugiosEnMemoria:
     def __init__(self, iniciales: list[Refugio] | None = None) -> None:
         self._datos = {r.id: r for r in iniciales or []}
 
-    def crear(self, nombre: str, capacidad: int) -> Refugio:
-        refugio = Refugio(nombre, capacidad, id=max(self._datos, default=0) + 1)
+    def crear(self, nombre: str, capacidad: int, direccion: str = "") -> Refugio:
+        refugio = Refugio(nombre, capacidad, id=max(self._datos, default=0) + 1,
+                          direccion=direccion)
         self._datos[refugio.id] = refugio
         return replace(refugio)
 
@@ -33,3 +38,7 @@ class RepositorioRefugiosEnMemoria:
 
     def existe(self, refugio_id: int) -> bool:
         return refugio_id in self._datos
+
+    def de_animal(self, animal_id: int) -> Refugio | None:
+        # En memoria los animales están en el primer refugio (el de los cupos).
+        return self.todos()[0] if self._datos else None

@@ -32,6 +32,10 @@ class RepositorioBitacora(Protocol):
         """Los últimos eventos, el más reciente primero."""
         ...
 
+    def de_actor(self, actor: str, accion: str, limite: int = 50) -> list[Evento]:
+        """RF-16: los eventos de una cuenta (p. ej. sus inicios de sesión), recientes primero."""
+        ...
+
 
 class RepositorioBitacoraEnMemoria:
     def __init__(self) -> None:
@@ -42,3 +46,7 @@ class RepositorioBitacoraEnMemoria:
 
     def recientes(self, limite: int = 100) -> list[Evento]:
         return list(reversed(self._eventos[-limite:]))
+
+    def de_actor(self, actor: str, accion: str, limite: int = 50) -> list[Evento]:
+        return [e for e in reversed(self._eventos)
+                if e.actor == actor and e.accion == accion][:limite]

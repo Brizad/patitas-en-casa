@@ -41,7 +41,8 @@ def test_la_api_registra_los_cambios_con_actor_y_ruta_sin_el_cuerpo():
                                 "contrasena": CLAVE, "autoriza_datos": True})
     c.get("/refugio/animales", headers=coord)  # una lectura no se registra
     c.post("/refugio/ingresos", json={"nombre": "x"}, headers=coord)  # 422: no cambió nada
-    eventos = c.app.state.bitacora.recientes()
+    # Los inicios de sesión también quedan (RF-16), pero aquí se miran los cambios de datos.
+    eventos = [e for e in c.app.state.bitacora.recientes() if e.accion != "inicio de sesión"]
     assert [(e.actor, e.accion) for e in reversed(eventos)] == [
         ("coord@patitas.co", "POST /refugio/ingresos"),
         ("coord@patitas.co", "POST /refugio/animales/{animal_id}/egreso"),

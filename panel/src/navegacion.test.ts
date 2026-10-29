@@ -9,6 +9,7 @@ describe("pantallasDelRol", () => {
     expect(pantallasDelRol("rescatista")).toEqual(["rescates"]);
     expect(pantallasDelRol("administrador")).toEqual(["administracion", "indicadores"]);
     expect(pantallasDelRol("adoptante")).toEqual(["adopcion"]);
+    expect(pantallasDelRol("alcaldia")).toEqual(["indicadores"]);
   });
   it("un rol desconocido no ve ninguna pantalla", () => {
     expect(pantallasDelRol("ciudadano")).toEqual([]);

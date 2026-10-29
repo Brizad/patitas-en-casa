@@ -150,6 +150,7 @@ class Rol(StrEnum):
     RESCATISTA = "rescatista"  # HU-06: voluntario que atiende rescates en campo
     ADMINISTRADOR = "administrador"  # #67: refugios y cuentas (RF-14, RF-16)
     ADOPTANTE = "adoptante"  # #85 (RF-08): se registra solo; no es personal del refugio
+    ALCALDIA = "alcaldia"  # #108 (RF-13): solo consulta indicadores anonimizados
 
 
 class EstadoRescate(StrEnum):
@@ -196,6 +197,7 @@ class Refugio:
     capacidad: int
     ocupados: int = 0
     id: int | None = None  # #67: None mientras no se ha guardado
+    direccion: str = ""  # #108 (RF-14)
 
     def __post_init__(self) -> None:
         # BUG-04: invariante del refugio (DAD 7.2).

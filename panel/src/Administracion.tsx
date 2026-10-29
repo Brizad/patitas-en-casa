@@ -78,7 +78,8 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
       <div className="tarjeta">
         <h2>Refugios</h2>
         <ul className="lista-simple">
-          {sedes.map((s) => <li key={s.id}>{s.nombre}: {s.ocupados}/{s.capacidad} cupos</li>)}
+          {sedes.map((s) => <li key={s.id}>{s.nombre}{s.direccion && ` (${s.direccion})`}:{" "}
+            {s.ocupados}/{s.capacidad} cupos</li>)}
         </ul>
         <NuevoRefugio hacer={hacer} token={token} />
       </div>
@@ -119,14 +120,17 @@ function NuevaCuenta({ token, hacer }: { token: string; hacer: Hacer }) {
 function NuevoRefugio({ token, hacer }: { token: string; hacer: Hacer }) {
   const [nombre, setNombre] = useState("");
   const [capacidad, setCapacidad] = useState(20);
+  const [direccion, setDireccion] = useState("");
   return (
     <form className="ajuste" onSubmit={async (e) => {
       e.preventDefault();
-      if (await hacer(() => crearRefugio(token, nombre.trim(), capacidad),
+      if (await hacer(() => crearRefugio(token, nombre.trim(), capacidad, direccion.trim()),
                       `Refugio ${nombre.trim()} registrado.`)) setNombre("");
     }}>
       <label>Nombre del refugio<input required value={nombre}
         onChange={(e) => setNombre(e.target.value)} /></label>
+      <label>Dirección<input value={direccion}
+        onChange={(e) => setDireccion(e.target.value)} /></label>
       <label>Capacidad (cupos)<input type="number" min={1} required value={capacidad}
         onChange={(e) => setCapacidad(Number(e.target.value))} /></label>
       <button className="principal">Registrar refugio</button>

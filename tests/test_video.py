@@ -18,7 +18,9 @@ def reporte(estado=EstadoReporte.REQUIERE_REVISION):
 def test_rn07_gana_la_prioridad_mas_alta_y_se_juntan_las_evidencias():
     r = fusionar(TEXTO_MEDIA, VIDEO_ALTA)
     assert (r.prioridad, r.confianza) == (Prioridad.ALTA, 0.8)
-    assert r.evidencias == ["señal 'cojea' -> media", "video: no apoya la pata trasera izquierda"]
+    assert r.evidencias[:2] == ["señal 'cojea' -> media",
+                                "video: no apoya la pata trasera izquierda"]
+    assert "discrepancia: texto media, video alta" in r.evidencias[2]  # RF-19
     assert fusionar(VIDEO_ALTA, TEXTO_MEDIA).prioridad == Prioridad.ALTA  # simétrico
     assert fusionar(TEXTO_MEDIA, None) is TEXTO_MEDIA
 

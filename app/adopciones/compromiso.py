@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC
 
 from app.adopciones.modelos import Publicacion, Seguimiento, Solicitud
+from app.dominio.modelos import Refugio
 
 COMPROMISOS = [
     "Darle alimento adecuado, agua limpia y un lugar protegido del sol y la lluvia.",
@@ -21,7 +22,8 @@ COMPROMISOS = [
 
 
 def lineas_compromiso(solicitud: Solicitud, publicacion: Publicacion, nombre_adoptante: str,
-                      seguimientos: list[Seguimiento]) -> list[str | tuple[str, int]]:
+                      seguimientos: list[Seguimiento],
+                      refugio: Refugio | None = None) -> list[str | tuple[str, int]]:
     fecha = solicitud.decidida_en.astimezone(UTC).strftime("%Y-%m-%d")
     lineas: list[str | tuple[str, int]] = [
         ("Compromiso de adopción responsable", 18),
@@ -30,6 +32,8 @@ def lineas_compromiso(solicitud: Solicitud, publicacion: Publicacion, nombre_ado
         f"Solicitud N.° {solicitud.id} · aprobada el {fecha} (UTC)",
         f"Animal: {publicacion.nombre} ({publicacion.especie}), {publicacion.edad_meses} meses",
         f"Adoptante: {nombre_adoptante} <{solicitud.adoptante}>",
+        f"Refugio: {refugio.nombre}" + (f", {refugio.direccion}" if refugio.direccion else "")
+        if refugio else "Refugio: sin dato",
         "",
         ("Me comprometo a:", 13),
     ]

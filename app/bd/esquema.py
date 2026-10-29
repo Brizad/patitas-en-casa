@@ -89,6 +89,7 @@ refugios = Table(
     Column("nombre", Text, nullable=False),
     Column("capacidad", Integer, nullable=False),
     Column("ocupados", Integer, nullable=False, server_default=text("0")),
+    Column("direccion", Text),  # #108 (RF-14)
     CheckConstraint("capacidad > 0", name="ck_refugios_capacidad"),
     CheckConstraint("ocupados BETWEEN 0 AND capacidad", name="ck_refugios_ocupados"),
 )
