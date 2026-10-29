@@ -79,6 +79,21 @@ class AjustesCorreo(BaseSettings):
         return [c.strip() for c in self.correos_coordinadores.split(",") if c.strip()]
 
 
+class AjustesAdmin(BaseSettings):
+    """Primera cuenta de administración (#67). Vacías = no se crea ninguna."""
+
+    model_config = SettingsConfigDict(env_prefix="PATITAS_ADMIN_", extra="ignore")
+
+    correo: str | None = None
+    contrasena: SecretStr | None = None
+    nombre: str = "Administración"
+
+    @field_validator("correo", "contrasena", mode="before")
+    @classmethod
+    def _vacio_es_ninguno(cls, valor):
+        return None if isinstance(valor, str) and not valor.strip() else valor
+
+
 def _cargar(clase, prefijo: str, archivo_env: str | None):
     try:
         return clase(_env_file=archivo_env)
@@ -99,3 +114,7 @@ def cargar_ajustes_seguridad(archivo_env: str | None = ".env") -> AjustesSegurid
 
 def cargar_ajustes_correo(archivo_env: str | None = ".env") -> AjustesCorreo:
     return _cargar(AjustesCorreo, "PATITAS_", archivo_env)
+
+
+def cargar_ajustes_admin(archivo_env: str | None = ".env") -> AjustesAdmin:
+    return _cargar(AjustesAdmin, "PATITAS_ADMIN_", archivo_env)
