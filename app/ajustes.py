@@ -27,12 +27,15 @@ class AjustesBD(BaseSettings):
     password: SecretStr
     db: str = "patitas"
     db_pruebas: str = "patitas_test"
+    # Neon (#154) exige TLS: POSTGRES_SSLMODE=require. Vacío = lo que decida libpq (local).
+    sslmode: str | None = None
 
     def url(self, pruebas: bool = False) -> str:
         """URL de SQLAlchemy; escapa la contraseña por si trae caracteres como @ o /."""
         base = self.db_pruebas if pruebas else self.db
         clave = quote(self.password.get_secret_value(), safe="")
-        return f"postgresql+psycopg://{self.user}:{clave}@{self.host}:{self.port}/{base}"
+        url = f"postgresql+psycopg://{self.user}:{clave}@{self.host}:{self.port}/{base}"
+        return f"{url}?sslmode={quote(self.sslmode)}" if self.sslmode else url
 
 
 class AjustesSeguridad(BaseSettings):
