@@ -31,14 +31,7 @@ def hungaro(costos: list[list[float]]) -> list[int]:
         usada = [False] * (n + 1)
         while fila_de[j0]:
             usada[j0] = True
-            i0, delta, j1 = fila_de[j0], infinito, 0
-            for j in range(1, n + 1):
-                if not usada[j]:
-                    actual = costos[i0 - 1][j - 1] - u[i0] - v[j]
-                    if actual < minimo[j]:
-                        minimo[j], previo[j] = actual, j0
-                    if minimo[j] < delta:
-                        delta, j1 = minimo[j], j
+            delta, j1 = _columna_mas_barata(costos, u, v, fila_de[j0], j0, usada, minimo, previo)
             for j in range(n + 1):
                 if usada[j]:
                     u[fila_de[j]] += delta
@@ -55,6 +48,20 @@ def hungaro(costos: list[list[float]]) -> list[int]:
         if fila_de[j]:
             asignada[fila_de[j] - 1] = j - 1
     return asignada
+
+
+def _columna_mas_barata(costos, u, v, i0, j0, usada, minimo, previo) -> tuple[float, int]:
+    """Actualiza el costo reducido mínimo de cada columna libre desde la fila i0 y devuelve
+    la columna libre más barata con su costo (un paso del «Dijkstra» del húngaro)."""
+    delta, j1 = float("inf"), 0
+    for j in range(1, len(costos) + 1):
+        if not usada[j]:
+            actual = costos[i0 - 1][j - 1] - u[i0] - v[j]
+            if actual < minimo[j]:
+                minimo[j], previo[j] = actual, j0
+            if minimo[j] < delta:
+                delta, j1 = minimo[j], j
+    return delta, j1
 
 
 def asignar(puntajes: list[list[int]]) -> list[tuple[int, int]]:

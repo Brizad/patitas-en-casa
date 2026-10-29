@@ -362,7 +362,9 @@ def emisor_desde_entorno() -> EmisorTokens:
     return EmisorTokens(ajustes.jwt_secreto.get_secret_value(), minutos=ajustes.jwt_minutos)
 
 
-def crear_app(repositorio: RepositorioReportes | None = None,
+# C901: mccabe suma aquí las ~70 funciones de endpoint anidadas; cada una por separado es
+# sencilla. crear_app es la «raíz de composición» que conecta adaptadores y rutas.
+def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
               emisor_tokens: EmisorTokens | None = None,
