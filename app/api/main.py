@@ -78,6 +78,7 @@ from app.rescates.servicio import (
 from app.seguridad.tokens import EmisorTokens
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
 from app.usuarios.admin_inicial import crear_admin_inicial
+from app.usuarios.contrasenas import ContrasenaInvalida
 from app.usuarios.intentos import (
     LimiteIntentos,
     RepositorioIntentosEnMemoria,
@@ -85,9 +86,14 @@ from app.usuarios.intentos import (
     clave_ip,
 )
 from app.usuarios.intentos_postgres import RepositorioIntentosPostgres
-from app.usuarios.repositorio import RepositorioUsuarios
+from app.usuarios.repositorio import CorreoDuplicado, RepositorioUsuarios
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
-from app.usuarios.servicio import ServicioUsuarios, normalizar_correo
+from app.usuarios.servicio import (
+    AutoSuspension,
+    CuentaNoEncontrada,
+    ServicioUsuarios,
+    normalizar_correo,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +167,24 @@ def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
     return datos
 
 
+class CuentaEntrada(BaseModel):
+    """#67: el administrador crea cuentas del personal (la contraseña nunca se devuelve)."""
+
+    correo: str = Field(max_length=254)
+    nombre: str = Field(max_length=120)
+    rol: Rol
+    contrasena: str = Field(max_length=128)
+
+
+class ActivoEntrada(BaseModel):
+    activo: bool
+
+
+def _cuenta(usuario: Usuario) -> dict:
+    return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value,
+            "activo": usuario.activo}
+
+
 class IngresoEntrada(BaseModel):
     nombre: str
     especie: Especie
@@ -230,6 +254,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     coordinacion = exigir_rol(dependencia_usuario, Rol.COORDINADOR)
     veterinaria = exigir_rol(dependencia_usuario, Rol.VETERINARIO)  # RN-06
     rescatista_actual = exigir_rol(dependencia_usuario, Rol.RESCATISTA)  # HU-06
+    administracion = exigir_rol(dependencia_usuario, Rol.ADMINISTRADOR)  # #67
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -289,6 +314,35 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     @app.get("/auth/yo")
     def mi_cuenta(usuario: Usuario = usuario_actual):
         return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value}
+
+    # --- Fase 1 (#67): administración de cuentas (RF-13, RF-16) -------------------------
+
+    @app.get("/admin/usuarios")
+    def listar_cuentas(_admin: Usuario = administracion):
+        return [_cuenta(u) for u in usuarios.listar()]
+
+    @app.post("/admin/usuarios", status_code=201)
+    def crear_cuenta(datos: CuentaEntrada, _admin: Usuario = administracion):
+        try:
+            nueva = usuarios.registrar(datos.correo, datos.nombre, datos.rol, datos.contrasena)
+        except CorreoDuplicado as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except (ContrasenaInvalida, ValueError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return _cuenta(nueva)
+
+    @app.put("/admin/usuarios/{correo}/activo")
+    def suspender_o_reactivar(correo: str, datos: ActivoEntrada,
+                              admin: Usuario = administracion):
+        """RF-16: una cuenta suspendida pierde el acceso en la siguiente petición, porque
+        la dependencia de sesión relee la cuenta (no basta con tener un token vigente)."""
+        try:
+            usuarios.cambiar_activo(admin, correo, datos.activo)
+        except AutoSuspension as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except CuentaNoEncontrada as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return {"correo": normalizar_correo(correo), "activo": datos.activo}
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,

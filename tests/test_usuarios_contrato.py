@@ -51,3 +51,22 @@ def test_la_base_rechaza_roles_desconocidos_y_correos_con_mayusculas(bd_limpia, 
         conexion.execute(text(
             "INSERT INTO usuarios (correo, nombre, rol, hash_contrasena) "
             "VALUES (:correo, 'Ana', :rol, 'h')"), fila)
+
+
+def test_todos_devuelve_las_cuentas_ordenadas_por_correo(repositorio):
+    """#67 (RF-16): el administrador ve la lista de cuentas."""
+    repositorio.crear(usuario("zoe@patitas.co"))
+    repositorio.crear(usuario("ana@patitas.co", rol=Rol.COORDINADOR))
+    assert [u.correo for u in repositorio.todos()] == ["ana@patitas.co", "zoe@patitas.co"]
+
+
+def test_cambiar_activo_suspende_y_reactiva(repositorio):
+    repositorio.crear(usuario())
+    assert repositorio.cambiar_activo("vet@patitas.co", False) is True
+    assert repositorio.buscar_por_correo("vet@patitas.co").activo is False
+    assert repositorio.cambiar_activo("vet@patitas.co", True) is True
+    assert repositorio.buscar_por_correo("vet@patitas.co").activo is True
+
+
+def test_cambiar_activo_de_un_correo_inexistente_devuelve_false(repositorio):
+    assert repositorio.cambiar_activo("nadie@patitas.co", False) is False

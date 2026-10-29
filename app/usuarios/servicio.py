@@ -7,6 +7,15 @@ from app.dominio.modelos import Rol, Usuario
 from app.usuarios import contrasenas
 from app.usuarios.repositorio import RepositorioUsuarios
 
+
+class CuentaNoEncontrada(LookupError):
+    pass
+
+
+class AutoSuspension(ValueError):
+    pass
+
+
 PATRON_CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -44,3 +53,15 @@ class ServicioUsuarios:
             self._repositorio.actualizar_hash(usuario.correo, nuevo)
             usuario.hash_contrasena = nuevo
         return usuario
+
+    def listar(self) -> list[Usuario]:
+        return self._repositorio.todos()
+
+    def cambiar_activo(self, quien: Usuario, correo: str, activo: bool) -> None:
+        """RF-16. Nadie se suspende a sí mismo: así nunca se pierde la última cuenta de
+        administración por un clic equivocado."""
+        correo = normalizar_correo(correo)
+        if not activo and correo == quien.correo:
+            raise AutoSuspension("No puedes suspender tu propia cuenta.")
+        if not self._repositorio.cambiar_activo(correo, activo):
+            raise CuentaNoEncontrada(f"No existe una cuenta con el correo {correo}.")
