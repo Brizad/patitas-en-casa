@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     Column,
@@ -23,14 +24,24 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
+from app.adopciones.modelos import (
+    Energia,
+    EstadoPublicacion,
+    EstadoSolicitud,
+    Tamano,
+    Vivienda,
+)
 from app.avisos.modelos import EstadoAviso
 from app.dominio.modelos import (
     Especie,
     EstadoReporte,
     EstadoRescate,
+    MotivoDescarte,
+    MotivoEgreso,
     Prioridad,
     ResultadoRescate,
     Rol,
+    TipoNota,
 )
 
 
@@ -57,6 +68,7 @@ reportes = Table(
     Column("comuna", SmallInteger),  # HU-06: comuna de Cúcuta, opcional
     # RF-12 (#61): clave que genera la PWA; el reenvío con la misma clave no duplica.
     Column("clave_idempotencia", String(64), unique=True),
+    Column("version_modelo", String(40)),  # RF-20 (#75)
     CheckConstraint(f"estado IN ({_valores(EstadoReporte)})", name="ck_reportes_estado"),
     CheckConstraint("comuna BETWEEN 1 AND 10", name="ck_reportes_comuna"),
     CheckConstraint(f"prioridad IN ({_valores(Prioridad)})", name="ck_reportes_prioridad"),
@@ -77,6 +89,7 @@ refugios = Table(
     Column("nombre", Text, nullable=False),
     Column("capacidad", Integer, nullable=False),
     Column("ocupados", Integer, nullable=False, server_default=text("0")),
+    Column("direccion", Text),  # #108 (RF-14)
     CheckConstraint("capacidad > 0", name="ck_refugios_capacidad"),
     CheckConstraint("ocupados BETWEEN 0 AND capacidad", name="ck_refugios_ocupados"),
 )
@@ -92,7 +105,29 @@ animales = Table(
     Column("vacunado", Boolean, nullable=False, server_default=false()),
     Column("esterilizado", Boolean, nullable=False, server_default=false()),
     Column("ingresado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    # RF-26 (#75): fecha y motivo del egreso, juntos o ninguno.
+    Column("egresado_en", DateTime(timezone=True)),
+    Column("motivo_egreso", String(15)),
     CheckConstraint(f"especie IN ({_valores(Especie)})", name="ck_animales_especie"),
+    CheckConstraint(f"motivo_egreso IN ({_valores(MotivoEgreso)})",
+                    name="ck_animales_motivo_egreso"),
+    CheckConstraint("(egresado_en IS NULL) = (motivo_egreso IS NULL)",
+                    name="ck_animales_egreso_completo"),
+)
+
+# RF-24 (#75): historial clínico; las notas solo se insertan.
+historial_clinico = Table(
+    "historial_clinico",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("animal_id", Integer, ForeignKey("animales.id"), nullable=False),
+    Column("autor", Text, nullable=False),
+    Column("tipo", String(15), nullable=False),
+    Column("texto", Text, nullable=False),
+    Column("registrada_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"tipo IN ({_valores(TipoNota)})", name="ck_historial_tipo"),
+    CheckConstraint("btrim(texto) <> ''", name="ck_historial_texto"),
+    Index("ix_historial_clinico_animal", "animal_id"),
 )
 
 # DT-02: cuentas del personal. Solo se guarda el hash Argon2id de la contraseña.
@@ -106,9 +141,97 @@ usuarios = Table(
     Column("hash_contrasena", Text, nullable=False),
     Column("activo", Boolean, nullable=False, server_default=true()),
     Column("creado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("refugio_id", Integer, ForeignKey("refugios.id")),  # #67 (RF-14)
     UniqueConstraint("correo", name="uq_usuarios_correo"),
     CheckConstraint("correo = lower(correo)", name="ck_usuarios_correo_minusculas"),
     CheckConstraint(f"rol IN ({_valores(Rol)})", name="ck_usuarios_rol"),
+)
+
+# RF-08 (#85): perfil del adoptante, uno por cuenta. Datos mínimos (RNF-08, RNF-16).
+perfiles_adoptante = Table(
+    "perfiles_adoptante",
+    metadata,
+    Column("correo", Text, ForeignKey("usuarios.correo"), primary_key=True),
+    Column("vivienda", String(12), nullable=False),
+    Column("tiene_patio", Boolean, nullable=False),
+    Column("hay_ninos", Boolean, nullable=False),
+    Column("otros_animales", Boolean, nullable=False),
+    Column("horas_solo_al_dia", SmallInteger, nullable=False),
+    Column("experiencia", Boolean, nullable=False),
+    Column("acepta_seguimiento", Boolean, nullable=False),
+    Column("actualizado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"vivienda IN ({_valores(Vivienda)})", name="ck_perfiles_vivienda"),
+    CheckConstraint("horas_solo_al_dia BETWEEN 0 AND 24", name="ck_perfiles_horas"),
+)
+
+# RF-25 (#85): animales publicados para adopción; una publicación por animal.
+publicaciones = Table(
+    "publicaciones",
+    metadata,
+    Column("animal_id", Integer, ForeignKey("animales.id"), primary_key=True),
+    Column("descripcion", Text, nullable=False),
+    Column("tamano", String(10), nullable=False),
+    Column("energia", String(10), nullable=False),
+    Column("edad_meses", SmallInteger, nullable=False),
+    Column("apto_ninos", Boolean, nullable=False),
+    Column("apto_otros_animales", Boolean, nullable=False),
+    Column("necesita_patio", Boolean, nullable=False),
+    Column("estado", String(12), nullable=False),
+    Column("publicado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"tamano IN ({_valores(Tamano)})", name="ck_publicaciones_tamano"),
+    CheckConstraint(f"energia IN ({_valores(Energia)})", name="ck_publicaciones_energia"),
+    CheckConstraint(f"estado IN ({_valores(EstadoPublicacion)})",
+                    name="ck_publicaciones_estado"),
+    CheckConstraint("edad_meses BETWEEN 0 AND 360", name="ck_publicaciones_edad"),
+)
+
+# RF-27 (#85): solicitudes de adopción.
+solicitudes = Table(
+    "solicitudes",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("animal_id", Integer, ForeignKey("publicaciones.animal_id"), nullable=False),
+    Column("adoptante", Text, ForeignKey("usuarios.correo"), nullable=False),
+    Column("mensaje", Text, nullable=False, server_default=""),
+    Column("estado", String(10), nullable=False),
+    Column("creada_en", DateTime(timezone=True), nullable=False),
+    Column("decidida_por", Text),
+    Column("decidida_en", DateTime(timezone=True)),
+    Column("razon", Text),
+    CheckConstraint(f"estado IN ({_valores(EstadoSolicitud)})", name="ck_solicitudes_estado"),
+)
+Index("uq_solicitudes_pendiente", solicitudes.c.animal_id, solicitudes.c.adoptante,
+      unique=True, postgresql_where=text("estado = 'pendiente'"))
+# RN-11: una sola adopción aprobada por animal, también con dos coordinadores a la vez.
+Index("uq_solicitudes_aprobada", solicitudes.c.animal_id, unique=True,
+      postgresql_where=text("estado = 'aprobada'"))
+
+# RF-10 (#85): seguimientos a los 30, 90 y 180 días de la adopción.
+seguimientos = Table(
+    "seguimientos",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("solicitud_id", Integer, ForeignKey("solicitudes.id"), nullable=False),
+    Column("dia", SmallInteger, nullable=False),
+    Column("programado_para", DateTime(timezone=True), nullable=False),
+    Column("realizado_en", DateTime(timezone=True)),
+    Column("nota", Text),
+    Column("registrado_por", Text),
+    CheckConstraint("dia IN (30, 90, 180)", name="ck_seguimientos_dia"),
+    UniqueConstraint("solicitud_id", "dia", name="uq_seguimientos_dia"),
+)
+
+# RF-32 (#102): bitácora general. Solo INSERT: un disparador (migración 0020) rechaza
+# UPDATE y DELETE.
+bitacora = Table(
+    "bitacora",
+    metadata,
+    Column("id", BigInteger, primary_key=True),
+    Column("momento", DateTime(timezone=True), nullable=False),
+    Column("actor", Text, nullable=False),
+    Column("accion", Text, nullable=False),
+    Column("objeto", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("estado_http", SmallInteger, nullable=False),
 )
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
@@ -133,6 +256,7 @@ decisiones_triaje = Table(
     Column("prioridad_final", String(10), nullable=False),
     Column("justificacion", Text),
     Column("decidido_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("version_modelo", String(40)),  # RF-20, D-04 (#75)
     CheckConstraint(f"prioridad_sugerida IN ({_valores(Prioridad)})",
                     name="ck_decisiones_prioridad_sugerida"),
     CheckConstraint(f"prioridad_final IN ({_valores(Prioridad)})",
@@ -143,6 +267,21 @@ decisiones_triaje = Table(
                     "AND char_length(btrim(justificacion)) >= 10)",
                     name="ck_decisiones_justificacion"),
     UniqueConstraint("reporte_codigo", name="uq_decisiones_reporte"),
+)
+
+# D-02 (#75): bitácora de reportes descartados (uno por reporte).
+descartes = Table(
+    "descartes",
+    metadata,
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), primary_key=True),
+    Column("veterinario", Text, nullable=False),
+    Column("motivo", String(10), nullable=False),
+    Column("duplicado_de", String(8), ForeignKey("reportes.codigo")),
+    Column("justificacion", Text, nullable=False),
+    Column("descartado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"motivo IN ({_valores(MotivoDescarte)})", name="ck_descartes_motivo"),
+    CheckConstraint("char_length(btrim(justificacion)) >= 10",
+                    name="ck_descartes_justificacion"),
 )
 
 # HU-06: disponibilidad de los rescatistas (RF-15) y rescates (RN-08).

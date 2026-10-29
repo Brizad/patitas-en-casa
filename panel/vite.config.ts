@@ -9,6 +9,9 @@ export default defineConfig({
   plugins: [react()],
   build: { outDir: "../app/panel_web", emptyOutDir: true },
   // En desarrollo (npm run dev) las llamadas a la API pasan por el mismo origen.
-  server: { proxy: { "/auth": API, "/cola": API, "/reportes": API } },
+  server: { proxy: Object.fromEntries(
+    ["/auth", "/cola", "/reportes", "/rescates", "/rescatistas", "/refugio", "/admin",
+     "/adoptantes", "/adopciones", "/indicadores", "/bitacora"]
+      .map((ruta) => [ruta, API])) },
   test: { environment: "node" },
 });

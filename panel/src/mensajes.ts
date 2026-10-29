@@ -27,9 +27,12 @@ export function sugerida(estado: string, prioridad: Prioridad): Prioridad {
   return estado === "sin_clasificar" ? "alta" : prioridad;
 }
 
-/** RN-16: solo cambiar la prioridad exige justificación (igual que el servidor). */
+/** RN-16 y D-07: solo cambiar la prioridad exige justificación de 10 caracteres o más con
+ * al menos 5 letras (igual que el servidor: «..........» no explica nada). */
 export function faltaJustificacion(sugerida: Prioridad, elegida: Prioridad, texto: string) {
-  return elegida !== sugerida && texto.trim().length < 10;
+  const limpio = texto.trim();
+  const letras = (limpio.match(/\p{L}/gu) ?? []).length;
+  return elegida !== sugerida && (limpio.length < 10 || letras < 5);
 }
 
 /** D-05: dice qué se guardó y qué está pendiente; nunca afirma que el aviso ya llegó. */

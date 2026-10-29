@@ -11,6 +11,8 @@ export interface ReporteEnCola {
   estado: string;
   confianza: number | null;
   evidencias: string[];
+  version_modelo: string | null; // RF-20
+  posibles_duplicados: string[]; // RF-17: a menos de 200 m y 2 horas
 }
 
 export interface RespuestaConfirmacion {
@@ -27,7 +29,7 @@ export class ErrorApi extends Error {
   }
 }
 
-async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?: string): Promise<T> {
+export async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?: string): Promise<T> {
   const cabeceras = new Headers(opciones.headers);
   if (token) cabeceras.set("Authorization", `Bearer ${token}`);
   const respuesta = await fetch(ruta, { ...opciones, headers: cabeceras });
@@ -58,6 +60,16 @@ export function confirmar(token: string, codigo: string, prioridad?: Prioridad,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prioridad: prioridad ?? null, justificacion: justificacion ?? null }),
+  }, token);
+}
+
+/** D-02: falso o duplicado (con el original, opcional). 409 si ya se decidió. */
+export function descartar(token: string, codigo: string, motivo: "falso" | "duplicado",
+                          justificacion: string, duplicado_de?: string) {
+  return pedir(`/reportes/${codigo}/descarte`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ motivo, justificacion, duplicado_de: duplicado_de ?? null }),
   }, token);
 }
 

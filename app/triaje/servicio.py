@@ -8,7 +8,7 @@ from concurrent.futures import TimeoutError as TiempoAgotado
 
 from app import config
 from app.dominio.modelos import EstadoReporte, Prioridad, Reporte
-from app.triaje.clasificador import Resultado, clasificar
+from app.triaje.clasificador import VERSION, Resultado, clasificar
 
 Clasificador = Callable[[str], Resultado]
 
@@ -20,8 +20,10 @@ log = logging.getLogger(__name__)
 
 class ServicioTriaje:
     def __init__(self, clasificador: Clasificador = clasificar,
-                 tiempo_max_s: float = TIEMPO_MAX_CLASIFICACION_S) -> None:
+                 tiempo_max_s: float = TIEMPO_MAX_CLASIFICACION_S,
+                 version: str = VERSION) -> None:
         self._clasificador = clasificador
+        self._version = version
         self._tiempo_max_s = tiempo_max_s
         self._ejecutor = ThreadPoolExecutor(max_workers=HILOS_CLASIFICACION)
 
@@ -42,6 +44,7 @@ class ServicioTriaje:
         reporte.prioridad = resultado.prioridad
         reporte.confianza = resultado.confianza
         reporte.evidencias = resultado.evidencias
+        reporte.version_modelo = self._version
         if resultado.confianza < config.UMBRAL_CONFIANZA and resultado.prioridad in (
             Prioridad.MEDIA, Prioridad.BAJA,
         ):
@@ -64,6 +67,7 @@ class ServicioTriaje:
         reporte.confianza = 0.0
         reporte.estado = EstadoReporte.SIN_CLASIFICAR
         reporte.evidencias = ["clasificador no disponible: revisar manualmente"]
+        reporte.version_modelo = None  # ningún modelo sugirió: lo decidió la política
         return reporte
 
 

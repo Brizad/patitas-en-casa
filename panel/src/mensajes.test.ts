@@ -67,3 +67,11 @@ describe("textoAvisos", () => {
     expect(textoAvisos({ ...resumen, pendiente: 0, enviado: 2 }, [])).toBe("Avisos: 2 enviado.");
   });
 });
+
+describe("faltaJustificacion con relleno (D-07)", () => {
+  it("rechaza puntos o números aunque tengan 10 caracteres", () => {
+    expect(faltaJustificacion("critica", "alta", "..........")).toBe(true);
+    expect(faltaJustificacion("critica", "alta", "1234567890")).toBe(true);
+    expect(faltaJustificacion("critica", "alta", "Sangra mucho")).toBe(false);
+  });
+});

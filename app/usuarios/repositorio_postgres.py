@@ -21,6 +21,7 @@ class RepositorioUsuariosPostgres:
                 conexion.execute(insert(usuarios).values(
                     correo=usuario.correo, nombre=usuario.nombre, rol=usuario.rol.value,
                     hash_contrasena=usuario.hash_contrasena, activo=usuario.activo,
+                    refugio_id=usuario.refugio_id,
                 ))
         except IntegrityError as error:
             if getattr(error.orig, "sqlstate", None) == VIOLACION_DE_UNICIDAD:
@@ -33,12 +34,32 @@ class RepositorioUsuariosPostgres:
             fila = conexion.execute(
                 select(usuarios).where(usuarios.c.correo == correo)
             ).mappings().first()
-        if fila is None:
-            return None
-        return Usuario(correo=fila["correo"], nombre=fila["nombre"], rol=Rol(fila["rol"]),
-                       hash_contrasena=fila["hash_contrasena"], activo=fila["activo"])
+        return None if fila is None else _usuario(fila)
 
     def actualizar_hash(self, correo: str, hash_contrasena: str) -> None:
         with self._motor.begin() as conexion:
             conexion.execute(update(usuarios).where(usuarios.c.correo == correo)
                              .values(hash_contrasena=hash_contrasena))
+
+    def todos(self) -> list[Usuario]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(usuarios).order_by(usuarios.c.correo)).mappings()
+            return [_usuario(fila) for fila in filas]
+
+    def cambiar_activo(self, correo: str, activo: bool) -> bool:
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(update(usuarios).where(usuarios.c.correo == correo)
+                                      .values(activo=activo))
+        return cambio.rowcount == 1
+
+    def vincular_refugio(self, correo: str, refugio_id: int | None) -> bool:
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(update(usuarios).where(usuarios.c.correo == correo)
+                                      .values(refugio_id=refugio_id))
+        return cambio.rowcount == 1
+
+
+def _usuario(fila) -> Usuario:
+    return Usuario(correo=fila["correo"], nombre=fila["nombre"], rol=Rol(fila["rol"]),
+                   hash_contrasena=fila["hash_contrasena"], activo=fila["activo"],
+                   refugio_id=fila["refugio_id"])

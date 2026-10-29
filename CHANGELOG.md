@@ -2,8 +2,19 @@
 
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
-## [Sin publicar]
+## [1.0.0] - 2026-10-29
+Plan autónomo de cierre: incremento 3 y fases 1 a 5. Para actualizar una instalación:
+`alembic upgrade head` (migraciones `0009` a `0020`) y, en el `.env` o en Render,
+`PATITAS_ADMIN_CORREO` y `PATITAS_ADMIN_CONTRASENA` para crear la primera cuenta de
+administración. El modelo de triaje se entrenó con datos **sintéticos** (ver
+`docs/aprende/fase-4-ia.md`).
+
 ### Agregado
+- Fase 5 (#102), cierre: bitácora general inmutable de toda acción que cambia datos, sin cuerpos ni datos personales, con un disparador que rechaza `UPDATE` y `DELETE` (`GET /bitacora`, migración `0020`, RF-32, RNF-12); indicadores sin datos personales (`GET /indicadores`, RF-30); exportar reportes en CSV y resumen en PDF anonimizados (`GET /indicadores/reportes.csv`, `GET /indicadores/resumen.pdf`, RF-31). Panel: pestaña «Indicadores».
+- Fase 4 (#95), IA: clasificador TF-IDF + regresión logística entrenado con datos sintéticos (`scripts/ia/`), servido desde JSON en Python puro y combinado con las reglas (solo sube la prioridad; ≥ 3 evidencias; versión `reglas-v0+tfidf-lr-v1`; RF-02, RNF-03, RNF-09); compatibilidad adoptante–animal con puntaje, razones y alertas sin atributos protegidos (`GET /adopciones/recomendaciones`, RF-09, RNF-16); propuesta de asignación global en jornadas con el algoritmo húngaro (`GET /refugio/jornada/propuesta`, RF-28); fusión texto + video RN-07 y puerto del analizador (RF-19). Panel: recomendaciones y jornada.
+- Fase 3 (#85), adopción: cuenta pública del adoptante con autorización de datos y perfil (`POST /adoptantes`, `GET/PUT /adoptantes/yo/perfil`, RF-08); publicar un animal y catálogo público (`POST /refugio/animales/{id}/publicacion`, `GET /adopciones/animales`, RF-25); solicitar (`POST /adopciones/solicitudes`, RN-10) y decidir (`POST /refugio/solicitudes/{id}/decision`) con restricciones duras (RN-05) y una adopción aprobada por animal (RN-11); aprobar da el egreso por adopción y programa los seguimientos a 30, 90 y 180 días (`GET/POST /refugio/seguimientos`, RF-10); compromiso de adopción en PDF sin dependencias (RF-29). Panel: registro y pantalla del adoptante; pestaña «Adopciones» del coordinador. Migraciones `0016` a `0019`.
+- Fase 2 (#75), refugio completo: descartar un reporte falso o duplicado con justificación (`POST /reportes/{codigo}/descarte`, estado `descartado`, tabla `descartes`, D-02); posibles duplicados a ≤ 200 m y ≤ 2 h en la cola (RF-17); `version_modelo` en reportes y decisiones (RF-20, D-04); ficha clínica con historial que solo crece (`GET /refugio/animales`, `GET /refugio/animales/{id}`, `POST .../historial`, RF-06, RF-24); egresos que liberan el cupo (`POST .../egreso`, RF-26); ingresos y ocupación del refugio de cada persona. Panel: descartar, duplicados, fichas, historial, egresos, «Saltar a la cola» y foco tras confirmar (D-08). Migraciones `0012` a `0015`.
+- Fase 1 (#67), pantallas por rol: rol `administrador` (migración `0010`) y primera cuenta creada al arrancar desde `PATITAS_ADMIN_CORREO` y `PATITAS_ADMIN_CONTRASENA` (sin reemplazar una existente). `GET/POST /admin/usuarios` y `PUT /admin/usuarios/{correo}/activo` (RF-16: suspender corta el acceso en la siguiente petición; nadie se suspende a sí mismo). `GET/POST /admin/refugios` y `PUT /admin/usuarios/{correo}/refugio` (RF-14, columna `usuarios.refugio_id`, migración `0011`). Panel: navegación por rol y pantallas del rescatista (disponibilidad, zona, ofertas, aceptar, llegué, resultado), del refugio (ocupación con nivel de alerta e ingresos del coordinador) y del administrador.
 - Incremento 3 (II-03), outbox de avisos (#63, D-03 de II-01): al confirmar un crítico o alto, los avisos a los rescatistas de la comuna se guardan como **pendientes** en la misma transacción que la decisión (tabla `avisos`, migración `0009`) y un procesador los envía cada 15 s con reintentos (60 s, 120 s… hasta 1 h; 5 intentos) y estado real: enviado o fallido. Garantía «al menos una vez». `GET /reportes/{codigo}/avisos` (personal) muestra el estado, los intentos y el último error.
 - Panel del personal en React (#64) en `/panel/`: inicio de sesión, cola priorizada con evidencias y confirmar o ajustar la prioridad con mensajes que no prometen de más («aviso pendiente de envío», nunca «se avisó»). Código en `panel/` (Vite + React + TypeScript); el CI compila y prueba el panel.
 - Docker Compose (PostgreSQL 17 + API con el panel): `docker compose up --build`.
@@ -36,6 +47,8 @@ Incremento 2, "Fundación segura". Para actualizar una instalación: `alembic up
 - HU-06, parte 1 (#50): rol rescatista, disponibilidad, ofertas de rescate (confirmados críticos o altos) y el ciclo aceptar → llegué al sitio → resultado, o liberar. RN-08 con índices únicos parciales en PostgreSQL (migración `0006`). La zona, el canal de alerta y el escalamiento esperan la decisión del #46 (256 pruebas).
 - HU-08, parte 1 (#52): `GET /reportes/{codigo}/seguimiento`, línea de tiempo pública del reporte con la fecha del último cambio y sin datos personales (RN-14). Acepta el código en minúsculas o con espacios (266 pruebas).
 ### Cambiado
+- D-06 (#75): todas las fechas de la API salen en UTC (`+00:00`); antes la bitácora salía con `-05:00`.
+- D-07 (#75): la justificación de un ajuste o descarte exige además 5 letras como mínimo; «..........» se rechaza con 422.
 - La respuesta de `POST /reportes/{codigo}/confirmacion` agrega el campo `avisos` (`programados` y `estado`: `pendiente`, `sin_destinatarios` o `no_aplica`). Cambio aditivo (#63). La confirmación ya no envía el correo en segundo plano: lo envía el procesador de avisos.
 - `NotificadorCorreo.entregar()` lanza `EntregaFallida` si el SMTP falla; `enviar()` conserva el contrato anterior (registra y no propaga).
 - `GET /cola` muestra solo los reportes pendientes de confirmar; los confirmados salen de la cola, como en el prototipo (HU-02, #2).

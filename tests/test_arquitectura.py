@@ -14,9 +14,17 @@ INFRAESTRUCTURA = ("fastapi", "starlette", "sqlalchemy", "psycopg", "smtplib", "
 
 # Módulos con reglas de negocio o casos de uso (sin adaptadores).
 NUCLEO = ["dominio/modelos.py", "avisos/modelos.py", "avisos/repositorio.py",
-          "avisos/procesador.py", "reportes/confirmacion.py", "reportes/servicio.py",
+          "avisos/procesador.py", "reportes/confirmacion.py", "reportes/descarte.py",
+          "reportes/duplicados.py",
+          "reportes/servicio.py",
           "rescates/servicio.py", "triaje/clasificador.py", "triaje/servicio.py",
-          "cupos/servicio.py"]
+          "triaje/modelo.py", "triaje/combinado.py", "triaje/video.py",
+          "cupos/servicio.py", "cupos/fichas.py", "adopciones/modelos.py",
+          "adopciones/repositorio.py", "adopciones/servicio.py",
+          "adopciones/reglas.py", "adopciones/compromiso.py", "documentos/pdf.py",
+          "adopciones/compatibilidad.py", "adopciones/asignacion.py",
+          "bitacora/repositorio.py", "indicadores/calculo.py",
+          "indicadores/exportar.py"]
 
 
 def importaciones(ruta: Path) -> set[str]:

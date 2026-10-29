@@ -26,6 +26,16 @@ class EstadoReporte(StrEnum):
     REQUIERE_REVISION = "requiere_revision"
     SIN_CLASIFICAR = "sin_clasificar"
     CONFIRMADO = "confirmado"
+    DESCARTADO = "descartado"  # D-02 (#75): falso o duplicado; sale de la cola
+
+
+# Estados en los que el veterinario ya decidió: el reporte no vuelve a la cola.
+DECIDIDOS = frozenset({EstadoReporte.CONFIRMADO, EstadoReporte.DESCARTADO})
+
+
+class MotivoDescarte(StrEnum):
+    FALSO = "falso"
+    DUPLICADO = "duplicado"
 
 
 @dataclass
@@ -53,6 +63,7 @@ class Reporte:
     confianza: float | None = None
     evidencias: list[str] = field(default_factory=list)
     creado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+    version_modelo: str | None = None  # RF-20: quién sugirió; None en falla segura (RN-03)
 
 
 @dataclass
@@ -64,6 +75,39 @@ class Animal:
     estado_salud: str
     vacunado: bool = False
     esterilizado: bool = False
+    id: int | None = None  # #75: lo asigna el repositorio al ingresar
+    ingresado_en: datetime | None = None
+    egresado_en: datetime | None = None  # RF-26: None mientras sigue en el refugio
+    motivo_egreso: MotivoEgreso | None = None
+
+
+class MotivoEgreso(StrEnum):
+    """RF-26: por qué sale un animal del refugio."""
+
+    ADOPCION = "adopcion"
+    TRASLADO = "traslado"  # a otro refugio u hogar de paso
+    FALLECIMIENTO = "fallecimiento"
+    DEVUELTO = "devuelto"  # a su familia
+
+
+class TipoNota(StrEnum):
+    """Tipos de nota del historial clínico (RF-24)."""
+
+    OBSERVACION = "observacion"
+    TRATAMIENTO = "tratamiento"
+    VACUNA = "vacuna"
+    PROCEDIMIENTO = "procedimiento"
+
+
+@dataclass
+class NotaClinica:
+    """Una entrada del historial clínico (RF-24): solo se agrega, nunca se edita."""
+
+    animal_id: int
+    autor: str  # correo del veterinario
+    tipo: TipoNota
+    texto: str
+    registrada_en: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -79,10 +123,23 @@ class DecisionTriaje:
     prioridad_final: Prioridad
     justificacion: str | None = None
     decidido_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+    version_modelo: str | None = None  # RF-20, D-04: versión que hizo la sugerencia
 
     @property
     def ajustada(self) -> bool:
         return self.prioridad_final != self.prioridad_sugerida
+
+
+@dataclass
+class Descarte:
+    """D-02: el veterinario descarta un reporte falso o duplicado, con justificación."""
+
+    codigo: str
+    veterinario: str  # correo de la cuenta
+    motivo: MotivoDescarte
+    justificacion: str
+    duplicado_de: str | None = None
+    descartado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class Rol(StrEnum):
@@ -92,6 +149,8 @@ class Rol(StrEnum):
     COORDINADOR = "coordinador"
     RESCATISTA = "rescatista"  # HU-06: voluntario que atiende rescates en campo
     ADMINISTRADOR = "administrador"  # #67: refugios y cuentas (RF-14, RF-16)
+    ADOPTANTE = "adoptante"  # #85 (RF-08): se registra solo; no es personal del refugio
+    ALCALDIA = "alcaldia"  # #108 (RF-13): solo consulta indicadores anonimizados
 
 
 class EstadoRescate(StrEnum):
@@ -129,6 +188,7 @@ class Usuario:
     rol: Rol
     hash_contrasena: str = field(repr=False)  # Argon2id; nunca la contraseña
     activo: bool = True
+    refugio_id: int | None = None  # #67 (RF-14): refugio donde trabaja; None = ninguno
 
 
 @dataclass
@@ -136,6 +196,8 @@ class Refugio:
     nombre: str
     capacidad: int
     ocupados: int = 0
+    id: int | None = None  # #67: None mientras no se ha guardado
+    direccion: str = ""  # #108 (RF-14)
 
     def __post_init__(self) -> None:
         # BUG-04: invariante del refugio (DAD 7.2).

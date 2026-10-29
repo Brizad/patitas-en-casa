@@ -41,15 +41,17 @@ def motor_pruebas():
 
 
 REFUGIO_DEMO = ("Refugio demo Cúcuta", 40)
+# Todas las tablas con datos; una tabla nueva se agrega aquí.
+TABLAS = ("bitacora", "seguimientos", "solicitudes", "publicaciones", "perfiles_adoptante",
+          "historial_clinico", "descartes", "avisos", "escalamientos", "rescates", "rescatistas",
+          "decisiones_triaje", "reportes", "animales", "refugios", "usuarios", "intentos_fallidos")
 
 
 @pytest.fixture
 def bd_limpia(motor_pruebas):
     """Cada prueba empieza con las tablas vacías y solo el refugio demo (0/40)."""
     with motor_pruebas.begin() as conexion:
-        conexion.execute(text(
-            "TRUNCATE TABLE avisos, escalamientos, rescates, rescatistas, decisiones_triaje, "
-            "reportes, animales, refugios, usuarios, intentos_fallidos RESTART IDENTITY"))
+        conexion.execute(text(f"TRUNCATE TABLE {', '.join(TABLAS)} RESTART IDENTITY"))
         conexion.execute(text("INSERT INTO refugios (nombre, capacidad) VALUES (:n, :c)"),
                          {"n": REFUGIO_DEMO[0], "c": REFUGIO_DEMO[1]})
     return motor_pruebas

@@ -1,6 +1,6 @@
 [project]
 name = "patitas-en-casa"
-version = "0.2.0"
+version = "1.0.0"
 description = "Gestión logística de refugios animales con triaje de emergencias"
 requires-python = ">=3.11"
 
@@ -13,4 +13,8 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP"]
+select = ["E", "F", "W", "I", "B", "UP", "C90"]
+
+# RNF-10: complejidad ciclomática ≤ 10 por función, comprobada en cada CI.
+[tool.ruff.lint.mccabe]
+max-complexity = 10

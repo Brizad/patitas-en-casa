@@ -7,7 +7,7 @@ from typing import Protocol
 
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.repositorio import RepositorioAvisosEnMemoria
-from app.dominio.modelos import DecisionTriaje, EstadoReporte, Reporte
+from app.dominio.modelos import DECIDIDOS, DecisionTriaje, Descarte, EstadoReporte, Reporte
 
 
 class RepositorioReportes(Protocol):
@@ -23,6 +23,13 @@ class RepositorioReportes(Protocol):
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]: ...
 
+    def descartar(self, descarte: Descarte) -> bool:
+        """D-02: marca el reporte descartado y guarda el descarte, en una operación. False si
+        ya estaba confirmado o descartado."""
+        ...
+
+    def descarte(self, codigo: str) -> Descarte | None: ...
+
     def guardar_con_clave(self, reporte: Reporte, clave: str) -> Reporte:
         """RF-12 (#61): guarda el reporte ligado a la clave de idempotencia de la PWA. Si la
         clave ya tiene un reporte, no guarda nada y devuelve ese (el reenvío no duplica)."""
@@ -35,6 +42,7 @@ class RepositorioEnMemoria:
     def __init__(self) -> None:
         self._datos: dict[str, Reporte] = {}
         self._decisiones: dict[str, list[DecisionTriaje]] = {}
+        self._descartes: dict[str, Descarte] = {}
         self._claves: dict[str, str] = {}  # clave de idempotencia -> código
         self._candado = threading.Lock()
         self.avisos = RepositorioAvisosEnMemoria()  # #63: la «misma base» de los avisos
@@ -51,7 +59,7 @@ class RepositorioEnMemoria:
     def confirmar(self, decision: DecisionTriaje, avisos: Sequence[AvisoNuevo] = ()) -> bool:
         with self._candado:
             reporte = self._datos.get(decision.codigo)
-            if reporte is None or reporte.estado == EstadoReporte.CONFIRMADO:
+            if reporte is None or reporte.estado in DECIDIDOS:
                 return False
             reporte.prioridad = decision.prioridad_final
             reporte.estado = EstadoReporte.CONFIRMADO
@@ -61,6 +69,18 @@ class RepositorioEnMemoria:
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
         return list(self._decisiones.get(codigo, []))
+
+    def descartar(self, descarte: Descarte) -> bool:
+        with self._candado:
+            reporte = self._datos.get(descarte.codigo)
+            if reporte is None or reporte.estado in DECIDIDOS:
+                return False
+            reporte.estado = EstadoReporte.DESCARTADO
+            self._descartes[descarte.codigo] = descarte
+            return True
+
+    def descarte(self, codigo: str) -> Descarte | None:
+        return self._descartes.get(codigo)
 
     def guardar_con_clave(self, reporte: Reporte, clave: str) -> Reporte:
         with self._candado:

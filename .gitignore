@@ -10,3 +10,6 @@ htmlcov/
 # Panel React (#64): dependencias y compilación (se genera con «npm run build» en panel/)
 panel/node_modules/
 app/panel_web/
+
+# Datos sintéticos de entrenamiento (se regeneran con scripts/ia/).
+datos_sinteticos_*.csv

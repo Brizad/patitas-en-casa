@@ -11,6 +11,10 @@ from dataclasses import dataclass
 from app.dominio.modelos import Prioridad
 from app.triaje.normalizacion import normalizar
 
+# RF-20 (#75): se guarda con cada reporte y decisión. Cambiarla cuando cambie el léxico o
+# el modelo, para poder comparar versiones en la bitácora.
+VERSION = "reglas-v0"
+
 # Léxico de señales clínicas: fragmento -> prioridad que sugiere.
 LEXICO = {
     "no respira": Prioridad.CRITICA,

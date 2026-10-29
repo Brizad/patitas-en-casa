@@ -12,12 +12,18 @@ VIDEO_MAX_MB = 50
 
 # RN-16: ajustar la prioridad sugerida exige justificación (prototipo, P-04 "Ajustar").
 MIN_CARACTERES_JUSTIFICACION = 10
+# D-07 (#75): además, un mínimo de letras; «..........» o «1234567890» no explican nada.
+MIN_LETRAS_JUSTIFICACION = 5
 
 # DT-06: intentos fallidos de inicio de sesión permitidos dentro de la ventana. Por IP el
 # máximo es mayor porque el personal de un refugio suele compartir la misma IP pública.
 INTENTOS_MAXIMOS = 5
 INTENTOS_MAXIMOS_POR_IP = 20
 VENTANA_INTENTOS_MINUTOS = 15
+
+# RF-17 (#75): dos reportes con GPS a esta distancia y en este rato son posibles duplicados.
+DUPLICADO_METROS = 200
+DUPLICADO_HORAS = 2
 
 # HU-06 (#46): la zona del rescatista se elige por comunas. El área urbana de Cúcuta tiene
 # 10 comunas.

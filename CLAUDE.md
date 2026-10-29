@@ -10,7 +10,8 @@ veterinarios y control de cupos del refugio.
 
 - Proyecto integrador de Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 - Autor: Brayan David Amado Ramírez. Repositorio: https://github.com/Brizad/patitas-en-casa
-- Versión publicada: v0.2.0 (incremento 2, "Fundación segura").
+- Versión: v1.0.0 preparada (#102: incremento 3 y fases 1 a 5); se publica al integrar los PR
+  apilados en orden y crear la etiqueta `v1.0.0` sobre `main`. Última publicada: v0.2.0.
 - Idioma: todo (código, pruebas, commits, documentación) en **español**.
 
 ## Estructura
@@ -23,8 +24,12 @@ veterinarios y control de cupos del refugio.
 | `app/ajustes.py` | Conexión a PostgreSQL leída del entorno o `.env` (`AjustesBD`). |
 | `app/bd/` | Tablas (`esquema.py`) y aplicar/verificar migraciones desde Python (`migraciones.py`). |
 | `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
-| `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
+| `app/triaje/` | Normalización, reglas v0, modelo TF-IDF desde JSON (`modelo.py`), combinación reglas+modelo (`combinado.py`: el modelo solo sube), puerto de video (`video.py`) y `ServicioTriaje` (RN-02/RN-03). |
+| `scripts/ia/` | Generador de datos **sintéticos** y entrenamiento del triaje (scikit-learn solo aquí). |
 | `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
+| `app/refugios/` | `RepositorioRefugios` (memoria y PostgreSQL): refugios que registra el administrador (RF-14). |
+| `app/adopciones/` | Adopción (fase 3): perfil, publicación, solicitudes, `reglas.py` (RN-05), servicio y compromiso en PDF. |
+| `app/documentos/pdf.py` | PDF de texto sin dependencias (RF-29, RF-31). |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |
 | `app/seguridad/tokens.py`, `app/api/seguridad.py` | Tokens JWT (`EmisorTokens`) y la dependencia de FastAPI que exige sesión. |
 | `app/notificaciones/correo.py` | Adaptadores de `Notificador` (DT-03): correo SMTP o, sin SMTP configurado, el log. |
@@ -59,6 +64,10 @@ veterinarios y control de cupos del refugio.
   Valores en `app/config.py`; el aviso sale una sola vez (tabla `escalamientos`).
 - **Avisos (#63)**: confirmar guarda los avisos como pendientes en la misma transacción; el
   envío es del procesador. Nunca decir que un aviso «se envió» o «llegó» si no está `enviado`.
+- **D-02 / D-07** (#75): descartar es como confirmar (solo veterinario, una vez, sale de la
+  cola); toda justificación pasa por `validar_justificacion` (10 caracteres y 5 letras). El
+  seguimiento de un descartado no muestra el motivo. Las fechas de la API van en UTC
+  (`fecha_utc`). El historial clínico solo se inserta; el egreso libera el cupo una sola vez.
 - **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
   código, los pasos y sus fechas; nunca descripción, ubicación, prioridad ni correos.
 
@@ -85,8 +94,9 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
 
 ## Seguridad (DT-02)
 
-- Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01) y
-  `POST /auth/token`. Todo lo demás exige `Authorization: Bearer` de personal
+- Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01),
+  `POST /auth/token`, `POST /adoptantes` (siempre crea el rol adoptante, exige
+  `autoriza_datos`) y `GET /adopciones/animales`. Todo lo demás exige `Authorization: Bearer` de personal
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
 - `POST /refugio/ingresos` es solo del coordinador (`dependencies=[coordinacion]`, 403 para el
@@ -95,6 +105,9 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
   401 sin sesión.
 - DT-06: `POST /auth/token` cuenta los fallos por correo y por IP (`LimiteIntentos` en
   `app/usuarios/intentos.py`, tabla `intentos_fallidos`); bloqueado responde 429 con `Retry-After`.
+- Fase 1 (#67): `/admin/*` es solo del rol `administrador` (`dependencies` o parámetro
+  `administracion`). La primera cuenta sale de `PATITAS_ADMIN_CORREO`/`PATITAS_ADMIN_CONTRASENA`
+  y nunca se reemplaza.
 
 El CI (`.github/workflows/ci.yml`, job `build-lint-test`) ejecuta gitleaks (secretos en todo el
 historial), Ruff y pytest con cobertura mínima del 70 %.
@@ -131,6 +144,7 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Deuda técnica abierta
 
-Ver `DEUDA_TECNICA.md`: DT-04 (clasificador por reglas → modelo Transformer). Pagadas: DT-01 (reportes en
+Ver `DEUDA_TECNICA.md`: DT-04 (pagada en parte: falta validar el modelo con datos reales),
+DT-07, DT-08, DT-09 (registro público sin límite por IP) y DT-10 (video sin MediaPipe). Pagadas: DT-01 (reportes en
 PostgreSQL), DT-02 (JWT + Argon2id), DT-03 (notificador por correo), DT-05 (cupos en
 PostgreSQL) y DT-06 (límite de intentos de inicio de sesión).

@@ -17,12 +17,15 @@ class CupoAgotado(Exception):
 
 
 class ServicioCupos:
-    def __init__(self, repositorio: RepositorioCupos | Refugio, notificador: Notificador) -> None:
+    def __init__(self, repositorio: RepositorioCupos | Refugio, notificador: Notificador,
+                 avisar_a: list[str] | None = None) -> None:
         # Un Refugio suelto se guarda en memoria (pruebas unitarias y compatibilidad).
         if isinstance(repositorio, Refugio):
             repositorio = RepositorioCuposEnMemoria(repositorio)
         self._repositorio = repositorio
         self._notificador = notificador
+        # RF-07: los coordinadores de ESTE refugio; sin ninguno, el grupo general del .env.
+        self._avisar_a = avisar_a or ["coordinadores"]
 
     def registrar_ingreso(self, animal: Animal) -> Refugio:
         if not animal.nombre or not animal.estado_salud:
@@ -33,9 +36,9 @@ class ServicioCupos:
             raise CupoAgotado(f"{nombre} no tiene cupos disponibles.")
         if refugio.porcentaje_ocupacion() >= config.ALERTA_OCUPACION:
             umbral = int(config.ALERTA_OCUPACION * 100)
-            self._notificador.enviar(
-                "coordinadores", f"Ocupación sobre el {umbral} % en {refugio.nombre}"
-            )
+            for destinatario in self._avisar_a:
+                self._notificador.enviar(
+                    destinatario, f"Ocupación sobre el {umbral} % en {refugio.nombre}")
         return refugio
 
     def porcentaje_ocupacion(self) -> float:

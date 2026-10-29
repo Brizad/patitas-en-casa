@@ -1,0 +1,159 @@
+import { useCallback, useEffect, useState } from "react";
+import {
+  NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, decidir, propuestaJornada,
+  publicar, registrarSeguimiento, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
+} from "./apiAdopcionCoordinador";
+import { FichaAnimal, animales } from "./apiRefugio";
+import { faltaJustificacion, textoError } from "./mensajes";
+
+const VACIA: NuevaPublicacion = { descripcion: "", tamano: "mediano", energia: "media",
+  edad_meses: 12, apto_ninos: true, apto_otros_animales: true, necesita_patio: false };
+
+/** Adopciones del refugio: publicar (RF-25), decidir (RF-27) y seguimientos (RF-10). */
+export default function AdopcionesCoordinador({ token }: { token: string }) {
+  const [presentes, setPresentes] = useState<FichaAnimal[]>([]);
+  const [solicitudes, setSolicitudes] = useState<SolicitudRefugio[]>([]);
+  const [seguimientos, setSeguimientos] = useState<SeguimientoRefugio[]>([]);
+  const [mensaje, setMensaje] = useState("");
+  const [jornada, setJornada] = useState<Pareja[] | null>(null);
+
+  const recargar = useCallback(async () => {
+    try {
+      const [a, s, x] = await Promise.all([animales(token), solicitudesRefugio(token),
+                                           seguimientosRefugio(token)]);
+      setPresentes(a.filter((f) => !f.egresado_en));
+      setSolicitudes(s);
+      setSeguimientos(x);
+    } catch (e) {
+      setMensaje(textoError(e));
+    }
+  }, [token]);
+
+  useEffect(() => { void recargar(); }, [recargar]);
+
+  async function hacer(accion: () => Promise<unknown>, exito: string) {
+    try {
+      await accion();
+      setMensaje(exito);
+      await recargar();
+    } catch (e) {
+      setMensaje(textoError(e)); // p. ej. la restricción dura de RN-05, dicha por el servidor
+    }
+  }
+
+  const pendientes = solicitudes.filter((s) => s.estado === "pendiente");
+  return (
+    <section className="pagina">
+      {mensaje && <p className="resultado" role="status">{mensaje}</p>}
+      <Publicar presentes={presentes} alPublicar={(id, p) =>
+        hacer(() => publicar(token, id, p), "Animal publicado en el catálogo.")} />
+      <div className="tarjeta">
+        <h2>Solicitudes pendientes ({pendientes.length})</h2>
+        <ul className="lista-simple">
+          {pendientes.map((s) => (
+            <Solicitud key={s.id} s={s} hacer={hacer} token={token} />))}
+        </ul>
+      </div>
+      <div className="tarjeta">
+        <h2>Jornada de adopción</h2>
+        <p className="nota">Propone quién con qué animal para que la compatibilidad total sea la
+          más alta (RF-28). Es una sugerencia: cada solicitud se aprueba aparte.</p>
+        <button onClick={() => void hacer(async () => setJornada(await propuestaJornada(token)),
+          "Propuesta calculada.")}>Calcular propuesta</button>
+        {jornada && (jornada.length === 0 ? <p className="vacio">Sin parejas posibles.</p> : (
+          <ul className="lista-simple">{jornada.map((p) => (
+            <li key={p.adoptante}>{p.adoptante} → <b>{p.animal}</b> · {p.puntaje}/100
+              {!p.solicito_este_animal && " · no lo pidió: conversarlo"}</li>))}</ul>))}
+      </div>
+      <div className="tarjeta">
+        <h2>Seguimientos (30, 90 y 180 días)</h2>
+        <ul className="lista-simple">
+          {seguimientos.map((x) => (
+            <li key={x.id}>{x.animal} · día {x.dia} · {x.programado_para.slice(0, 10)}
+              {x.vencido && <b className="error"> · vencido</b>}
+              {x.realizado_en ? <p>Hecho: {x.nota}</p> : (
+                <NotaSeguimiento alGuardar={(nota) => hacer(
+                  () => registrarSeguimiento(token, x.id, nota), "Seguimiento registrado.")} />)}
+            </li>))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+type Hacer = (accion: () => Promise<unknown>, exito: string) => Promise<void>;
+
+function Solicitud({ s, token, hacer }: { s: SolicitudRefugio; token: string; hacer: Hacer }) {
+  const [razon, setRazon] = useState("");
+  return (
+    <li>
+      <b>{s.animal}</b> · {s.adoptante}<br /><small>{resumenPerfil(s.perfil)}</small>
+      {s.compatibilidad && (
+        <p className="nota">Compatibilidad {s.compatibilidad.puntaje}/100
+          {[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].length > 0 &&
+            `: ${[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].join("; ")}`}
+        </p>)}
+      {s.mensaje && <p>«{s.mensaje}»</p>}
+      <div className="acciones">
+        <button className="principal" onClick={() => void hacer(() => decidir(token, s.id, true),
+          `Adopción de ${s.animal} aprobada: egresó del refugio y se programaron los seguimientos.`)}>
+          Aprobar</button>
+        <input aria-label="Razón del rechazo" placeholder="Razón del rechazo" value={razon}
+          onChange={(e) => setRazon(e.target.value)} />
+        <button disabled={faltaJustificacion("critica", "alta", razon)}
+          onClick={() => void hacer(() => decidir(token, s.id, false, razon.trim()),
+            "Solicitud rechazada.")}>Rechazar</button>
+      </div>
+    </li>
+  );
+}
+
+function NotaSeguimiento({ alGuardar }: { alGuardar: (nota: string) => void }) {
+  const [nota, setNota] = useState("");
+  return (
+    <form className="acciones" onSubmit={(e) => { e.preventDefault(); alGuardar(nota.trim()); }}>
+      <input aria-label="Nota del seguimiento" placeholder="¿Cómo está el animal?" value={nota}
+        onChange={(e) => setNota(e.target.value)} />
+      <button>Registrar</button>
+    </form>
+  );
+}
+
+function Publicar({ presentes, alPublicar }: {
+  presentes: FichaAnimal[]; alPublicar: (id: number, p: NuevaPublicacion) => void;
+}) {
+  const [id, setId] = useState<number | "">("");
+  const [p, setP] = useState(VACIA);
+  const marca = (campo: "apto_ninos" | "apto_otros_animales" | "necesita_patio", texto: string) => (
+    <label className="en-linea"><input type="checkbox" checked={p[campo]}
+      onChange={(e) => setP({ ...p, [campo]: e.target.checked })} /> {texto}</label>);
+  return (
+    <form className="tarjeta" onSubmit={(e) => {
+      e.preventDefault();
+      if (id !== "") alPublicar(id, { ...p, descripcion: p.descripcion.trim() });
+    }}>
+      <h2>Publicar para adopción</h2>
+      <label>Animal<select required value={id} onChange={(e) => setId(Number(e.target.value))}>
+        <option value="">Elige un animal</option>
+        {presentes.map((a) => <option key={a.id} value={a.id}>{a.nombre} ({a.especie})</option>)}
+      </select></label>
+      <label>Descripción (20 caracteres o más)<textarea rows={2} required minLength={20}
+        value={p.descripcion} onChange={(e) => setP({ ...p, descripcion: e.target.value })} />
+      </label>
+      <label>Tamaño<select value={p.tamano}
+        onChange={(e) => setP({ ...p, tamano: e.target.value as NuevaPublicacion["tamano"] })}>
+        <option value="pequeno">Pequeño</option><option value="mediano">Mediano</option>
+        <option value="grande">Grande</option></select></label>
+      <label>Energía<select value={p.energia}
+        onChange={(e) => setP({ ...p, energia: e.target.value as NuevaPublicacion["energia"] })}>
+        <option value="baja">Baja</option><option value="media">Media</option>
+        <option value="alta">Alta</option></select></label>
+      <label>Edad (meses)<input type="number" min={0} max={360} value={p.edad_meses}
+        onChange={(e) => setP({ ...p, edad_meses: Number(e.target.value) })} /></label>
+      {marca("apto_ninos", "Convive con niños")}
+      {marca("apto_otros_animales", "Convive con otros animales")}
+      {marca("necesita_patio", "Necesita patio")}
+      <p><button className="principal">Publicar</button></p>
+    </form>
+  );
+}
