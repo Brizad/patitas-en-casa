@@ -242,6 +242,9 @@ bitacora = Table(
     Column("accion", Text, nullable=False),
     Column("objeto", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
     Column("estado_http", SmallInteger, nullable=False),
+    # RNF-12 (#149): estados o cifras de antes y después; nunca datos personales.
+    Column("valor_anterior", JSONB),
+    Column("valor_nuevo", JSONB),
 )
 
 # RF-25 (#115): una foto por animal, en la base (el disco de Render gratis no persiste).

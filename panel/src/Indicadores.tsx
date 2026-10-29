@@ -17,7 +17,19 @@ interface Datos {
     tasa_recomendacion_por_segmento: Record<string, { perfiles: number;
       tasa_recomendacion: number }> };
 }
-interface Evento { momento: string; actor: string; accion: string; objeto: Conteo }
+interface Evento {
+  momento: string; actor: string; accion: string; objeto: Conteo;
+  valor_anterior: Record<string, unknown> | null; valor_nuevo: Record<string, unknown> | null;
+}
+
+/** RNF-12: «prioridad: media → alta». */
+function cambio(e: Evento): string {
+  if (!e.valor_nuevo) return "";
+  return Object.entries(e.valor_nuevo).map(([k, v]) => {
+    const antes = e.valor_anterior?.[k];
+    return `${k}: ${antes === undefined ? "" : `${String(antes)} → `}${String(v)}`;
+  }).join("; ");
+}
 
 /** Barras en CSS: sin librerías de gráficos (CSP 'self' y paquete pequeño, RNF-07). */
 function Barras({ titulo, datos }: { titulo: string; datos: Conteo }) {
@@ -101,10 +113,11 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
         <div className="tarjeta">
           <h2>Bitácora (últimos 50 cambios)</h2>
           <p className="nota">Inmutable: no se puede editar ni borrar (RF-32).</p>
-          <table className="tabla"><thead><tr><th>Cuándo</th><th>Quién</th><th>Qué</th></tr>
+          <table className="tabla"><thead><tr><th>Cuándo</th><th>Quién</th><th>Qué</th><th>Antes → después</th></tr>
           </thead><tbody>{eventos.map((e, i) => (
             <tr key={i}><td>{new Date(e.momento).toLocaleString()}</td><td>{e.actor}</td>
-              <td><code>{e.accion}</code> {Object.values(e.objeto).join(", ")}</td></tr>))}
+              <td><code>{e.accion}</code> {Object.values(e.objeto).join(", ")}</td>
+              <td>{cambio(e)}</td></tr>))}
           </tbody></table>
         </div>)}
     </section>

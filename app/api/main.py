@@ -425,6 +425,13 @@ def emisor_desde_entorno() -> EmisorTokens:
 
 # C901: mccabe suma aquí las ~70 funciones de endpoint anidadas; cada una por separado es
 # sencilla. crear_app es la «raíz de composición» que conecta adaptadores y rutas.
+def _cambio(peticion: Request, anterior: dict | None, nuevo: dict | None) -> None:
+    """RNF-12 (#149): el endpoint deja aquí cómo estaba y cómo quedó; el middleware de la
+    bitácora lo guarda junto con el actor y la ruta. Solo estados y cifras, nunca datos
+    personales ni el cuerpo de la petición."""
+    peticion.state.cambio = (anterior, nuevo)
+
+
 def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
@@ -651,16 +658,18 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         return _cuenta(nueva)
 
     @app.put("/admin/usuarios/{correo}/activo")
-    def suspender_o_reactivar(correo: str, datos: ActivoEntrada,
+    def suspender_o_reactivar(correo: str, datos: ActivoEntrada, peticion: Request,
                               admin: Usuario = administracion):
         """RF-16: una cuenta suspendida pierde el acceso en la siguiente petición, porque
         la dependencia de sesión relee la cuenta (no basta con tener un token vigente)."""
+        antes = repositorio_usuarios.buscar_por_correo(normalizar_correo(correo))
         try:
             usuarios.cambiar_activo(admin, correo, datos.activo)
         except AutoSuspension as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         except CuentaNoEncontrada as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
+        _cambio(peticion, {"activo": antes.activo}, {"activo": datos.activo})
         return {"correo": normalizar_correo(correo), "activo": datos.activo}
 
     @app.get("/admin/usuarios/{correo}/accesos")
@@ -682,13 +691,15 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                                                    datos.direccion.strip()))
 
     @app.put("/admin/usuarios/{correo}/refugio")
-    def vincular_a_refugio(correo: str, datos: VinculoEntrada,
+    def vincular_a_refugio(correo: str, datos: VinculoEntrada, peticion: Request,
                            _admin: Usuario = administracion):
         correo = normalizar_correo(correo)
+        antes = repositorio_usuarios.buscar_por_correo(correo)
         if datos.refugio_id is not None and not repositorio_refugios.existe(datos.refugio_id):
             raise HTTPException(status_code=404, detail="Ese refugio no existe.")
         if not repositorio_usuarios.vincular_refugio(correo, datos.refugio_id):
             raise HTTPException(status_code=404, detail="No existe una cuenta con ese correo.")
+        _cambio(peticion, {"refugio_id": antes.refugio_id}, {"refugio_id": datos.refugio_id})
         return {"correo": correo, "refugio_id": datos.refugio_id}
 
     # --- Fase 3 (#85): adoptante (RF-08) ---------------------------------------------
@@ -732,7 +743,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 "actualizado_en": fecha_utc(perfil.actualizado_en)}
 
     @app.put("/adoptantes/yo/perfil")
-    def guardar_mi_perfil(datos: PerfilEntrada, adoptante: Usuario = adoptante_actual):
+    def guardar_mi_perfil(datos: PerfilEntrada, peticion: Request,
+                          adoptante: Usuario = adoptante_actual):
+        antes = repositorio_adopciones.perfil(adoptante.correo)
+        nuevos = datos.model_dump()
+        cambiados = sorted(k for k, v in nuevos.items()
+                           if antes is None or getattr(antes, k) != v)
+        _cambio(peticion, None if antes is None else {"campos": cambiados},
+                {"campos": cambiados})
         repositorio_adopciones.guardar_perfil(
             PerfilAdoptante(correo=adoptante.correo, **datos.model_dump()))
         return {"correo": adoptante.correo, "guardado": True}
@@ -860,7 +878,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 for i, j in asignar([[c.puntaje for c in fila] for fila in tabla])]
 
     @app.post("/refugio/solicitudes/{solicitud_id}/decision")
-    def decidir_solicitud(solicitud_id: int, datos: DecisionEntrada,
+    def decidir_solicitud(solicitud_id: int, datos: DecisionEntrada, peticion: Request,
                           coordinador: Usuario = coordinacion):
         """RF-27: aprobar (RN-05, RN-11; egreso por adopción y seguimientos RF-10) o
         rechazar con razón. Solo solicitudes de animales de su refugio."""
@@ -869,6 +887,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             raise HTTPException(status_code=404, detail="No hay esa solicitud en tu refugio.")
         try:
             s = adopciones.decidir(coordinador, solicitud_id, datos.aprobar, datos.razon)
+            _cambio(peticion, {"estado": solicitud.estado.value}, {"estado": s.estado.value})
         except SolicitudNoEncontrada as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
         except (SolicitudYaDecidida, RestriccionDura) as error:
@@ -1034,7 +1053,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         ]
 
     @app.post("/reportes/{codigo}/confirmacion")
-    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada,
+    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada, peticion: Request,
                             veterinario: Usuario = veterinaria):
         """HU-02: el veterinario confirma la prioridad sugerida o la ajusta con justificación.
 
@@ -1051,6 +1070,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         except AjusteSinJustificacion as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         decision = resultado.decision
+        _cambio(peticion, {"prioridad": decision.prioridad_sugerida.value},
+                {"prioridad": decision.prioridad_final.value,
+                 "estado": EstadoReporte.CONFIRMADO.value})
         if decision.prioridad_final not in PRIORIDADES_DE_RESCATE:
             estado_aviso = "no_aplica"  # media y baja las programa el refugio
         else:
@@ -1060,9 +1082,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 "avisos": {"programados": resultado.avisos, "estado": estado_aviso}}
 
     @app.post("/reportes/{codigo}/descarte")
-    def descartar_reporte(codigo: str, datos: DescarteEntrada,
+    def descartar_reporte(codigo: str, datos: DescarteEntrada, peticion: Request,
                           veterinario: Usuario = veterinaria):
         """D-02: falso o duplicado. Como confirmar, sale de la cola y es una sola vez (409)."""
+        antes = repositorio.buscar(codigo.upper())
         original = datos.duplicado_de.upper() if datos.duplicado_de else None
         try:
             descartes.descartar(codigo.upper(), veterinario, datos.motivo, datos.justificacion,
@@ -1073,6 +1096,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             raise HTTPException(status_code=409, detail=str(error)) from error
         except DescarteInvalido as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+        _cambio(peticion, {"estado": antes.estado.value},
+                {"estado": EstadoReporte.DESCARTADO.value, "motivo": datos.motivo.value})
         return {"codigo": codigo.upper(), "estado": EstadoReporte.DESCARTADO.value}
 
     @app.get("/reportes/{codigo}/avisos", dependencies=[personal])
@@ -1197,10 +1222,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                     actor = emisor_tokens.validar(token).correo
             try:
                 # En un hilo: el INSERT no debe frenar las demás peticiones (async).
+                anterior, nuevo = getattr(peticion.state, "cambio", (None, None))
                 await run_in_threadpool(repositorio_bitacora.registrar, Evento(
                     actor, f"{peticion.method} {ruta.path}",
                     {k: str(v) for k, v in peticion.path_params.items()},
-                    respuesta.status_code))
+                    respuesta.status_code, anterior=anterior, nuevo=nuevo))
             except Exception:
                 # La acción ya ocurrió; no se le dice al usuario que falló. Queda en el log.
                 logger.exception("No se pudo registrar en la bitácora: %s", ruta.path)
@@ -1253,7 +1279,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     @app.get("/bitacora")
     def ver_bitacora(limite: int = 100, _admin: Usuario = administracion):
         return [{"momento": fecha_utc(e.momento), "actor": e.actor, "accion": e.accion,
-                 "objeto": e.objeto, "estado_http": e.estado_http}
+                 "objeto": e.objeto, "estado_http": e.estado_http,
+                 "valor_anterior": e.anterior, "valor_nuevo": e.nuevo}
                 for e in repositorio_bitacora.recientes(min(max(limite, 1), 500))]
 
     @app.get("/", include_in_schema=False)
@@ -1267,14 +1294,17 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")
 
     @app.post("/refugio/ingresos", status_code=201)
-    def registrar_ingreso(datos: IngresoEntrada, coordinador: Usuario = coordinacion):
+    def registrar_ingreso(datos: IngresoEntrada, peticion: Request,
+                          coordinador: Usuario = coordinacion):
         cupos = cupos_de(coordinador)
+        antes = cupos.texto_ocupacion()
         try:
             cupos.registrar_ingreso(Animal(**datos.model_dump()))
         except CupoAgotado as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+        _cambio(peticion, {"ocupacion": antes}, {"ocupacion": cupos.texto_ocupacion()})
         return {"ocupacion": cupos.texto_ocupacion()}
 
     # --- Fase 2 (#75): ficha clínica e historial (RF-06, RF-24) -----------------------
@@ -1307,7 +1337,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 "registrada_en": fecha_utc(nota.registrada_en)}
 
     @app.post("/refugio/animales/{animal_id}/egreso")
-    def registrar_egreso(animal_id: int, datos: EgresoEntrada,
+    def registrar_egreso(animal_id: int, datos: EgresoEntrada, peticion: Request,
                          coordinador: Usuario = coordinacion):
         """RF-26: como el ingreso, es del coordinador. 404 si no está en su refugio y 409 si
         ya egresó (el cupo no se libera dos veces)."""
@@ -1315,9 +1345,13 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         animal = repo.animal(animal_id)
         if animal is None:
             raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
+        antes = cupos_de(coordinador).texto_ocupacion()
         refugio = repo.egresar(animal_id, datos.motivo)
         if refugio is None:
             raise HTTPException(status_code=409, detail=f"{animal.nombre} ya egresó.")
+        _cambio(peticion, {"ocupacion": antes, "en_refugio": True},
+                {"ocupacion": refugio.texto_ocupacion(), "en_refugio": False,
+                 "motivo": datos.motivo.value})
         return {"ocupacion": refugio.texto_ocupacion()}
 
     @app.get("/refugio/ocupacion")

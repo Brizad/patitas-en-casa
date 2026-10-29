@@ -5,6 +5,10 @@ qué (método y ruta, p. ej. «POST /refugio/animales/{animal_id}/egreso»), sob
 parámetros de la ruta) y cuándo. NUNCA se guarda el cuerpo de la petición: ahí van
 contraseñas, descripciones y datos personales (Ley 1581).
 
+RNF-12 (#149): en los cambios importantes (prioridad, descarte, cuentas, solicitudes,
+cupos) también el valor anterior y el nuevo. Solo estados y cifras, nunca datos personales:
+del perfil del adoptante se guarda qué campos cambiaron, no sus valores.
+
 Inmutable: el repositorio solo tiene «registrar» y «recientes»; no hay editar ni borrar. En
 PostgreSQL, además, un disparador rechaza UPDATE y DELETE (migración 0020), así que ni
 siquiera un error en el código puede alterar la historia.
@@ -23,6 +27,8 @@ class Evento:
     objeto: dict[str, str]  # parámetros de la ruta (códigos, ids); nunca el cuerpo
     estado_http: int
     momento: datetime = field(default_factory=lambda: datetime.now(UTC))
+    anterior: dict | None = None  # RNF-12: cómo estaba (None si no aplica)
+    nuevo: dict | None = None  # RNF-12: cómo quedó
 
 
 class RepositorioBitacora(Protocol):
