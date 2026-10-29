@@ -95,6 +95,17 @@ class RepositorioPostgres:
             insertar_avisos(conexion, decision.codigo, avisos, decision.decidido_en)
         return True
 
+    def actualizar_triaje(self, reporte: Reporte) -> bool:
+        """#125: mismo UPDATE condicional que confirmar; si el veterinario ya decidió, el
+        resultado del video no deshace su decisión."""
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(
+                update(reportes).where(reportes.c.codigo == reporte.codigo, PENDIENTE)
+                .values(estado=reporte.estado.value, confianza=reporte.confianza,
+                        prioridad=reporte.prioridad.value if reporte.prioridad else None,
+                        evidencias=list(reporte.evidencias)))
+        return cambio.rowcount == 1
+
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
         with self._motor.connect() as conexion:
             filas = conexion.execute(

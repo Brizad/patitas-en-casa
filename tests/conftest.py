@@ -42,10 +42,10 @@ def motor_pruebas():
 
 REFUGIO_DEMO = ("Refugio demo Cúcuta", 40)
 # Todas las tablas con datos; una tabla nueva se agrega aquí.
-TABLAS = ("fotos_animales", "bitacora", "seguimientos", "solicitudes", "publicaciones",
-          "perfiles_adoptante", "historial_clinico", "descartes", "avisos", "escalamientos",
-          "rescates", "rescatistas", "decisiones_triaje", "reportes", "animales", "refugios",
-          "usuarios", "intentos_fallidos")
+TABLAS = ("analisis_video", "fotos_animales", "bitacora", "seguimientos", "solicitudes",
+          "publicaciones", "perfiles_adoptante", "historial_clinico", "descartes", "avisos",
+          "escalamientos", "rescates", "rescatistas", "decisiones_triaje", "reportes", "animales",
+          "refugios", "usuarios", "intentos_fallidos")
 
 
 @pytest.fixture

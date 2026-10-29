@@ -37,6 +37,11 @@ class RepositorioReportes(Protocol):
 
     def buscar_por_clave(self, clave: str) -> Reporte | None: ...
 
+    def actualizar_triaje(self, reporte: Reporte) -> bool:
+        """#125: guarda prioridad, confianza, evidencias y estado SOLO si el reporte sigue sin
+        decidir; si el veterinario lo confirmó o descartó entretanto, no cambia nada (False)."""
+        ...
+
 
 class RepositorioEnMemoria:
     def __init__(self) -> None:
@@ -93,3 +98,12 @@ class RepositorioEnMemoria:
     def buscar_por_clave(self, clave: str) -> Reporte | None:
         codigo = self._claves.get(clave)
         return None if codigo is None else self._datos.get(codigo)
+
+    def actualizar_triaje(self, reporte: Reporte) -> bool:
+        with self._candado:
+            actual = self._datos.get(reporte.codigo)
+            if actual is None or actual.estado in DECIDIDOS:
+                return False
+            actual.prioridad, actual.confianza = reporte.prioridad, reporte.confianza
+            actual.evidencias, actual.estado = list(reporte.evidencias), reporte.estado
+            return True

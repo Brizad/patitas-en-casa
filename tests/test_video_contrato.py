@@ -3,16 +3,25 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.dominio.modelos import Prioridad
+from app.dominio.modelos import EstadoReporte, Prioridad, Reporte, Ubicacion
+from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.video.modelos import EstadoVideo
 from app.video.repositorio import RepositorioVideosEnMemoria
+from app.video.repositorio_postgres import RepositorioVideosPostgres
 
 T0 = datetime(2026, 10, 29, 12, 0, tzinfo=UTC)
 
 
-@pytest.fixture
-def repo():
-    return RepositorioVideosEnMemoria()
+@pytest.fixture(params=["memoria", pytest.param("postgres", marks=pytest.mark.postgres)])
+def repo(request):
+    if request.param == "memoria":
+        return RepositorioVideosEnMemoria()
+    motor = request.getfixturevalue("bd_limpia")
+    reportes = RepositorioPostgres(motor)
+    for codigo in ("ABCD1234", "BBBB2222", "CCCC3333"):
+        reportes.guardar(Reporte(codigo, "Perro cojeando cerca del parque",
+                                 Ubicacion(direccion="Calle 10")))
+    return RepositorioVideosPostgres(motor)
 
 
 def test_un_video_por_reporte(repo):
@@ -58,3 +67,20 @@ def test_esperando_desde_antes_solo_cuenta_lo_que_no_termino(repo):
     repo.guardar(terminado)
     assert [t.id for t in repo.esperando_desde_antes(T0 + timedelta(hours=1))] == [viejo.id]
 
+
+@pytest.mark.postgres
+def test_actualizar_triaje_no_deshace_la_decision_del_veterinario(bd_limpia):
+    reportes = RepositorioPostgres(bd_limpia)
+    reporte = Reporte("ABCD1234", "Perro cojeando cerca del parque",
+                      Ubicacion(direccion="Calle 10"), estado=EstadoReporte.REQUIERE_REVISION,
+                      prioridad=Prioridad.MEDIA, confianza=0.5)
+    reportes.guardar(reporte)
+    reporte.prioridad, reporte.estado = Prioridad.ALTA, EstadoReporte.CLASIFICADO
+    reporte.evidencias = ["video: no apoya la pata"]
+    assert reportes.actualizar_triaje(reporte) is True
+    leido = reportes.buscar("ABCD1234")
+    assert (leido.prioridad, leido.evidencias) == (Prioridad.ALTA, ["video: no apoya la pata"])
+    reportes.guardar(Reporte("ABCD1234", reporte.descripcion, reporte.ubicacion,
+                             estado=EstadoReporte.CONFIRMADO, prioridad=Prioridad.MEDIA))
+    assert reportes.actualizar_triaje(reporte) is False
+    assert reportes.buscar("ABCD1234").prioridad == Prioridad.MEDIA

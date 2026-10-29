@@ -366,3 +366,33 @@ avisos = Table(
     UniqueConstraint("reporte_codigo", "destinatario", name="uq_avisos_reporte_destinatario"),
     Index("ix_avisos_estado_proximo_intento", "estado", "proximo_intento_en"),
 )
+
+# #125 (RF-03, RF-19): un trabajo de análisis por video de reporte. El video vive en el disco
+# temporal de Render solo hasta que el trabajador local lo analiza; aquí quedan las medidas.
+analisis_video = Table(
+    "analisis_video",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("codigo", String(8), ForeignKey("reportes.codigo"), nullable=False, unique=True),
+    Column("ruta", Text, nullable=False),
+    Column("bytes", BigInteger, nullable=False),
+    Column("estado", String(16), nullable=False),
+    Column("intentos", SmallInteger, nullable=False, server_default=text("0")),
+    Column("creado_en", DateTime(timezone=True), nullable=False),
+    Column("reclamado_en", DateTime(timezone=True)),
+    Column("terminado_en", DateTime(timezone=True)),
+    Column("prioridad", String(10)),
+    Column("confianza", Double),
+    Column("evidencias", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("medidas", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("version_modelo", String(40)),
+    Column("motivo", Text),
+    Column("discrepancia", Boolean, nullable=False, server_default=false()),
+    Column("tira", LargeBinary),
+    CheckConstraint("estado IN ('pendiente', 'enviado', 'terminado', 'no_concluyente', "
+                    "'fallido')", name="ck_analisis_video_estado"),
+    CheckConstraint("bytes <= 52428800", name="ck_analisis_video_tamano"),  # RN-01: 50 MB
+    CheckConstraint("tira IS NULL OR octet_length(tira) <= 204800",
+                    name="ck_analisis_video_tira"),
+    Index("ix_analisis_video_estado_creado", "estado", "creado_en"),
+)
