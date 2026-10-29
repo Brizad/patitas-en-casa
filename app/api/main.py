@@ -36,8 +36,12 @@ from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
 from app.adopciones.servicio import (
     AnimalNoDisponible,
     PerfilIncompleto,
+    RazonInvalida,
+    RestriccionDura,
     ServicioAdopciones,
+    SolicitudNoEncontrada,
     SolicitudRepetida,
+    SolicitudYaDecidida,
 )
 from app.ajustes import (
     cargar_ajustes,
@@ -287,6 +291,11 @@ class SolicitudEntrada(BaseModel):
     mensaje: str = Field(default="", max_length=1000)
 
 
+class DecisionEntrada(BaseModel):
+    aprobar: bool
+    razon: str | None = Field(default=None, max_length=1000)  # obligatoria al rechazar
+
+
 class NotaEntrada(BaseModel):
     tipo: TipoNota
     texto: str = Field(max_length=2000)
@@ -365,7 +374,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                 [Refugio(demo.nombre, demo.capacidad, demo.ocupados, id=1)])
     repositorio_adopciones = repositorio_adopciones or (
         RepositorioAdopcionesPostgres(motor) if motor is not None
-        else RepositorioAdopcionesEnMemoria())
+        else RepositorioAdopcionesEnMemoria(repositorio_cupos))
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
@@ -589,6 +598,26 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                     k: v for k, v in vars(perfil).items()
                     if k not in ("correo", "actualizado_en")}})
         return respuesta
+
+    @app.post("/refugio/solicitudes/{solicitud_id}/decision")
+    def decidir_solicitud(solicitud_id: int, datos: DecisionEntrada,
+                          coordinador: Usuario = coordinacion):
+        """RF-27: aprobar (RN-05, RN-11; egreso por adopción y seguimientos RF-10) o
+        rechazar con razón. Solo solicitudes de animales de su refugio."""
+        solicitud = repositorio_adopciones.solicitud(solicitud_id)
+        if solicitud is None or fichas_de(coordinador).animal(solicitud.animal_id) is None:
+            raise HTTPException(status_code=404, detail="No hay esa solicitud en tu refugio.")
+        try:
+            s = adopciones.decidir(coordinador, solicitud_id, datos.aprobar, datos.razon)
+        except SolicitudNoEncontrada as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (SolicitudYaDecidida, RestriccionDura) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except RazonInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"id": s.id, "estado": s.estado.value, "razon": s.razon,
+                "seguimientos": [{"dia": x.dia, "programado_para": fecha_utc(x.programado_para)}
+                                 for x in repositorio_adopciones.seguimientos(solicitud_id)]}
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,

@@ -1,12 +1,21 @@
-"""Casos de uso de la adopción (fase 3, #85): solicitar (RF-27, RN-10)."""
+"""Casos de uso de la adopción (fase 3, #85): solicitar y decidir (RF-27, RN-05, RN-10,
+RN-11) y programar los seguimientos (RF-10)."""
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
-from app.adopciones.modelos import EstadoPublicacion, EstadoSolicitud, Solicitud
+from app.adopciones.modelos import (
+    DIAS_SEGUIMIENTO,
+    EstadoPublicacion,
+    EstadoSolicitud,
+    Seguimiento,
+    Solicitud,
+)
+from app.adopciones.reglas import restricciones_duras
 from app.adopciones.repositorio import RepositorioAdopciones
 from app.dominio.modelos import Rol, Usuario
+from app.reportes.confirmacion import validar_justificacion
 
 
 class PerfilIncompleto(ValueError):
@@ -18,6 +27,22 @@ class AnimalNoDisponible(LookupError):
 
 
 class SolicitudRepetida(Exception):
+    pass
+
+
+class SolicitudNoEncontrada(LookupError):
+    pass
+
+
+class SolicitudYaDecidida(Exception):
+    pass
+
+
+class RestriccionDura(ValueError):
+    pass
+
+
+class RazonInvalida(ValueError):
     pass
 
 
@@ -44,3 +69,32 @@ class ServicioAdopciones:
         if not self._repositorio.crear_solicitud(solicitud):
             raise SolicitudRepetida("Ya tienes una solicitud pendiente por este animal.")
         return solicitud
+
+    def decidir(self, coordinador: Usuario, solicitud_id: int, aprobar: bool,
+                razon: str | None = None) -> Solicitud:
+        """RF-27. Rechazar exige una razón (como RN-16, sin relleno: D-07). Aprobar no se
+        permite si hay una restricción dura (RN-05) y programa los seguimientos (RF-10)."""
+        if coordinador.rol != Rol.COORDINADOR:
+            raise PermissionError("Solo el coordinador decide las adopciones.")
+        solicitud = self._repositorio.solicitud(solicitud_id)
+        if solicitud is None:
+            raise SolicitudNoEncontrada(f"No existe la solicitud {solicitud_id}.")
+        if solicitud.estado != EstadoSolicitud.PENDIENTE:
+            raise SolicitudYaDecidida("Esta solicitud ya fue decidida.")
+        ahora = self._reloj()
+        if not aprobar:
+            razon = (razon or "").strip()
+            validar_justificacion(razon, RazonInvalida)
+            if not self._repositorio.rechazar(solicitud_id, coordinador.correo, razon, ahora):
+                raise SolicitudYaDecidida("Esta solicitud ya fue decidida.")
+            return self._repositorio.solicitud(solicitud_id)
+        perfil = self._repositorio.perfil(solicitud.adoptante)
+        publicacion = self._repositorio.publicacion(solicitud.animal_id)
+        motivos = restricciones_duras(perfil, publicacion)
+        if motivos:
+            raise RestriccionDura("No se puede aprobar (RN-05): " + "; ".join(motivos) + ".")
+        plan = [Seguimiento(None, solicitud_id, dia, ahora + timedelta(days=dia))
+                for dia in DIAS_SEGUIMIENTO]
+        if not self._repositorio.aprobar(solicitud_id, coordinador.correo, ahora, plan):
+            raise SolicitudYaDecidida("Este animal ya tiene una adopción aprobada (RN-11).")
+        return self._repositorio.solicitud(solicitud_id)

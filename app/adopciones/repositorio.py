@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import datetime
 from typing import Protocol
 
 from app.adopciones.modelos import (
@@ -9,8 +10,11 @@ from app.adopciones.modelos import (
     EstadoSolicitud,
     PerfilAdoptante,
     Publicacion,
+    Seguimiento,
     Solicitud,
 )
+from app.cupos.repositorio import RepositorioCupos
+from app.dominio.modelos import MotivoEgreso
 
 
 class RepositorioAdopciones(Protocol):
@@ -38,9 +42,27 @@ class RepositorioAdopciones(Protocol):
         """Todas, la más antigua primero."""
         ...
 
+    def solicitud(self, solicitud_id: int) -> Solicitud | None: ...
+
+    def rechazar(self, solicitud_id: int, por: str, razon: str, momento: datetime) -> bool:
+        """False si ya no estaba pendiente."""
+        ...
+
+    def aprobar(self, solicitud_id: int, por: str, momento: datetime,
+                seguimientos: list[Seguimiento]) -> bool:
+        """Todo o nada: aprueba, rechaza las otras pendientes del animal, marca la
+        publicación adoptada, da el egreso por adopción (libera el cupo, RF-26) y programa
+        los seguimientos (RF-10). False si ya no estaba pendiente o el animal ya tenía una
+        adopción aprobada (RN-11)."""
+        ...
+
+    def seguimientos(self, solicitud_id: int) -> list[Seguimiento]: ...
+
 
 class RepositorioAdopcionesEnMemoria:
-    def __init__(self) -> None:
+    def __init__(self, cupos: RepositorioCupos | None = None) -> None:
+        self._cupos = cupos  # para el egreso al aprobar
+        self._seguimientos: list[Seguimiento] = []
         self._perfiles: dict[str, PerfilAdoptante] = {}
         self._publicaciones: dict[int, Publicacion] = {}
         self._solicitudes: list[Solicitud] = []
@@ -77,3 +99,40 @@ class RepositorioAdopcionesEnMemoria:
 
     def solicitudes(self) -> list[Solicitud]:
         return [replace(s) for s in self._solicitudes]
+
+    def solicitud(self, solicitud_id: int) -> Solicitud | None:
+        return next((replace(s) for s in self._solicitudes if s.id == solicitud_id), None)
+
+    def _decidir(self, s: Solicitud, estado: EstadoSolicitud, por: str, momento: datetime,
+                 razon: str | None) -> None:
+        s.estado, s.decidida_por, s.decidida_en, s.razon = estado, por, momento, razon
+
+    def rechazar(self, solicitud_id: int, por: str, razon: str, momento: datetime) -> bool:
+        s = next((s for s in self._solicitudes if s.id == solicitud_id), None)
+        if s is None or s.estado != EstadoSolicitud.PENDIENTE:
+            return False
+        self._decidir(s, EstadoSolicitud.RECHAZADA, por, momento, razon)
+        return True
+
+    def aprobar(self, solicitud_id: int, por: str, momento: datetime,
+                seguimientos: list[Seguimiento]) -> bool:
+        s = next((s for s in self._solicitudes if s.id == solicitud_id), None)
+        if s is None or s.estado != EstadoSolicitud.PENDIENTE or any(
+                o.animal_id == s.animal_id and o.estado == EstadoSolicitud.APROBADA
+                for o in self._solicitudes):
+            return False
+        self._decidir(s, EstadoSolicitud.APROBADA, por, momento, None)
+        for otra in self._solicitudes:
+            if otra.animal_id == s.animal_id and otra.estado == EstadoSolicitud.PENDIENTE:
+                self._decidir(otra, EstadoSolicitud.RECHAZADA, por, momento,
+                              "Se aprobó otra solicitud para este animal.")
+        self._publicaciones[s.animal_id].estado = EstadoPublicacion.ADOPTADO
+        if self._cupos is not None:
+            self._cupos.egresar(s.animal_id, MotivoEgreso.ADOPCION)
+        for i, seguimiento in enumerate(seguimientos, start=len(self._seguimientos) + 1):
+            seguimiento.id = i
+            self._seguimientos.append(replace(seguimiento))
+        return True
+
+    def seguimientos(self, solicitud_id: int) -> list[Seguimiento]:
+        return [replace(x) for x in self._seguimientos if x.solicitud_id == solicitud_id]

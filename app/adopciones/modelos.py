@@ -89,3 +89,22 @@ class Solicitud:
     mensaje: str
     estado: EstadoSolicitud
     creada_en: datetime
+    decidida_por: str | None = None  # correo del coordinador
+    decidida_en: datetime | None = None
+    razon: str | None = None  # obligatoria al rechazar
+
+
+DIAS_SEGUIMIENTO = (30, 90, 180)  # RF-10
+
+
+@dataclass
+class Seguimiento:
+    """RF-10: visita o llamada después de la adopción."""
+
+    id: int | None
+    solicitud_id: int
+    dia: int  # 30, 90 o 180
+    programado_para: datetime
+    realizado_en: datetime | None = None
+    nota: str | None = None
+    registrado_por: str | None = None

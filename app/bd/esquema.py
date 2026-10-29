@@ -193,10 +193,31 @@ solicitudes = Table(
     Column("mensaje", Text, nullable=False, server_default=""),
     Column("estado", String(10), nullable=False),
     Column("creada_en", DateTime(timezone=True), nullable=False),
+    Column("decidida_por", Text),
+    Column("decidida_en", DateTime(timezone=True)),
+    Column("razon", Text),
     CheckConstraint(f"estado IN ({_valores(EstadoSolicitud)})", name="ck_solicitudes_estado"),
 )
 Index("uq_solicitudes_pendiente", solicitudes.c.animal_id, solicitudes.c.adoptante,
       unique=True, postgresql_where=text("estado = 'pendiente'"))
+# RN-11: una sola adopción aprobada por animal, también con dos coordinadores a la vez.
+Index("uq_solicitudes_aprobada", solicitudes.c.animal_id, unique=True,
+      postgresql_where=text("estado = 'aprobada'"))
+
+# RF-10 (#85): seguimientos a los 30, 90 y 180 días de la adopción.
+seguimientos = Table(
+    "seguimientos",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("solicitud_id", Integer, ForeignKey("solicitudes.id"), nullable=False),
+    Column("dia", SmallInteger, nullable=False),
+    Column("programado_para", DateTime(timezone=True), nullable=False),
+    Column("realizado_en", DateTime(timezone=True)),
+    Column("nota", Text),
+    Column("registrado_por", Text),
+    CheckConstraint("dia IN (30, 90, 180)", name="ck_seguimientos_dia"),
+    UniqueConstraint("solicitud_id", "dia", name="uq_seguimientos_dia"),
+)
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
 intentos_fallidos = Table(

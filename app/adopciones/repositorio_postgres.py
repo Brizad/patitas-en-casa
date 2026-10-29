@@ -1,7 +1,9 @@
 """Adopción en PostgreSQL (fase 3, #85)."""
 from __future__ import annotations
 
-from sqlalchemy import Engine, select
+from datetime import datetime
+
+from sqlalchemy import Engine, func, select, update
 from sqlalchemy import insert as insertar
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -12,11 +14,20 @@ from app.adopciones.modelos import (
     EstadoSolicitud,
     PerfilAdoptante,
     Publicacion,
+    Seguimiento,
     Solicitud,
     Tamano,
     Vivienda,
 )
-from app.bd.esquema import animales, perfiles_adoptante, publicaciones, solicitudes
+from app.bd.esquema import (
+    animales,
+    perfiles_adoptante,
+    publicaciones,
+    refugios,
+    seguimientos,
+    solicitudes,
+)
+from app.dominio.modelos import MotivoEgreso
 
 # La publicación con el nombre y la especie de la ficha del animal.
 _CONSULTA = select(publicaciones, animales.c.nombre, animales.c.especie).join(
@@ -96,9 +107,78 @@ class RepositorioAdopcionesPostgres:
     def solicitudes(self) -> list[Solicitud]:
         with self._motor.connect() as conexion:
             filas = conexion.execute(select(solicitudes).order_by(solicitudes.c.id)).mappings()
-            return [Solicitud(id=f["id"], animal_id=f["animal_id"], adoptante=f["adoptante"],
-                              mensaje=f["mensaje"], estado=EstadoSolicitud(f["estado"]),
-                              creada_en=f["creada_en"]) for f in filas]
+            return [_solicitud(f) for f in filas]
+
+    def solicitud(self, solicitud_id: int) -> Solicitud | None:
+        with self._motor.connect() as conexion:
+            f = conexion.execute(select(solicitudes).where(
+                solicitudes.c.id == solicitud_id)).mappings().first()
+        return None if f is None else _solicitud(f)
+
+    def rechazar(self, solicitud_id: int, por: str, razon: str, momento: datetime) -> bool:
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(update(solicitudes).where(
+                solicitudes.c.id == solicitud_id,
+                solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                estado=EstadoSolicitud.RECHAZADA.value, decidida_por=por, decidida_en=momento,
+                razon=razon))
+        return cambio.rowcount == 1
+
+    def aprobar(self, solicitud_id: int, por: str, momento: datetime,
+                seguimientos_nuevos: list[Seguimiento]) -> bool:
+        """Una transacción. RN-11 la garantiza el índice único parcial: si dos coordinadores
+        aprueban dos solicitudes del mismo animal a la vez, la segunda falla y no cambia nada."""
+        try:
+            with self._motor.begin() as conexion:
+                fila = conexion.execute(update(solicitudes).where(
+                    solicitudes.c.id == solicitud_id,
+                    solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                    estado=EstadoSolicitud.APROBADA.value, decidida_por=por,
+                    decidida_en=momento).returning(solicitudes.c.animal_id)).first()
+                if fila is None:
+                    return False
+                animal_id = fila.animal_id
+                conexion.execute(update(solicitudes).where(
+                    solicitudes.c.animal_id == animal_id,
+                    solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                    estado=EstadoSolicitud.RECHAZADA.value, decidida_por=por,
+                    decidida_en=momento, razon="Se aprobó otra solicitud para este animal."))
+                conexion.execute(update(publicaciones).where(
+                    publicaciones.c.animal_id == animal_id).values(
+                    estado=EstadoPublicacion.ADOPTADO.value))
+                # Egreso por adopción y cupo libre (RF-26), en la misma transacción.
+                refugio_id = conexion.execute(update(animales).where(
+                    animales.c.id == animal_id, animales.c.egresado_en.is_(None)).values(
+                    egresado_en=func.now(), motivo_egreso=MotivoEgreso.ADOPCION.value)
+                    .returning(animales.c.refugio_id)).scalar()
+                if refugio_id is not None:
+                    conexion.execute(update(refugios).where(refugios.c.id == refugio_id)
+                                     .values(ocupados=refugios.c.ocupados - 1))
+                for s in seguimientos_nuevos:
+                    s.id = conexion.execute(insertar(seguimientos).values(
+                        solicitud_id=solicitud_id, dia=s.dia,
+                        programado_para=s.programado_para).returning(seguimientos.c.id)
+                    ).scalar_one()
+        except IntegrityError:
+            return False
+        return True
+
+    def seguimientos(self, solicitud_id: int) -> list[Seguimiento]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(seguimientos).where(
+                seguimientos.c.solicitud_id == solicitud_id).order_by(seguimientos.c.dia)
+            ).mappings()
+            return [Seguimiento(id=f["id"], solicitud_id=f["solicitud_id"], dia=f["dia"],
+                                programado_para=f["programado_para"],
+                                realizado_en=f["realizado_en"], nota=f["nota"],
+                                registrado_por=f["registrado_por"]) for f in filas]
+
+
+def _solicitud(f) -> Solicitud:
+    return Solicitud(id=f["id"], animal_id=f["animal_id"], adoptante=f["adoptante"],
+                     mensaje=f["mensaje"], estado=EstadoSolicitud(f["estado"]),
+                     creada_en=f["creada_en"], decidida_por=f["decidida_por"],
+                     decidida_en=f["decidida_en"], razon=f["razon"])
 
 
 def _publicacion(f) -> Publicacion:
