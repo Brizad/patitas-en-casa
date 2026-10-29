@@ -29,7 +29,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
-from app.ajustes import cargar_ajustes, cargar_ajustes_correo, cargar_ajustes_seguridad
+from app.ajustes import (
+    cargar_ajustes,
+    cargar_ajustes_admin,
+    cargar_ajustes_correo,
+    cargar_ajustes_seguridad,
+)
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
 from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
@@ -72,6 +77,7 @@ from app.rescates.servicio import (
 )
 from app.seguridad.tokens import EmisorTokens
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
+from app.usuarios.admin_inicial import crear_admin_inicial
 from app.usuarios.intentos import (
     LimiteIntentos,
     RepositorioIntentosEnMemoria,
@@ -203,6 +209,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         repositorio = repositorio or RepositorioPostgres(motor)
         repositorio_cupos = repositorio_cupos or RepositorioCuposPostgres.primer_refugio(motor)
         repositorio_usuarios = repositorio_usuarios or RepositorioUsuariosPostgres(motor)
+        # #67: en Render no hay consola; la primera cuenta de administración sale del entorno.
+        crear_admin_inicial(repositorio_usuarios, cargar_ajustes_admin())
     # DT-06: con PostgreSQL el límite vale para todos los procesos y sobrevive a un reinicio.
     limite_intentos = limite_intentos or LimiteIntentos(
         RepositorioIntentosPostgres(motor) if motor is not None

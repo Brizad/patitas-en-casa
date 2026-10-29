@@ -30,3 +30,9 @@ services:
         generateValue: true          # Render genera una clave aleatoria; nadie la escribe a mano
       - key: PATITAS_SMTP_HOST       # vacío = los avisos quedan en el log y en la app
         sync: false
+      # Primera cuenta de administración (#67): Brayan las escribe en el panel de Render.
+      # La cuenta se crea en el primer arranque y no se reemplaza en los siguientes.
+      - key: PATITAS_ADMIN_CORREO
+        sync: false
+      - key: PATITAS_ADMIN_CONTRASENA
+        sync: false
