@@ -44,7 +44,8 @@ probar sin base de datos, usando el repositorio en memoria. La prueba
 10. `scripts/ia/` y `app/triaje/modelo.py`: la IA entrenada (fase 4).
 11. `tests/`: cada archivo de prueba es un ejemplo de uso. Lee `test_api.py`.
 12. Las guías por fase de esta carpeta, en orden: `fase-1-pantallas-por-rol.md`,
-    `fase-2-refugio-completo.md`, `fase-3-adopcion.md`, `fase-4-ia.md`, `fase-5-cierre.md`.
+    `fase-2-refugio-completo.md`, `fase-3-adopcion.md`, `fase-4-ia.md`, `fase-5-cierre.md`,
+    `fase-6-video.md`.
 
 ## Cómo probarlo en tu PC
 
