@@ -6,7 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Protocol
 
-from app.dominio.modelos import Animal, NotaClinica, Refugio
+from app.dominio.modelos import Animal, MotivoEgreso, NotaClinica, Refugio
 
 
 class RepositorioCupos(Protocol):
@@ -33,6 +33,11 @@ class RepositorioCupos(Protocol):
         ...
 
     def agregar_nota(self, nota: NotaClinica) -> None: ...
+
+    def egresar(self, animal_id: int, motivo: MotivoEgreso) -> Refugio | None:
+        """RF-26: marca el egreso y libera el cupo en una sola operación. None si el animal
+        no está en este refugio o ya egresó (nada cambia)."""
+        ...
 
     def historial(self, animal_id: int) -> list[NotaClinica]: ...
 
@@ -70,6 +75,15 @@ class RepositorioCuposEnMemoria:
 
     def agregar_nota(self, nota: NotaClinica) -> None:
         self._notas.append(nota)
+
+    def egresar(self, animal_id: int, motivo: MotivoEgreso) -> Refugio | None:
+        with self._candado:
+            animal = next((a for a in self._animales if a.id == animal_id), None)
+            if animal is None or animal.egresado_en is not None:
+                return None
+            animal.egresado_en, animal.motivo_egreso = datetime.now(UTC), motivo
+            self._refugio.ocupados -= 1
+            return replace(self._refugio)
 
     def historial(self, animal_id: int) -> list[NotaClinica]:
         return [n for n in self._notas if n.animal_id == animal_id]

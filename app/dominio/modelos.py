@@ -77,6 +77,17 @@ class Animal:
     esterilizado: bool = False
     id: int | None = None  # #75: lo asigna el repositorio al ingresar
     ingresado_en: datetime | None = None
+    egresado_en: datetime | None = None  # RF-26: None mientras sigue en el refugio
+    motivo_egreso: MotivoEgreso | None = None
+
+
+class MotivoEgreso(StrEnum):
+    """RF-26: por qué sale un animal del refugio."""
+
+    ADOPCION = "adopcion"
+    TRASLADO = "traslado"  # a otro refugio u hogar de paso
+    FALLECIMIENTO = "fallecimiento"
+    DEVUELTO = "devuelto"  # a su familia
 
 
 class TipoNota(StrEnum):

@@ -29,6 +29,7 @@ from app.dominio.modelos import (
     EstadoReporte,
     EstadoRescate,
     MotivoDescarte,
+    MotivoEgreso,
     Prioridad,
     ResultadoRescate,
     Rol,
@@ -95,7 +96,14 @@ animales = Table(
     Column("vacunado", Boolean, nullable=False, server_default=false()),
     Column("esterilizado", Boolean, nullable=False, server_default=false()),
     Column("ingresado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    # RF-26 (#75): fecha y motivo del egreso, juntos o ninguno.
+    Column("egresado_en", DateTime(timezone=True)),
+    Column("motivo_egreso", String(15)),
     CheckConstraint(f"especie IN ({_valores(Especie)})", name="ck_animales_especie"),
+    CheckConstraint(f"motivo_egreso IN ({_valores(MotivoEgreso)})",
+                    name="ck_animales_motivo_egreso"),
+    CheckConstraint("(egresado_en IS NULL) = (motivo_egreso IS NULL)",
+                    name="ck_animales_egreso_completo"),
 )
 
 # RF-24 (#75): historial clínico; las notas solo se insertan.

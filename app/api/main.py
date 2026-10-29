@@ -51,6 +51,7 @@ from app.dominio.modelos import (
     Especie,
     EstadoReporte,
     MotivoDescarte,
+    MotivoEgreso,
     Prioridad,
     Refugio,
     Reporte,
@@ -231,6 +232,10 @@ class IngresoEntrada(BaseModel):
     esterilizado: bool = False
 
 
+class EgresoEntrada(BaseModel):
+    motivo: MotivoEgreso
+
+
 class NotaEntrada(BaseModel):
     tipo: TipoNota
     texto: str = Field(max_length=2000)
@@ -239,7 +244,9 @@ class NotaEntrada(BaseModel):
 def _ficha(animal: Animal) -> dict:
     return {"id": animal.id, "nombre": animal.nombre, "especie": animal.especie.value,
             "estado_salud": animal.estado_salud, "vacunado": animal.vacunado,
-            "esterilizado": animal.esterilizado, "ingresado_en": fecha_utc(animal.ingresado_en)}
+            "esterilizado": animal.esterilizado, "ingresado_en": fecha_utc(animal.ingresado_en),
+            "egresado_en": fecha_utc(animal.egresado_en),
+            "motivo_egreso": animal.motivo_egreso.value if animal.motivo_egreso else None}
 
 
 def motor_desde_entorno() -> Engine:
@@ -671,6 +678,20 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"tipo": nota.tipo.value, "texto": nota.texto, "autor": nota.autor,
                 "registrada_en": fecha_utc(nota.registrada_en)}
+
+    @app.post("/refugio/animales/{animal_id}/egreso")
+    def registrar_egreso(animal_id: int, datos: EgresoEntrada,
+                         coordinador: Usuario = coordinacion):
+        """RF-26: como el ingreso, es del coordinador. 404 si no está en su refugio y 409 si
+        ya egresó (el cupo no se libera dos veces)."""
+        repo = fichas_de(coordinador)
+        animal = repo.animal(animal_id)
+        if animal is None:
+            raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
+        refugio = repo.egresar(animal_id, datos.motivo)
+        if refugio is None:
+            raise HTTPException(status_code=409, detail=f"{animal.nombre} ya egresó.")
+        return {"ocupacion": refugio.texto_ocupacion()}
 
     @app.get("/refugio/ocupacion")
     def ocupacion(usuario: Usuario = personal):

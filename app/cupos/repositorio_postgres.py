@@ -6,10 +6,17 @@ lleguen desde procesos distintos. El CHECK de la tabla es la última barrera.
 """
 from __future__ import annotations
 
-from sqlalchemy import Engine, insert, select, update
+from sqlalchemy import Engine, func, insert, select, update
 
 from app.bd.esquema import animales, historial_clinico, refugios
-from app.dominio.modelos import Animal, Especie, NotaClinica, Refugio, TipoNota
+from app.dominio.modelos import (
+    Animal,
+    Especie,
+    MotivoEgreso,
+    NotaClinica,
+    Refugio,
+    TipoNota,
+)
 
 
 class RepositorioCuposPostgres:
@@ -77,6 +84,23 @@ class RepositorioCuposPostgres:
                 animal_id=nota.animal_id, autor=nota.autor, tipo=nota.tipo.value,
                 texto=nota.texto, registrada_en=nota.registrada_en))
 
+    def egresar(self, animal_id: int, motivo: MotivoEgreso) -> Refugio | None:
+        """Dos UPDATE condicionales en una transacción: el animal solo se marca si sigue en
+        el refugio (dos egresos simultáneos no liberan dos cupos) y el cupo baja después."""
+        with self._motor.begin() as conexion:
+            marcado = conexion.execute(
+                update(animales)
+                .where(animales.c.id == animal_id, animales.c.refugio_id == self._refugio_id,
+                       animales.c.egresado_en.is_(None))
+                .values(egresado_en=func.now(), motivo_egreso=motivo.value))
+            if marcado.rowcount == 0:
+                return None
+            fila = conexion.execute(
+                update(refugios).where(refugios.c.id == self._refugio_id)
+                .values(ocupados=refugios.c.ocupados - 1)
+                .returning(refugios.c.nombre, refugios.c.capacidad, refugios.c.ocupados)).one()
+        return Refugio(fila.nombre, fila.capacidad, fila.ocupados)
+
     def historial(self, animal_id: int) -> list[NotaClinica]:
         with self._motor.connect() as conexion:
             filas = conexion.execute(select(historial_clinico).where(
@@ -91,4 +115,6 @@ def _animal(fila) -> Animal:
     return Animal(nombre=fila["nombre"], especie=Especie(fila["especie"]),
                   estado_salud=fila["estado_salud"], vacunado=fila["vacunado"],
                   esterilizado=fila["esterilizado"], id=fila["id"],
-                  ingresado_en=fila["ingresado_en"])
+                  ingresado_en=fila["ingresado_en"], egresado_en=fila["egresado_en"],
+                  motivo_egreso=MotivoEgreso(fila["motivo_egreso"])
+                  if fila["motivo_egreso"] else None)
