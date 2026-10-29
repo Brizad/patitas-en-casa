@@ -9,7 +9,7 @@ export interface NuevaPublicacion {
 }
 export interface SolicitudRefugio {
   id: number; animal_id: number; animal: string; adoptante: string; mensaje: string;
-  estado: string; creada_en: string; perfil: Perfil | null;
+  estado: string; creada_en: string; perfil: Perfil | null; razon?: string | null;
   compatibilidad: Compatibilidad | null;
 }
 export interface Pareja extends Compatibilidad {
@@ -34,6 +34,11 @@ export const decidir = (t: string, id: number, aprobar: boolean, razon?: string)
 /** RF-28: propuesta de la jornada (no aprueba nada; RN-16). */
 export const propuestaJornada = (t: string) =>
   pedir<Pareja[]>("/refugio/jornada/propuesta", {}, t);
+/** RF-27: visita previa (nota). RF-10/RN-13: devolución (motivo). */
+export const pedirVisita = (t: string, id: number, texto: string) =>
+  pedir(`/refugio/solicitudes/${id}/visita`, enviar({ texto }), t);
+export const registrarDevolucion = (t: string, id: number, texto: string) =>
+  pedir(`/refugio/solicitudes/${id}/devolucion`, enviar({ texto }), t);
 export const seguimientosRefugio = (t: string) =>
   pedir<SeguimientoRefugio[]>("/refugio/seguimientos", {}, t);
 export const registrarSeguimiento = (t: string, id: number, nota: string) =>

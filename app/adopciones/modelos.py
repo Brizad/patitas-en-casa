@@ -75,8 +75,14 @@ class Publicacion:
 
 class EstadoSolicitud(StrEnum):
     PENDIENTE = "pendiente"
+    VISITA = "visita"  # RF-27 (#113): el refugio pidió una visita previa antes de decidir
     APROBADA = "aprobada"
     RECHAZADA = "rechazada"
+    DEVUELTA = "devuelta"  # RF-10, RN-13 (#113): el animal volvió al refugio
+
+
+# Se pueden aprobar o rechazar (la visita previa todavía no es una decisión final).
+ABIERTAS = frozenset({EstadoSolicitud.PENDIENTE, EstadoSolicitud.VISITA})
 
 
 @dataclass

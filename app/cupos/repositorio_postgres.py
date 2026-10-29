@@ -84,6 +84,13 @@ class RepositorioCuposPostgres:
                 animal_id=nota.animal_id, autor=nota.autor, tipo=nota.tipo.value,
                 texto=nota.texto, registrada_en=nota.registrada_en))
 
+    def reingresar(self, animal_id: int) -> Refugio | None:
+        try:
+            with self._motor.begin() as conexion:  # SinCupo deshace la transacción
+                return reingresar_en(conexion, animal_id, self._refugio_id)
+        except SinCupo:
+            return None
+
     def egresar(self, animal_id: int, motivo: MotivoEgreso) -> Refugio | None:
         """Dos UPDATE condicionales en una transacción: el animal solo se marca si sigue en
         el refugio (dos egresos simultáneos no liberan dos cupos) y el cupo baja después."""
@@ -118,3 +125,27 @@ def _animal(fila) -> Animal:
                   ingresado_en=fila["ingresado_en"], egresado_en=fila["egresado_en"],
                   motivo_egreso=MotivoEgreso(fila["motivo_egreso"])
                   if fila["motivo_egreso"] else None)
+
+
+class SinCupo(Exception):
+    """Para deshacer la transacción: el animal devuelto no cabe (RN-04)."""
+
+
+def reingresar_en(conexion, animal_id: int, refugio_id: int | None = None) -> Refugio | None:
+    """Reingreso dentro de una transacción abierta (la usa también la devolución). Si no hay
+    cupo lanza SinCupo para que la transacción entera se deshaga."""
+    condicion = [animales.c.id == animal_id, animales.c.egresado_en.is_not(None)]
+    if refugio_id is not None:
+        condicion.append(animales.c.refugio_id == refugio_id)
+    refugio = conexion.execute(update(animales).where(*condicion).values(
+        egresado_en=None, motivo_egreso=None).returning(animales.c.refugio_id)).scalar()
+    if refugio is None:
+        return None
+    fila = conexion.execute(
+        update(refugios).where(refugios.c.id == refugio,
+                               refugios.c.ocupados < refugios.c.capacidad)
+        .values(ocupados=refugios.c.ocupados + 1)
+        .returning(refugios.c.nombre, refugios.c.capacidad, refugios.c.ocupados)).first()
+    if fila is None:
+        raise SinCupo
+    return Refugio(fila.nombre, fila.capacidad, fila.ocupados)

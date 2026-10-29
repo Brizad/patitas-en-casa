@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Protocol
 
 from app.adopciones.modelos import (
+    ABIERTAS,
     EstadoPublicacion,
     EstadoSolicitud,
     PerfilAdoptante,
@@ -57,6 +58,16 @@ class RepositorioAdopciones(Protocol):
         ...
 
     def seguimientos(self, solicitud_id: int) -> list[Seguimiento]: ...
+
+    def pedir_visita(self, solicitud_id: int, por: str, nota: str, momento: datetime) -> bool:
+        """RF-27: pendiente → visita. False si no estaba pendiente."""
+        ...
+
+    def devolver(self, solicitud_id: int, por: str, motivo: str,
+                 momento: datetime) -> bool | None:
+        """RF-10, RN-13: aprobada → devuelta, el animal reingresa (ocupa cupo) y vuelve a estar
+        disponible, todo junto. False si no estaba aprobada; None si no hay cupo (nada cambia)."""
+        ...
 
     def registrar_seguimiento(self, seguimiento_id: int, por: str, nota: str,
                               momento: datetime) -> Seguimiento | None:
@@ -115,7 +126,7 @@ class RepositorioAdopcionesEnMemoria:
 
     def rechazar(self, solicitud_id: int, por: str, razon: str, momento: datetime) -> bool:
         s = next((s for s in self._solicitudes if s.id == solicitud_id), None)
-        if s is None or s.estado != EstadoSolicitud.PENDIENTE:
+        if s is None or s.estado not in ABIERTAS:
             return False
         self._decidir(s, EstadoSolicitud.RECHAZADA, por, momento, razon)
         return True
@@ -123,13 +134,13 @@ class RepositorioAdopcionesEnMemoria:
     def aprobar(self, solicitud_id: int, por: str, momento: datetime,
                 seguimientos: list[Seguimiento]) -> bool:
         s = next((s for s in self._solicitudes if s.id == solicitud_id), None)
-        if s is None or s.estado != EstadoSolicitud.PENDIENTE or any(
+        if s is None or s.estado not in ABIERTAS or any(
                 o.animal_id == s.animal_id and o.estado == EstadoSolicitud.APROBADA
                 for o in self._solicitudes):
             return False
         self._decidir(s, EstadoSolicitud.APROBADA, por, momento, None)
         for otra in self._solicitudes:
-            if otra.animal_id == s.animal_id and otra.estado == EstadoSolicitud.PENDIENTE:
+            if otra.animal_id == s.animal_id and otra.estado in ABIERTAS:
                 self._decidir(otra, EstadoSolicitud.RECHAZADA, por, momento,
                               "Se aprobó otra solicitud para este animal.")
         self._publicaciones[s.animal_id].estado = EstadoPublicacion.ADOPTADO
@@ -150,3 +161,21 @@ class RepositorioAdopcionesEnMemoria:
             return None
         x.realizado_en, x.nota, x.registrado_por = momento, nota, por
         return replace(x)
+
+    def pedir_visita(self, solicitud_id: int, por: str, nota: str, momento: datetime) -> bool:
+        s = next((s for s in self._solicitudes if s.id == solicitud_id), None)
+        if s is None or s.estado != EstadoSolicitud.PENDIENTE:
+            return False
+        self._decidir(s, EstadoSolicitud.VISITA, por, momento, nota)
+        return True
+
+    def devolver(self, solicitud_id: int, por: str, motivo: str,
+                 momento: datetime) -> bool | None:
+        s = next((s for s in self._solicitudes if s.id == solicitud_id), None)
+        if s is None or s.estado != EstadoSolicitud.APROBADA:
+            return False
+        if self._cupos is not None and self._cupos.reingresar(s.animal_id) is None:
+            return None
+        self._decidir(s, EstadoSolicitud.DEVUELTA, por, momento, motivo)
+        self._publicaciones[s.animal_id].estado = EstadoPublicacion.DISPONIBLE
+        return True

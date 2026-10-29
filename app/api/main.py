@@ -53,6 +53,7 @@ from app.adopciones.servicio import (
     RestriccionDura,
     SeguimientoNoValido,
     ServicioAdopciones,
+    SinCupoParaDevolucion,
     SolicitudNoEncontrada,
     SolicitudRepetida,
     SolicitudYaDecidida,
@@ -334,6 +335,10 @@ def _publicacion(p: Publicacion) -> dict:
 class SolicitudEntrada(BaseModel):
     animal_id: int
     mensaje: str = Field(default="", max_length=1000)
+
+
+class NotaSolicitudEntrada(BaseModel):
+    texto: str = Field(max_length=1000)  # nota de la visita o motivo de la devolución
 
 
 class DecisionEntrada(BaseModel):
@@ -723,6 +728,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             respuesta.append({
                 "id": s.id, "animal_id": s.animal_id, "animal": animal.nombre,
                 "adoptante": s.adoptante, "mensaje": s.mensaje, "estado": s.estado.value,
+                "razon": s.razon,
                 "creada_en": fecha_utc(s.creada_en),
                 "perfil": None if perfil is None else {
                     k: v for k, v in vars(perfil).items()
@@ -773,6 +779,37 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         return {"id": s.id, "estado": s.estado.value, "razon": s.razon,
                 "seguimientos": [{"dia": x.dia, "programado_para": fecha_utc(x.programado_para)}
                                  for x in repositorio_adopciones.seguimientos(solicitud_id)]}
+
+    def _solicitud_del_refugio(solicitud_id: int, coordinador: Usuario) -> None:
+        s = repositorio_adopciones.solicitud(solicitud_id)
+        if s is None or fichas_de(coordinador).animal(s.animal_id) is None:
+            raise HTTPException(status_code=404, detail="No hay esa solicitud en tu refugio.")
+
+    @app.post("/refugio/solicitudes/{solicitud_id}/visita")
+    def pedir_visita(solicitud_id: int, datos: NotaSolicitudEntrada,
+                     coordinador: Usuario = coordinacion):
+        """RF-27: pedir una visita previa antes de aprobar o rechazar."""
+        _solicitud_del_refugio(solicitud_id, coordinador)
+        try:
+            s = adopciones.pedir_visita(coordinador, solicitud_id, datos.texto)
+        except SolicitudYaDecidida as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except RazonInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"id": s.id, "estado": s.estado.value, "nota": s.razon}
+
+    @app.post("/refugio/solicitudes/{solicitud_id}/devolucion")
+    def registrar_devolucion(solicitud_id: int, datos: NotaSolicitudEntrada,
+                             coordinador: Usuario = coordinacion):
+        """RF-10, RN-13: devolución con su motivo; el animal reingresa y vuelve al catálogo."""
+        _solicitud_del_refugio(solicitud_id, coordinador)
+        try:
+            s = adopciones.devolver(coordinador, solicitud_id, datos.texto)
+        except (SolicitudYaDecidida, SinCupoParaDevolucion) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except RazonInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"id": s.id, "estado": s.estado.value, "motivo": s.razon}
 
     @app.get("/refugio/seguimientos")
     def seguimientos_del_refugio(coordinador: Usuario = coordinacion):
