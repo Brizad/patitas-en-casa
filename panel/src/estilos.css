@@ -66,3 +66,5 @@ button.enlace { border: 0; background: none; padding: 2px 4px; color: var(--verd
   background: var(--verde); min-width: 2px; }
 .foto { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 3;
   object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
+/* #125: tira de 3 cuadros del video con los puntos del cuerpo. */
+.tira { display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; }

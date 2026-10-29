@@ -59,6 +59,15 @@
         </select>
         <span class="tag">Ayuda a avisar primero a los rescatistas de esa zona.</span>
       </div>
+      <!-- #125 (RF-03): el video ayuda a ver cómo camina el animal; es opcional. -->
+      <div class="card">
+        <label class="f" for="video">Video del animal (opcional)</label>
+        <input class="in" type="file" id="video" accept="video/mp4,video/quicktime,video/webm"
+               aria-describedby="info-video error-video">
+        <span class="tag" id="info-video">Máximo 60 segundos y 50 MB. Grábalo de lado, que se
+          vea el animal completo.</span>
+        <span class="err-campo" id="error-video" hidden></span>
+      </div>
       <div class="card">
         <label class="f" for="contacto">Tu correo o teléfono (opcional)</label>
         <input class="in" id="contacto" name="contacto" autocomplete="email" maxlength="120"

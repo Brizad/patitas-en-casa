@@ -179,7 +179,10 @@ for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
     mimetypes.add_type(_tipo, _extension)
 # Solo recursos del propio servidor: sin scripts en línea ni de terceros (XSS).
 POLITICA_PERMISOS = "geolocation=(self), camera=(), microphone=(), payment=()"
-POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
+POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
+                # #125: blob: son archivos locales del navegador (la tira del video en el panel
+                # y la duración del video elegido en la PWA); nunca de otro servidor.
+                "img-src 'self' blob:; media-src blob:; "
                 "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
                 "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 

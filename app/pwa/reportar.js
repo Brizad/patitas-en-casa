@@ -2,13 +2,17 @@
    Cada reporte recibe en el navegador una clave aleatoria (Idempotency-Key) y espera en
    localStorage hasta que la API responde. Si no hay señal se reintenta al volver la conexión
    (evento online), al abrir la app y cada 30 s; como la clave es la misma, la API devuelve el
-   mismo código y el reporte nunca se duplica. Al enviarse se borra del teléfono. */
+   mismo código y el reporte nunca se duplica. Al enviarse se borra del teléfono.
+   #125: el video opcional se sube DESPUÉS de crear el reporte, con la misma clave. Sin señal
+   no se guarda en el teléfono (pesa hasta 50 MB): solo viaja el texto. */
 (function () {
   'use strict';
 
   const PENDIENTES = 'patitas.pendientes';
   const MIN_CARACTERES = 20;  // RN-01
   const REINTENTO_MS = 30000;
+  const VIDEO_MAX_SEGUNDOS = 60;  // RN-01
+  const VIDEO_MAX_MB = 50;
   const $ = (id) => document.getElementById(id);
   const formulario = $('reporte');
   const descripcion = $('descripcion');
@@ -19,6 +23,7 @@
   let gps = null;  // { latitud, longitud } cuando el ciudadano comparte su ubicación
   let cadena = Promise.resolve();  // los envíos van de uno en uno
   let ultimoRechazo = '';
+  let video = null;  // { archivo, segundos, mb } cuando el ciudadano adjunta un video
 
   // 16 bytes del generador seguro del navegador = 32 caracteres hex (funciona sin HTTPS).
   function nuevaClave() {
@@ -171,11 +176,66 @@
     return !corta && !sinUbicacion && !sinPermiso;
   }
 
+  // --- Video opcional (#125) ---------------------------------------------------------
+
+  function duracion(archivo) {
+    return new Promise((resolver) => {
+      const url = URL.createObjectURL(archivo);
+      const elemento = document.createElement('video');
+      const fin = (valor) => { URL.revokeObjectURL(url); resolver(valor); };
+      elemento.preload = 'metadata';
+      elemento.addEventListener('loadedmetadata', () => fin(elemento.duration), { once: true });
+      elemento.addEventListener('error', () => fin(null), { once: true });
+      elemento.src = url;
+    });
+  }
+
+  async function elegirVideo() {
+    const campo = $('video');
+    const archivo = campo.files && campo.files[0];
+    video = null;
+    errorEn(campo, 'error-video', '');
+    $('info-video').textContent = 'Máximo 60 segundos y 50 MB. Grábalo de lado, que se vea el '
+      + 'animal completo.';
+    if (!archivo) return;
+    const mb = archivo.size / (1024 * 1024);
+    const segundos = await duracion(archivo);
+    let problema = '';
+    if (mb > VIDEO_MAX_MB) problema = 'El video pesa ' + mb.toFixed(1) + ' MB; el máximo es 50 MB.';
+    else if (segundos === null) problema = 'No pudimos leer este video. Prueba con otro.';
+    else if (segundos > VIDEO_MAX_SEGUNDOS) {
+      problema = 'El video dura ' + Math.round(segundos) + ' s; el máximo es 60 s.';
+    }
+    if (problema) {
+      campo.value = '';
+      errorEn(campo, 'error-video', problema);
+      return;
+    }
+    video = { archivo, segundos: Math.ceil(segundos), mb: Math.round(mb * 10) / 10 };
+    const peso = mb < 1 ? Math.max(1, Math.round(archivo.size / 1024)) + ' KB' : video.mb + ' MB';
+    $('info-video').textContent = 'Video listo: ' + video.segundos + ' s · ' + peso + '.';
+  }
+
+  async function subirVideo(codigo, clave, elegido) {
+    try {
+      const respuesta = await fetch('/reportes/' + encodeURIComponent(codigo) + '/video', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': clave, 'Content-Type': elegido.archivo.type || 'video/mp4' },
+        body: elegido.archivo,
+      });
+      if (respuesta.ok) return 'Video recibido, se está analizando.';
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      if (typeof cuerpo.detail === 'string') return cuerpo.detail;
+    } catch (error) { /* sin señal: abajo */ }
+    return 'No pudimos subir el video; tu reporte sí llegó y se atiende con la descripción.';
+  }
+
   function datosDelFormulario() {
     const datos = { descripcion: descripcion.value.trim() };
     if (direccion.value.trim()) datos.direccion = direccion.value.trim();
     if (gps) { datos.latitud = gps.latitud; datos.longitud = gps.longitud; }
     if (comuna.value) datos.comuna = Number(comuna.value);
+    if (video) { datos.video_segundos = video.segundos; datos.video_mb = video.mb; }
     // RF-18: el contacto solo viaja si la persona marcó la autorización.
     if ($('contacto').value.trim() && $('autoriza-contacto').checked) {
       datos.contacto = $('contacto').value.trim();
@@ -187,6 +247,9 @@
   function limpiar() {
     formulario.reset();
     gps = null;
+    video = null;
+    $('info-video').textContent = 'Máximo 60 segundos y 50 MB. Grábalo de lado, que se vea el '
+      + 'animal completo.';
     $('estado-gps').textContent = 'o escribe la dirección';
     $('usar-gps').textContent = 'Usar mi GPS';
     contar();
@@ -200,6 +263,7 @@
                         guardado_en: new Date().toISOString() };
     // Primero se guarda: si la señal se cae a mitad del envío, el reporte no se pierde.
     const guardado = escribirCola([...leerCola(), pendiente]);
+    const elegido = video;
     botonEnviar.disabled = true;
     botonEnviar.textContent = 'Enviando…';
     try {
@@ -208,13 +272,18 @@
         : await enviar(pendiente);
       if (resultado.tipo === 'enviado') {
         limpiar();
-        window.Patitas.mostrarCodigo(resultado.codigo);
+        window.Patitas.mostrarCodigo(resultado.codigo, elegido ? 'Subiendo el video…' : '');
+        if (elegido) {
+          const nota = await subirVideo(resultado.codigo, pendiente.clave, elegido);
+          window.Patitas.mostrarCodigo(resultado.codigo, nota);
+        }
       } else if (resultado.tipo === 'rechazado') {
         avisar(resultado.detalle, true);  // el texto sigue en el formulario para corregirlo
       } else if (guardado) {
         limpiar();  // ya está en la cola: así no se envía dos veces con otra clave
         avisar('Sin señal: guardamos tu reporte en este teléfono y lo enviaremos solo '
-          + 'cuando vuelva la conexión. Mantén la app abierta o vuelve a abrirla después.');
+          + 'cuando vuelva la conexión. Mantén la app abierta o vuelve a abrirla después.'
+          + (elegido ? ' El video no se guarda en el teléfono: solo se enviará el texto.' : ''));
       } else {
         avisar('Sin señal y este navegador no permite guardar el reporte. '
           + 'Intenta de nuevo cuando vuelva la conexión.', true);
@@ -227,6 +296,7 @@
   });
 
   descripcion.addEventListener('input', contar);
+  $('video').addEventListener('change', elegirVideo);
   direccion.addEventListener('input', () => {
     if (direccion.value.trim()) errorEn(direccion, 'error-ubicacion', '');
   });

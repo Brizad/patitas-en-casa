@@ -145,3 +145,16 @@ def test_el_service_worker_guarda_la_nueva_pantalla():
     sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
     assert "'reportar.js'" in sw
     assert "patitas-pwa-v1'" not in sw  # versión nueva: los teléfonos bajan la interfaz nueva
+
+
+def test_video_opcional_en_el_formulario_y_blob_solo_local():
+    """#125: el video se elige en el formulario; la CSP admite blob: (archivos del propio
+    navegador) para leer su duración y mostrar la tira, pero ningún servidor externo."""
+    c = TestClient(crear_app(RepositorioEnMemoria(), RepositorioCuposEnMemoria(Refugio("D", 40)),
+                             repositorio_usuarios=RepositorioUsuariosEnMemoria(),
+                             emisor_tokens=EmisorTokens("secreto-de-pruebas-con-mas-de-32-car")))
+    respuesta = c.get("/app/")
+    assert 'id="video"' in respuesta.text and 'accept="video/mp4' in respuesta.text
+    politica = respuesta.headers["Content-Security-Policy"]
+    assert "img-src 'self' blob:" in politica and "media-src blob:" in politica
+    assert "http" not in politica

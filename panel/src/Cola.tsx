@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Cuenta, ReporteEnCola, cola } from "./api";
 import Confirmar, { resumenAvisos } from "./Confirmar";
 import Descartar from "./Descartar";
+import VideoDelReporte from "./VideoDelReporte";
 import { etiquetaEstado, textoError } from "./mensajes";
 
 /** Cola priorizada (RF-04): mismo orden que GET /cola; el detalle muestra las evidencias. */
@@ -92,6 +93,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
             <h3>Evidencias del triaje</h3>
             {detalle.evidencias.length === 0 ? <p className="vacio">Sin evidencias.</p> : (
               <ol>{detalle.evidencias.map((ev) => <li key={ev}>{ev}</li>)}</ol>)}
+            <VideoDelReporte token={token} codigo={detalle.codigo} />
             {cuenta.rol === "veterinario" ? (
               <>
                 <Confirmar key={detalle.codigo} token={token} reporte={detalle}
