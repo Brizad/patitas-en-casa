@@ -45,7 +45,9 @@ UMBRAL_IRREGULAR = 0.6
 
 @dataclass(frozen=True)
 class Medidas:
-    cuadros_utiles: float  # fracción de cuadros con el cuerpo visible
+    # De los cuadros en que aparece el animal, en cuántos se ve su cuerpo. Un cuadro vacío
+    # ({}) es uno sin animal: ese caso ya lo juzga el detector, no se cuenta dos veces.
+    cuadros_utiles: float
     utiles: int  # cuántos cuadros sirvieron
     de_pie: float  # fracción de los cuadros útiles en que está de pie
     asimetria: float  # 0 = patas pareadas iguales; 1 = una no se mueve
@@ -131,7 +133,7 @@ def medir(cuadros: list[Cuadro], fps: float) -> Medidas:
                  for p, serie in elevaciones.items() if serie}
     peor = max(sin_apoyo, key=sin_apoyo.get)
     return Medidas(
-        cuadros_utiles=len(utiles) / len(cuadros), utiles=len(utiles),
+        cuadros_utiles=len(utiles) / sum(1 for c in cuadros if c), utiles=len(utiles),
         de_pie=sum(u["altura"] >= UMBRAL_DE_PIE for u in utiles) / len(utiles),
         asimetria=_asimetria(elevaciones),
         pata_sin_apoyo=PATAS[peor] if sin_apoyo[peor] >= FRACCION_SIN_APOYO else None,
