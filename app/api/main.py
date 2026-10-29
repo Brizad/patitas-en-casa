@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
+from app.adopciones.compatibilidad import Compatibilidad, calcular, recomendar
 from app.adopciones.compromiso import lineas_compromiso
 from app.adopciones.modelos import (
     Energia,
@@ -320,6 +321,11 @@ def _seguimiento(x: Seguimiento, ahora: datetime) -> dict:
             "vencido": x.realizado_en is None and x.programado_para < ahora}
 
 
+def _compatibilidad(c: Compatibilidad) -> dict:
+    return {"puntaje": c.puntaje, "razones": c.razones, "alertas": c.alertas,
+            "restricciones": c.restricciones}
+
+
 class NotaEntrada(BaseModel):
     tipo: TipoNota
     texto: str = Field(max_length=2000)
@@ -586,6 +592,17 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         """Público: animales disponibles. Sin datos del refugio ni de personas (RN-14)."""
         return [_publicacion(p) for p in repositorio_adopciones.disponibles()]
 
+    @app.get("/adopciones/recomendaciones")
+    def recomendaciones(adoptante: Usuario = adoptante_actual):
+        """RF-09: animales disponibles ordenados por compatibilidad con SU hogar, con puntaje
+        y 3 razones. Los que tienen una restricción dura (RN-05) no aparecen."""
+        perfil = repositorio_adopciones.perfil(adoptante.correo)
+        if perfil is None:
+            raise HTTPException(status_code=422, detail="Llena tu perfil para ver "
+                                "recomendaciones.")
+        return [{**_publicacion(a), **_compatibilidad(c)}
+                for a, c in recomendar(perfil, repositorio_adopciones.disponibles())]
+
     @app.post("/adopciones/solicitudes", status_code=201)
     def solicitar_adopcion(datos: SolicitudEntrada, adoptante: Usuario = adoptante_actual):
         """RF-27, RN-10: perfil lleno y seguimiento aceptado; una pendiente por animal."""
@@ -622,7 +639,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                 "creada_en": fecha_utc(s.creada_en),
                 "perfil": None if perfil is None else {
                     k: v for k, v in vars(perfil).items()
-                    if k not in ("correo", "actualizado_en")}})
+                    if k not in ("correo", "actualizado_en")},
+                # RF-09: ayuda a decidir; la decisión sigue siendo del coordinador (RN-16).
+                "compatibilidad": None if perfil is None else _compatibilidad(
+                    calcular(perfil, repositorio_adopciones.publicacion(s.animal_id)))})
         return respuesta
 
     @app.post("/refugio/solicitudes/{solicitud_id}/decision")
