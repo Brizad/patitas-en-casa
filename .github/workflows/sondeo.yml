@@ -1,0 +1,34 @@
+name: Sondeo de disponibilidad
+
+# RNF-04 (#119): sondeo externo del módulo de reportes. GitHub ejecuta un cron como mínimo
+# cada 5 minutos (no cada minuto como pide el ERS) y a veces se retrasa: el historial de
+# ejecuciones sirve como registro de disponibilidad aproximado. En el plan gratis de Render
+# el servicio se duerme tras 15 min sin visitas; el sondeo lo mantiene despierto, pero no
+# garantiza el 99 %: para eso hace falta un plan pagado (ver docs/aprende/trazabilidad.md).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sondear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: La PWA y la API de reportes responden
+        env:
+          URL: https://patitas-en-casa-pnnk.onrender.com
+        run: |
+          # Hasta 3 intentos: el primero puede despertar el servicio (30 a 60 s).
+          for intento in 1 2 3; do
+            pwa=$(curl -s -o /dev/null -m 90 -w "%{http_code}" "$URL/app/")
+            api=$(curl -s -o /dev/null -m 30 -w "%{http_code}" "$URL/reportes/NOEXISTE")
+            echo "intento $intento: /app/ $pwa · GET /reportes/{codigo} $api"
+            if [ "$pwa" = 200 ] && [ "$api" = 404 ]; then exit 0; fi
+            sleep 20
+          done
+          echo "::error::El módulo de reportes no responde"; exit 1
