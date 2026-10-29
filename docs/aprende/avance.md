@@ -322,6 +322,27 @@ hizo qué y cuándo; ahora también **cómo estaba y cómo quedó**:
 - En el panel del administrador, la bitácora tiene la columna «Antes → después».
 - Con esto RNF-12 pasa a **hecho**.
 
+### 5. Migración de la base a Neon (#154)
+
+Render **borra** las bases gratis a los 30 días de creadas (más 14 de gracia). Neon tiene un
+plan gratis permanente. Quedó todo listo para que tú hagas el cambio en unos 20 minutos,
+siguiendo `docs/aprende/migrar-a-neon.md`:
+
+- **Cuenta que debes crear:** Neon (https://neon.com), con «Continue with GitHub», sin
+  tarjeta. Proyecto `patitas`, Postgres 17, región Oregon.
+- **Qué copiar:** de Neon, la *connection string* con «Connection pooling» apagado; de
+  Render, la *External Database URL* de `patitas-bd`. No las pegues en el chat ni en el
+  repositorio.
+- **Qué ejecutar:** `python scripts/operacion/migrar_a_neon.py`. Copia, cuenta las filas de
+  cada tabla en las dos bases e imprime las variables que debes poner en Render
+  (`POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_SSLMODE=require` y la
+  contraseña de Neon).
+- Probado sin tus cuentas: el copiado y la comparación entre dos bases locales (20 tablas, sin
+  diferencias) y la lógica con `tests/test_migrar_a_neon.py`. La contraseña nunca va en la
+  línea de comandos ni se imprime.
+- Si Render no deja editar las variables (vienen del Blueprint), pídeme el cambio de
+  `render.yaml` (P-11).
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis

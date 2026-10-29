@@ -121,6 +121,7 @@ cd panel && npm run dev                     # panel en http://127.0.0.1:5173/pan
 - `trazabilidad.md`: cada requisito del ERS con su estado, código, prueba y PR.
 - `guion-demo.md`: la demostración de 10 minutos para el profesor.
 - `accesibilidad.md`: cómo se mide RNF-11 (axe-core y Lighthouse), qué salió y qué falta.
+- `migrar-a-neon.md`: cómo pasar la base de Render (vence) a Neon (gratis permanente).
 - `preguntas-sustentacion.md`: 30 preguntas probables con respuesta corta.
 
 La app publicada está en https://patitas-en-casa-pnnk.onrender.com (PWA en `/app/`, panel en `/panel/`, API en `/docs`).
