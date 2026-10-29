@@ -2,6 +2,10 @@
 
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
+## [Sin publicar]
+### Agregado
+- Datos de demostración (#109): con `PATITAS_DEMO_ACTIVA=true` y `PATITAS_DEMO_CONTRASENA`, al arrancar se cargan una vez una cuenta por rol (`*@demo.patitas.co`), reportes en 7 comunas de Cúcuta, un rescate completo, una oferta abierta, cuatro animales con historial y tres en adopción. La contraseña nunca está en el código.
+
 ## [1.0.0] - 2026-10-29
 Plan autónomo de cierre: incremento 3 y fases 1 a 5. Para actualizar una instalación:
 `alembic upgrade head` (migraciones `0009` a `0020`) y, en el `.env` o en Render,

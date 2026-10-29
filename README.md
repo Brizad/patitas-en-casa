@@ -9,7 +9,16 @@ en próximos incrementos, recomendación de adopciones.
 Proyecto integrador — Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 Autor: Brayan David Amado Ramírez.
 
-## Estado: v1.0.0 preparada (pendiente de integrar)
+**Publicada en Render:** https://patitas-en-casa-pnnk.onrender.com
+
+- PWA ciudadana (reportar sin cuenta y consultar el estado): https://patitas-en-casa-pnnk.onrender.com/app/
+- Panel por rol (personal, adoptante y Alcaldía): https://patitas-en-casa-pnnk.onrender.com/panel/
+- Documentación interactiva de la API: https://patitas-en-casa-pnnk.onrender.com/docs
+
+El plan gratis de Render «duerme» el servicio tras 15 minutos sin visitas: la primera
+petición puede tardar unos 30 a 60 segundos en responder.
+
+## Estado: v1.0.0 integrada en `main` y desplegada en Render
 
 Además de lo de la v0.2.0 (abajo), la v1.0.0 trae:
 

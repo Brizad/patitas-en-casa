@@ -7,7 +7,7 @@
 - Guía de estudio iniciada: `00-mapa.md`.
 - **Render**: el Blueprint aún no está creado. Crearlo lo hace Brayan (es crear cuenta y
   aceptar términos): en Render, *New → Blueprint →* este repositorio. Después, cada merge a
-  `main` se despliega solo. URL: pendiente.
+  `main` se despliega solo. **Hecho por Brayan: https://patitas-en-casa-pnnk.onrender.com**
 
 ## Fase 1 · Pantallas por rol (#67)
 
@@ -68,7 +68,7 @@ PR muestra conflictos, pídeme «rebasa la cadena sobre main». Al terminar, cre
 
 **Render:** crear el Blueprint (*New → Blueprint →* este repositorio) es tuyo (cuenta y
 términos). Luego agrega en *Environment* `PATITAS_ADMIN_CORREO` y
-`PATITAS_ADMIN_CONTRASENA`. Cada merge a `main` se despliega solo. **URL: pendiente.**
+`PATITAS_ADMIN_CONTRASENA`. Cada merge a `main` se despliega solo. **URL: https://patitas-en-casa-pnnk.onrender.com**
 
 **Qué falta o quedó como deuda:**
 - DT-04 (en parte): validar el modelo de triaje con reportes reales.
@@ -77,3 +77,56 @@ términos). Luego agrega en *Environment* `PATITAS_ADMIN_CORREO` y
 - DT-07 y DT-08 (del incremento 3) siguen abiertas.
 - RN-13 (devolución de un animal adoptado) solo está en el texto del compromiso.
 - Revisa `preguntas-para-brayan.md`: P-01 a P-06.
+
+## Integración y despliegue (29 de octubre de 2026)
+
+- Por indicación de Brayan, la cadena de PR apilados se integró en **un solo PR (#108)**: se
+  hizo merge de `main` en `trabajo/cierre`, los 5 conflictos se resolvieron con la versión
+  de `trabajo/cierre` (el merge no cambió ningún archivo), 573 pruebas en verde con
+  PostgreSQL y CI en verde. Los PR #69 a #107 se cerraron con «Integrado en el PR de
+  trabajo/cierre».
+- Render desplegó solo: la API responde versión 1.0.0, la PWA, el panel y el catálogo de
+  adopción responden 200 (las migraciones `0010` a `0021` corrieron) y `/cola` sin sesión
+  responde 401. URL: https://patitas-en-casa-pnnk.onrender.com
+
+## Cómo crear las variables en Render (paso a paso)
+
+Las contraseñas **no están en el código**: tú las escribes en Render y el sistema las lee al
+arrancar. Hazlo así:
+
+1. Entra a https://dashboard.render.com e inicia sesión.
+2. En la lista, haz clic en el servicio web **patitas-en-casa** (no en la base de datos).
+3. En el menú de la izquierda, haz clic en **Environment**.
+4. Pulsa **Add Environment Variable** (o **Edit** si ya existe) y crea, una por una:
+
+   | Nombre (Key) | Valor (Value) | Para qué sirve |
+   |--------------|---------------|----------------|
+   | `PATITAS_ADMIN_CORREO` | tu correo real, p. ej. `brayan@…` | Tu cuenta de administrador. |
+   | `PATITAS_ADMIN_CONTRASENA` | una contraseña tuya de 12 caracteres o más | Contraseña de esa cuenta. |
+   | `PATITAS_DEMO_ACTIVA` | `true` | Carga los datos de demostración una sola vez. |
+   | `PATITAS_DEMO_CONTRASENA` | otra contraseña de 12 caracteres o más | La usan **todas** las cuentas de demostración. |
+
+5. Pulsa **Save Changes**. Render reinicia el servicio solo (tarda unos minutos).
+6. Abre https://patitas-en-casa-pnnk.onrender.com/panel/ y entra con cualquiera de estas cuentas y la contraseña que pusiste en
+   `PATITAS_DEMO_CONTRASENA`:
+
+   | Rol | Correo |
+   |-----|--------|
+   | Administrador | `admin@demo.patitas.co` |
+   | Veterinaria | `veterinaria@demo.patitas.co` |
+   | Coordinador | `coordinador@demo.patitas.co` |
+   | Rescatista | `rescatista@demo.patitas.co` |
+   | Adoptante | `adoptante@demo.patitas.co` |
+   | Alcaldía | `alcaldia@demo.patitas.co` |
+
+Qué hay que saber:
+
+- Las cuentas de demostración son ficticias (el dominio `demo.patitas.co` no existe).
+- Los datos se cargan **una sola vez**: si la cuenta `veterinaria@demo.patitas.co` ya existe,
+  no se vuelve a cargar nada aunque Render reinicie. Para empezar de cero hay que borrar la
+  base (o crear una nueva) en Render.
+- Para no volver a cargarlos en una base nueva, cambia `PATITAS_DEMO_ACTIVA` a `false`.
+- No uses la misma contraseña para tu cuenta de administrador y para la demostración: la de
+  demostración la verá quien asista a la presentación.
+- Si alguna variable falta o la contraseña es corta, la API arranca igual y en *Logs* aparece
+  el motivo (nunca la contraseña).
