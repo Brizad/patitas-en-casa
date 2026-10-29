@@ -447,7 +447,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         if motor is not None:
             motor.dispose()
 
-    app = FastAPI(title="Patitas en Casa", version="0.2.0", lifespan=ciclo_de_vida)
+    app = FastAPI(title="Patitas en Casa", version="1.0.0", lifespan=ciclo_de_vida)
     # #95: reglas + modelo entrenado (el modelo solo sube la prioridad); sin modelo, reglas.
     clasificador, version_triaje = triaje_por_defecto()
     reportes = ServicioReportes(repositorio, ServicioTriaje(clasificador, version=version_triaje))

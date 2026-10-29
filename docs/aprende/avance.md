@@ -48,3 +48,32 @@
 - El modelo de triaje se entrenó con datos sintéticos: sus métricas no son clínicas.
 - No construido: análisis de video con MediaPipe (DT-10, con plan en `DEUDA_TECNICA.md`).
 - Guía: `fase-4-ia.md`.
+
+## Fase 5 · Cierre (#102)
+
+- PR apilados, en orden: #103 (bitácora) → #104 (indicadores) → #105 (exportar) → #106
+  (panel) → versión 1.0.0 y esta guía.
+- 568 pruebas en verde, cobertura 98 %; vitest 21; build del panel sin errores.
+- Guía: `fase-5-cierre.md`.
+
+## Resumen para Brayan
+
+**Qué quedó:** todo el plan, en PR pequeños y apilados (#66 a #107), cada uno con su CI en
+verde. Ninguno está integrado a `main`: la regla 2 de `CLAUDE.md` pide tu revisión (P-01).
+
+**Cómo integrarlos:** en orden, del más bajo al más alto. Cada PR apunta a la rama del
+anterior; al integrar uno con *squash*, GitHub cambia la base del siguiente a `main`. Si un
+PR muestra conflictos, pídeme «rebasa la cadena sobre main». Al terminar, crea la etiqueta
+`v1.0.0` sobre `main`.
+
+**Render:** crear el Blueprint (*New → Blueprint →* este repositorio) es tuyo (cuenta y
+términos). Luego agrega en *Environment* `PATITAS_ADMIN_CORREO` y
+`PATITAS_ADMIN_CONTRASENA`. Cada merge a `main` se despliega solo. **URL: pendiente.**
+
+**Qué falta o quedó como deuda:**
+- DT-04 (en parte): validar el modelo de triaje con reportes reales.
+- DT-09: limitar por IP el registro público de adoptantes.
+- DT-10: análisis de video con MediaPipe (no cabe en Render gratis; plan escrito).
+- DT-07 y DT-08 (del incremento 3) siguen abiertas.
+- RN-13 (devolución de un animal adoptado) solo está en el texto del compromiso.
+- Revisa `preguntas-para-brayan.md`: P-01 a P-06.

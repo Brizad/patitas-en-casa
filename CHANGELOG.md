@@ -2,8 +2,15 @@
 
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
-## [Sin publicar]
+## [1.0.0] - 2026-10-29
+Plan autónomo de cierre: incremento 3 y fases 1 a 5. Para actualizar una instalación:
+`alembic upgrade head` (migraciones `0009` a `0020`) y, en el `.env` o en Render,
+`PATITAS_ADMIN_CORREO` y `PATITAS_ADMIN_CONTRASENA` para crear la primera cuenta de
+administración. El modelo de triaje se entrenó con datos **sintéticos** (ver
+`docs/aprende/fase-4-ia.md`).
+
 ### Agregado
+- Fase 5 (#102), cierre: bitácora general inmutable de toda acción que cambia datos, sin cuerpos ni datos personales, con un disparador que rechaza `UPDATE` y `DELETE` (`GET /bitacora`, migración `0020`, RF-32, RNF-12); indicadores sin datos personales (`GET /indicadores`, RF-30); exportar reportes en CSV y resumen en PDF anonimizados (`GET /indicadores/reportes.csv`, `GET /indicadores/resumen.pdf`, RF-31). Panel: pestaña «Indicadores».
 - Fase 4 (#95), IA: clasificador TF-IDF + regresión logística entrenado con datos sintéticos (`scripts/ia/`), servido desde JSON en Python puro y combinado con las reglas (solo sube la prioridad; ≥ 3 evidencias; versión `reglas-v0+tfidf-lr-v1`; RF-02, RNF-03, RNF-09); compatibilidad adoptante–animal con puntaje, razones y alertas sin atributos protegidos (`GET /adopciones/recomendaciones`, RF-09, RNF-16); propuesta de asignación global en jornadas con el algoritmo húngaro (`GET /refugio/jornada/propuesta`, RF-28); fusión texto + video RN-07 y puerto del analizador (RF-19). Panel: recomendaciones y jornada.
 - Fase 3 (#85), adopción: cuenta pública del adoptante con autorización de datos y perfil (`POST /adoptantes`, `GET/PUT /adoptantes/yo/perfil`, RF-08); publicar un animal y catálogo público (`POST /refugio/animales/{id}/publicacion`, `GET /adopciones/animales`, RF-25); solicitar (`POST /adopciones/solicitudes`, RN-10) y decidir (`POST /refugio/solicitudes/{id}/decision`) con restricciones duras (RN-05) y una adopción aprobada por animal (RN-11); aprobar da el egreso por adopción y programa los seguimientos a 30, 90 y 180 días (`GET/POST /refugio/seguimientos`, RF-10); compromiso de adopción en PDF sin dependencias (RF-29). Panel: registro y pantalla del adoptante; pestaña «Adopciones» del coordinador. Migraciones `0016` a `0019`.
 - Fase 2 (#75), refugio completo: descartar un reporte falso o duplicado con justificación (`POST /reportes/{codigo}/descarte`, estado `descartado`, tabla `descartes`, D-02); posibles duplicados a ≤ 200 m y ≤ 2 h en la cola (RF-17); `version_modelo` en reportes y decisiones (RF-20, D-04); ficha clínica con historial que solo crece (`GET /refugio/animales`, `GET /refugio/animales/{id}`, `POST .../historial`, RF-06, RF-24); egresos que liberan el cupo (`POST .../egreso`, RF-26); ingresos y ocupación del refugio de cada persona. Panel: descartar, duplicados, fichas, historial, egresos, «Saltar a la cola» y foco tras confirmar (D-08). Migraciones `0012` a `0015`.

@@ -9,7 +9,24 @@ en próximos incrementos, recomendación de adopciones.
 Proyecto integrador — Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 Autor: Brayan David Amado Ramírez.
 
-## Estado: v0.2.0 publicada (incremento 2, "Fundación segura")
+## Estado: v1.0.0 preparada (pendiente de integrar)
+
+Además de lo de la v0.2.0 (abajo), la v1.0.0 trae:
+
+- **Panel por rol** en `/panel/`: veterinario (cola, descartar, fichas), coordinador (refugio,
+  ingresos, egresos, adopciones, jornada, indicadores), rescatista (ofertas y rescate),
+  administrador (cuentas, refugios, bitácora) y adoptante (perfil, recomendaciones,
+  solicitudes y compromiso en PDF).
+- **Refugio completo**: ficha clínica con historial, egresos que liberan cupo, varios
+  refugios, posibles duplicados y descartes con justificación.
+- **Adopción**: perfil, publicación, solicitud, aprobación con restricciones duras y
+  seguimientos a 30, 90 y 180 días.
+- **IA**: triaje con reglas + modelo TF-IDF (entrenado con datos sintéticos: `scripts/ia/`),
+  compatibilidad adoptante–animal y asignación global en jornadas.
+- **Cierre**: indicadores, exportar CSV/PDF anonimizados y bitácora inmutable.
+- Guía de estudio en `docs/aprende/` (empieza por `00-mapa.md`).
+
+### Lo publicado en la v0.2.0 (incremento 2, "Fundación segura")
 
 Públicos (el ciudadano no necesita cuenta):
 - `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional y `comuna`

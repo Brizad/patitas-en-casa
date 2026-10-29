@@ -39,8 +39,12 @@ probar sin base de datos, usando el repositorio en memoria. La prueba
 6. `app/usuarios/`, `app/seguridad/tokens.py`, `app/api/seguridad.py`: cuentas, JWT y roles.
 7. `app/rescates/` y `app/avisos/`: el rescate y el envío de avisos con reintentos.
 8. `panel/src/`: el panel en React. Empieza por `App.tsx` y `api.ts`.
-9. `tests/`: cada archivo de prueba es un ejemplo de uso. Lee `test_api.py`.
-10. Las guías por fase de esta carpeta (`fase-1-…`, `fase-2-…`, …).
+9. `app/adopciones/`, `app/indicadores/`, `app/bitacora/`: adopción, indicadores y
+   bitácora (fases 3 y 5).
+10. `scripts/ia/` y `app/triaje/modelo.py`: la IA entrenada (fase 4).
+11. `tests/`: cada archivo de prueba es un ejemplo de uso. Lee `test_api.py`.
+12. Las guías por fase de esta carpeta, en orden: `fase-1-pantallas-por-rol.md`,
+    `fase-2-refugio-completo.md`, `fase-3-adopcion.md`, `fase-4-ia.md`, `fase-5-cierre.md`.
 
 ## Cómo probarlo en tu PC
 
@@ -94,6 +98,18 @@ cd panel && npm run dev                     # panel en http://127.0.0.1:5173/pan
 - **Docker**: empaqueta la API con todo lo que necesita para que corra igual en cualquier PC.
 - **Datos sintéticos**: datos inventados por un programa, con reglas conocidas, para entrenar
   o probar cuando no hay datos reales.
+- **TF-IDF**: convierte un texto en números: cuenta cada palabra y le da más peso si es rara
+  en el conjunto (una palabra que aparece en todos los reportes no ayuda a distinguir).
+- **Regresión logística**: modelo que da una probabilidad por clase sumando pesos de cada
+  palabra; los pesos se aprenden de los ejemplos.
+- **Recall (sensibilidad)**: de todos los casos críticos reales, cuántos detectó el modelo.
+- **Algoritmo húngaro**: resuelve el problema de asignación (quién con qué) maximizando el
+  total.
+- **Middleware**: código que se ejecuta antes y después de cada petición (aquí: cabeceras de
+  seguridad y bitácora).
+- **Disparador (trigger)**: función de la base que se ejecuta sola ante un INSERT, UPDATE o
+  DELETE (aquí: impedir cambiar la bitácora).
+- **Anonimizar**: quitar todo dato que permita identificar a una persona o un lugar.
 
 ## Archivos de esta carpeta
 
