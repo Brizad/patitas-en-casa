@@ -20,7 +20,7 @@ label { display: block; margin: 10px 0; font-weight: 600; }
 @media (max-width: 760px) { .cola { grid-template-columns: 1fr; } }
 .cola ul { list-style: none; padding: 0; margin: 0; }
 .fila-titulo { display: flex; justify-content: space-between; align-items: center; }
-.item { width: 100%; display: grid; grid-template-columns: 7em 1fr 3em; gap: 8px; text-align: left;
+.item { width: 100%; display: grid; grid-template-columns: 7em 1fr 3em auto; gap: 8px; text-align: left;
   margin: 4px 0; align-items: center; }
 .item.activo { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde) inset; }
 .chip { border-radius: 99px; padding: 2px 8px; font-size: .85em; font-weight: 600; background: #eef1f0; }
@@ -50,3 +50,9 @@ fieldset { border: 1px solid var(--borde); border-radius: 10px; margin-top: 10px
   vertical-align: top; }
 .tabla select { min-width: 9em; }
 @media (max-width: 760px) { .tabla { display: block; overflow-x: auto; } }
+/* D-08 (#75): enlace para saltar a la cola, visible solo con el foco del teclado. */
+.saltar { position: absolute; left: -9999px; top: 8px; background: #fff; color: var(--verde);
+  padding: 8px 12px; border-radius: 8px; font-weight: 600; z-index: 10; }
+.saltar:focus { left: 8px; }
+#cola:focus { outline: 3px solid var(--verde); outline-offset: 4px; }
+.descartar { margin-top: 12px; }

@@ -19,6 +19,8 @@ export default function App() {
   const pantallas = pantallasDelRol(cuenta.rol);
   return (
     <main className="panel">
+      {/* D-08: el primer Tab ofrece ir directo a la cola sin recorrer la barra. */}
+      {pantalla === "cola" && <a className="saltar" href="#cola">Saltar a la cola</a>}
       <header className="barra">
         <b>Patitas en Casa · Panel</b>
         <span>{cuenta.nombre} · {cuenta.rol}</span>
