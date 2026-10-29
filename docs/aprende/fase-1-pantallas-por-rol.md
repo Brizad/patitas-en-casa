@@ -1,6 +1,6 @@
 # Fase 1 · Pantallas por rol (RF-13 a RF-16, RF-21, RF-22)
 
-Issue #67. PR apilados: #68 → #69 → #70 → #71 → #72 → #73 → este.
+Issue #67. PR apilados: #68 → #69 → #70 → #71 → #72 → #73 → este. Se revisaron por separado y se integraron a `main` juntos en el **#108**.
 
 ## Qué hace
 
@@ -85,3 +85,35 @@ En Render: *Environment* → agrega las dos variables y reinicia el servicio.
    contraseña? ¿Qué ley y qué requisito no funcional se relacionan con eso?
 5. ¿Por qué la migración `0010` puede fallar al hacer `downgrade` si hay administradores, y
    por qué eso es preferible a borrar las cuentas?
+
+### Respuestas
+
+<details><summary>Respuesta 1</summary>
+
+Porque Render reinicia el servicio a menudo y cada arranque vuelve a ejecutar `crear_admin_inicial`. Si reemplazara la cuenta, cada reinicio devolvería la contraseña a la de la variable de entorno y borraría la que el administrador haya cambiado; si alguien suspendió esa cuenta, se reactivaría sola.
+
+</details>
+
+<details><summary>Respuesta 2</summary>
+
+Porque la dependencia `usuario_actual` no confía solo en el token: en cada petición vuelve a leer la cuenta en la base. Si `activo` es falso responde 401, aunque el token siga vigente. Así no hace falta una «lista negra» de tokens.
+
+</details>
+
+<details><summary>Respuesta 3</summary>
+
+No. El panel solo esconde botones; cualquiera puede llamar a la API con `curl`. Lo que protege es `exigir_rol(..., Rol.ADMINISTRADOR)` en el servidor: sin sesión responde 401 y con otro rol 403.
+
+</details>
+
+<details><summary>Respuesta 4</summary>
+
+Porque los logs los ven más personas y sistemas (Render, quien revise errores) y se guardan mucho tiempo. La Ley 1581 y RNF-05/RNF-08 piden proteger los datos personales y las credenciales; la regla incumplida sí sirve para corregir el error.
+
+</details>
+
+<details><summary>Respuesta 5</summary>
+
+Porque el `downgrade` vuelve a crear el CHECK sin «administrador» y PostgreSQL rechaza el CHECK si alguna fila no lo cumple. Es preferible que falle a que borre cuentas en silencio: así quien baja la versión decide qué hacer con ellas.
+
+</details>

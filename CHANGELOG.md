@@ -2,7 +2,15 @@
 
 Formato basado en *Keep a Changelog*; versiones según SemVer.
 
-## [Sin publicar]
+## [1.0.0] - 2026-10-29
+Plan autónomo de cierre: incremento 3 y fases 1 a 5, más las brechas del ERS (PR #108 a
+#122). Publicada en https://patitas-en-casa-pnnk.onrender.com. Para actualizar una instalación:
+`alembic upgrade head` (migraciones `0009` a `0024`) y, en el `.env` o en Render,
+`PATITAS_ADMIN_CORREO` y `PATITAS_ADMIN_CONTRASENA` (primera cuenta de administración),
+`PATITAS_CLAVE_DATOS` (cifrado del contacto) y, si se quiere, `PATITAS_DEMO_ACTIVA` y
+`PATITAS_DEMO_CONTRASENA` (datos de demostración). El modelo de triaje se entrenó con datos **sintéticos** (ver
+`docs/aprende/fase-4-ia.md`).
+
 ### Agregado
 - Prueba de punta a punta (#121): cabeceras `Strict-Transport-Security`, `Permissions-Policy` y `Cross-Origin-Opener-Policy` en todas las respuestas (advertencias de OWASP ZAP) y compresión gzip. Panel: al elegir un reporte el foco va al detalle (en el celular quedaba debajo de la lista) y los botones de nombre de animal miden al menos 24 px (WCAG 2.2, RNF-11).
 - RF-30, RF-31 y RNF-16 completos (#117): tiempo de respuesta por prioridad (hasta confirmar y hasta que un rescatista acepta), devoluciones, tasa de recomendación por tipo de hogar, y `GET /indicadores/fichas.csv` (fichas del refugio sin el texto de las notas).
@@ -10,15 +18,6 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - RF-27 y RF-10 (#113): el coordinador puede pedir una **visita previa** antes de decidir (`POST /refugio/solicitudes/{id}/visita`) y registrar una **devolución con su motivo** (`POST /refugio/solicitudes/{id}/devolucion`, RN-13): el animal reingresa (ocupa cupo; sin cupo responde 409 y no cambia nada) y vuelve al catálogo. Estados nuevos `visita` y `devuelta` (migración `0023`). Panel: botones en «Adopciones».
 - RF-18 y RNF-08 (#111): contacto opcional del ciudadano (correo o teléfono) con autorización expresa, guardado con AES-256-GCM (`PATITAS_CLAVE_DATOS`, migración `0022`); si es un correo, recibe un aviso cuando un veterinario revisa su reporte, por el mismo outbox y con el destinatario cifrado también en la tabla de avisos. Campo nuevo en la PWA.
 - Datos de demostración (#109): con `PATITAS_DEMO_ACTIVA=true` y `PATITAS_DEMO_CONTRASENA`, al arrancar se cargan una vez una cuenta por rol (`*@demo.patitas.co`), reportes en 7 comunas de Cúcuta, un rescate completo, una oferta abierta, cuatro animales con historial y tres en adopción. La contraseña nunca está en el código.
-
-## [1.0.0] - 2026-10-29
-Plan autónomo de cierre: incremento 3 y fases 1 a 5. Para actualizar una instalación:
-`alembic upgrade head` (migraciones `0009` a `0020`) y, en el `.env` o en Render,
-`PATITAS_ADMIN_CORREO` y `PATITAS_ADMIN_CONTRASENA` para crear la primera cuenta de
-administración. El modelo de triaje se entrenó con datos **sintéticos** (ver
-`docs/aprende/fase-4-ia.md`).
-
-### Agregado
 - Fase 5 (#102), cierre: bitácora general inmutable de toda acción que cambia datos, sin cuerpos ni datos personales, con un disparador que rechaza `UPDATE` y `DELETE` (`GET /bitacora`, migración `0020`, RF-32, RNF-12); indicadores sin datos personales (`GET /indicadores`, RF-30); exportar reportes en CSV y resumen en PDF anonimizados (`GET /indicadores/reportes.csv`, `GET /indicadores/resumen.pdf`, RF-31). Panel: pestaña «Indicadores».
 - Fase 4 (#95), IA: clasificador TF-IDF + regresión logística entrenado con datos sintéticos (`scripts/ia/`), servido desde JSON en Python puro y combinado con las reglas (solo sube la prioridad; ≥ 3 evidencias; versión `reglas-v0+tfidf-lr-v1`; RF-02, RNF-03, RNF-09); compatibilidad adoptante–animal con puntaje, razones y alertas sin atributos protegidos (`GET /adopciones/recomendaciones`, RF-09, RNF-16); propuesta de asignación global en jornadas con el algoritmo húngaro (`GET /refugio/jornada/propuesta`, RF-28); fusión texto + video RN-07 y puerto del analizador (RF-19). Panel: recomendaciones y jornada.
 - Fase 3 (#85), adopción: cuenta pública del adoptante con autorización de datos y perfil (`POST /adoptantes`, `GET/PUT /adoptantes/yo/perfil`, RF-08); publicar un animal y catálogo público (`POST /refugio/animales/{id}/publicacion`, `GET /adopciones/animales`, RF-25); solicitar (`POST /adopciones/solicitudes`, RN-10) y decidir (`POST /refugio/solicitudes/{id}/decision`) con restricciones duras (RN-05) y una adopción aprobada por animal (RN-11); aprobar da el egreso por adopción y programa los seguimientos a 30, 90 y 180 días (`GET/POST /refugio/seguimientos`, RF-10); compromiso de adopción en PDF sin dependencias (RF-29). Panel: registro y pantalla del adoptante; pestaña «Adopciones» del coordinador. Migraciones `0016` a `0019`.

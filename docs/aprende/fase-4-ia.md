@@ -1,6 +1,6 @@
 # Fase 4 · Inteligencia artificial
 
-Issue #95. PR apilados: #96 → #97 → #98 → #99 → #100 → este.
+Issue #95. PR apilados: #96 → #97 → #98 → #99 → #100 → este. Se revisaron por separado y se integraron a `main` juntos en el **#108**.
 
 ## Qué hace
 
@@ -82,3 +82,35 @@ descripción y la `prioridad_final`, y usarlos en vez de `generar()` en `entrena
 3. ¿Cómo explica el sistema por qué sugirió «crítica»? ¿Qué es una evidencia?
 4. ¿Por qué el algoritmo húngaro puede dar un total mayor que el voraz? Da un ejemplo.
 5. ¿Qué atributos del adoptante no se usan en la compatibilidad y por qué?
+
+### Respuestas
+
+<details><summary>Respuesta 1</summary>
+
+Porque el modelo se entrenó con datos sintéticos y las reglas ya están validadas para los críticos conocidos. Si pudiera bajar la prioridad, un error del modelo podría hacer que un caso crítico espere; subirla solo cuesta una revisión de más (RNF-03).
+
+</details>
+
+<details><summary>Respuesta 2</summary>
+
+Significa que el modelo aprendió bien las plantillas con las que se generaron los datos. No significa que acierte con reportes reales escritos por ciudadanos: para eso hay que validarlo con reportes confirmados por veterinarios (DT-04).
+
+</details>
+
+<details><summary>Respuesta 3</summary>
+
+Con al menos 3 evidencias (RNF-09): las palabras o pares de palabras que más empujaron hacia esa prioridad (por ejemplo «atropellado»), las señales de las reglas y, si faltan, lo que opinó cada parte. Una evidencia es una razón concreta que el veterinario puede revisar en el texto.
+
+</details>
+
+<details><summary>Respuesta 4</summary>
+
+Porque el voraz elige en orden lo mejor para cada uno y puede quitarle a otro su mejor opción. Ejemplo de la prueba: Ana-animal 0 = 90, Ana-1 = 80, Beto-0 = 85, Beto-1 = 10. El voraz da 90 + 10 = 100; el húngaro da 80 + 85 = 165.
+
+</details>
+
+<details><summary>Respuesta 5</summary>
+
+Edad, género, estrato, etnia, religión, discapacidad e ingresos: no se piden ni se usan. Son atributos protegidos o datos de ingresos (RNF-16, RF-08) y usarlos sería discriminar. Solo cuentan el hogar (vivienda, patio, niños, otros animales, horas solo, experiencia) y el animal.
+
+</details>
