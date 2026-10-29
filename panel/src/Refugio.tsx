@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ErrorApi } from "./api";
 import { Ingreso, Ocupacion, nivelOcupacion, ocupacion, registrarIngreso } from "./apiRefugio";
+import Fichas from "./Fichas";
 import { textoError } from "./mensajes";
 
 const VACIO: Ingreso = { nombre: "", especie: "perro", estado_salud: "", vacunado: false,
@@ -45,6 +46,9 @@ export default function Refugio({ token, rol }: { token: string; rol: string }) 
       </div>
       {rol === "coordinador" ? <FormularioIngreso token={token} alGuardar={recargar} /> : (
         <p className="nota">Solo coordinación registra ingresos (pantalla P-06).</p>)}
+      {/* La ocupación cambia con cada ingreso o egreso: la lista se vuelve a pedir. */}
+      <Fichas version={datos?.ocupacion} token={token} rol={rol}
+        alCambiarCupo={() => void recargar()} />
     </section>
   );
 }
