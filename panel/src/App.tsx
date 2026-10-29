@@ -2,13 +2,19 @@ import { useState } from "react";
 import { Cuenta, iniciarSesion, miCuenta } from "./api";
 import Cola from "./Cola";
 import { textoError } from "./mensajes";
+import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
+import Rescatista from "./Rescatista";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(null);
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
+  const [pantalla, setPantalla] = useState<Pantalla | null>(null);
   if (!token || !cuenta) {
-    return <InicioSesion alEntrar={(t, c) => { setToken(t); setCuenta(c); }} />;
+    return <InicioSesion alEntrar={(t, c) => {
+      setToken(t); setCuenta(c); setPantalla(pantallasDelRol(c.rol)[0] ?? null);
+    }} />;
   }
+  const pantallas = pantallasDelRol(cuenta.rol);
   return (
     <main className="panel">
       <header className="barra">
@@ -16,7 +22,16 @@ export default function App() {
         <span>{cuenta.nombre} · {cuenta.rol}</span>
         <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
       </header>
-      <Cola token={token} cuenta={cuenta} />
+      {pantallas.length > 1 && (
+        <nav className="pestanas" aria-label="Secciones">
+          {pantallas.map((p) => (
+            <button key={p} aria-current={p === pantalla ? "page" : undefined}
+              onClick={() => setPantalla(p)}>{NOMBRE_PANTALLA[p]}</button>))}
+        </nav>)}
+      {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
+      {pantalla === "rescates" && <Rescatista token={token} />}
+      {pantalla === "refugio" && <p className="vacio">Pantalla del refugio: siguiente PR.</p>}
+      {pantalla === null && <p className="vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>
   );
 }

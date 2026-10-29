@@ -27,7 +27,7 @@ export class ErrorApi extends Error {
   }
 }
 
-async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?: string): Promise<T> {
+export async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?: string): Promise<T> {
   const cabeceras = new Headers(opciones.headers);
   if (token) cabeceras.set("Authorization", `Bearer ${token}`);
   const respuesta = await fetch(ruta, { ...opciones, headers: cabeceras });
