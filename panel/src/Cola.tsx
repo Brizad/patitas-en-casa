@@ -28,6 +28,15 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
 
   useEffect(() => { void recargar(); }, [recargar]);
   const detalle = reportes.find((r) => r.codigo === elegido) ?? null;
+  const tituloDetalle = useRef<HTMLHeadingElement>(null);
+  // Prueba de punta a punta (#121): en el celular el detalle queda debajo de la lista; al
+  // elegir un reporte el foco (y la vista) van al detalle, donde están las acciones.
+  useEffect(() => {
+    if (elegido) {
+      tituloDetalle.current?.focus();
+      tituloDetalle.current?.scrollIntoView?.({ block: "start" });
+    }
+  }, [elegido]);
 
   function terminado(codigo: string, texto: string) {
     setAviso({ codigo, texto });
@@ -72,7 +81,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
       <div className="detalle tarjeta">
         {!detalle ? <p className="vacio">Elige un reporte de la cola.</p> : (
           <>
-            <h2>Reporte <code>{detalle.codigo}</code></h2>
+            <h2 tabIndex={-1} ref={tituloDetalle}>Reporte <code>{detalle.codigo}</code></h2>
             <p>Sugerida: <b>{etiquetaEstado(detalle.estado, detalle.prioridad)}</b>
               {detalle.confianza !== null && <> · confianza {detalle.confianza.toFixed(2)}</>}</p>
             {detalle.version_modelo && (
