@@ -39,6 +39,12 @@ export const pedirVisita = (t: string, id: number, texto: string) =>
   pedir(`/refugio/solicitudes/${id}/visita`, enviar({ texto }), t);
 export const registrarDevolucion = (t: string, id: number, texto: string) =>
   pedir(`/refugio/solicitudes/${id}/devolucion`, enviar({ texto }), t);
+/** RF-25: JPEG, PNG o WebP de hasta 300 KB; el servidor revisa el contenido real. */
+export const subirFoto = (t: string, animalId: number, archivo: File) => {
+  const datos = new FormData();
+  datos.append("foto", archivo);
+  return pedir(`/refugio/animales/${animalId}/foto`, { method: "POST", body: datos }, t);
+};
 export const seguimientosRefugio = (t: string) =>
   pedir<SeguimientoRefugio[]>("/refugio/seguimientos", {}, t);
 export const registrarSeguimiento = (t: string, id: number, nota: string) =>

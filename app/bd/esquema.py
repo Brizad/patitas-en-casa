@@ -11,6 +11,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     MetaData,
     SmallInteger,
     String,
@@ -233,6 +234,18 @@ bitacora = Table(
     Column("accion", Text, nullable=False),
     Column("objeto", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
     Column("estado_http", SmallInteger, nullable=False),
+)
+
+# RF-25 (#115): una foto por animal, en la base (el disco de Render gratis no persiste).
+fotos_animales = Table(
+    "fotos_animales",
+    metadata,
+    Column("animal_id", Integer, ForeignKey("animales.id"), primary_key=True),
+    Column("tipo", String(12), nullable=False),
+    Column("datos", LargeBinary, nullable=False),
+    Column("guardada_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint("tipo IN ('image/jpeg', 'image/png', 'image/webp')", name="ck_fotos_tipo"),
+    CheckConstraint("octet_length(datos) <= 307200", name="ck_fotos_tamano"),
 )
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
