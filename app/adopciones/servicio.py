@@ -46,6 +46,10 @@ class RazonInvalida(ValueError):
     pass
 
 
+class SeguimientoNoValido(ValueError):
+    pass
+
+
 class ServicioAdopciones:
     def __init__(self, repositorio: RepositorioAdopciones,
                  reloj: Callable[[], datetime] | None = None) -> None:
@@ -98,3 +102,17 @@ class ServicioAdopciones:
         if not self._repositorio.aprobar(solicitud_id, coordinador.correo, ahora, plan):
             raise SolicitudYaDecidida("Este animal ya tiene una adopción aprobada (RN-11).")
         return self._repositorio.solicitud(solicitud_id)
+
+    def registrar_seguimiento(self, coordinador: Usuario, seguimiento_id: int,
+                              nota: str) -> Seguimiento:
+        """RF-10: el coordinador anota cómo está el animal. La nota se exige con palabras:
+        «ok» no dice nada a quien lea el caso después."""
+        if coordinador.rol != Rol.COORDINADOR:
+            raise PermissionError("Solo el coordinador registra seguimientos.")
+        nota = nota.strip()
+        validar_justificacion(nota, SeguimientoNoValido)
+        hecho = self._repositorio.registrar_seguimiento(
+            seguimiento_id, coordinador.correo, nota, self._reloj())
+        if hecho is None:
+            raise SeguimientoNoValido("Ese seguimiento no existe o ya fue registrado.")
+        return hecho

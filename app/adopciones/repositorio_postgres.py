@@ -168,10 +168,22 @@ class RepositorioAdopcionesPostgres:
             filas = conexion.execute(select(seguimientos).where(
                 seguimientos.c.solicitud_id == solicitud_id).order_by(seguimientos.c.dia)
             ).mappings()
-            return [Seguimiento(id=f["id"], solicitud_id=f["solicitud_id"], dia=f["dia"],
-                                programado_para=f["programado_para"],
-                                realizado_en=f["realizado_en"], nota=f["nota"],
-                                registrado_por=f["registrado_por"]) for f in filas]
+            return [_seguimiento(f) for f in filas]
+
+    def registrar_seguimiento(self, seguimiento_id: int, por: str, nota: str,
+                              momento: datetime) -> Seguimiento | None:
+        with self._motor.begin() as conexion:
+            f = conexion.execute(update(seguimientos).where(
+                seguimientos.c.id == seguimiento_id, seguimientos.c.realizado_en.is_(None))
+                .values(realizado_en=momento, nota=nota, registrado_por=por)
+                .returning(*seguimientos.c)).mappings().first()
+        return None if f is None else _seguimiento(f)
+
+
+def _seguimiento(f) -> Seguimiento:
+    return Seguimiento(id=f["id"], solicitud_id=f["solicitud_id"], dia=f["dia"],
+                       programado_para=f["programado_para"], realizado_en=f["realizado_en"],
+                       nota=f["nota"], registrado_por=f["registrado_por"])
 
 
 def _solicitud(f) -> Solicitud:

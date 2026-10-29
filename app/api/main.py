@@ -30,7 +30,15 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
-from app.adopciones.modelos import Energia, PerfilAdoptante, Publicacion, Tamano, Vivienda
+from app.adopciones.modelos import (
+    Energia,
+    EstadoSolicitud,
+    PerfilAdoptante,
+    Publicacion,
+    Seguimiento,
+    Tamano,
+    Vivienda,
+)
 from app.adopciones.repositorio import RepositorioAdopciones, RepositorioAdopcionesEnMemoria
 from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
 from app.adopciones.servicio import (
@@ -38,6 +46,7 @@ from app.adopciones.servicio import (
     PerfilIncompleto,
     RazonInvalida,
     RestriccionDura,
+    SeguimientoNoValido,
     ServicioAdopciones,
     SolicitudNoEncontrada,
     SolicitudRepetida,
@@ -294,6 +303,18 @@ class SolicitudEntrada(BaseModel):
 class DecisionEntrada(BaseModel):
     aprobar: bool
     razon: str | None = Field(default=None, max_length=1000)  # obligatoria al rechazar
+
+
+class SeguimientoEntrada(BaseModel):
+    nota: str = Field(max_length=2000)
+
+
+def _seguimiento(x: Seguimiento, ahora: datetime) -> dict:
+    return {"id": x.id, "dia": x.dia, "programado_para": fecha_utc(x.programado_para),
+            "realizado_en": fecha_utc(x.realizado_en), "nota": x.nota,
+            "registrado_por": x.registrado_por,
+            # Vencido: ya pasó la fecha y nadie lo registró (aparece primero en la lista).
+            "vencido": x.realizado_en is None and x.programado_para < ahora}
 
 
 class NotaEntrada(BaseModel):
@@ -618,6 +639,36 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         return {"id": s.id, "estado": s.estado.value, "razon": s.razon,
                 "seguimientos": [{"dia": x.dia, "programado_para": fecha_utc(x.programado_para)}
                                  for x in repositorio_adopciones.seguimientos(solicitud_id)]}
+
+    @app.get("/refugio/seguimientos")
+    def seguimientos_del_refugio(coordinador: Usuario = coordinacion):
+        """RF-10: seguimientos de las adopciones de animales de su refugio, los pendientes
+        primero y por fecha."""
+        animales = fichas_de(coordinador)
+        ahora = datetime.now(UTC)
+        filas = []
+        for s in repositorio_adopciones.solicitudes():
+            animal = animales.animal(s.animal_id)
+            if s.estado != EstadoSolicitud.APROBADA or animal is None:
+                continue
+            for x in repositorio_adopciones.seguimientos(s.id):
+                filas.append({**_seguimiento(x, ahora), "solicitud_id": s.id,
+                              "animal": animal.nombre, "adoptante": s.adoptante})
+        return sorted(filas, key=lambda f: (f["realizado_en"] is not None,
+                                            f["programado_para"]))
+
+    @app.post("/refugio/seguimientos/{seguimiento_id}")
+    def registrar_seguimiento(seguimiento_id: int, datos: SeguimientoEntrada,
+                              coordinador: Usuario = coordinacion):
+        mios = {f["id"] for f in seguimientos_del_refugio(coordinador)}
+        if seguimiento_id not in mios:
+            raise HTTPException(status_code=404, detail="No hay ese seguimiento en tu refugio.")
+        try:
+            hecho = adopciones.registrar_seguimiento(coordinador, seguimiento_id, datos.nota)
+        except SeguimientoNoValido as error:
+            raise HTTPException(status_code=409 if "registrado" in str(error) else 422,
+                                detail=str(error)) from error
+        return _seguimiento(hecho, datetime.now(UTC))
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,

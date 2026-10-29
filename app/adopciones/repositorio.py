@@ -58,6 +58,12 @@ class RepositorioAdopciones(Protocol):
 
     def seguimientos(self, solicitud_id: int) -> list[Seguimiento]: ...
 
+    def registrar_seguimiento(self, seguimiento_id: int, por: str, nota: str,
+                              momento: datetime) -> Seguimiento | None:
+        """RF-10: marca el seguimiento como realizado. None si no existe o ya se registró
+        (un seguimiento se registra una sola vez)."""
+        ...
+
 
 class RepositorioAdopcionesEnMemoria:
     def __init__(self, cupos: RepositorioCupos | None = None) -> None:
@@ -136,3 +142,11 @@ class RepositorioAdopcionesEnMemoria:
 
     def seguimientos(self, solicitud_id: int) -> list[Seguimiento]:
         return [replace(x) for x in self._seguimientos if x.solicitud_id == solicitud_id]
+
+    def registrar_seguimiento(self, seguimiento_id: int, por: str, nota: str,
+                              momento: datetime) -> Seguimiento | None:
+        x = next((x for x in self._seguimientos if x.id == seguimiento_id), None)
+        if x is None or x.realizado_en is not None:
+            return None
+        x.realizado_en, x.nota, x.registrado_por = momento, nota, por
+        return replace(x)
