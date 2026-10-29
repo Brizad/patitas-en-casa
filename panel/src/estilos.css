@@ -45,3 +45,8 @@ fieldset { border: 1px solid var(--borde); border-radius: 10px; margin-top: 10px
 .barra-ocupacion span { display: block; height: 100%; background: var(--verde); }
 .barra-ocupacion.alerta span { background: #c77a12; }
 .barra-ocupacion.lleno span { background: var(--error); }
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th, .tabla td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--borde);
+  vertical-align: top; }
+.tabla select { min-width: 9em; }
+@media (max-width: 760px) { .tabla { display: block; overflow-x: auto; } }
