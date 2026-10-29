@@ -480,15 +480,20 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             demo = repositorio_cupos.refugio()
             repositorio_refugios = RepositorioRefugiosEnMemoria(
                 [Refugio(demo.nombre, demo.capacidad, demo.ocupados, id=1)])
-    repositorio_adopciones = repositorio_adopciones or (
-        RepositorioAdopcionesPostgres(motor) if motor is not None
-        else RepositorioAdopcionesEnMemoria(repositorio_cupos))
-    repositorio_bitacora = repositorio_bitacora or (
-        RepositorioBitacoraPostgres(motor) if motor is not None
-        else RepositorioBitacoraEnMemoria())
     if cifrador is None and motor is not None:
         clave_datos = cargar_ajustes_datos().clave_datos
         cifrador = Cifrador(clave_datos.get_secret_value()) if clave_datos else None
+    if repositorio_adopciones is None and motor is not None:
+        # RNF-08 (#149): perfiles cifrados; los que estaban en claro se cifran al arrancar.
+        repositorio_adopciones = RepositorioAdopcionesPostgres(motor, cifrador)
+        cifrados = repositorio_adopciones.cifrar_perfiles_en_claro()
+        if cifrados:
+            logger.info("Perfiles de adoptante cifrados al arrancar: %d.", cifrados)
+    repositorio_adopciones = repositorio_adopciones or RepositorioAdopcionesEnMemoria(
+        repositorio_cupos)
+    repositorio_bitacora = repositorio_bitacora or (
+        RepositorioBitacoraPostgres(motor) if motor is not None
+        else RepositorioBitacoraEnMemoria())
     repositorio_fotos = repositorio_fotos or (
         RepositorioFotosPostgres(motor) if motor is not None else RepositorioFotosEnMemoria())
     # #125: análisis de video con el trabajador local. Sin token, apagado (manda el texto).

@@ -10,6 +10,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Scripts del nodo de video para Ubuntu/WSL2 (#143): `servicios/video/instalar_nodo.sh` instala todo y `arrancar_nodo.sh` pide el token sin mostrarlo (opción de guardarlo con permisos 600). README con 3 pasos para quien nunca usó Linux y `.gitattributes` con fin de línea LF para los `.sh`.
 
 ### Seguridad
+- Perfiles de adoptante cifrados (RNF-08, #149): con `PATITAS_CLAVE_DATOS` el perfil se guarda entero en `perfiles_adoptante.datos_cifrados` (AES-256-GCM, la misma clave del contacto del ciudadano) y las columnas en claro quedan vacías (migración `0026`). Los perfiles que ya existían se cifran solos al arrancar la API. Para actualizar: `alembic upgrade head`.
 - DT-09 pagada (#149): `POST /adoptantes` admite 5 registros por IP cada 15 minutos (429 con `Retry-After`; cuentan también los intentos fallidos) y responde exactamente igual si el correo ya tenía cuenta (antes: 409, que revelaba quién está registrado). La cuenta existente no cambia. El panel muestra un mensaje que cubre los dos casos.
 
 ### Cambiado

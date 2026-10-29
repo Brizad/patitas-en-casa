@@ -32,7 +32,7 @@ veterinarios y control de cupos del refugio.
 | `app/adopciones/` | Adopción (fase 3): perfil, publicación, solicitudes, `reglas.py` (RN-05), servicio y compromiso en PDF. |
 | `app/documentos/pdf.py` | PDF de texto sin dependencias (RF-29, RF-31). |
 | `app/demo.py` | Datos de demostración cargados al arrancar con `PATITAS_DEMO_ACTIVA` y `PATITAS_DEMO_CONTRASENA` (nunca en el código). |
-| `app/seguridad/cifrado.py` | AES-256-GCM para el contacto del ciudadano (`PATITAS_CLAVE_DATOS`, RF-18, RNF-08). |
+| `app/seguridad/cifrado.py` | AES-256-GCM para el contacto del ciudadano y el perfil del adoptante (#149) (`PATITAS_CLAVE_DATOS`, RF-18, RNF-08). |
 | `app/indicadores/`, `app/bitacora/` | Indicadores y exportación anonimizada (RF-30, RF-31); bitácora inmutable (RF-32). |
 | `scripts/operacion/` | Prueba de carga (RNF-01, RNF-14); los flujos `sondeo.yml` y `zap.yml` están en `.github/workflows/`. |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |

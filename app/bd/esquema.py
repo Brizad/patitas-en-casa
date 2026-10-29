@@ -150,20 +150,28 @@ usuarios = Table(
 )
 
 # RF-08 (#85): perfil del adoptante, uno por cuenta. Datos mínimos (RNF-08, RNF-16).
+# #149 (RNF-08): con PATITAS_CLAVE_DATOS el perfil va entero en datos_cifrados (AES-256-GCM)
+# y las columnas en claro quedan vacías (migración 0026).
 perfiles_adoptante = Table(
     "perfiles_adoptante",
     metadata,
     Column("correo", Text, ForeignKey("usuarios.correo"), primary_key=True),
-    Column("vivienda", String(12), nullable=False),
-    Column("tiene_patio", Boolean, nullable=False),
-    Column("hay_ninos", Boolean, nullable=False),
-    Column("otros_animales", Boolean, nullable=False),
-    Column("horas_solo_al_dia", SmallInteger, nullable=False),
-    Column("experiencia", Boolean, nullable=False),
-    Column("acepta_seguimiento", Boolean, nullable=False),
+    Column("vivienda", String(12)),
+    Column("tiene_patio", Boolean),
+    Column("hay_ninos", Boolean),
+    Column("otros_animales", Boolean),
+    Column("horas_solo_al_dia", SmallInteger),
+    Column("experiencia", Boolean),
+    Column("acepta_seguimiento", Boolean),
     Column("actualizado_en", DateTime(timezone=True), nullable=False),
+    Column("datos_cifrados", Text),
     CheckConstraint(f"vivienda IN ({_valores(Vivienda)})", name="ck_perfiles_vivienda"),
     CheckConstraint("horas_solo_al_dia BETWEEN 0 AND 24", name="ck_perfiles_horas"),
+    CheckConstraint(
+        "datos_cifrados IS NOT NULL OR (vivienda IS NOT NULL AND tiene_patio IS NOT NULL "
+        "AND hay_ninos IS NOT NULL AND otros_animales IS NOT NULL "
+        "AND horas_solo_al_dia IS NOT NULL AND experiencia IS NOT NULL "
+        "AND acepta_seguimiento IS NOT NULL)", name="ck_perfiles_claro_o_cifrado"),
 )
 
 # RF-25 (#85): animales publicados para adopción; una publicación por animal.
