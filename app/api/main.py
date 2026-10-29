@@ -9,6 +9,7 @@ import contextlib
 import logging
 import mimetypes
 import re
+import tempfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -76,8 +77,10 @@ from app.ajustes import (
     cargar_ajustes_datos,
     cargar_ajustes_demo,
     cargar_ajustes_seguridad,
+    cargar_ajustes_video,
 )
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
+from app.api.video import crear_rutas_video
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
@@ -157,6 +160,10 @@ from app.usuarios.servicio import (
     ServicioUsuarios,
     normalizar_correo,
 )
+from app.video.almacen import AlmacenEnDisco
+from app.video.repositorio import RepositorioVideos, RepositorioVideosEnMemoria
+from app.video.repositorio_postgres import RepositorioVideosPostgres
+from app.video.servicio import ServicioVideo
 
 logger = logging.getLogger(__name__)
 
@@ -423,7 +430,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_bitacora: RepositorioBitacora | None = None,
               contrasena_demo: str | None = None,
               cifrador: Cifrador | None = None,
-              repositorio_fotos: RepositorioFotos | None = None) -> FastAPI:
+              repositorio_fotos: RepositorioFotos | None = None,
+              repositorio_videos: RepositorioVideos | None = None,
+              token_video: str | None = None,
+              directorio_videos: str | None = None,
+              revisar_videos_cada_s: float | None = config.REVISION_VIDEOS_SEGUNDOS) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -469,6 +480,17 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         cifrador = Cifrador(clave_datos.get_secret_value()) if clave_datos else None
     repositorio_fotos = repositorio_fotos or (
         RepositorioFotosPostgres(motor) if motor is not None else RepositorioFotosEnMemoria())
+    # #125: análisis de video con el trabajador local. Sin token, apagado (manda el texto).
+    repositorio_videos = repositorio_videos or (
+        RepositorioVideosPostgres(motor) if motor is not None else RepositorioVideosEnMemoria())
+    if motor is not None:
+        ajustes_video = cargar_ajustes_video()
+        token_video = token_video or (ajustes_video.video_token.get_secret_value()
+                                      if ajustes_video.video_token else None)
+        directorio_videos = directorio_videos or ajustes_video.video_dir
+    almacen_videos = AlmacenEnDisco(directorio_videos or
+                                    Path(tempfile.gettempdir()) / "patitas-videos")
+    videos = ServicioVideo(repositorio_videos, repositorio, almacen_videos)
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
@@ -494,6 +516,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         if procesar_avisos_cada_s:
             tareas.append(asyncio.create_task(repetir_cada(
                 procesador.procesar, procesar_avisos_cada_s, "envío de avisos pendientes")))
+        if revisar_videos_cada_s and token_video:
+            tareas.append(asyncio.create_task(repetir_cada(
+                videos.revisar, revisar_videos_cada_s, "videos sin analizar a tiempo")))
         yield
         for tarea in tareas:
             tarea.cancel()
@@ -1200,6 +1225,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def inicio():
         return RedirectResponse("/app/")
 
+    app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal))
     app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")
     if (CARPETA_PANEL / "index.html").exists():  # sin compilar, /panel no existe
         app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")

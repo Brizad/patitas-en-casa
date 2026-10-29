@@ -107,6 +107,21 @@ class AjustesDatos(BaseSettings):
         return None if isinstance(valor, str) and not valor.strip() else valor
 
 
+class AjustesVideo(BaseSettings):
+    """#125: token que comparte la API con el trabajador local de video. Vacío = el análisis
+    de video está apagado y manda el texto. VIDEO_DIR: dónde esperan los videos (temporal)."""
+
+    model_config = SettingsConfigDict(env_prefix="PATITAS_", extra="ignore")
+
+    video_token: SecretStr | None = None
+    video_dir: str | None = None
+
+    @field_validator("video_token", "video_dir", mode="before")
+    @classmethod
+    def _vacio_es_ninguno(cls, valor):
+        return None if isinstance(valor, str) and not valor.strip() else valor
+
+
 class AjustesDemo(BaseSettings):
     """Datos de demostración (#109). Desactivados salvo PATITAS_DEMO_ACTIVA=true."""
 
@@ -158,3 +173,7 @@ def cargar_ajustes_demo(archivo_env: str | None = ".env") -> AjustesDemo:
 
 def cargar_ajustes_datos(archivo_env: str | None = ".env") -> AjustesDatos:
     return _cargar(AjustesDatos, "PATITAS_", archivo_env)
+
+
+def cargar_ajustes_video(archivo_env: str | None = ".env") -> AjustesVideo:
+    return _cargar(AjustesVideo, "PATITAS_", archivo_env)

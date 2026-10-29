@@ -30,6 +30,8 @@ services:
         generateValue: true          # Render genera una clave aleatoria; nadie la escribe a mano
       - key: PATITAS_CLAVE_DATOS     # RNF-08 (#111): cifra el contacto opcional del ciudadano
         generateValue: true
+      - key: PATITAS_VIDEO_TOKEN     # #125: lo comparte la API con el trabajador local de video
+        generateValue: true
       - key: PATITAS_SMTP_HOST       # vacío = los avisos quedan en el log y en la app
         sync: false
       # Primera cuenta de administración (#67): Brayan las escribe en el panel de Render.
