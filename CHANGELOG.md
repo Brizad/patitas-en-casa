@@ -4,6 +4,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 ### Agregado
+- Prueba de punta a punta (#121): cabeceras `Strict-Transport-Security`, `Permissions-Policy` y `Cross-Origin-Opener-Policy` en todas las respuestas (advertencias de OWASP ZAP) y compresión gzip. Panel: al elegir un reporte el foco va al detalle (en el celular quedaba debajo de la lista) y los botones de nombre de animal miden al menos 24 px (WCAG 2.2, RNF-11).
 - RF-30, RF-31 y RNF-16 completos (#117): tiempo de respuesta por prioridad (hasta confirmar y hasta que un rescatista acepta), devoluciones, tasa de recomendación por tipo de hogar, y `GET /indicadores/fichas.csv` (fichas del refugio sin el texto de las notas).
 - RF-25 (#115): foto de cada animal publicado (`POST /refugio/animales/{id}/foto`, coordinador; `GET /adopciones/animales/{id}/foto`, pública). JPEG, PNG o WebP de hasta 300 KB, validados por su contenido; se guardan en PostgreSQL porque el disco de Render gratis no persiste (migración `0024`). El catálogo trae `foto`. Panel: subir foto y verla en el catálogo.
 - RF-27 y RF-10 (#113): el coordinador puede pedir una **visita previa** antes de decidir (`POST /refugio/solicitudes/{id}/visita`) y registrar una **devolución con su motivo** (`POST /refugio/solicitudes/{id}/devolucion`, RN-13): el animal reingresa (ocupa cupo; sin cupo responde 409 y no cambia nada) y vuelve al catálogo. Estados nuevos `visita` y `devuelta` (migración `0023`). Panel: botones en «Adopciones».

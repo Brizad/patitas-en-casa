@@ -26,6 +26,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -169,6 +170,7 @@ for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
                           ("image/svg+xml", ".svg")):
     mimetypes.add_type(_tipo, _extension)
 # Solo recursos del propio servidor: sin scripts en línea ni de terceros (XSS).
+POLITICA_PERMISOS = "geolocation=(self), camera=(), microphone=(), payment=()"
 POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
                 "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
                 "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
@@ -501,6 +503,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             motor.dispose()
 
     app = FastAPI(title="Patitas en Casa", version="1.0.0", lifespan=ciclo_de_vida)
+    # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
+    # en celulares con datos limitados (RNF-07).
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
     # #95: reglas + modelo entrenado (el modelo solo sube la prioridad); sin modelo, reglas.
     clasificador, version_triaje = triaje_por_defecto()
     reportes = ServicioReportes(repositorio, ServicioTriaje(clasificador, version=version_triaje))
@@ -1103,9 +1108,15 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     @app.middleware("http")
     async def cabeceras_de_la_pwa(peticion: Request, siguiente):
         respuesta = await siguiente(peticion)
+        # Prueba de punta a punta (#121, OWASP ZAP): en todas las respuestas, HTTPS por un año
+        # (HSTS), el GPS solo desde este sitio (la PWA lo usa) y sin cámara ni micrófono, y
+        # ninguna otra ventana puede manipular esta (COOP).
+        respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
+        respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS
+        respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
         if peticion.url.path.startswith(("/app", "/panel")):
             respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
-            respuesta.headers["X-Content-Type-Options"] = "nosniff"
             respuesta.headers["Referrer-Policy"] = "no-referrer"
         return respuesta
 
