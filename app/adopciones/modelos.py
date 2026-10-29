@@ -71,3 +71,21 @@ class Publicacion:
     especie: str = ""
     estado: EstadoPublicacion = EstadoPublicacion.DISPONIBLE
     publicado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+class EstadoSolicitud(StrEnum):
+    PENDIENTE = "pendiente"
+    APROBADA = "aprobada"
+    RECHAZADA = "rechazada"
+
+
+@dataclass
+class Solicitud:
+    """RF-27: un adoptante pide adoptar un animal publicado; el refugio decide."""
+
+    id: int | None
+    animal_id: int
+    adoptante: str  # correo de la cuenta
+    mensaje: str
+    estado: EstadoSolicitud
+    creada_en: datetime

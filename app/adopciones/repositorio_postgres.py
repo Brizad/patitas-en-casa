@@ -2,17 +2,21 @@
 from __future__ import annotations
 
 from sqlalchemy import Engine, select
+from sqlalchemy import insert as insertar
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 
 from app.adopciones.modelos import (
     Energia,
     EstadoPublicacion,
+    EstadoSolicitud,
     PerfilAdoptante,
     Publicacion,
+    Solicitud,
     Tamano,
     Vivienda,
 )
-from app.bd.esquema import animales, perfiles_adoptante, publicaciones
+from app.bd.esquema import animales, perfiles_adoptante, publicaciones, solicitudes
 
 # La publicación con el nombre y la especie de la ficha del animal.
 _CONSULTA = select(publicaciones, animales.c.nombre, animales.c.especie).join(
@@ -77,6 +81,24 @@ class RepositorioAdopcionesPostgres:
                 publicaciones.c.estado == EstadoPublicacion.DISPONIBLE.value)
                 .order_by(publicaciones.c.publicado_en)).mappings()
             return [_publicacion(f) for f in filas]
+
+    def crear_solicitud(self, solicitud: Solicitud) -> bool:
+        try:
+            with self._motor.begin() as conexion:
+                solicitud.id = conexion.execute(insertar(solicitudes).values(
+                    animal_id=solicitud.animal_id, adoptante=solicitud.adoptante,
+                    mensaje=solicitud.mensaje, estado=solicitud.estado.value,
+                    creada_en=solicitud.creada_en).returning(solicitudes.c.id)).scalar_one()
+        except IntegrityError:
+            return False  # índice único parcial: ya había una pendiente
+        return True
+
+    def solicitudes(self) -> list[Solicitud]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(solicitudes).order_by(solicitudes.c.id)).mappings()
+            return [Solicitud(id=f["id"], animal_id=f["animal_id"], adoptante=f["adoptante"],
+                              mensaje=f["mensaje"], estado=EstadoSolicitud(f["estado"]),
+                              creada_en=f["creada_en"]) for f in filas]
 
 
 def _publicacion(f) -> Publicacion:

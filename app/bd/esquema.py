@@ -23,7 +23,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
-from app.adopciones.modelos import Energia, EstadoPublicacion, Tamano, Vivienda
+from app.adopciones.modelos import (
+    Energia,
+    EstadoPublicacion,
+    EstadoSolicitud,
+    Tamano,
+    Vivienda,
+)
 from app.avisos.modelos import EstadoAviso
 from app.dominio.modelos import (
     Especie,
@@ -176,6 +182,21 @@ publicaciones = Table(
                     name="ck_publicaciones_estado"),
     CheckConstraint("edad_meses BETWEEN 0 AND 360", name="ck_publicaciones_edad"),
 )
+
+# RF-27 (#85): solicitudes de adopción.
+solicitudes = Table(
+    "solicitudes",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("animal_id", Integer, ForeignKey("publicaciones.animal_id"), nullable=False),
+    Column("adoptante", Text, ForeignKey("usuarios.correo"), nullable=False),
+    Column("mensaje", Text, nullable=False, server_default=""),
+    Column("estado", String(10), nullable=False),
+    Column("creada_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"estado IN ({_valores(EstadoSolicitud)})", name="ck_solicitudes_estado"),
+)
+Index("uq_solicitudes_pendiente", solicitudes.c.animal_id, solicitudes.c.adoptante,
+      unique=True, postgresql_where=text("estado = 'pendiente'"))
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
 intentos_fallidos = Table(

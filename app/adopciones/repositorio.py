@@ -4,7 +4,13 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Protocol
 
-from app.adopciones.modelos import EstadoPublicacion, PerfilAdoptante, Publicacion
+from app.adopciones.modelos import (
+    EstadoPublicacion,
+    EstadoSolicitud,
+    PerfilAdoptante,
+    Publicacion,
+    Solicitud,
+)
 
 
 class RepositorioAdopciones(Protocol):
@@ -24,11 +30,20 @@ class RepositorioAdopciones(Protocol):
         """Catálogo público: publicaciones disponibles, la más antigua primero."""
         ...
 
+    def crear_solicitud(self, solicitud: Solicitud) -> bool:
+        """Asigna solicitud.id. False si el adoptante ya tiene una pendiente por ese animal."""
+        ...
+
+    def solicitudes(self) -> list[Solicitud]:
+        """Todas, la más antigua primero."""
+        ...
+
 
 class RepositorioAdopcionesEnMemoria:
     def __init__(self) -> None:
         self._perfiles: dict[str, PerfilAdoptante] = {}
         self._publicaciones: dict[int, Publicacion] = {}
+        self._solicitudes: list[Solicitud] = []
 
     def guardar_perfil(self, perfil: PerfilAdoptante) -> None:
         self._perfiles[perfil.correo] = replace(perfil)
@@ -51,3 +66,14 @@ class RepositorioAdopcionesEnMemoria:
         return sorted((replace(p) for p in self._publicaciones.values()
                        if p.estado == EstadoPublicacion.DISPONIBLE),
                       key=lambda p: p.publicado_en)
+
+    def crear_solicitud(self, solicitud: Solicitud) -> bool:
+        if any(s.animal_id == solicitud.animal_id and s.adoptante == solicitud.adoptante
+               and s.estado == EstadoSolicitud.PENDIENTE for s in self._solicitudes):
+            return False
+        solicitud.id = len(self._solicitudes) + 1
+        self._solicitudes.append(replace(solicitud))
+        return True
+
+    def solicitudes(self) -> list[Solicitud]:
+        return [replace(s) for s in self._solicitudes]

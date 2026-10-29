@@ -33,6 +33,12 @@ from app import config
 from app.adopciones.modelos import Energia, PerfilAdoptante, Publicacion, Tamano, Vivienda
 from app.adopciones.repositorio import RepositorioAdopciones, RepositorioAdopcionesEnMemoria
 from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
+from app.adopciones.servicio import (
+    AnimalNoDisponible,
+    PerfilIncompleto,
+    ServicioAdopciones,
+    SolicitudRepetida,
+)
 from app.ajustes import (
     cargar_ajustes,
     cargar_ajustes_admin,
@@ -276,6 +282,11 @@ def _publicacion(p: Publicacion) -> dict:
             "estado": p.estado.value, "publicado_en": fecha_utc(p.publicado_en)}
 
 
+class SolicitudEntrada(BaseModel):
+    animal_id: int
+    mensaje: str = Field(default="", max_length=1000)
+
+
 class NotaEntrada(BaseModel):
     tipo: TipoNota
     texto: str = Field(max_length=2000)
@@ -356,6 +367,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         RepositorioAdopcionesPostgres(motor) if motor is not None
         else RepositorioAdopcionesEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
+    adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
     usuario_actual = Depends(dependencia_usuario)
     # DT-02: el personal se identifica con su token; X-Rol ya no existe.
@@ -538,6 +550,45 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     def catalogo_de_adopcion():
         """Público: animales disponibles. Sin datos del refugio ni de personas (RN-14)."""
         return [_publicacion(p) for p in repositorio_adopciones.disponibles()]
+
+    @app.post("/adopciones/solicitudes", status_code=201)
+    def solicitar_adopcion(datos: SolicitudEntrada, adoptante: Usuario = adoptante_actual):
+        """RF-27, RN-10: perfil lleno y seguimiento aceptado; una pendiente por animal."""
+        try:
+            s = adopciones.solicitar(adoptante, datos.animal_id, datos.mensaje)
+        except PerfilIncompleto as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        except AnimalNoDisponible as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except SolicitudRepetida as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        return {"id": s.id, "animal_id": s.animal_id, "estado": s.estado.value}
+
+    @app.get("/adopciones/solicitudes/mias")
+    def mis_solicitudes(adoptante: Usuario = adoptante_actual):
+        return [{"id": s.id, "animal_id": s.animal_id, "estado": s.estado.value,
+                 "creada_en": fecha_utc(s.creada_en)}
+                for s in repositorio_adopciones.solicitudes() if s.adoptante == adoptante.correo]
+
+    @app.get("/refugio/solicitudes")
+    def solicitudes_del_refugio(coordinador: Usuario = coordinacion):
+        """Las solicitudes por animales de SU refugio, con el perfil del adoptante: es lo que
+        el coordinador necesita para decidir (y nada más: ni contraseña ni otros datos)."""
+        animales = fichas_de(coordinador)
+        respuesta = []
+        for s in repositorio_adopciones.solicitudes():
+            animal = animales.animal(s.animal_id)
+            if animal is None:
+                continue
+            perfil = repositorio_adopciones.perfil(s.adoptante)
+            respuesta.append({
+                "id": s.id, "animal_id": s.animal_id, "animal": animal.nombre,
+                "adoptante": s.adoptante, "mensaje": s.mensaje, "estado": s.estado.value,
+                "creada_en": fecha_utc(s.creada_en),
+                "perfil": None if perfil is None else {
+                    k: v for k, v in vars(perfil).items()
+                    if k not in ("correo", "actualizado_en")}})
+        return respuesta
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,
