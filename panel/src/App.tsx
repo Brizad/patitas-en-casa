@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Cuenta, iniciarSesion, miCuenta } from "./api";
 import Administracion from "./Administracion";
+import AdopcionesCoordinador from "./AdopcionesCoordinador";
 import Adoptante from "./Adoptante";
 import Cola from "./Cola";
 import { textoError } from "./mensajes";
@@ -38,6 +39,7 @@ export default function App() {
       {pantalla === "rescates" && <Rescatista token={token} />}
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
       {pantalla === "adopcion" && <Adoptante token={token} />}
+      {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}
       {pantalla === "administracion" && <Administracion token={token} yo={cuenta.correo} />}
       {pantalla === null && <p className="vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>
