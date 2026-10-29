@@ -40,3 +40,11 @@
   no la registra); límite de registros por IP en `POST /adoptantes` (anotado en
   `DEUDA_TECNICA.md` como DT-09).
 - Guía: `fase-3-adopcion.md`.
+
+## Fase 4 · IA (#95)
+
+- PR apilados, en orden: #96 (clasificador entrenado) → #97 (compatibilidad) → #98
+  (jornada, húngaro) → #99 (video: puerto y RN-07) → #100 (panel) → guía de la fase.
+- El modelo de triaje se entrenó con datos sintéticos: sus métricas no son clínicas.
+- No construido: análisis de video con MediaPipe (DT-10, con plan en `DEUDA_TECNICA.md`).
+- Guía: `fase-4-ia.md`.

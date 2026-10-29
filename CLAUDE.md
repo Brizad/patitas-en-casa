@@ -23,7 +23,8 @@ veterinarios y control de cupos del refugio.
 | `app/ajustes.py` | Conexión a PostgreSQL leída del entorno o `.env` (`AjustesBD`). |
 | `app/bd/` | Tablas (`esquema.py`) y aplicar/verificar migraciones desde Python (`migraciones.py`). |
 | `migraciones/` | Alembic: una revisión por cada cambio de `app/bd/esquema.py`. |
-| `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
+| `app/triaje/` | Normalización, reglas v0, modelo TF-IDF desde JSON (`modelo.py`), combinación reglas+modelo (`combinado.py`: el modelo solo sube), puerto de video (`video.py`) y `ServicioTriaje` (RN-02/RN-03). |
+| `scripts/ia/` | Generador de datos **sintéticos** y entrenamiento del triaje (scikit-learn solo aquí). |
 | `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
 | `app/refugios/` | `RepositorioRefugios` (memoria y PostgreSQL): refugios que registra el administrador (RF-14). |
 | `app/adopciones/` | Adopción (fase 3): perfil, publicación, solicitudes, `reglas.py` (RN-05), servicio y compromiso en PDF. |
@@ -142,6 +143,7 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Deuda técnica abierta
 
-Ver `DEUDA_TECNICA.md`: DT-04 (clasificador por reglas → modelo Transformer). Pagadas: DT-01 (reportes en
+Ver `DEUDA_TECNICA.md`: DT-04 (pagada en parte: falta validar el modelo con datos reales),
+DT-07, DT-08, DT-09 (registro público sin límite por IP) y DT-10 (video sin MediaPipe). Pagadas: DT-01 (reportes en
 PostgreSQL), DT-02 (JWT + Argon2id), DT-03 (notificador por correo), DT-05 (cupos en
 PostgreSQL) y DT-06 (límite de intentos de inicio de sesión).
