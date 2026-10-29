@@ -18,7 +18,9 @@ export default function RegistroAdoptante({ alTerminar }: { alTerminar: (m: stri
     if (!autoriza) return setError("Debes autorizar el tratamiento de tus datos.");
     try {
       await registrarAdoptante(correo.trim(), nombre.trim(), clave, autoriza);
-      alTerminar("Cuenta creada. Ya puedes entrar con tu correo y contraseña.");
+      // DT-09: el servidor no dice si el correo ya tenía cuenta; el mensaje cubre ambos casos.
+      alTerminar("Listo. Si este correo no tenía cuenta, ya puedes entrar con él y tu "
+        + "contraseña. Si ya tenía una, entra con tu contraseña de siempre.");
     } catch (e) {
       setError(textoError(e));
     }
@@ -26,7 +28,7 @@ export default function RegistroAdoptante({ alTerminar }: { alTerminar: (m: stri
 
   return (
     <form className="tarjeta inicio" onSubmit={crear}>
-      <h2>Quiero adoptar</h2>
+      <h1>Quiero adoptar</h1>
       <label>Correo<input type="email" required value={correo} autoComplete="email"
         onChange={(e) => setCorreo(e.target.value)} /></label>
       <label>Nombre<input required value={nombre} onChange={(e) => setNombre(e.target.value)} />

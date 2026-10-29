@@ -280,6 +280,21 @@ Seis tareas pedidas por Brayan, cada una en PR pequeños con CI en verde.
 - **Lo que te toca:** escuchar el guion de la demostración con NVDA (gratis) o TalkBack, unos
   20 minutos, y anotar lo que suene confuso.
 
+### 4. Seguridad de los adoptantes (#149)
+
+**Parte 1, DT-09 pagada.** El registro público de adoptantes tenía dos huecos:
+
+- **Sin límite:** un robot podía crear miles de cuentas. Ahora cada IP puede registrar 5
+  cuentas cada 15 minutos (se reutilizó el `LimiteIntentos` del inicio de sesión con otra
+  clave, `registro:<ip>`); la sexta recibe 429 y cuánto esperar.
+- **Revelaba correos:** si el correo ya existía respondía 409, así que cualquiera podía
+  averiguar quién tiene cuenta. Ahora la respuesta es idéntica en los dos casos y la cuenta
+  existente no cambia. Como el hash Argon2id se calcula antes de descubrir que el correo
+  existe, ni siquiera el tiempo de respuesta lo delata.
+- Para la sustentación: «¿y si el dueño del correo olvidó que tenía cuenta?» Entra con su
+  contraseña de siempre; el mensaje lo dice. Lo ideal sería avisarle por correo, pero en
+  producción no hay SMTP (P-12).
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis

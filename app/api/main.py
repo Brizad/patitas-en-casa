@@ -150,6 +150,7 @@ from app.usuarios.intentos import (
     RepositorioIntentosEnMemoria,
     clave_correo,
     clave_ip,
+    clave_registro,
 )
 from app.usuarios.intentos_postgres import RepositorioIntentosPostgres
 from app.usuarios.repositorio import CorreoDuplicado, RepositorioUsuarios
@@ -187,6 +188,10 @@ POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
                 "img-src 'self' blob:; media-src blob:; "
                 "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
                 "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
+
+# DT-09 (#149): igual si el correo es nuevo o ya tenía cuenta.
+MENSAJE_REGISTRO = ("Listo. Si este correo no tenía cuenta, ya puedes entrar con él y tu "
+                    "contraseña. Si ya tenía una, entra con tu contraseña de siempre.")
 
 # Pueden usar /cola y /refugio/ocupacion. Públicos (RF-01): POST /reportes y
 # GET /reportes/{codigo}. POST /refugio/ingresos es solo del coordinador (P-06 del prototipo).
@@ -684,21 +689,34 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     # --- Fase 3 (#85): adoptante (RF-08) ---------------------------------------------
 
     @app.post("/adoptantes", status_code=201)
-    def registrar_adoptante(datos: RegistroAdoptante):
+    def registrar_adoptante(datos: RegistroAdoptante, peticion: Request):
         """Público, como el reporte: el adoptante no es personal y crea su propia cuenta.
-        El rol siempre es adoptante; nadie puede registrarse como personal por aquí."""
+        El rol siempre es adoptante; nadie puede registrarse como personal por aquí.
+
+        DT-09 (#149): máximo REGISTROS_MAXIMOS_POR_IP intentos por IP en la ventana (429), y
+        la misma respuesta exista o no el correo: así nadie averigua quién tiene cuenta."""
+        clave = clave_registro(peticion.client.host if peticion.client else "desconocida")
+        espera = limite_intentos.segundos_de_bloqueo([clave])
+        if espera:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Demasiados registros desde esta conexión. Intenta en {espera} segundos.",
+                headers={"Retry-After": str(espera)})
+        limite_intentos.registrar_fallo([clave])
         if not datos.autoriza_datos:
             raise HTTPException(status_code=422, detail=(
                 "Para crear la cuenta debes autorizar el tratamiento de tus datos "
                 "(Ley 1581 de 2012)."))
         try:
-            nueva = usuarios.registrar(datos.correo, datos.nombre, Rol.ADOPTANTE,
-                                       datos.contrasena)
-        except CorreoDuplicado as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
+            usuarios.registrar(datos.correo, datos.nombre, Rol.ADOPTANTE, datos.contrasena)
+        except CorreoDuplicado:
+            # La cuenta existente no cambia. El hash ya se calculó antes de fallar, así que
+            # tampoco el tiempo de respuesta delata el correo.
+            pass
         except (ContrasenaInvalida, ValueError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-        return {"correo": nueva.correo, "rol": nueva.rol.value}
+        return {"correo": normalizar_correo(datos.correo), "rol": Rol.ADOPTANTE.value,
+                "mensaje": MENSAJE_REGISTRO}
 
     @app.get("/adoptantes/yo/perfil")
     def mi_perfil(adoptante: Usuario = adoptante_actual):

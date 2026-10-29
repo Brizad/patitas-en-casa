@@ -9,6 +9,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Página de inicio pública en la raíz del sitio (#145, `app/inicio/`): explica el problema en Cúcuta, el flujo reporte → IA de texto y video → veterinario → rescate → refugio → adopción, los siete roles y la tecnología, con botones grandes a «Reportar emergencia» (`/app/`), «Adoptar» (`/panel/#registro`, abre el registro de adoptante) y «Entrar como personal». Sin JavaScript, con la misma CSP de la PWA, una columna en celular y modo oscuro.
 - Scripts del nodo de video para Ubuntu/WSL2 (#143): `servicios/video/instalar_nodo.sh` instala todo y `arrancar_nodo.sh` pide el token sin mostrarlo (opción de guardarlo con permisos 600). README con 3 pasos para quien nunca usó Linux y `.gitattributes` con fin de línea LF para los `.sh`.
 
+### Seguridad
+- DT-09 pagada (#149): `POST /adoptantes` admite 5 registros por IP cada 15 minutos (429 con `Retry-After`; cuentan también los intentos fallidos) y responde exactamente igual si el correo ya tenía cuenta (antes: 409, que revelaba quién está registrado). La cuenta existente no cambia. El panel muestra un mensaje que cubre los dos casos.
+
 ### Cambiado
 - Panel: el inicio de sesión y el registro de adoptante van dentro de `<main>`, y la barra con sesión tiene un título de nivel 1 (axe `landmark-one-main`, `region`, `page-has-heading-one`; Lighthouse pasó de 96 a 100) (#147).
 - `GET /` muestra la página de inicio en vez de redirigir a la PWA (#145).

@@ -104,7 +104,7 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
 
 - Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01),
   `POST /auth/token`, `POST /adoptantes` (siempre crea el rol adoptante, exige
-  `autoriza_datos`) y `GET /adopciones/animales`. Todo lo demás exige `Authorization: Bearer` de personal
+  `autoriza_datos`; DT-09: 5 por IP cada 15 min y la misma respuesta si el correo ya existe) y `GET /adopciones/animales`. Todo lo demás exige `Authorization: Bearer` de personal
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
 - `POST /refugio/ingresos` es solo del coordinador (`dependencies=[coordinacion]`, 403 para el
@@ -153,6 +153,6 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 ## Deuda técnica abierta
 
 Ver `DEUDA_TECNICA.md`: DT-04 (pagada en parte: falta validar el modelo con datos reales),
-DT-07, DT-08, DT-09 (registro público sin límite por IP). Pagadas: DT-10 (video, fase 6), DT-01 (reportes en
+DT-07 y DT-08. Pagadas: DT-09 (registro con límite por IP, #149), DT-10 (video, fase 6), DT-01 (reportes en
 PostgreSQL), DT-02 (JWT + Argon2id), DT-03 (notificador por correo), DT-05 (cupos en
 PostgreSQL) y DT-06 (límite de intentos de inicio de sesión).

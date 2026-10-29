@@ -105,3 +105,4 @@ No son requisitos nuevos del ERS: mejoran la presentación y la operación de lo
 | Scripts del nodo de video (WSL/Ubuntu) | RF-03, RNF-02 | `servicios/video/instalar_nodo.sh`, `arrancar_nodo.sh` | `test_video_nodo.py` | #143 / #144 |
 | Página de inicio pública | RF-01 (entrada al reporte), RNF-07, RNF-11 | `app/inicio/` | `test_inicio.py` | #145 / #146 |
 | Revisión de accesibilidad en el CI | RNF-11 | `scripts/accesibilidad/`, paso «Accesibilidad» del CI | `revisar.mjs` (axe-core + Lighthouse) | #147 / #148 |
+| DT-09: registro de adoptantes con límite por IP y sin revelar correos | RNF-05, RNF-08 | `app/usuarios/intentos.py`, `POST /adoptantes` | `test_registro_adoptante.py` | #149 |

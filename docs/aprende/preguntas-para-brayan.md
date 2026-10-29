@@ -15,6 +15,7 @@ Cada una dice qué se eligió y cómo cambiarla.
 | P-08 | ¿Correo real para los avisos (RF-05, RF-18)? | Sin SMTP los avisos quedan en el log y en la app. | Crea en Render `PATITAS_SMTP_HOST`, `PATITAS_SMTP_USUARIO`, `PATITAS_SMTP_CONTRASENA` y `PATITAS_SMTP_REMITENTE` (por ejemplo, Gmail con contraseña de aplicación). |
 | P-09 | ¿Subir videos (RF-01) y analizarlos (RF-03)? | No cabe en el plan gratis (ver `trazabilidad.md`, notas 1 y 2). | Decide si se crea un almacenamiento de objetos y un worker; el plan está en DT-10. |
 | P-10 | ¿Prueba con usuarios reales (RNF-06)? | Pendiente: necesita 10 personas y un cronómetro. | Usa `guion-demo.md` como tarea y registra el tiempo y el puntaje SUS. |
+| P-12 | DT-09: ¿qué hacer cuando alguien se registra con un correo que ya tiene cuenta? | Se responde igual que a un registro nuevo y **no se avisa** al dueño (no hay SMTP en producción, P-08). | Con SMTP configurado, pídeme «avisar al dueño del correo»: se encola un aviso «alguien intentó registrarse con tu correo» con el mismo outbox de #63. |
 
 **Texto sugerido para la regla 2 de `CLAUDE.md` (lo pegas tú):**
 
