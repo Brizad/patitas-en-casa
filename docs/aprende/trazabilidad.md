@@ -9,7 +9,7 @@ por qué. Los PR de las fases 1 a 5 se revisaron uno por uno (#66 a #107) y se i
 `main` juntos en el **#108**; por eso aparecen como «#NN → #108». Todas las rutas de pruebas
 están en `tests/`.
 
-Resumen: **RF: 32 hechos. RNF: 10 hechos, 5 parciales, 1 pendiente** (RNF-06), más RNF-15 que espera la decisión de Brayan. La fase 6 (#125) cerró RF-01, RF-03, RF-19 y RNF-02.
+Resumen: **RF: 32 hechos. RNF: 11 hechos, 4 parciales, 1 pendiente** (RNF-06), más RNF-15 que espera la decisión de Brayan. La fase 6 (#125) cerró RF-01, RF-03, RF-19 y RNF-02.
 
 ## Requisitos funcionales
 
@@ -63,7 +63,7 @@ Resumen: **RF: 32 hechos. RNF: 10 hechos, 5 parciales, 1 pendiente** (RNF-06), m
 | RNF-09 | ≥ 3 evidencias o factores | Hecho | `app/triaje/combinado.py`, `compatibilidad.py` | #96, #97 → #108 |
 | RNF-10 | Cobertura ≥ 70 %, complejidad ≤ 10, ruff | Hecho: cobertura del 97 %; complejidad ≤ 10 en el CI (ruff C901) | `pyproject.toml`, `.github/workflows/ci.yml` | #108 |
 | RNF-11 | WCAG 2.2 AA (contraste, teclado, lectores, objetivos ≥ 24 px) | Parcial: **medido** con axe-core y Lighthouse en cada PR (todas las pantallas y roles, claro, oscuro y 320 px): 0 fallas y Lighthouse 100 después de corregir 2 fallas del panel (`accesibilidad.md`). Teclado revisado a mano (#122). Falta escuchar el recorrido con un lector de pantalla | `panel/src/`, `app/pwa/` | #84 → #108, #122 |
-| RNF-12 | Bitácora con actor, fecha, valor anterior y nuevo, sin edición | Parcial: actor, fecha, acción y objeto, inmutable. El valor anterior y el nuevo están en las tablas de cada dominio (`decisiones_triaje`: sugerida → final; historial clínico; solicitudes), no en la bitácora general | `app/bitacora/` | #103 → #108 |
+| RNF-12 | Bitácora con actor, fecha, valor anterior y nuevo, sin edición | Hecho (#149): actor, fecha, acción, objeto y, en los cambios importantes, el valor anterior y el nuevo (prioridad, estado del reporte, cuenta activa, refugio, solicitud, ocupación; del perfil solo los campos). Inmutable por disparador. No guarda valores personales | `app/bitacora/` | #103 → #108 |
 | RNF-13 | Docker, PostgreSQL 16, configuración por entorno | Hecho (Redis no hace falta: el outbox usa PostgreSQL) | `Dockerfile`, `render.yaml` | #64 |
 | RNF-14 | 200 reportes/hora y 50 usuarios del panel | Hecho en local: ≈ 58.000 reportes/hora con 50 usuarios del panel a la vez | `scripts/operacion/prueba_carga.py` | #120 |
 | RNF-15 | Respaldo diario cifrado; RPO ≤ 24 h, RTO ≤ 4 h | **Pendiente**: decisión de Brayan (nota 7) | — | — |
@@ -107,3 +107,4 @@ No son requisitos nuevos del ERS: mejoran la presentación y la operación de lo
 | Revisión de accesibilidad en el CI | RNF-11 | `scripts/accesibilidad/`, paso «Accesibilidad» del CI | `revisar.mjs` (axe-core + Lighthouse) | #147 / #148 |
 | DT-09: registro de adoptantes con límite por IP y sin revelar correos | RNF-05, RNF-08 | `app/usuarios/intentos.py`, `POST /adoptantes` | `test_registro_adoptante.py` | #149 |
 | Perfiles de adoptante cifrados | RNF-08 | `app/adopciones/repositorio_postgres.py`, migración `0026` | `test_perfiles_cifrados.py`, `test_adoptante_perfil.py` | #149 |
+| Bitácora con valor anterior y nuevo | RNF-12 | `app/bitacora/`, `_cambio` en `app/api/main.py`, migración `0027` | `test_bitacora_valores.py` | #149 |

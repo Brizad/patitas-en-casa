@@ -309,6 +309,19 @@ horas solo, experiencia…) se guarda cifrado con AES-256-GCM, con la misma clav
   adoptante tendría que llenarlo de nuevo. Por eso la clave vive en Render y conviene
   guardarla también en un gestor de contraseñas (P-13).
 
+**Parte 3, bitácora con valor anterior y nuevo (RNF-12).** Antes la bitácora decía quién
+hizo qué y cuándo; ahora también **cómo estaba y cómo quedó**:
+
+- El endpoint llama a `_cambio(peticion, anterior, nuevo)` y el middleware que ya guardaba
+  cada cambio lo escribe junto con el actor y la ruta. Si la acción falla, no queda nada.
+- Se registra en: confirmar (prioridad sugerida → final), descartar (estado y motivo),
+  suspender o reactivar cuentas, vincular a un refugio, decidir solicitudes, ingresos y
+  egresos (ocupación antes y después) y el perfil del adoptante.
+- **Del perfil solo se guardan los nombres de los campos** que cambiaron, no los valores: la
+  bitácora no está cifrada y el perfil sí (sería una fuga).
+- En el panel del administrador, la bitácora tiene la columna «Antes → después».
+- Con esto RNF-12 pasa a **hecho**.
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis
