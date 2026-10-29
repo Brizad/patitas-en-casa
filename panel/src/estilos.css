@@ -15,6 +15,7 @@ label { display: block; margin: 10px 0; font-weight: 600; }
 .barra { display: flex; gap: 16px; align-items: center; padding: 12px 20px; background: var(--verde);
   color: #fff; }
 .barra span { margin-left: auto; }
+.marca { font-size: 1rem; margin: 0; }  /* h1 de la barra, del tamaño del texto */
 .vacio { padding: 24px; color: #5a6461; }
 .cola { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 16px; padding: 16px; }
 @media (max-width: 760px) { .cola { grid-template-columns: 1fr; } }

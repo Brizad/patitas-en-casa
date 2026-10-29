@@ -13,3 +13,7 @@ app/panel_web/
 
 # Datos sintéticos de entrenamiento (se regeneran con scripts/ia/).
 datos_sinteticos_*.csv
+
+# Revisión de accesibilidad (RNF-11)
+scripts/accesibilidad/node_modules/
+scripts/accesibilidad/informe.json

@@ -26,7 +26,7 @@ export default function App() {
       {/* D-08: el primer Tab ofrece ir directo a la cola sin recorrer la barra. */}
       {pantalla === "cola" && <a className="saltar" href="#cola">Saltar a la cola</a>}
       <header className="barra">
-        <b>Patitas en Casa · Panel</b>
+        <h1 className="marca">Patitas en Casa · Panel</h1>
         <span>{cuenta.nombre} · {cuenta.rol}</span>
         <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
       </header>
@@ -72,20 +72,26 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
   }
 
   if (registro) {
-    return <RegistroAdoptante alTerminar={(m) => { setAviso(m); setRegistro(false); }} />;
+    return (
+      <main>
+        <RegistroAdoptante alTerminar={(m) => { setAviso(m); setRegistro(false); }} />
+      </main>
+    );
   }
   return (
-    <form className="tarjeta inicio" onSubmit={entrar}>
-      <h1>Patitas en Casa</h1>
-      {aviso && <p className="resultado" role="status">{aviso}</p>}
-      <label>Correo<input type="email" value={correo} required autoComplete="username"
-        onChange={(e) => setCorreo(e.target.value)} /></label>
-      <label>Contraseña<input type="password" value={clave} required
-        autoComplete="current-password" onChange={(e) => setClave(e.target.value)} /></label>
-      {error && <p className="error" role="alert">{error}</p>}
-      <button className="principal" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
-      <p><button type="button" className="enlace" onClick={() => setRegistro(true)}>
-        ¿Quieres adoptar? Crea tu cuenta</button></p>
-    </form>
+    <main>
+      <form className="tarjeta inicio" onSubmit={entrar}>
+        <h1>Patitas en Casa</h1>
+        {aviso && <p className="resultado" role="status">{aviso}</p>}
+        <label>Correo<input type="email" value={correo} required autoComplete="username"
+          onChange={(e) => setCorreo(e.target.value)} /></label>
+        <label>Contraseña<input type="password" value={clave} required
+          autoComplete="current-password" onChange={(e) => setClave(e.target.value)} /></label>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="principal" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
+        <p><button type="button" className="enlace" onClick={() => setRegistro(true)}>
+          ¿Quieres adoptar? Crea tu cuenta</button></p>
+      </form>
+    </main>
   );
 }
