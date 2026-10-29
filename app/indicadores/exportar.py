@@ -16,7 +16,7 @@ import io
 from datetime import UTC
 
 from app.documentos.pdf import generar_pdf
-from app.dominio.modelos import DecisionTriaje, Reporte
+from app.dominio.modelos import Animal, DecisionTriaje, Reporte
 
 COLUMNAS = ["fila", "dia", "comuna", "estado", "prioridad_sugerida", "prioridad_final",
             "ajustada", "minutos_hasta_confirmar", "version_modelo"]
@@ -74,3 +74,23 @@ def resumen_pdf(indicadores: dict, generado: str) -> bytes:
 
 def _lista(conteo: dict) -> str:
     return ", ".join(f"{k} {v}" for k, v in conteo.items()) or "sin datos"
+
+
+COLUMNAS_FICHAS = ["id", "especie", "ingreso", "egreso", "motivo_egreso", "vacunado",
+                   "esterilizado", "notas_clinicas"]
+
+
+def fichas_csv(animales: list[tuple[Animal, int]]) -> str:
+    """RF-31: fichas del refugio sin el texto de las notas (pueden nombrar personas): solo
+    cuántas hay. Fechas por día."""
+    salida = io.StringIO()
+    escritor = csv.writer(salida)
+    escritor.writerow(COLUMNAS_FICHAS)
+    for a, notas in animales:
+        escritor.writerow([_celda(v) for v in (
+            a.id, a.especie.value,
+            a.ingresado_en.astimezone(UTC).date().isoformat() if a.ingresado_en else "",
+            a.egresado_en.astimezone(UTC).date().isoformat() if a.egresado_en else "",
+            a.motivo_egreso.value if a.motivo_egreso else "",
+            "si" if a.vacunado else "no", "si" if a.esterilizado else "no", notas)])
+    return salida.getvalue()
