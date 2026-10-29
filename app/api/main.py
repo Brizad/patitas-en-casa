@@ -91,6 +91,8 @@ from app.dominio.modelos import (
     Ubicacion,
     Usuario,
 )
+from app.indicadores.calculo import Datos
+from app.indicadores.calculo import calcular as calcular_indicadores
 from app.notificaciones.correo import crear_notificador
 from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
 from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
@@ -423,6 +425,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     veterinaria = exigir_rol(dependencia_usuario, Rol.VETERINARIO)  # RN-06
     rescatista_actual = exigir_rol(dependencia_usuario, Rol.RESCATISTA)  # HU-06
     administracion = exigir_rol(dependencia_usuario, Rol.ADMINISTRADOR)  # #67
+    gestion = exigir_rol(dependencia_usuario, Rol.COORDINADOR, Rol.ADMINISTRADOR)  # #102
     adoptante_actual = exigir_rol(dependencia_usuario, Rol.ADOPTANTE)  # #85
 
     @asynccontextmanager
@@ -962,6 +965,25 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                 # La acción ya ocurrió; no se le dice al usuario que falló. Queda en el log.
                 logger.exception("No se pudo registrar en la bitácora: %s", ruta.path)
         return respuesta
+
+    def datos_para_indicadores() -> Datos:
+        reportes_ = repositorio.todos()
+        decisiones = {}
+        for r in reportes_:
+            lista = repositorio.decisiones(r.codigo)
+            if lista:
+                decisiones[r.codigo] = lista[-1]
+        rescates_ = [x for x in (repositorio_rescates.vigente(c) for c in decisiones) if x]
+        solicitudes_ = repositorio_adopciones.solicitudes()
+        seguimientos_ = [x for s in solicitudes_ for x in repositorio_adopciones.seguimientos(s.id)]
+        return Datos(reportes_, decisiones, rescates_, repositorio_refugios.todos(),
+                     solicitudes_, seguimientos_)
+
+    @app.get("/indicadores", dependencies=[gestion])
+    def indicadores():
+        """RF-30: conteos, porcentajes y tiempos; ningún dato personal. Se calculan al pedirlos
+        (pocos datos: no hace falta un almacén aparte)."""
+        return calcular_indicadores(datos_para_indicadores(), datetime.now(UTC))
 
     @app.get("/bitacora")
     def ver_bitacora(limite: int = 100, _admin: Usuario = administracion):
