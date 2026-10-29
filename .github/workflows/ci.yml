@@ -93,3 +93,25 @@ jobs:
           npm ci --no-audit --no-fund
           npm test
           npm run build
+
+      # RNF-11 (#147): accesibilidad medida con axe-core (cada pantalla, cada rol, claro y
+      # oscuro) y Lighthouse (pantallas públicas, puntaje 100) sobre el panel recién compilado.
+      # La contraseña de las cuentas de demostración es aleatoria y vive solo en este paso.
+      - name: Accesibilidad (axe-core y Lighthouse)
+        working-directory: scripts/accesibilidad
+        run: |
+          npm ci --no-audit --no-fund
+          clave="$(openssl rand -hex 16)"
+          echo "::add-mask::$clave"
+          export PATITAS_DEMO_CONTRASENA="$clave"
+          python servidor_demo.py 8765 &
+          curl -sf -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:8765/
+          CHROME_PATH="$(command -v google-chrome)" node revisar.mjs
+
+      - name: Guardar el informe de accesibilidad
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-accesibilidad
+          path: scripts/accesibilidad/informe.json
+          if-no-files-found: ignore

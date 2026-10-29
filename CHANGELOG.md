@@ -5,10 +5,12 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Accesibilidad medida (RNF-11, #147): `scripts/accesibilidad/revisar.mjs` recorre la página de inicio, la PWA y cada pestaña de los 6 roles con axe-core 4.14 (WCAG 2.2 A/AA y buenas prácticas, en claro, oscuro y celular de 320 px) y Lighthouse 13.6 (puntaje mínimo 100), más el reflujo a 320 px. Corre en el CI con un servidor de demostración en memoria (`servidor_demo.py`, contraseña aleatoria por corrida). Informe en `docs/aprende/accesibilidad.md`.
 - Página de inicio pública en la raíz del sitio (#145, `app/inicio/`): explica el problema en Cúcuta, el flujo reporte → IA de texto y video → veterinario → rescate → refugio → adopción, los siete roles y la tecnología, con botones grandes a «Reportar emergencia» (`/app/`), «Adoptar» (`/panel/#registro`, abre el registro de adoptante) y «Entrar como personal». Sin JavaScript, con la misma CSP de la PWA, una columna en celular y modo oscuro.
 - Scripts del nodo de video para Ubuntu/WSL2 (#143): `servicios/video/instalar_nodo.sh` instala todo y `arrancar_nodo.sh` pide el token sin mostrarlo (opción de guardarlo con permisos 600). README con 3 pasos para quien nunca usó Linux y `.gitattributes` con fin de línea LF para los `.sh`.
 
 ### Cambiado
+- Panel: el inicio de sesión y el registro de adoptante van dentro de `<main>`, y la barra con sesión tiene un título de nivel 1 (axe `landmark-one-main`, `region`, `page-has-heading-one`; Lighthouse pasó de 96 a 100) (#147).
 - `GET /` muestra la página de inicio en vez de redirigir a la PWA (#145).
 
 ## [1.1.0] - 2026-10-29
