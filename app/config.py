@@ -21,6 +21,10 @@ INTENTOS_MAXIMOS = 5
 INTENTOS_MAXIMOS_POR_IP = 20
 VENTANA_INTENTOS_MINUTOS = 15
 
+# RF-17 (#75): dos reportes con GPS a esta distancia y en este rato son posibles duplicados.
+DUPLICADO_METROS = 200
+DUPLICADO_HORAS = 2
+
 # HU-06 (#46): la zona del rescatista se elige por comunas. El área urbana de Cúcuta tiene
 # 10 comunas.
 COMUNAS_CUCUTA = tuple(range(1, 11))

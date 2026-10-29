@@ -69,6 +69,7 @@ from app.reportes.confirmacion import (
     ServicioConfirmacion,
 )
 from app.reportes.descarte import DescarteInvalido, ServicioDescarte
+from app.reportes.duplicados import posibles_duplicados
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
@@ -454,11 +455,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     @app.get("/cola", dependencies=[personal])
     def cola():
         """Reportes pendientes de confirmar (HU-02); los confirmados salen de la cola."""
-        pendientes = [r for r in repositorio.todos() if r.estado not in DECIDIDOS]
+        todos = repositorio.todos()
+        pendientes = [r for r in todos if r.estado not in DECIDIDOS]
         return [
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
              "confianza": r.confianza, "evidencias": r.evidencias,
-             "version_modelo": r.version_modelo}
+             "version_modelo": r.version_modelo,
+             # RF-17: se compara también con los ya confirmados (el original suele estarlo).
+             "posibles_duplicados": posibles_duplicados(r, todos)}
             for r in ordenar_cola(pendientes)
         ]
 
