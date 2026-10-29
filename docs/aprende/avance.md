@@ -268,6 +268,18 @@ Seis tareas pedidas por Brayan, cada una en PR pequeños con CI en verde.
   que solo informa; así carga rápido con mala señal y no hay nada que atacar.
 - Pruebas: `tests/test_inicio.py`.
 
+### 3. Accesibilidad medida (#147)
+
+- `scripts/accesibilidad/revisar.mjs` abre un navegador real y pasa **axe-core** por cada
+  pantalla (pública y de cada rol, en claro, oscuro y celular de 320 px) y **Lighthouse** por
+  las pantallas públicas. Corre en el CI: si algo empeora, el PR queda en rojo.
+- Encontró 2 fallas, las dos en el panel y de estructura (sin región `<main>` en el inicio de
+  sesión y sin título de nivel 1 con sesión). Corregidas: **0 fallas y Lighthouse 100**.
+  Ninguna de contraste.
+- Informe completo, con lo que las herramientas no prueban: `docs/aprende/accesibilidad.md`.
+- **Lo que te toca:** escuchar el guion de la demostración con NVDA (gratis) o TalkBack, unos
+  20 minutos, y anotar lo que suene confuso.
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis
