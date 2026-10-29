@@ -26,6 +26,8 @@ veterinarios y control de cupos del refugio.
 | `app/triaje/` | Normalización de texto, clasificador por reglas v0 y `ServicioTriaje` (política RN-02/RN-03). |
 | `app/cupos/` | `ServicioCupos` (ingresos, cupos y alerta, RF-06/RF-07) sobre `RepositorioCupos`: en memoria o en PostgreSQL con `UPDATE` condicional (DT-05). |
 | `app/refugios/` | `RepositorioRefugios` (memoria y PostgreSQL): refugios que registra el administrador (RF-14). |
+| `app/adopciones/` | Adopción (fase 3): perfil, publicación, solicitudes, `reglas.py` (RN-05), servicio y compromiso en PDF. |
+| `app/documentos/pdf.py` | PDF de texto sin dependencias (RF-29, RF-31). |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |
 | `app/seguridad/tokens.py`, `app/api/seguridad.py` | Tokens JWT (`EmisorTokens`) y la dependencia de FastAPI que exige sesión. |
 | `app/notificaciones/correo.py` | Adaptadores de `Notificador` (DT-03): correo SMTP o, sin SMTP configurado, el log. |
@@ -90,8 +92,9 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
 
 ## Seguridad (DT-02)
 
-- Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01) y
-  `POST /auth/token`. Todo lo demás exige `Authorization: Bearer` de personal
+- Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01),
+  `POST /auth/token`, `POST /adoptantes` (siempre crea el rol adoptante, exige
+  `autoriza_datos`) y `GET /adopciones/animales`. Todo lo demás exige `Authorization: Bearer` de personal
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
 - `POST /refugio/ingresos` es solo del coordinador (`dependencies=[coordinacion]`, 403 para el

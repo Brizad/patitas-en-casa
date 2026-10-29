@@ -28,3 +28,15 @@
 - Falta: alerta de cupo por correo a los coordinadores **del refugio** (hoy va a la lista
   `PATITAS_CORREOS_COORDINADORES`); exportar la ficha queda para la fase 5.
 - Guía: `fase-2-refugio-completo.md`.
+
+## Fase 3 · Adopción (#85)
+
+- PR apilados, en orden: #86 (adoptante y perfil) → #87 (publicar) → #88 (solicitar) → #89
+  (decidir, RN-05, RN-11, seguimientos) → #90 (registrar seguimientos) → #91 (PDF) → #92
+  (panel del adoptante) → #93 (panel del coordinador) → guía de la fase.
+- Probado en el navegador de punta a punta: publicar → perfil → solicitar → aprobar →
+  seguimientos programados. El PDF se abrió y se ve bien.
+- Falta: devolución de un animal adoptado (RN-13: hoy el compromiso la pide, pero el sistema
+  no la registra); límite de registros por IP en `POST /adoptantes` (anotado en
+  `DEUDA_TECNICA.md` como DT-09).
+- Guía: `fase-3-adopcion.md`.
