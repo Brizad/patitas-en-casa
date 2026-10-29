@@ -9,6 +9,7 @@ from app.api.main import crear_app
 from app.cupos.repositorio import RepositorioCuposEnMemoria
 from app.dominio.modelos import Refugio, Rol
 from app.reportes.repositorio import RepositorioEnMemoria
+from app.seguridad.cifrado import Cifrador
 from app.seguridad.tokens import EmisorTokens
 from app.usuarios.repositorio import RepositorioUsuariosEnMemoria
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
@@ -79,13 +80,17 @@ def test_perfil_con_horas_imposibles_responde_422(c):
     assert r.status_code == 422
 
 
-@pytest.fixture(params=["memoria", pytest.param("postgres", marks=pytest.mark.postgres)])
+@pytest.fixture(params=["memoria", pytest.param("postgres", marks=pytest.mark.postgres),
+                        pytest.param("postgres_cifrado", marks=pytest.mark.postgres)])
 def repositorio(request):
-    if request.param == "postgres":
+    if request.param.startswith("postgres"):
         motor = request.getfixturevalue("bd_limpia")
         ServicioUsuarios(RepositorioUsuariosPostgres(motor)).registrar(
             "lau@correo.co", "Laura", Rol.ADOPTANTE, CLAVE)
-        return RepositorioAdopcionesPostgres(motor)
+        # #149 (RNF-08): el mismo contrato con el perfil cifrado.
+        cifrador = (Cifrador("clave-de-datos-falsa-con-mas-de-32-caracteres")
+                    if request.param == "postgres_cifrado" else None)
+        return RepositorioAdopcionesPostgres(motor, cifrador)
     return RepositorioAdopcionesEnMemoria()
 
 

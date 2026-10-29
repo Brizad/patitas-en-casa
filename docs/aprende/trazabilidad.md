@@ -59,7 +59,7 @@ Resumen: **RF: 32 hechos. RNF: 10 hechos, 5 parciales, 1 pendiente** (RNF-06), m
 | RNF-05 | TLS ≥ 1.2, Argon2id, RBAC, bloqueo tras 5 intentos, ZAP sin altos | Hecho: TLS 1.0/1.1 rechazados y 1.2 aceptado (medido en Render); ZAP: **0 altos**; de 5 advertencias bajas quedan 3 informativas tras #122 (COEP y caché) | `zap.yml`, `test_limite_intentos.py`, `test_cabeceras.py` | inc. 2, #120, #122 |
 | RNF-06 | 80 % reporta en ≤ 90 s; SUS ≥ 70 | **Pendiente**: necesita 10 participantes reales (nota 5) | — | — |
 | RNF-07 | PWA en Android 8 / 2 GB; carga inicial ≤ 1,5 MB | Hecho: la PWA pesa **28 KB** y el panel 61 KB (medido en Render); gzip desde #122. No se probó en un teléfono físico | `app/pwa/` | #60, #122 |
-| RNF-08 | Datos personales cifrados (AES-256); minimización | Parcial: el contacto del ciudadano va con AES-256-GCM y se piden datos mínimos; los correos del personal y los perfiles de adoptante no se cifran en la aplicación (nota 6) | `app/seguridad/cifrado.py` | #112 |
+| RNF-08 | Datos personales cifrados (AES-256); minimización | Parcial: el contacto del ciudadano y el perfil del adoptante (#149) van con AES-256-GCM y se piden datos mínimos; los correos de las cuentas no se cifran porque son el usuario con el que se inicia sesión (nota 6) | `app/seguridad/cifrado.py` | #112 |
 | RNF-09 | ≥ 3 evidencias o factores | Hecho | `app/triaje/combinado.py`, `compatibilidad.py` | #96, #97 → #108 |
 | RNF-10 | Cobertura ≥ 70 %, complejidad ≤ 10, ruff | Hecho: cobertura del 97 %; complejidad ≤ 10 en el CI (ruff C901) | `pyproject.toml`, `.github/workflows/ci.yml` | #108 |
 | RNF-11 | WCAG 2.2 AA (contraste, teclado, lectores, objetivos ≥ 24 px) | Parcial: **medido** con axe-core y Lighthouse en cada PR (todas las pantallas y roles, claro, oscuro y 320 px): 0 fallas y Lighthouse 100 después de corregir 2 fallas del panel (`accesibilidad.md`). Teclado revisado a mano (#122). Falta escuchar el recorrido con un lector de pantalla | `panel/src/`, `app/pwa/` | #84 → #108, #122 |
@@ -106,3 +106,4 @@ No son requisitos nuevos del ERS: mejoran la presentación y la operación de lo
 | Página de inicio pública | RF-01 (entrada al reporte), RNF-07, RNF-11 | `app/inicio/` | `test_inicio.py` | #145 / #146 |
 | Revisión de accesibilidad en el CI | RNF-11 | `scripts/accesibilidad/`, paso «Accesibilidad» del CI | `revisar.mjs` (axe-core + Lighthouse) | #147 / #148 |
 | DT-09: registro de adoptantes con límite por IP y sin revelar correos | RNF-05, RNF-08 | `app/usuarios/intentos.py`, `POST /adoptantes` | `test_registro_adoptante.py` | #149 |
+| Perfiles de adoptante cifrados | RNF-08 | `app/adopciones/repositorio_postgres.py`, migración `0026` | `test_perfiles_cifrados.py`, `test_adoptante_perfil.py` | #149 |

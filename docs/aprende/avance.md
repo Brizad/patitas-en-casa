@@ -295,6 +295,20 @@ Seis tareas pedidas por Brayan, cada una en PR pequeños con CI en verde.
   contraseña de siempre; el mensaje lo dice. Lo ideal sería avisarle por correo, pero en
   producción no hay SMTP (P-12).
 
+**Parte 2, perfiles cifrados (RNF-08).** El perfil del adoptante (vivienda, si hay niños,
+horas solo, experiencia…) se guarda cifrado con AES-256-GCM, con la misma clave
+`PATITAS_CLAVE_DATOS` del contacto del ciudadano (Render ya la tiene).
+
+- En la tabla queda solo el correo, la fecha y un texto ilegible (`datos_cifrados`); las
+  columnas en claro quedan vacías. Una restricción de la base impide un perfil «a medias».
+- La migración `0026` no conoce la clave, así que los perfiles viejos se cifran solos la
+  primera vez que arranca la API (`cifrar_perfiles_en_claro`); si ya están cifrados, no hace
+  nada.
+- Las recomendaciones siguen funcionando: el perfil se descifra en memoria al leerlo.
+- Para la sustentación: «¿y si pierden la clave?» Los perfiles no se pueden leer; el
+  adoptante tendría que llenarlo de nuevo. Por eso la clave vive en Render y conviene
+  guardarla también en un gestor de contraseñas (P-13).
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis

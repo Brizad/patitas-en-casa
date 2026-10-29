@@ -1,6 +1,7 @@
 """Adopción en PostgreSQL (fase 3, #85)."""
 from __future__ import annotations
 
+import json
 from datetime import datetime
 
 from sqlalchemy import Engine, func, select, update
@@ -30,24 +31,38 @@ from app.bd.esquema import (
 )
 from app.cupos.repositorio_postgres import SinCupo, reingresar_en
 from app.dominio.modelos import MotivoEgreso
+from app.seguridad.cifrado import Cifrador
 
 # La publicación con el nombre y la especie de la ficha del animal.
 _CONSULTA = select(publicaciones, animales.c.nombre, animales.c.especie).join(
     animales, animales.c.id == publicaciones.c.animal_id)
 
 
+# Campos del perfil que se cifran juntos (todo menos la cuenta y la fecha).
+_CAMPOS_PERFIL = ("vivienda", "tiene_patio", "hay_ninos", "otros_animales",
+                  "horas_solo_al_dia", "experiencia", "acepta_seguimiento")
+
+
 class RepositorioAdopcionesPostgres:
-    def __init__(self, motor: Engine) -> None:
+    def __init__(self, motor: Engine, cifrador: Cifrador | None = None) -> None:
+        """Con cifrador (RNF-08, #149) el perfil se guarda cifrado; sin él, en claro."""
         self._motor = motor
+        self._cifrador = cifrador
+
+    def _fila_perfil(self, perfil: PerfilAdoptante) -> dict:
+        datos = {"vivienda": perfil.vivienda.value, "tiene_patio": perfil.tiene_patio,
+                 "hay_ninos": perfil.hay_ninos, "otros_animales": perfil.otros_animales,
+                 "horas_solo_al_dia": perfil.horas_solo_al_dia,
+                 "experiencia": perfil.experiencia,
+                 "acepta_seguimiento": perfil.acepta_seguimiento}
+        fila = {"correo": perfil.correo, "actualizado_en": perfil.actualizado_en}
+        if self._cifrador is None:
+            return {**fila, **datos, "datos_cifrados": None}
+        return {**fila, **dict.fromkeys(_CAMPOS_PERFIL),
+                "datos_cifrados": self._cifrador.cifrar(json.dumps(datos))}
 
     def guardar_perfil(self, perfil: PerfilAdoptante) -> None:
-        fila = {"correo": perfil.correo, "vivienda": perfil.vivienda.value,
-                "tiene_patio": perfil.tiene_patio, "hay_ninos": perfil.hay_ninos,
-                "otros_animales": perfil.otros_animales,
-                "horas_solo_al_dia": perfil.horas_solo_al_dia,
-                "experiencia": perfil.experiencia,
-                "acepta_seguimiento": perfil.acepta_seguimiento,
-                "actualizado_en": perfil.actualizado_en}
+        fila = self._fila_perfil(perfil)
         sentencia = insert(perfiles_adoptante).values(**fila)
         sentencia = sentencia.on_conflict_do_update(
             index_elements=[perfiles_adoptante.c.correo],
@@ -59,12 +74,34 @@ class RepositorioAdopcionesPostgres:
         with self._motor.connect() as conexion:
             f = conexion.execute(select(perfiles_adoptante).where(
                 perfiles_adoptante.c.correo == correo)).mappings().first()
-        return None if f is None else _perfil(f)
+        return None if f is None else self._perfil(f)
 
     def perfiles(self) -> list[PerfilAdoptante]:
         with self._motor.connect() as conexion:
             filas = conexion.execute(select(perfiles_adoptante)).mappings()
-            return [_perfil(f) for f in filas]
+            return [self._perfil(f) for f in filas]
+
+    def _perfil(self, f) -> PerfilAdoptante:
+        if f["datos_cifrados"] is None:
+            return _perfil(f)
+        if self._cifrador is None:
+            raise RuntimeError("Hay perfiles cifrados y falta PATITAS_CLAVE_DATOS.")
+        datos = json.loads(self._cifrador.descifrar(f["datos_cifrados"]))
+        return _perfil({**datos, "correo": f["correo"], "actualizado_en": f["actualizado_en"]})
+
+    def cifrar_perfiles_en_claro(self) -> int:
+        """Cifra los perfiles guardados antes de 0026 (la migración no conoce la clave).
+        Devuelve cuántos cifró; con todo cifrado no hace nada."""
+        if self._cifrador is None:
+            return 0
+        with self._motor.begin() as conexion:
+            filas = conexion.execute(select(perfiles_adoptante).where(
+                perfiles_adoptante.c.datos_cifrados.is_(None)).with_for_update()).mappings().all()
+            for f in filas:
+                conexion.execute(update(perfiles_adoptante).where(
+                    perfiles_adoptante.c.correo == f["correo"]).values(
+                    **{k: v for k, v in self._fila_perfil(_perfil(f)).items() if k != "correo"}))
+        return len(filas)
 
     def publicar(self, publicacion: Publicacion) -> bool:
         # La llave primaria (animal_id) garantiza una publicación por animal, aunque dos

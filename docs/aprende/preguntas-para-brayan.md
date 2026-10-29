@@ -16,6 +16,7 @@ Cada una dice qué se eligió y cómo cambiarla.
 | P-09 | ¿Subir videos (RF-01) y analizarlos (RF-03)? | No cabe en el plan gratis (ver `trazabilidad.md`, notas 1 y 2). | Decide si se crea un almacenamiento de objetos y un worker; el plan está en DT-10. |
 | P-10 | ¿Prueba con usuarios reales (RNF-06)? | Pendiente: necesita 10 personas y un cronómetro. | Usa `guion-demo.md` como tarea y registra el tiempo y el puntaje SUS. |
 | P-12 | DT-09: ¿qué hacer cuando alguien se registra con un correo que ya tiene cuenta? | Se responde igual que a un registro nuevo y **no se avisa** al dueño (no hay SMTP en producción, P-08). | Con SMTP configurado, pídeme «avisar al dueño del correo»: se encola un aviso «alguien intentó registrarse con tu correo» con el mismo outbox de #63. |
+| P-13 | RNF-08: ¿cifrar los perfiles con la misma clave del contacto del ciudadano? | Sí, `PATITAS_CLAVE_DATOS`: una sola clave que guardar. Si se pierde, los perfiles (y los contactos) no se pueden leer. | Copia la clave de Render → *Environment* a un gestor de contraseñas. Si prefieres otra clave para adopción, pídemelo. |
 
 **Texto sugerido para la regla 2 de `CLAUDE.md` (lo pegas tú):**
 
