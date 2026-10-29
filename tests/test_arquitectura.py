@@ -14,7 +14,8 @@ INFRAESTRUCTURA = ("fastapi", "starlette", "sqlalchemy", "psycopg", "smtplib", "
 
 # Módulos con reglas de negocio o casos de uso (sin adaptadores).
 NUCLEO = ["dominio/modelos.py", "avisos/modelos.py", "avisos/repositorio.py",
-          "avisos/procesador.py", "reportes/confirmacion.py", "reportes/servicio.py",
+          "avisos/procesador.py", "reportes/confirmacion.py", "reportes/descarte.py",
+          "reportes/servicio.py",
           "rescates/servicio.py", "triaje/clasificador.py", "triaje/servicio.py",
           "cupos/servicio.py"]
 

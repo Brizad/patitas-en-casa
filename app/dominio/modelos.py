@@ -26,6 +26,16 @@ class EstadoReporte(StrEnum):
     REQUIERE_REVISION = "requiere_revision"
     SIN_CLASIFICAR = "sin_clasificar"
     CONFIRMADO = "confirmado"
+    DESCARTADO = "descartado"  # D-02 (#75): falso o duplicado; sale de la cola
+
+
+# Estados en los que el veterinario ya decidió: el reporte no vuelve a la cola.
+DECIDIDOS = frozenset({EstadoReporte.CONFIRMADO, EstadoReporte.DESCARTADO})
+
+
+class MotivoDescarte(StrEnum):
+    FALSO = "falso"
+    DUPLICADO = "duplicado"
 
 
 @dataclass
@@ -85,6 +95,18 @@ class DecisionTriaje:
     @property
     def ajustada(self) -> bool:
         return self.prioridad_final != self.prioridad_sugerida
+
+
+@dataclass
+class Descarte:
+    """D-02: el veterinario descarta un reporte falso o duplicado, con justificación."""
+
+    codigo: str
+    veterinario: str  # correo de la cuenta
+    motivo: MotivoDescarte
+    justificacion: str
+    duplicado_de: str | None = None
+    descartado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class Rol(StrEnum):

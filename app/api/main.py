@@ -45,9 +45,11 @@ from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
 from app.dominio.modelos import (
+    DECIDIDOS,
     Animal,
     Especie,
     EstadoReporte,
+    MotivoDescarte,
     Prioridad,
     Refugio,
     Reporte,
@@ -66,6 +68,7 @@ from app.reportes.confirmacion import (
     ReporteYaConfirmado,
     ServicioConfirmacion,
 )
+from app.reportes.descarte import DescarteInvalido, ServicioDescarte
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
@@ -148,6 +151,14 @@ class ConfirmacionEntrada(BaseModel):
 
     prioridad: Prioridad | None = None
     justificacion: str | None = Field(default=None, max_length=1000)
+
+
+class DescarteEntrada(BaseModel):
+    """D-02: falso o duplicado (con el código del original, opcional)."""
+
+    motivo: MotivoDescarte
+    justificacion: str | None = Field(default=None, max_length=1000)
+    duplicado_de: str | None = Field(default=None, max_length=8)
 
 
 class DisponibilidadEntrada(BaseModel):
@@ -310,6 +321,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     app = FastAPI(title="Patitas en Casa", version="0.2.0", lifespan=ciclo_de_vida)
     reportes = ServicioReportes(repositorio, ServicioTriaje())
     rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador)
+    descartes = ServicioDescarte(repositorio)
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=rescates.avisos_para)
     procesador = ProcesadorAvisos(repositorio_avisos, notificador)
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
@@ -431,8 +443,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         if reporte is None:
             raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
         decisiones = repositorio.decisiones(codigo)
+        descarte = repositorio.descarte(codigo)
         pasos, ultimo_cambio = linea_de_tiempo(
-            reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo))
+            reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo),
+            descarte.descartado_en if descarte else None)
         return {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
                 "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
                            "fecha": fecha_utc(p.fecha)} for p in pasos]}
@@ -440,7 +454,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     @app.get("/cola", dependencies=[personal])
     def cola():
         """Reportes pendientes de confirmar (HU-02); los confirmados salen de la cola."""
-        pendientes = [r for r in repositorio.todos() if r.estado != EstadoReporte.CONFIRMADO]
+        pendientes = [r for r in repositorio.todos() if r.estado not in DECIDIDOS]
         return [
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
              "confianza": r.confianza, "evidencias": r.evidencias,
@@ -473,6 +487,22 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         return {"codigo": decision.codigo, "estado": EstadoReporte.CONFIRMADO.value,
                 "prioridad": decision.prioridad_final.value, "ajustada": decision.ajustada,
                 "avisos": {"programados": resultado.avisos, "estado": estado_aviso}}
+
+    @app.post("/reportes/{codigo}/descarte")
+    def descartar_reporte(codigo: str, datos: DescarteEntrada,
+                          veterinario: Usuario = veterinaria):
+        """D-02: falso o duplicado. Como confirmar, sale de la cola y es una sola vez (409)."""
+        original = datos.duplicado_de.upper() if datos.duplicado_de else None
+        try:
+            descartes.descartar(codigo.upper(), veterinario, datos.motivo, datos.justificacion,
+                                duplicado_de=original)
+        except ReporteNoEncontrado as error:
+            raise HTTPException(status_code=404, detail="Reporte no encontrado.") from error
+        except ReporteYaConfirmado as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except DescarteInvalido as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"codigo": codigo.upper(), "estado": EstadoReporte.DESCARTADO.value}
 
     @app.get("/reportes/{codigo}/avisos", dependencies=[personal])
     def avisos_del_reporte(codigo: str):

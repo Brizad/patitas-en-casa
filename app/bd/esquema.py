@@ -28,6 +28,7 @@ from app.dominio.modelos import (
     Especie,
     EstadoReporte,
     EstadoRescate,
+    MotivoDescarte,
     Prioridad,
     ResultadoRescate,
     Rol,
@@ -146,6 +147,21 @@ decisiones_triaje = Table(
                     "AND char_length(btrim(justificacion)) >= 10)",
                     name="ck_decisiones_justificacion"),
     UniqueConstraint("reporte_codigo", name="uq_decisiones_reporte"),
+)
+
+# D-02 (#75): bitácora de reportes descartados (uno por reporte).
+descartes = Table(
+    "descartes",
+    metadata,
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), primary_key=True),
+    Column("veterinario", Text, nullable=False),
+    Column("motivo", String(10), nullable=False),
+    Column("duplicado_de", String(8), ForeignKey("reportes.codigo")),
+    Column("justificacion", Text, nullable=False),
+    Column("descartado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"motivo IN ({_valores(MotivoDescarte)})", name="ck_descartes_motivo"),
+    CheckConstraint("char_length(btrim(justificacion)) >= 10",
+                    name="ck_descartes_justificacion"),
 )
 
 # HU-06: disponibilidad de los rescatistas (RF-15) y rescates (RN-08).

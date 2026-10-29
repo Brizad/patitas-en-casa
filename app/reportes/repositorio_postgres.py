@@ -9,8 +9,19 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.repositorio_postgres import insertar_avisos
-from app.bd.esquema import decisiones_triaje, reportes
-from app.dominio.modelos import DecisionTriaje, EstadoReporte, Prioridad, Reporte, Ubicacion
+from app.bd.esquema import decisiones_triaje, descartes, reportes
+from app.dominio.modelos import (
+    DECIDIDOS,
+    DecisionTriaje,
+    Descarte,
+    EstadoReporte,
+    MotivoDescarte,
+    Prioridad,
+    Reporte,
+    Ubicacion,
+)
+
+PENDIENTE = reportes.c.estado.not_in([e.value for e in DECIDIDOS])
 
 
 class RepositorioPostgres:
@@ -68,8 +79,7 @@ class RepositorioPostgres:
         with self._motor.begin() as conexion:
             cambio = conexion.execute(
                 update(reportes)
-                .where(reportes.c.codigo == decision.codigo,
-                       reportes.c.estado != EstadoReporte.CONFIRMADO.value)
+                .where(reportes.c.codigo == decision.codigo, PENDIENTE)
                 .values(estado=EstadoReporte.CONFIRMADO.value,
                         prioridad=decision.prioridad_final.value)
             )
@@ -98,6 +108,31 @@ class RepositorioPostgres:
                 justificacion=f["justificacion"], decidido_en=f["decidido_en"],
                 version_modelo=f["version_modelo"],
             ) for f in filas]
+
+    def descartar(self, descarte: Descarte) -> bool:
+        """Mismo UPDATE condicional que confirmar: confirmar y descartar a la vez no pueden
+        ganar los dos."""
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(
+                update(reportes).where(reportes.c.codigo == descarte.codigo, PENDIENTE)
+                .values(estado=EstadoReporte.DESCARTADO.value))
+            if cambio.rowcount == 0:
+                return False
+            conexion.execute(insertar(descartes).values(
+                reporte_codigo=descarte.codigo, veterinario=descarte.veterinario,
+                motivo=descarte.motivo.value, duplicado_de=descarte.duplicado_de,
+                justificacion=descarte.justificacion, descartado_en=descarte.descartado_en))
+        return True
+
+    def descarte(self, codigo: str) -> Descarte | None:
+        with self._motor.connect() as conexion:
+            f = conexion.execute(select(descartes).where(descartes.c.reporte_codigo == codigo)
+                                 ).mappings().first()
+        if f is None:
+            return None
+        return Descarte(codigo=f["reporte_codigo"], veterinario=f["veterinario"],
+                        motivo=MotivoDescarte(f["motivo"]), justificacion=f["justificacion"],
+                        duplicado_de=f["duplicado_de"], descartado_en=f["descartado_en"])
 
 
 def _a_fila(reporte: Reporte) -> dict:
