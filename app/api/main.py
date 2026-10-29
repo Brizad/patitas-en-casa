@@ -111,6 +111,7 @@ from app.rescates.servicio import (
     ServicioRescates,
 )
 from app.seguridad.tokens import EmisorTokens
+from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
 from app.usuarios.admin_inicial import crear_admin_inicial
 from app.usuarios.contrasenas import ContrasenaInvalida
@@ -429,7 +430,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             motor.dispose()
 
     app = FastAPI(title="Patitas en Casa", version="0.2.0", lifespan=ciclo_de_vida)
-    reportes = ServicioReportes(repositorio, ServicioTriaje())
+    # #95: reglas + modelo entrenado (el modelo solo sube la prioridad); sin modelo, reglas.
+    clasificador, version_triaje = triaje_por_defecto()
+    reportes = ServicioReportes(repositorio, ServicioTriaje(clasificador, version=version_triaje))
     rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador)
     descartes = ServicioDescarte(repositorio)
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=rescates.avisos_para)

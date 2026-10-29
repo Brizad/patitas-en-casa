@@ -3,3 +3,5 @@ pytest==8.4.2
 pytest-cov==7.0.0
 httpx==0.28.1
 ruff==0.15.11
+# Solo para entrenar el triaje (scripts/ia/); la API no lo carga en producción.
+scikit-learn==1.9.1
