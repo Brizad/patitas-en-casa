@@ -343,6 +343,29 @@ siguiendo `docs/aprende/migrar-a-neon.md`:
 - Si Render no deja editar las variables (vienen del Blueprint), pídeme el cambio de
   `render.yaml` (P-11).
 
+### 6. Manual de usuario (#156)
+
+- `docs/manual-usuario.md`: una sección por rol, en lenguaje sencillo, con **17 capturas**
+  tomadas del sistema real con los datos de demostración (ciudadano, rescatista y adoptante
+  en tamaño de celular; el resto en computador).
+- Las capturas no se hicieron a mano: `scripts/accesibilidad/capturas.mjs` recorre cada rol
+  y las toma. Si cambia una pantalla, se vuelven a tomar en un minuto.
+- Al tomarlas aparecieron dos detalles, ya corregidos: la veterinaria de demostración no
+  estaba vinculada al refugio (su pestaña «Refugio» salía vacía en el servidor en memoria) y
+  la revisión de accesibilidad podía medir una pestaña antes de que cargara sus datos.
+
+### Lo que te toca de estas seis tareas
+
+1. **Video:** instala Ubuntu y el trabajador con los 3 pasos de `servicios/video/README.md`.
+2. **Neon:** crea la cuenta y sigue `docs/aprende/migrar-a-neon.md` **antes de que Render
+   borre la base** (30 días desde que la creaste, más 14 de gracia).
+3. **Accesibilidad:** escucha el guion de la demostración con NVDA o TalkBack (20 min).
+4. **Clave de datos:** copia `PATITAS_CLAVE_DATOS` de Render a un gestor de contraseñas (P-13):
+   sin ella no se pueden leer los perfiles ni los contactos.
+5. **Release:** cuando quieras publicar todo esto, crea la etiqueta `v1.2.0` (el CHANGELOG
+   lo tiene en «Sin publicar»). Revisa las decisiones nuevas P-11 a P-14 en
+   `preguntas-para-brayan.md`.
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis

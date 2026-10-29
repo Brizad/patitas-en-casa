@@ -21,7 +21,8 @@ petición puede tardar unos 30 a 60 segundos en responder.
 ## Estado: v1.0.0 publicada y desplegada en Render
 
 Trazabilidad de cada requisito del ERS: `docs/aprende/trazabilidad.md`. Guion de la
-demostración: `docs/aprende/guion-demo.md`.
+demostración: `docs/aprende/guion-demo.md`. Manual de usuario con capturas de cada rol:
+`docs/manual-usuario.md`.
 
 Además de lo de la v0.2.0 (abajo), la v1.0.0 trae:
 

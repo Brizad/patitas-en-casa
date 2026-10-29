@@ -109,3 +109,4 @@ No son requisitos nuevos del ERS: mejoran la presentación y la operación de lo
 | Perfiles de adoptante cifrados | RNF-08 | `app/adopciones/repositorio_postgres.py`, migración `0026` | `test_perfiles_cifrados.py`, `test_adoptante_perfil.py` | #149 |
 | Bitácora con valor anterior y nuevo | RNF-12 | `app/bitacora/`, `_cambio` en `app/api/main.py`, migración `0027` | `test_bitacora_valores.py` | #149 |
 | Migración de la base a Neon (preparada, la ejecuta Brayan) | RNF-13, RNF-15 | `scripts/operacion/migrar_a_neon.py`, `docs/aprende/migrar-a-neon.md` | `test_migrar_a_neon.py`, `test_ajustes.py` | #154 / #155 |
+| Manual de usuario con capturas por rol | RNF-06 (apoya la prueba con usuarios), RF de cada rol | `docs/manual-usuario.md`, `docs/manual/`, `scripts/accesibilidad/capturas.mjs` | capturas tomadas del sistema real con datos de demostración | #156 / #158 |
