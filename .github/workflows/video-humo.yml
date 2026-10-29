@@ -27,6 +27,8 @@ jobs:
       - name: Instalar el trabajador
         working-directory: servicios/video
         run: |
+          # MediaPipe carga libEGL/libGLESv2 aunque corra en CPU; Ubuntu no las trae.
+          sudo apt-get update -qq && sudo apt-get install -y -qq libegl1 libgles2
           pip install torch==2.14.1 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
 

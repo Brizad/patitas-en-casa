@@ -32,7 +32,7 @@ esa protección (en Windows 11 no se puede volver a encender sin reinstalar). La
 Usa una ruta corta (en Windows las rutas largas también fallaron al instalar).
 
 ```bash
-sudo apt install -y python3-venv git
+sudo apt install -y python3-venv git libegl1 libgles2   # MediaPipe necesita libEGL
 git clone https://github.com/Brizad/patitas-en-casa.git ~/patitas && cd ~/patitas/servicios/video
 python3 -m venv ~/pv && source ~/pv/bin/activate
 pip install torch==2.14.1 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cpu
