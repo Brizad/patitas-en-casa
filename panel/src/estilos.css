@@ -58,3 +58,9 @@ fieldset { border: 1px solid var(--borde); border-radius: 10px; margin-top: 10px
 .descartar { margin-top: 12px; }
 button.enlace { border: 0; background: none; padding: 0; color: var(--verde);
   text-decoration: underline; font-weight: 600; }
+/* Fase 5 (#102): barras de indicadores sin librerías. */
+.barras div { display: grid; grid-template-columns: 11em 1fr; gap: 8px; margin: 4px 0; }
+.barras dt { color: #5a6461; }
+.barras dd { margin: 0; display: flex; align-items: center; gap: 6px; }
+.barras dd span { display: inline-block; height: 12px; border-radius: 6px;
+  background: var(--verde); min-width: 2px; }

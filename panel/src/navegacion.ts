@@ -2,7 +2,7 @@
 // evita mostrar botones que siempre fallarían. Función pura: se prueba sin navegador.
 
 export type Pantalla = "cola" | "rescates" | "refugio" | "administracion" | "adopcion"
-  | "adopciones";
+  | "adopciones" | "indicadores";
 
 export const NOMBRE_PANTALLA: Record<Pantalla, string> = {
   cola: "Cola de triaje",
@@ -11,13 +11,14 @@ export const NOMBRE_PANTALLA: Record<Pantalla, string> = {
   administracion: "Administración",
   adopcion: "Adopción",
   adopciones: "Adopciones",
+  indicadores: "Indicadores",
 };
 
 const POR_ROL: Record<string, Pantalla[]> = {
   veterinario: ["cola", "refugio"],
-  coordinador: ["refugio", "adopciones", "cola"],
+  coordinador: ["refugio", "adopciones", "cola", "indicadores"],
   rescatista: ["rescates"],
-  administrador: ["administracion"],
+  administrador: ["administracion", "indicadores"],
   adoptante: ["adopcion"], // #85: el adoptante no ve nada del personal
 };
 

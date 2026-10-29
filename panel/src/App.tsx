@@ -4,6 +4,7 @@ import Administracion from "./Administracion";
 import AdopcionesCoordinador from "./AdopcionesCoordinador";
 import Adoptante from "./Adoptante";
 import Cola from "./Cola";
+import Indicadores from "./Indicadores";
 import { textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
@@ -40,6 +41,7 @@ export default function App() {
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
       {pantalla === "adopcion" && <Adoptante token={token} />}
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}
+      {pantalla === "indicadores" && <Indicadores token={token} rol={cuenta.rol} />}
       {pantalla === "administracion" && <Administracion token={token} yo={cuenta.correo} />}
       {pantalla === null && <p className="vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>

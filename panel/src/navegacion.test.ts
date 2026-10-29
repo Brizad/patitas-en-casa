@@ -7,7 +7,7 @@ describe("pantallasDelRol", () => {
     expect(pantallasDelRol("veterinario")[0]).toBe("cola");
     expect(pantallasDelRol("coordinador")[0]).toBe("refugio");
     expect(pantallasDelRol("rescatista")).toEqual(["rescates"]);
-    expect(pantallasDelRol("administrador")).toEqual(["administracion"]);
+    expect(pantallasDelRol("administrador")).toEqual(["administracion", "indicadores"]);
     expect(pantallasDelRol("adoptante")).toEqual(["adopcion"]);
   });
   it("un rol desconocido no ve ninguna pantalla", () => {

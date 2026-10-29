@@ -11,7 +11,7 @@ export default defineConfig({
   // En desarrollo (npm run dev) las llamadas a la API pasan por el mismo origen.
   server: { proxy: Object.fromEntries(
     ["/auth", "/cola", "/reportes", "/rescates", "/rescatistas", "/refugio", "/admin",
-     "/adoptantes", "/adopciones"]
+     "/adoptantes", "/adopciones", "/indicadores", "/bitacora"]
       .map((ruta) => [ruta, API])) },
   test: { environment: "node" },
 });
