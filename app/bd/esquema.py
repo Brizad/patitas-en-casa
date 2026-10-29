@@ -57,6 +57,7 @@ reportes = Table(
     Column("comuna", SmallInteger),  # HU-06: comuna de Cúcuta, opcional
     # RF-12 (#61): clave que genera la PWA; el reenvío con la misma clave no duplica.
     Column("clave_idempotencia", String(64), unique=True),
+    Column("version_modelo", String(40)),  # RF-20 (#75)
     CheckConstraint(f"estado IN ({_valores(EstadoReporte)})", name="ck_reportes_estado"),
     CheckConstraint("comuna BETWEEN 1 AND 10", name="ck_reportes_comuna"),
     CheckConstraint(f"prioridad IN ({_valores(Prioridad)})", name="ck_reportes_prioridad"),
@@ -134,6 +135,7 @@ decisiones_triaje = Table(
     Column("prioridad_final", String(10), nullable=False),
     Column("justificacion", Text),
     Column("decidido_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("version_modelo", String(40)),  # RF-20, D-04 (#75)
     CheckConstraint(f"prioridad_sugerida IN ({_valores(Prioridad)})",
                     name="ck_decisiones_prioridad_sugerida"),
     CheckConstraint(f"prioridad_final IN ({_valores(Prioridad)})",

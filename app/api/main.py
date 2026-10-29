@@ -443,7 +443,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         pendientes = [r for r in repositorio.todos() if r.estado != EstadoReporte.CONFIRMADO]
         return [
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
-             "confianza": r.confianza, "evidencias": r.evidencias}
+             "confianza": r.confianza, "evidencias": r.evidencias,
+             "version_modelo": r.version_modelo}
             for r in ordenar_cola(pendientes)
         ]
 
@@ -487,7 +488,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     def bitacora_de_triaje(codigo: str):
         return [{"veterinario": d.veterinario, "prioridad_sugerida": d.prioridad_sugerida.value,
                  "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion,
-                 "decidido_en": fecha_utc(d.decidido_en)}
+                 "decidido_en": fecha_utc(d.decidido_en), "version_modelo": d.version_modelo}
                 for d in repositorio.decisiones(codigo.upper())]
 
     # --- HU-06: rescatistas (RF-05, RF-15, RN-08) --------------------------------------

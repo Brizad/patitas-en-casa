@@ -80,6 +80,7 @@ class RepositorioPostgres:
                 prioridad_sugerida=decision.prioridad_sugerida.value,
                 prioridad_final=decision.prioridad_final.value,
                 justificacion=decision.justificacion, decidido_en=decision.decidido_en,
+                version_modelo=decision.version_modelo,
             ))
             insertar_avisos(conexion, decision.codigo, avisos, decision.decidido_en)
         return True
@@ -95,6 +96,7 @@ class RepositorioPostgres:
                 prioridad_sugerida=Prioridad(f["prioridad_sugerida"]),
                 prioridad_final=Prioridad(f["prioridad_final"]),
                 justificacion=f["justificacion"], decidido_en=f["decidido_en"],
+                version_modelo=f["version_modelo"],
             ) for f in filas]
 
 
@@ -112,6 +114,7 @@ def _a_fila(reporte: Reporte) -> dict:
         "confianza": reporte.confianza,
         "evidencias": list(reporte.evidencias),
         "creado_en": reporte.creado_en,
+        "version_modelo": reporte.version_modelo,
     }
 
 
@@ -127,4 +130,5 @@ def _a_reporte(fila: RowMapping) -> Reporte:
         confianza=fila["confianza"],
         evidencias=list(fila["evidencias"]),
         creado_en=fila["creado_en"],
+        version_modelo=fila["version_modelo"],
     )

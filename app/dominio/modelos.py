@@ -53,6 +53,7 @@ class Reporte:
     confianza: float | None = None
     evidencias: list[str] = field(default_factory=list)
     creado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+    version_modelo: str | None = None  # RF-20: quién sugirió; None en falla segura (RN-03)
 
 
 @dataclass
@@ -79,6 +80,7 @@ class DecisionTriaje:
     prioridad_final: Prioridad
     justificacion: str | None = None
     decidido_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+    version_modelo: str | None = None  # RF-20, D-04: versión que hizo la sugerencia
 
     @property
     def ajustada(self) -> bool:

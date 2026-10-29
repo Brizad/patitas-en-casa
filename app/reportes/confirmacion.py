@@ -85,7 +85,8 @@ class ServicioConfirmacion:
             validar_justificacion(justificacion, AjusteSinJustificacion)
         decision = DecisionTriaje(codigo=codigo, veterinario=veterinario.correo,
                                   prioridad_sugerida=sugerida, prioridad_final=final,
-                                  justificacion=justificacion, decidido_en=self._reloj())
+                                  justificacion=justificacion, decidido_en=self._reloj(),
+                                  version_modelo=reporte.version_modelo)
         avisos = self._planificar(reporte, final)
         if not self._repositorio.confirmar(decision, avisos):
             raise ReporteYaConfirmado(f"El reporte {codigo} ya fue confirmado.")
