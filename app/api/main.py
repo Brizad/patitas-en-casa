@@ -28,6 +28,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
+from starlette.concurrency import run_in_threadpool
 
 from app import config
 from app.adopciones.asignacion import asignar
@@ -66,6 +67,8 @@ from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
 from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
 from app.bd.migraciones import verificar_migraciones
+from app.bitacora.repositorio import Evento, RepositorioBitacora, RepositorioBitacoraEnMemoria
+from app.bitacora.repositorio_postgres import RepositorioBitacoraPostgres
 from app.cupos.fichas import AnimalNoEncontrado, NotaInvalida, ServicioFichas
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
@@ -112,7 +115,7 @@ from app.rescates.servicio import (
     RescateNoOfrecido,
     ServicioRescates,
 )
-from app.seguridad.tokens import EmisorTokens
+from app.seguridad.tokens import EmisorTokens, TokenInvalido
 from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje, ordenar_cola
 from app.usuarios.admin_inicial import crear_admin_inicial
@@ -368,7 +371,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               repositorio_avisos: RepositorioAvisos | None = None,
               procesar_avisos_cada_s: float | None = config.REVISION_AVISOS_SEGUNDOS,
               repositorio_refugios: RepositorioRefugios | None = None,
-              repositorio_adopciones: RepositorioAdopciones | None = None) -> FastAPI:
+              repositorio_adopciones: RepositorioAdopciones | None = None,
+              repositorio_bitacora: RepositorioBitacora | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -406,6 +410,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     repositorio_adopciones = repositorio_adopciones or (
         RepositorioAdopcionesPostgres(motor) if motor is not None
         else RepositorioAdopcionesEnMemoria(repositorio_cupos))
+    repositorio_bitacora = repositorio_bitacora or (
+        RepositorioBitacoraPostgres(motor) if motor is not None
+        else RepositorioBitacoraEnMemoria())
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
@@ -445,6 +452,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=rescates.avisos_para)
     procesador = ProcesadorAvisos(repositorio_avisos, notificador)
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
+    app.state.bitacora = repositorio_bitacora
 
     def cupos_de(usuario: Usuario) -> ServicioCupos:
         """#75: los cupos del refugio de la persona; sin vínculo, el primer refugio (como
@@ -928,6 +936,38 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             respuesta.headers["X-Content-Type-Options"] = "nosniff"
             respuesta.headers["Referrer-Policy"] = "no-referrer"
         return respuesta
+
+    @app.middleware("http")
+    async def registrar_en_bitacora(peticion: Request, siguiente):
+        """RF-32: toda petición que cambia datos y sale bien queda en la bitácora. Se guarda
+        la PLANTILLA de la ruta y sus parámetros, nunca el cuerpo (contraseñas, datos
+        personales). El inicio de sesión no cambia datos y ya lo cuenta DT-06."""
+        respuesta = await siguiente(peticion)
+        ruta = peticion.scope.get("route")
+        if (peticion.method in ("POST", "PUT", "PATCH", "DELETE")
+                and 200 <= respuesta.status_code < 300 and ruta is not None
+                and ruta.path != "/auth/token"):
+            actor = "anónimo"
+            token = peticion.headers.get("authorization", "").removeprefix("Bearer ")
+            if token:
+                with contextlib.suppress(TokenInvalido):
+                    actor = emisor_tokens.validar(token).correo
+            try:
+                # En un hilo: el INSERT no debe frenar las demás peticiones (async).
+                await run_in_threadpool(repositorio_bitacora.registrar, Evento(
+                    actor, f"{peticion.method} {ruta.path}",
+                    {k: str(v) for k, v in peticion.path_params.items()},
+                    respuesta.status_code))
+            except Exception:
+                # La acción ya ocurrió; no se le dice al usuario que falló. Queda en el log.
+                logger.exception("No se pudo registrar en la bitácora: %s", ruta.path)
+        return respuesta
+
+    @app.get("/bitacora")
+    def ver_bitacora(limite: int = 100, _admin: Usuario = administracion):
+        return [{"momento": fecha_utc(e.momento), "actor": e.actor, "accion": e.accion,
+                 "objeto": e.objeto, "estado_http": e.estado_http}
+                for e in repositorio_bitacora.recientes(min(max(limite, 1), 500))]
 
     @app.get("/", include_in_schema=False)
     def inicio():

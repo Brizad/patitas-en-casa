@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     Column,
@@ -217,6 +218,19 @@ seguimientos = Table(
     Column("registrado_por", Text),
     CheckConstraint("dia IN (30, 90, 180)", name="ck_seguimientos_dia"),
     UniqueConstraint("solicitud_id", "dia", name="uq_seguimientos_dia"),
+)
+
+# RF-32 (#102): bitácora general. Solo INSERT: un disparador (migración 0020) rechaza
+# UPDATE y DELETE.
+bitacora = Table(
+    "bitacora",
+    metadata,
+    Column("id", BigInteger, primary_key=True),
+    Column("momento", DateTime(timezone=True), nullable=False),
+    Column("actor", Text, nullable=False),
+    Column("accion", Text, nullable=False),
+    Column("objeto", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("estado_http", SmallInteger, nullable=False),
 )
 
 # DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<ip>".
