@@ -3,8 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
+  # Todos los PR, también los apilados que apuntan a otra rama (P-02 de docs/aprende).
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read

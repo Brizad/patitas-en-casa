@@ -35,6 +35,7 @@ veterinarios y control de cupos del refugio.
 | `app/notificaciones/canal.py` | Puerto `CanalAviso` y `EntregaFallida`; el procesador no conoce el SMTP. |
 | `panel/` | Panel del personal en React + TypeScript (Vite); se compila a `app/panel_web` (ignorado por git) y se sirve en `/panel/`. |
 | `app/pwa/` | PWA ciudadana (HU-08, #47): HTML, CSS y JS sencillos servidos en `/app/` con CSP estricta; sin recursos externos ni `innerHTML` con datos; el service worker solo guarda la interfaz. |
+| `docs/aprende/` | Guía de estudio: mapa y glosario, una guía por fase, avance y preguntas para el autor. |
 | `docs/prototipo/` | Prototipo interactivo HTML (no es parte de la API; la PWA reutiliza su diseño). |
 
 ## Reglas de negocio vigentes (no romper)
