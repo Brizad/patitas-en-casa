@@ -18,3 +18,13 @@
 - Para Render: agregar `PATITAS_ADMIN_CORREO` y `PATITAS_ADMIN_CONTRASENA` en *Environment*.
 - Falta: que ingresos y ocupación usen el refugio del coordinador (fase 2).
 - Guía: `fase-1-pantallas-por-rol.md`.
+
+## Fase 2 · Refugio completo (#75)
+
+- PR apilados, en orden: #76 (D-06, D-07) → #77 (versión del modelo) → #78 (descartar) →
+  #79 (duplicados) → #80 (cupos por refugio) → #81 (ficha clínica) → #82 (egresos + panel de
+  la cola) → #83 (panel de fichas) → guía de la fase.
+- Probado en el navegador: descartar un duplicado y agregar una nota a la ficha.
+- Falta: alerta de cupo por correo a los coordinadores **del refugio** (hoy va a la lista
+  `PATITAS_CORREOS_COORDINADORES`); exportar la ficha queda para la fase 5.
+- Guía: `fase-2-refugio-completo.md`.

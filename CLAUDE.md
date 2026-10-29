@@ -60,6 +60,10 @@ veterinarios y control de cupos del refugio.
   Valores en `app/config.py`; el aviso sale una sola vez (tabla `escalamientos`).
 - **Avisos (#63)**: confirmar guarda los avisos como pendientes en la misma transacción; el
   envío es del procesador. Nunca decir que un aviso «se envió» o «llegó» si no está `enviado`.
+- **D-02 / D-07** (#75): descartar es como confirmar (solo veterinario, una vez, sale de la
+  cola); toda justificación pasa por `validar_justificacion` (10 caracteres y 5 letras). El
+  seguimiento de un descartado no muestra el motivo. Las fechas de la API van en UTC
+  (`fecha_utc`). El historial clínico solo se inserta; el egreso libera el cupo una sola vez.
 - **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
   código, los pasos y sus fechas; nunca descripción, ubicación, prioridad ni correos.
 
