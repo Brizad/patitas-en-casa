@@ -256,6 +256,18 @@ Seis tareas pedidas por Brayan, cada una en PR pequeños con CI en verde.
 - Pruebas: `tests/test_video_nodo.py` (sintaxis, el token no aparece en la salida, se
   guarda solo si se pide). No se probó en un Ubuntu real: el paso 2 lo vas a correr tú.
 
+### 2. Página de inicio pública (#145)
+
+- `https://patitas-en-casa-pnnk.onrender.com/` ya no salta a la PWA: muestra una página que
+  explica el proyecto en 30 segundos (problema, 6 pasos, 7 roles y tecnología) con tres
+  botones grandes. «Adoptar» abre directamente el registro de adoptante del panel
+  (`/panel/#registro`).
+- Es HTML y CSS sin JavaScript (`app/inicio/`), con la misma CSP estricta de la PWA. Se
+  revisó en un celular de 375 px: sin desplazamiento horizontal y botones de 56 px de alto.
+- Para la sustentación: si te preguntan «¿por qué sin JavaScript?», porque es una página
+  que solo informa; así carga rápido con mala señal y no hay nada que atacar.
+- Pruebas: `tests/test_inicio.py`.
+
 ## Resumen final para Brayan
 
 **Versión publicada: v1.1.0** (etiqueta `v1.1.0` y *release* en GitHub; añade el análisis
