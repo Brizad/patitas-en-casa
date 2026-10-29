@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, decidir, propuestaJornada,
-  publicar, registrarSeguimiento, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
+  NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, decidir, pedirVisita,
+  propuestaJornada, publicar, registrarDevolucion, registrarSeguimiento, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
 } from "./apiAdopcionCoordinador";
 import { FichaAnimal, animales } from "./apiRefugio";
 import { faltaJustificacion, textoError } from "./mensajes";
@@ -41,7 +41,9 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
     }
   }
 
-  const pendientes = solicitudes.filter((s) => s.estado === "pendiente");
+  // «visita» sigue abierta: el refugio pidió visitar el hogar y aún no decide (RF-27).
+  const pendientes = solicitudes.filter((s) => s.estado === "pendiente" || s.estado === "visita");
+  const aprobadas = solicitudes.filter((s) => s.estado === "aprobada");
   return (
     <section className="pagina">
       {mensaje && <p className="resultado" role="status">{mensaje}</p>}
@@ -52,6 +54,18 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
         <ul className="lista-simple">
           {pendientes.map((s) => (
             <Solicitud key={s.id} s={s} hacer={hacer} token={token} />))}
+        </ul>
+      </div>
+      <div className="tarjeta">
+        <h2>Adopciones aprobadas ({aprobadas.length})</h2>
+        <p className="nota">Si la familia ya no puede cuidarlo, registra la devolución con el
+          motivo: el animal vuelve al refugio y al catálogo (RF-10, RN-13).</p>
+        <ul className="lista-simple">
+          {aprobadas.map((s) => (
+            <li key={s.id}><b>{s.animal}</b> · {s.adoptante}
+              <TextoYBoton etiqueta="Motivo de la devolución" boton="Registrar devolución"
+                alEnviar={(texto) => hacer(() => registrarDevolucion(token, s.id, texto),
+                  `Devolución de ${s.animal} registrada: volvió al refugio.`)} /></li>))}
         </ul>
       </div>
       <div className="tarjeta">
@@ -94,6 +108,7 @@ function Solicitud({ s, token, hacer }: { s: SolicitudRefugio; token: string; ha
             `: ${[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].join("; ")}`}
         </p>)}
       {s.mensaje && <p>«{s.mensaje}»</p>}
+      {s.estado === "visita" && <p className="nota">Visita pedida: {s.razon}</p>}
       <div className="acciones">
         <button className="principal" onClick={() => void hacer(() => decidir(token, s.id, true),
           `Adopción de ${s.animal} aprobada: egresó del refugio y se programaron los seguimientos.`)}>
@@ -104,7 +119,26 @@ function Solicitud({ s, token, hacer }: { s: SolicitudRefugio; token: string; ha
           onClick={() => void hacer(() => decidir(token, s.id, false, razon.trim()),
             "Solicitud rechazada.")}>Rechazar</button>
       </div>
+      {s.estado === "pendiente" && (
+        <TextoYBoton etiqueta="Nota de la visita (cuándo y qué revisar)" boton="Pedir visita"
+          alEnviar={(texto) => hacer(() => pedirVisita(token, s.id, texto),
+            "Visita previa registrada: la solicitud sigue abierta.")} />)}
     </li>
+  );
+}
+
+/** Un texto con la regla de las justificaciones (D-07) y su botón. */
+function TextoYBoton({ etiqueta, boton, alEnviar }: {
+  etiqueta: string; boton: string; alEnviar: (texto: string) => void;
+}) {
+  const [texto, setTexto] = useState("");
+  return (
+    <div className="acciones">
+      <input aria-label={etiqueta} placeholder={etiqueta} value={texto}
+        onChange={(e) => setTexto(e.target.value)} />
+      <button disabled={faltaJustificacion("critica", "alta", texto)}
+        onClick={() => { alEnviar(texto.trim()); setTexto(""); }}>{boton}</button>
+    </div>
   );
 }
 

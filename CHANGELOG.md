@@ -4,6 +4,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 ### Agregado
+- RF-27 y RF-10 (#113): el coordinador puede pedir una **visita previa** antes de decidir (`POST /refugio/solicitudes/{id}/visita`) y registrar una **devolución con su motivo** (`POST /refugio/solicitudes/{id}/devolucion`, RN-13): el animal reingresa (ocupa cupo; sin cupo responde 409 y no cambia nada) y vuelve al catálogo. Estados nuevos `visita` y `devuelta` (migración `0023`). Panel: botones en «Adopciones».
 - RF-18 y RNF-08 (#111): contacto opcional del ciudadano (correo o teléfono) con autorización expresa, guardado con AES-256-GCM (`PATITAS_CLAVE_DATOS`, migración `0022`); si es un correo, recibe un aviso cuando un veterinario revisa su reporte, por el mismo outbox y con el destinatario cifrado también en la tabla de avisos. Campo nuevo en la PWA.
 - Datos de demostración (#109): con `PATITAS_DEMO_ACTIVA=true` y `PATITAS_DEMO_CONTRASENA`, al arrancar se cargan una vez una cuenta por rol (`*@demo.patitas.co`), reportes en 7 comunas de Cúcuta, un rescate completo, una oferta abierta, cuatro animales con historial y tres en adopción. La contraseña nunca está en el código.
 

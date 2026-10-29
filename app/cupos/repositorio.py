@@ -34,6 +34,11 @@ class RepositorioCupos(Protocol):
 
     def agregar_nota(self, nota: NotaClinica) -> None: ...
 
+    def reingresar(self, animal_id: int) -> Refugio | None:
+        """RF-10 (#113): un animal devuelto vuelve a ocupar cupo en su ficha de siempre.
+        None si no había egresado o no hay cupo (RN-04); entonces nada cambia."""
+        ...
+
     def egresar(self, animal_id: int, motivo: MotivoEgreso) -> Refugio | None:
         """RF-26: marca el egreso y libera el cupo en una sola operación. None si el animal
         no está en este refugio o ya egresó (nada cambia)."""
@@ -75,6 +80,15 @@ class RepositorioCuposEnMemoria:
 
     def agregar_nota(self, nota: NotaClinica) -> None:
         self._notas.append(nota)
+
+    def reingresar(self, animal_id: int) -> Refugio | None:
+        with self._candado:
+            animal = next((a for a in self._animales if a.id == animal_id), None)
+            if animal is None or animal.egresado_en is None or not self._refugio.tiene_cupo():
+                return None
+            animal.egresado_en, animal.motivo_egreso = None, None
+            self._refugio.ocupados += 1
+            return replace(self._refugio)
 
     def egresar(self, animal_id: int, motivo: MotivoEgreso) -> Refugio | None:
         with self._candado:

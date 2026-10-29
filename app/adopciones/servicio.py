@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from app.adopciones.modelos import (
+    ABIERTAS,
     DIAS_SEGUIMIENTO,
     EstadoPublicacion,
     EstadoSolicitud,
@@ -50,6 +51,10 @@ class SeguimientoNoValido(ValueError):
     pass
 
 
+class SinCupoParaDevolucion(Exception):
+    pass
+
+
 class ServicioAdopciones:
     def __init__(self, repositorio: RepositorioAdopciones,
                  reloj: Callable[[], datetime] | None = None) -> None:
@@ -83,7 +88,7 @@ class ServicioAdopciones:
         solicitud = self._repositorio.solicitud(solicitud_id)
         if solicitud is None:
             raise SolicitudNoEncontrada(f"No existe la solicitud {solicitud_id}.")
-        if solicitud.estado != EstadoSolicitud.PENDIENTE:
+        if solicitud.estado not in ABIERTAS:
             raise SolicitudYaDecidida("Esta solicitud ya fue decidida.")
         ahora = self._reloj()
         if not aprobar:
@@ -116,3 +121,27 @@ class ServicioAdopciones:
         if hecho is None:
             raise SeguimientoNoValido("Ese seguimiento no existe o ya fue registrado.")
         return hecho
+
+    def pedir_visita(self, coordinador: Usuario, solicitud_id: int, nota: str) -> Solicitud:
+        """RF-27: antes de decidir, el refugio pide una visita al hogar. La nota (cuándo y
+        qué revisar) sigue la regla de las justificaciones."""
+        nota = (nota or "").strip()
+        validar_justificacion(nota, RazonInvalida)
+        if not self._repositorio.pedir_visita(solicitud_id, coordinador.correo, nota,
+                                              self._reloj()):
+            raise SolicitudYaDecidida("Solo se pide visita a una solicitud pendiente.")
+        return self._repositorio.solicitud(solicitud_id)
+
+    def devolver(self, coordinador: Usuario, solicitud_id: int, motivo: str) -> Solicitud:
+        """RF-10, RN-13: el adoptante devuelve el animal al refugio (en vez de abandonarlo).
+        Queda el motivo; el animal reingresa y vuelve al catálogo."""
+        motivo = (motivo or "").strip()
+        validar_justificacion(motivo, RazonInvalida)
+        hecho = self._repositorio.devolver(solicitud_id, coordinador.correo, motivo,
+                                           self._reloj())
+        if hecho is None:
+            raise SinCupoParaDevolucion("El refugio no tiene cupo para recibir al animal "
+                                        "(RN-04): libera un cupo e inténtalo de nuevo.")
+        if not hecho:
+            raise SolicitudYaDecidida("Solo se registra la devolución de una adopción aprobada.")
+        return self._repositorio.solicitud(solicitud_id)

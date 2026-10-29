@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
 from app.adopciones.modelos import (
+    ABIERTAS,
     Energia,
     EstadoPublicacion,
     EstadoSolicitud,
@@ -27,6 +28,7 @@ from app.bd.esquema import (
     seguimientos,
     solicitudes,
 )
+from app.cupos.repositorio_postgres import SinCupo, reingresar_en
 from app.dominio.modelos import MotivoEgreso
 
 # La publicación con el nombre y la especie de la ficha del animal.
@@ -119,7 +121,7 @@ class RepositorioAdopcionesPostgres:
         with self._motor.begin() as conexion:
             cambio = conexion.execute(update(solicitudes).where(
                 solicitudes.c.id == solicitud_id,
-                solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                solicitudes.c.estado.in_([e.value for e in ABIERTAS])).values(
                 estado=EstadoSolicitud.RECHAZADA.value, decidida_por=por, decidida_en=momento,
                 razon=razon))
         return cambio.rowcount == 1
@@ -132,7 +134,7 @@ class RepositorioAdopcionesPostgres:
             with self._motor.begin() as conexion:
                 fila = conexion.execute(update(solicitudes).where(
                     solicitudes.c.id == solicitud_id,
-                    solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                    solicitudes.c.estado.in_([e.value for e in ABIERTAS])).values(
                     estado=EstadoSolicitud.APROBADA.value, decidida_por=por,
                     decidida_en=momento).returning(solicitudes.c.animal_id)).first()
                 if fila is None:
@@ -140,7 +142,7 @@ class RepositorioAdopcionesPostgres:
                 animal_id = fila.animal_id
                 conexion.execute(update(solicitudes).where(
                     solicitudes.c.animal_id == animal_id,
-                    solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                    solicitudes.c.estado.in_([e.value for e in ABIERTAS])).values(
                     estado=EstadoSolicitud.RECHAZADA.value, decidida_por=por,
                     decidida_en=momento, razon="Se aprobó otra solicitud para este animal."))
                 conexion.execute(update(publicaciones).where(
@@ -184,6 +186,36 @@ def _seguimiento(f) -> Seguimiento:
     return Seguimiento(id=f["id"], solicitud_id=f["solicitud_id"], dia=f["dia"],
                        programado_para=f["programado_para"], realizado_en=f["realizado_en"],
                        nota=f["nota"], registrado_por=f["registrado_por"])
+
+    def pedir_visita(self, solicitud_id: int, por: str, nota: str, momento: datetime) -> bool:
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(update(solicitudes).where(
+                solicitudes.c.id == solicitud_id,
+                solicitudes.c.estado == EstadoSolicitud.PENDIENTE.value).values(
+                estado=EstadoSolicitud.VISITA.value, decidida_por=por, decidida_en=momento,
+                razon=nota))
+        return cambio.rowcount == 1
+
+    def devolver(self, solicitud_id: int, por: str, motivo: str,
+                 momento: datetime) -> bool | None:
+        """Una transacción: si el animal no cabe (SinCupo), no cambia nada."""
+        try:
+            with self._motor.begin() as conexion:
+                animal_id = conexion.execute(update(solicitudes).where(
+                    solicitudes.c.id == solicitud_id,
+                    solicitudes.c.estado == EstadoSolicitud.APROBADA.value).values(
+                    estado=EstadoSolicitud.DEVUELTA.value, decidida_por=por,
+                    decidida_en=momento, razon=motivo).returning(solicitudes.c.animal_id)
+                ).scalar()
+                if animal_id is None:
+                    return False
+                reingresar_en(conexion, animal_id)
+                conexion.execute(update(publicaciones).where(
+                    publicaciones.c.animal_id == animal_id).values(
+                    estado=EstadoPublicacion.DISPONIBLE.value))
+        except SinCupo:
+            return None
+        return True
 
 
 def _solicitud(f) -> Solicitud:
