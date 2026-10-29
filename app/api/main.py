@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hmac
 import logging
 import mimetypes
 import re
@@ -1155,7 +1156,12 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         if (peticion.method in ("POST", "PUT", "PATCH", "DELETE")
                 and 200 <= respuesta.status_code < 300 and ruta is not None
                 and ruta.path != "/auth/token"):
-            actor = "anónimo"
+            # #125: el sondeo del trabajador sin trabajos (204) no es una acción.
+            if respuesta.status_code == 204 and ruta.path == "/video/trabajos/reclamar":
+                return respuesta
+            clave_video = peticion.headers.get("x-video-token", "")
+            actor = ("trabajador de video" if token_video and clave_video
+                     and hmac.compare_digest(clave_video, token_video) else "anónimo")
             token = peticion.headers.get("authorization", "").removeprefix("Bearer ")
             if token:
                 with contextlib.suppress(TokenInvalido):

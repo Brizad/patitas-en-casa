@@ -1,4 +1,6 @@
 """Rutas del video (#125): subida del ciudadano, trabajador local y vista del personal."""
+import base64
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -17,6 +19,12 @@ LLAVE = "clave-del-telefono-0001"
 REPORTE = {"descripcion": "Perro cojeando en el parque, no apoya una pata",
            "direccion": "Calle 10 # 5-20"}
 MP4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 2000
+TIRA = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"\x00" * 50).decode()
+RESULTADO = {"prioridad": "critica", "confianza": 0.9, "version_modelo": "marcha-mlp-v1",
+             "evidencias": ["no se pone de pie en el video", "apoya las cuatro patas",
+                            "casi no se desplaza"], "medidas": {"de_pie": 0.0},
+             "tira_png_base64": TIRA}
+TRABAJADOR = {"X-Video-Token": TOKEN}
 
 
 @pytest.fixture
@@ -80,3 +88,61 @@ def test_sin_token_configurado_el_video_esta_apagado_y_manda_el_texto(tmp_path):
     r = subir(c, codigo)
     assert r.status_code == 503
     assert "se atiende con la descripción" in r.json()["detail"]
+    assert c.post("/video/trabajos/reclamar", headers=TRABAJADOR).status_code == 503
+
+
+def test_recorrido_completo_del_video(c):
+    codigo = reportar(c)
+    r = subir(c, codigo)
+    assert r.status_code == 202
+    assert r.json()["mensaje"] == "Video recibido, se está analizando."
+    trabajo = c.post("/video/trabajos/reclamar", headers=TRABAJADOR).json()
+    assert trabajo["codigo"] == codigo
+    assert c.post("/video/trabajos/reclamar", headers=TRABAJADOR).status_code == 204
+    assert c.get(f"/video/trabajos/{trabajo['id']}/archivo", headers=TRABAJADOR).content == MP4
+    hecho = c.post(f"/video/trabajos/{trabajo['id']}/resultado", json=RESULTADO,
+                   headers=TRABAJADOR)
+    assert hecho.json() == {"estado": "terminado", "discrepancia": True}
+    assert list(c.directorio.iterdir()) == []  # RNF-08: el video se borró
+    vet = sesion(c)
+    vista = c.get(f"/reportes/{codigo}/video", headers=vet).json()
+    assert (vista["estado"], vista["prioridad"], vista["tiene_tira"]) == (
+        "terminado", "critica", True)
+    assert c.get(f"/reportes/{codigo}/video/tira.png", headers=vet).content.startswith(b"\x89PNG")
+    cola = c.get("/cola", headers=vet).json()
+    assert cola[0]["prioridad"] == "critica"  # RN-07: ganó el video, más grave
+    # RN-14: la consulta pública no muestra nada del video.
+    assert "video" not in str(c.get(f"/reportes/{codigo}/seguimiento").json())
+
+
+def test_el_trabajador_necesita_su_token_y_el_personal_su_sesion(c):
+    codigo = reportar(c)
+    assert c.post("/video/trabajos/reclamar").status_code == 401
+    assert c.post("/video/trabajos/reclamar",
+                  headers={"X-Video-Token": "otro-token"}).status_code == 401
+    assert c.get(f"/reportes/{codigo}/video").status_code == 401
+    assert c.get(f"/reportes/{codigo}/video/tira.png").status_code == 401
+
+
+def test_un_resultado_con_prioridad_necesita_tres_evidencias(c):
+    subir(c, reportar(c))
+    id_ = c.post("/video/trabajos/reclamar", headers=TRABAJADOR).json()["id"]
+    corto = {**RESULTADO, "evidencias": ["no se pone de pie"]}
+    assert c.post(f"/video/trabajos/{id_}/resultado", json=corto,
+                  headers=TRABAJADOR).status_code == 422
+    malo = {**RESULTADO, "tira_png_base64": base64.b64encode(b"GIF89a").decode()}
+    assert c.post(f"/video/trabajos/{id_}/resultado", json=malo,
+                  headers=TRABAJADOR).status_code == 422
+    fallo = c.post(f"/video/trabajos/{id_}/fallo", json={"motivo": "sin memoria"},
+                   headers=TRABAJADOR)
+    assert fallo.json() == {"estado": "pendiente"}  # se reintenta
+
+
+def test_la_bitacora_registra_al_trabajador_pero_no_cada_sondeo_vacio(c):
+    subir(c, reportar(c))
+    id_ = c.post("/video/trabajos/reclamar", headers=TRABAJADOR).json()["id"]
+    c.post("/video/trabajos/reclamar", headers=TRABAJADOR)  # 204: sin trabajos
+    c.post(f"/video/trabajos/{id_}/resultado", json=RESULTADO, headers=TRABAJADOR)
+    acciones = [(e.actor, e.accion) for e in c.app.state.bitacora.recientes()]
+    assert ("trabajador de video", "POST /video/trabajos/{id_}/resultado") in acciones
+    assert acciones.count(("trabajador de video", "POST /video/trabajos/reclamar")) == 1

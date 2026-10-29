@@ -12,6 +12,7 @@ Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10).
 - Tabla `analisis_video` (migración `0025`) y repositorio en PostgreSQL: un trabajo por reporte, reclamo con `FOR UPDATE SKIP LOCKED`. `actualizar_triaje` en los repositorios de reportes: el resultado del video nunca deshace una confirmación o un descarte del veterinario.
 - `ServicioVideo` (`app/video/servicio.py`): solo el teléfono que creó el reporte sube el video (su clave de idempotencia), dentro de 30 min y una vez; RN-07 y RF-19 al recibir el resultado; reintentos (3), reclamos vencidos (10 min) y falla segura: video perdido, no concluyente o sin analizar en 6 h ⇒ manda el texto. El video se borra siempre (RNF-08).
 - `POST /reportes/{codigo}/video` (público, con la misma `Idempotency-Key` del reporte): el video se escribe por partes en el disco temporal (≤ 50 MB, MP4/MOV/WebM por su firma) y responde «Video recibido, se está analizando». `GET /reportes/{codigo}/video` y `/video/tira.png` para el personal. Sin `PATITAS_VIDEO_TOKEN` el video está apagado (503) y manda el texto; `render.yaml` lo genera.
+- Rutas del trabajador local con `X-Video-Token`: `POST /video/trabajos/reclamar` (204 sin trabajos), `GET /video/trabajos/{id}/archivo`, `POST .../resultado` (≥ 3 evidencias, tira PNG ≤ 200 KB) y `POST .../fallo`. La bitácora registra al «trabajador de video» y no cada sondeo vacío.
 
 ## [1.0.0] - 2026-10-29
 Plan autónomo de cierre: incremento 3 y fases 1 a 5, más las brechas del ERS (PR #108 a
