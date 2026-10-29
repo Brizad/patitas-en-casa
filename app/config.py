@@ -20,6 +20,9 @@ MIN_LETRAS_JUSTIFICACION = 5
 INTENTOS_MAXIMOS = 5
 INTENTOS_MAXIMOS_POR_IP = 20
 VENTANA_INTENTOS_MINUTOS = 15
+# DT-09 (#149): registros públicos de adoptante por IP en la misma ventana. Una familia
+# o una oficina con una sola IP puede crear varias cuentas; un robot no, cientos.
+REGISTROS_MAXIMOS_POR_IP = 5
 
 # RF-17 (#75): dos reportes con GPS a esta distancia y en este rato son posibles duplicados.
 DUPLICADO_METROS = 200
