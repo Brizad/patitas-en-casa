@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 
 from app import config
+from app.adopciones.compromiso import lineas_compromiso
 from app.adopciones.modelos import (
     Energia,
     EstadoSolicitud,
@@ -67,6 +68,7 @@ from app.cupos.fichas import AnimalNoEncontrado, NotaInvalida, ServicioFichas
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
+from app.documentos.pdf import generar_pdf
 from app.dominio.modelos import (
     DECIDIDOS,
     Animal,
@@ -669,6 +671,27 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             raise HTTPException(status_code=409 if "registrado" in str(error) else 422,
                                 detail=str(error)) from error
         return _seguimiento(hecho, datetime.now(UTC))
+
+    acceso_adopcion = exigir_rol(dependencia_usuario, Rol.ADOPTANTE, Rol.COORDINADOR)
+
+    @app.get("/adopciones/solicitudes/{solicitud_id}/compromiso.pdf")
+    def compromiso_de_adopcion(solicitud_id: int, usuario: Usuario = acceso_adopcion):
+        """RF-29: el adoptante de la solicitud o el coordinador del refugio del animal; para
+        cualquier otro la solicitud «no existe» (404), así no se adivinan solicitudes ajenas."""
+        s = repositorio_adopciones.solicitud(solicitud_id)
+        if s is None or (s.adoptante != usuario.correo if usuario.rol == Rol.ADOPTANTE
+                         else fichas_de(usuario).animal(s.animal_id) is None):
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
+        if s.estado != EstadoSolicitud.APROBADA:
+            raise HTTPException(status_code=409,
+                                detail="El compromiso existe solo para adopciones aprobadas.")
+        adoptante = repositorio_usuarios.buscar_por_correo(s.adoptante)
+        pdf = generar_pdf(lineas_compromiso(
+            s, repositorio_adopciones.publicacion(s.animal_id),
+            adoptante.nombre if adoptante else s.adoptante,
+            repositorio_adopciones.seguimientos(s.id)))
+        return Response(pdf, media_type="application/pdf", headers={
+            "Content-Disposition": f'attachment; filename="compromiso-{s.id}.pdf"'})
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,
