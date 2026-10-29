@@ -44,4 +44,5 @@ jobs:
             echo "== $url"
             /usr/bin/time -f "tiempo: %e s, memoria máxima: %M KB" \
               python -m patitas_video.trabajador --video "video$i"
+            python -m patitas_video.diagnostico "video$i"
           done
