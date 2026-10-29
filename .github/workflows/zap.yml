@@ -1,0 +1,38 @@
+name: OWASP ZAP (análisis de seguridad)
+
+# RNF-05 (#119): análisis «baseline» de OWASP ZAP sobre la app publicada. Es pasivo: navega
+# y revisa cabeceras, cookies y respuestas, sin atacar ni llenar formularios. Se lanza a mano
+# (Actions → OWASP ZAP → Run workflow) y deja el informe como artefacto.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Despertar el servicio
+        run: curl -s -o /dev/null -m 90 https://patitas-en-casa-pnnk.onrender.com/app/ || true
+
+      - name: Análisis baseline
+        run: |
+          mkdir -p informe && chmod 777 informe
+          docker run --rm -v "$PWD/informe:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t https://patitas-en-casa-pnnk.onrender.com/app/ \
+            -r informe.html -J informe.json -I
+          # -I: no falla por advertencias; abajo se falla solo si hay riesgo ALTO (RNF-05).
+          altos=$(python3 -c "import json; d=json.load(open('informe/informe.json')); \
+          print(sum(1 for s in d['site'] for a in s['alerts'] if a['riskcode'] == '3'))")
+          echo "Hallazgos de severidad alta: $altos"
+          [ "$altos" = 0 ]
+
+      - name: Guardar el informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-zap
+          path: informe/
+          retention-days: 30
