@@ -22,4 +22,4 @@ RUN useradd --create-home patitas
 USER patitas
 EXPOSE 8000
 # Aplica las migraciones pendientes y arranca la API.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn --factory app.api.main:crear_app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn --factory app.api.main:crear_app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

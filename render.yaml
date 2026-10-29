@@ -1,0 +1,32 @@
+# Despliegue en Render (Blueprint). En Render: New > Blueprint > este repositorio.
+# Crea la base PostgreSQL y la API (imagen del Dockerfile: API + PWA en /app/ + panel en /panel/).
+databases:
+  - name: patitas-bd
+    plan: free
+    databaseName: patitas
+    user: patitas
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: patitas-en-casa
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /app/
+    autoDeploy: true
+    envVars:
+      - key: POSTGRES_HOST
+        fromDatabase: { name: patitas-bd, property: host }
+      - key: POSTGRES_PORT
+        fromDatabase: { name: patitas-bd, property: port }
+      - key: POSTGRES_USER
+        fromDatabase: { name: patitas-bd, property: user }
+      - key: POSTGRES_PASSWORD
+        fromDatabase: { name: patitas-bd, property: password }
+      - key: POSTGRES_DB
+        fromDatabase: { name: patitas-bd, property: database }
+      - key: PATITAS_JWT_SECRETO
+        generateValue: true          # Render genera una clave aleatoria; nadie la escribe a mano
+      - key: PATITAS_SMTP_HOST       # vacío = los avisos quedan en el log y en la app
+        sync: false
