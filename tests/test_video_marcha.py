@@ -66,3 +66,13 @@ def test_umbral_de_confianza_calibrado_con_la_prueba_de_humo():
     assert medir(medio).concluyente
     bajo = [{k: (x, y, 0.2) for k, (x, y, _c) in c.items()} for c in caminar()]
     assert not medir(bajo).concluyente
+
+
+def test_los_cuadros_sin_animal_no_cuentan_dos_veces():
+    """Prueba de humo (#125, galgo): el perro salía en 98 de 175 cuadros y en 50 de esos 98 se
+    veía el cuerpo. Los cuadros sin animal ya los juzga el detector («no se ve un perro o un
+    gato»); aquí la fracción útil se mide solo sobre los cuadros en que sí aparece."""
+    con_huecos = [c if k % 2 else {} for k, c in enumerate(caminar(segundos=12))]
+    m = medir(con_huecos)
+    assert m.cuadros_utiles == 1.0
+    assert m.concluyente
