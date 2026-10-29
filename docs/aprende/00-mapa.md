@@ -117,3 +117,8 @@ cd panel && npm run dev                     # panel en http://127.0.0.1:5173/pan
 - `fase-N-<tema>.md`: una guía por fase del plan.
 - `avance.md`: qué quedó, qué falta y la URL de Render.
 - `preguntas-para-brayan.md`: decisiones que tomé solo y que Brayan debe revisar.
+- `trazabilidad.md`: cada requisito del ERS con su estado, código, prueba y PR.
+- `guion-demo.md`: la demostración de 10 minutos para el profesor.
+- `preguntas-sustentacion.md`: 30 preguntas probables con respuesta corta.
+
+La app publicada está en https://patitas-en-casa-pnnk.onrender.com (PWA en `/app/`, panel en `/panel/`, API en `/docs`).

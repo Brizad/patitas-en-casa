@@ -1,6 +1,6 @@
 # Fase 2 · Refugio completo
 
-Issue #75. PR apilados: #76 → #77 → #78 → #79 → #80 → #81 → #82 → #83 → este.
+Issue #75. PR apilados: #76 → #77 → #78 → #79 → #80 → #81 → #82 → #83 → este. Se revisaron por separado y se integraron a `main` juntos en el **#108**.
 
 ## Qué hace
 
@@ -92,3 +92,35 @@ el egreso y mira cómo baja la ocupación.
 4. ¿Por qué el historial clínico no tiene endpoint para editar una nota? ¿Cómo se corrige un
    error?
 5. ¿Qué haría falta para detectar duplicados con 100 000 reportes? ¿Por qué hoy no hace falta?
+
+### Respuestas
+
+<details><summary>Respuesta 1</summary>
+
+Los dos ejecutan un `UPDATE reportes ... WHERE estado NOT IN ('confirmado', 'descartado')`. PostgreSQL bloquea la fila: el primero cambia el estado y el segundo ya no cumple la condición (0 filas), así que su servicio responde 409. La línea clave es la condición `PENDIENTE` en `RepositorioPostgres.confirmar` y `descartar`.
+
+</details>
+
+<details><summary>Respuesta 2</summary>
+
+Por RN-14: la consulta pública solo muestra pasos y fechas. El motivo («falso») no le sirve al ciudadano y el código del original apunta al reporte de otra persona.
+
+</details>
+
+<details><summary>Respuesta 3</summary>
+
+Porque «..........» tiene 10 caracteres y no explica nada. En la prueba con un compañero (E5) se vio que la justificación se podía llenar con relleno (D-07). Con 5 letras mínimas se acepta «Sangra mucho» y se rechaza el relleno.
+
+</details>
+
+<details><summary>Respuesta 4</summary>
+
+Para conservar la traza de quién dijo qué y cuándo (RF-24, RF-32). Un error se corrige agregando otra nota que lo aclara; la nota equivocada queda, con su fecha y autor.
+
+</details>
+
+<details><summary>Respuesta 5</summary>
+
+Un índice espacial (PostGIS) para buscar solo los reportes cercanos en vez de comparar todos contra todos. Hoy hay pocos reportes pendientes y el cálculo con la fórmula del haversine en Python tarda milisegundos.
+
+</details>

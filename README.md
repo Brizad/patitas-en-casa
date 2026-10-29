@@ -18,7 +18,10 @@ Autor: Brayan David Amado Ramírez.
 El plan gratis de Render «duerme» el servicio tras 15 minutos sin visitas: la primera
 petición puede tardar unos 30 a 60 segundos en responder.
 
-## Estado: v1.0.0 integrada en `main` y desplegada en Render
+## Estado: v1.0.0 publicada y desplegada en Render
+
+Trazabilidad de cada requisito del ERS: `docs/aprende/trazabilidad.md`. Guion de la
+demostración: `docs/aprende/guion-demo.md`.
 
 Además de lo de la v0.2.0 (abajo), la v1.0.0 trae:
 

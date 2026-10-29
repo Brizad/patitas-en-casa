@@ -1,6 +1,6 @@
 # Fase 5 · Cierre y v1.0.0
 
-Issue #102. PR apilados: #103 → #104 → #105 → #106 → este (versión 1.0.0).
+Issue #102. PR apilados: #103 → #104 → #105 → #106 → este (versión 1.0.0). Se revisaron por separado y se integraron a `main` juntos en el **#108**.
 
 ## Qué hace
 
@@ -70,3 +70,35 @@ la bitácora. Prueba en `psql`: `UPDATE bitacora SET actor = 'x';` debe fallar.
 3. ¿Por qué no se guarda el cuerpo de la petición?
 4. ¿Qué datos se quitan al exportar y por qué no basta con quitar el nombre?
 5. ¿Qué es la inyección de CSV y cómo se evita?
+
+### Respuestas
+
+<details><summary>Respuesta 1</summary>
+
+Porque así ninguna acción se olvida: el middleware ve todas las respuestas y registra las que cambian datos (POST, PUT, PATCH, DELETE con 2xx). Si se escribiera en cada endpoint, un endpoint nuevo podría quedar sin registro.
+
+</details>
+
+<details><summary>Respuesta 2</summary>
+
+Un disparador (`tr_bitacora_inmutable`) que rechaza `UPDATE` y `DELETE` con un error. `TRUNCATE` no activa disparadores de fila: solo lo usan las pruebas en la base de pruebas; en producción, el usuario de la app no debería tener ese permiso.
+
+</details>
+
+<details><summary>Respuesta 3</summary>
+
+Porque el cuerpo trae contraseñas, descripciones con nombres o teléfonos y datos del perfil. La bitácora solo necesita quién, qué ruta, sobre qué objeto y cuándo.
+
+</details>
+
+<details><summary>Respuesta 4</summary>
+
+Se quitan la descripción, la dirección, el GPS (queda la comuna), la hora (queda el día), el código de seguimiento y los correos. No basta con el nombre porque una dirección, un teléfono en la descripción o la hora exacta permiten identificar a alguien.
+
+</details>
+
+<details><summary>Respuesta 5</summary>
+
+Una celda que empieza con =, +, - o @ se ejecuta como fórmula al abrir el CSV en Excel y podría, por ejemplo, abrir un enlace. Se evita anteponiendo una comilla simple para que se muestre como texto.
+
+</details>

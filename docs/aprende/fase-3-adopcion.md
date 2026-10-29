@@ -1,6 +1,6 @@
 # Fase 3 · Adopción
 
-Issue #85. PR apilados: #86 → #87 → #88 → #89 → #90 → #91 → #92 → #93 → este.
+Issue #85. PR apilados: #86 → #87 → #88 → #89 → #90 → #91 → #92 → #93 → este. Se revisaron por separado y se integraron a `main` juntos en el **#108**.
 
 ## Qué hace
 
@@ -83,3 +83,35 @@ adopción; como coordinador apruébala; como adoptante descarga el compromiso en
 3. ¿Por qué el perfil no pregunta la edad ni el estrato del adoptante?
 4. ¿Por qué el registro público no deja elegir el rol?
 5. ¿Por qué se escribió el PDF a mano en vez de usar una librería?
+
+### Respuestas
+
+<details><summary>Respuesta 1</summary>
+
+Podría quedar una solicitud aprobada con el animal todavía ocupando un cupo y sin seguimientos, o la publicación «disponible» para otros. Al ser una transacción, si algo falla PostgreSQL deshace todo y el sistema queda como antes.
+
+</details>
+
+<details><summary>Respuesta 2</summary>
+
+Con el índice único parcial `uq_solicitudes_aprobada` sobre `animal_id`, que solo cuenta las filas con `estado = 'aprobada'`. Una segunda aprobación del mismo animal viola el índice, la transacción falla y no cambia nada (RN-11).
+
+</details>
+
+<details><summary>Respuesta 3</summary>
+
+Porque no sirve para saber si el animal estará bien cuidado y usarlo sería discriminar (RNF-16). Además, pedir menos datos personales es menos riesgo (Ley 1581, RNF-08): el perfil solo describe el hogar.
+
+</details>
+
+<details><summary>Respuesta 4</summary>
+
+Porque si el rol viniera del formulario, cualquiera podría registrarse como veterinario o administrador. `POST /adoptantes` siempre crea el rol adoptante; las cuentas del personal solo las crea el administrador.
+
+</details>
+
+<details><summary>Respuesta 5</summary>
+
+Porque una librería como ReportLab pesa varios MB y el servidor gratis tiene 512 MB de RAM. Un PDF de solo texto son objetos numerados y una tabla `xref` con sus posiciones: se escribe en unas 70 líneas y se prueba que cada posición apunte a su objeto.
+
+</details>

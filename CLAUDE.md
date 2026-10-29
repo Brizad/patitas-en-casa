@@ -10,8 +10,8 @@ veterinarios y control de cupos del refugio.
 
 - Proyecto integrador de Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 - Autor: Brayan David Amado Ramírez. Repositorio: https://github.com/Brizad/patitas-en-casa
-- Versión: v1.0.0 preparada (#102: incremento 3 y fases 1 a 5); se publica al integrar los PR
-  apilados en orden y crear la etiqueta `v1.0.0` sobre `main`. Última publicada: v0.2.0.
+- Versión publicada: v1.0.0 (incremento 3, fases 1 a 5 y brechas del ERS; PR #108 a #122).
+  En producción: https://patitas-en-casa-pnnk.onrender.com (Render, despliegue desde `main`).
 - Idioma: todo (código, pruebas, commits, documentación) en **español**.
 
 ## Estructura
@@ -30,6 +30,10 @@ veterinarios y control de cupos del refugio.
 | `app/refugios/` | `RepositorioRefugios` (memoria y PostgreSQL): refugios que registra el administrador (RF-14). |
 | `app/adopciones/` | Adopción (fase 3): perfil, publicación, solicitudes, `reglas.py` (RN-05), servicio y compromiso en PDF. |
 | `app/documentos/pdf.py` | PDF de texto sin dependencias (RF-29, RF-31). |
+| `app/demo.py` | Datos de demostración cargados al arrancar con `PATITAS_DEMO_ACTIVA` y `PATITAS_DEMO_CONTRASENA` (nunca en el código). |
+| `app/seguridad/cifrado.py` | AES-256-GCM para el contacto del ciudadano (`PATITAS_CLAVE_DATOS`, RF-18, RNF-08). |
+| `app/indicadores/`, `app/bitacora/` | Indicadores y exportación anonimizada (RF-30, RF-31); bitácora inmutable (RF-32). |
+| `scripts/operacion/` | Prueba de carga (RNF-01, RNF-14); los flujos `sondeo.yml` y `zap.yml` están en `.github/workflows/`. |
 | `app/usuarios/` | Cuentas del personal (DT-02): contraseñas Argon2id, `ServicioUsuarios`, repositorios y comando `crear_usuario`. |
 | `app/seguridad/tokens.py`, `app/api/seguridad.py` | Tokens JWT (`EmisorTokens`) y la dependencia de FastAPI que exige sesión. |
 | `app/notificaciones/correo.py` | Adaptadores de `Notificador` (DT-03): correo SMTP o, sin SMTP configurado, el log. |

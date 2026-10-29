@@ -130,3 +130,100 @@ Qué hay que saber:
   demostración la verá quien asista a la presentación.
 - Si alguna variable falta o la contraseña es corta, la API arranca igual y en *Logs* aparece
   el motivo (nunca la contraseña).
+
+## Brechas del ERS cerradas después del #108
+
+Al leer el ERS final (v5.0) aparecieron requisitos que estaban incompletos. Se cerraron, cada
+uno con su PR, CI en verde y comprobación en Render: datos de demostración (#110), contacto
+cifrado del ciudadano RF-18/RNF-08 (#112), visita previa y devoluciones RF-27/RF-10 (#114),
+fotos RF-25 (#116), indicadores y exportación completos RF-30/RF-31/RNF-16 (#118), prueba de
+carga, sondeo y OWASP ZAP RNF-01/04/05/14 (#120) y los arreglos de la prueba de punta a punta
+(#122). En el #108 ya habían entrado el rol Alcaldía (RF-13), la dirección del refugio
+(RF-14), el historial de acceso (RF-16), la alerta por refugio (RF-07), el refugio en el
+compromiso (RF-29), la discrepancia texto/video (RF-19) y la complejidad ≤ 10 (RNF-10).
+Detalle completo en `trazabilidad.md`.
+
+## Prueba de punta a punta (29 de octubre de 2026)
+
+**Dónde.** Las normas de seguridad del asistente no le permiten escribir contraseñas en un
+sitio de producción. Por eso:
+
+- **En Render (https://patitas-en-casa-pnnk.onrender.com):** todo lo público, en celular (375 × 812) y escritorio: la PWA
+  (reportar solo con teclado, código de seguimiento y consulta del estado), la pantalla de
+  inicio del panel, el catálogo público, cabeceras, TLS y OWASP ZAP. Se creó **un reporte de
+  prueba**, marcado «PRUEBA de punta a punta… (no es real)», con código `CMTNWEMQ`:
+  **descártalo** desde la cola como veterinaria («falso»).
+- **En local, con el mismo código de `main` y los datos de demostración:** el recorrido de
+  cada rol con sesión (veterinaria, rescatista, coordinador, adoptante, administrador y
+  Alcaldía), en celular y escritorio, solo con teclado.
+
+**Resultados.**
+
+| Qué | Resultado |
+|-----|-----------|
+| Errores en la consola | Ninguno, en ninguna pantalla (Render y local). |
+| Desborde horizontal a 375 px | Ninguno. |
+| Solo con teclado | Inicio de sesión, «Saltar a la cola», confirmar, aceptar rescate, pedir adopción y reportar en la PWA: todo funciona. |
+| Campos sin etiqueta / imágenes sin `alt` | Ninguno. |
+| Peso de la PWA en Render (RNF-07) | 28 KB (límite 1,5 MB); panel 61 KB. |
+| TLS (RNF-05) | 1.0 y 1.1 rechazados; 1.2 aceptado. |
+| OWASP ZAP (RNF-05) | 0 hallazgos altos; de 5 advertencias bajas quedan 3 informativas. |
+| Carga en local (RNF-01, RNF-14) | p95 2,84 s con 30 reportes a la vez y 50 usuarios del panel; 0 errores. |
+
+**Fallas encontradas y corregidas (#122):**
+
+1. En el celular, tras elegir un reporte, el foco se quedaba en la lista y había que recorrer
+   todos los reportes con Tab para llegar a «Confirmar». Ahora el foco va al detalle.
+2. Los botones con el nombre del animal medían 21 px de alto (WCAG 2.2 pide 24 px).
+3. Faltaban las cabeceras HSTS, `Permissions-Policy` y `Cross-Origin-Opener-Policy`.
+4. El JS del panel viajaba sin comprimir: ahora va con gzip.
+
+Observación que no es una falla de producción: con el doble en memoria (solo pruebas locales)
+la ocupación de «Indicadores» no ve los ingresos nuevos; con PostgreSQL (Render) sí.
+
+**Lo que debes probar tú en Render** (con tu contraseña de demostración): el guion de
+`guion-demo.md`. Es el mismo recorrido que se probó en local.
+
+## Resumen final para Brayan
+
+**Versión publicada: v1.0.0** (etiqueta `v1.0.0` y *release* en GitHub), desplegada en
+https://patitas-en-casa-pnnk.onrender.com.
+
+**Qué quedó funcionando** (en `main`, desplegado y probado):
+
+- PWA ciudadana: reportar sin cuenta (también sin señal), contacto opcional cifrado y
+  consulta del estado.
+- Triaje con reglas + modelo TF-IDF (datos sintéticos), cola, confirmar, ajustar o descartar
+  con justificación, duplicados y bitácora de decisiones.
+- Rescates: ofertas por comuna, aceptar, llegué, resultado, escalamiento y avisos con
+  reintentos (outbox).
+- Refugio: varios refugios, ingresos con ficha e historial, egresos, cupos con alerta al 90 %.
+- Adopción: perfil, recomendaciones con puntaje y razones, fotos, solicitudes, visita previa,
+  aprobación con restricciones duras, seguimientos 30/90/180, devoluciones y compromiso PDF.
+- Administración y control: seis roles, cuentas, suspensión, historial de acceso, indicadores,
+  exportación anonimizada y bitácora inmutable.
+- Calidad: más de 600 pruebas con PostgreSQL real, 97 % de cobertura, complejidad ≤ 10,
+  gitleaks, sondeo de disponibilidad y OWASP ZAP.
+
+**Qué no y por qué** (detalle en `trazabilidad.md`):
+
+- Subir y analizar videos (RF-01 en parte, RF-03, RNF-02): no caben en Render gratis.
+- Disponibilidad del 99 % (RNF-04): el plan gratis se duerme; hay sondeo, no garantía.
+- Recall con datos de veterinarios (RNF-03): el modelo se validó con datos sintéticos.
+- Usabilidad con personas (RNF-06): necesita participantes reales.
+- Respaldo diario (RNF-15): listo para integrar, pero es tu decisión (P-07).
+- Lector de pantalla y contraste medidos con herramienta (RNF-11): falta esa revisión.
+
+**Qué debes hacer tú:**
+
+1. En Render → servicio → *Environment* (paso a paso arriba): `PATITAS_ADMIN_CORREO`,
+   `PATITAS_ADMIN_CONTRASENA`, `PATITAS_DEMO_ACTIVA=true` y `PATITAS_DEMO_CONTRASENA`.
+   Comprueba que exista `PATITAS_CLAVE_DATOS` (la genera `render.yaml`; si no aparece,
+   créala con 32 caracteres o más al azar).
+2. Descarta el reporte de prueba `CMTNWEMQ`.
+3. Ensaya `guion-demo.md` en Render.
+4. Responde las preguntas pendientes de `preguntas-para-brayan.md`: P-01 (pegar la regla 2 en
+   `CLAUDE.md`), P-07 (respaldo), P-08 (correo real), P-09 (video) y P-10 (prueba con
+   usuarios).
+5. Estudia en este orden: `00-mapa.md`, las cinco guías de fase (cada una con sus 5
+   preguntas y respuestas), `preguntas-sustentacion.md` y `trazabilidad.md`.
