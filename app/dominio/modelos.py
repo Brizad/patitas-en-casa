@@ -129,6 +129,7 @@ class Usuario:
     rol: Rol
     hash_contrasena: str = field(repr=False)  # Argon2id; nunca la contraseña
     activo: bool = True
+    refugio_id: int | None = None  # #67 (RF-14): refugio donde trabaja; None = ninguno
 
 
 @dataclass
@@ -136,6 +137,7 @@ class Refugio:
     nombre: str
     capacidad: int
     ocupados: int = 0
+    id: int | None = None  # #67: None mientras no se ha guardado
 
     def __post_init__(self) -> None:
         # BUG-04: invariante del refugio (DAD 7.2).

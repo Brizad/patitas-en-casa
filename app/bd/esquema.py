@@ -106,6 +106,7 @@ usuarios = Table(
     Column("hash_contrasena", Text, nullable=False),
     Column("activo", Boolean, nullable=False, server_default=true()),
     Column("creado_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("refugio_id", Integer, ForeignKey("refugios.id")),  # #67 (RF-14)
     UniqueConstraint("correo", name="uq_usuarios_correo"),
     CheckConstraint("correo = lower(correo)", name="ck_usuarios_correo_minusculas"),
     CheckConstraint(f"rol IN ({_valores(Rol)})", name="ck_usuarios_rol"),

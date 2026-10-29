@@ -48,6 +48,7 @@ from app.dominio.modelos import (
     Especie,
     EstadoReporte,
     Prioridad,
+    Refugio,
     Reporte,
     Rescate,
     ResultadoRescate,
@@ -56,6 +57,8 @@ from app.dominio.modelos import (
     Usuario,
 )
 from app.notificaciones.correo import crear_notificador
+from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
+from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
 from app.reportes.confirmacion import (
     AjusteSinJustificacion,
     ReporteNoEncontrado,
@@ -180,9 +183,23 @@ class ActivoEntrada(BaseModel):
     activo: bool
 
 
+class RefugioEntrada(BaseModel):
+    nombre: str = Field(max_length=120)
+    capacidad: int = Field(gt=0, le=10_000)
+
+
+class VinculoEntrada(BaseModel):
+    refugio_id: int | None  # None desvincula
+
+
+def _refugio(refugio: Refugio) -> dict:
+    return {"id": refugio.id, "nombre": refugio.nombre, "capacidad": refugio.capacidad,
+            "ocupados": refugio.ocupados}
+
+
 def _cuenta(usuario: Usuario) -> dict:
     return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value,
-            "activo": usuario.activo}
+            "activo": usuario.activo, "refugio_id": usuario.refugio_id}
 
 
 class IngresoEntrada(BaseModel):
@@ -219,7 +236,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               revisar_escalamientos_cada_s: float | None =
               config.REVISION_ESCALAMIENTOS_SEGUNDOS,
               repositorio_avisos: RepositorioAvisos | None = None,
-              procesar_avisos_cada_s: float | None = config.REVISION_AVISOS_SEGUNDOS) -> FastAPI:
+              procesar_avisos_cada_s: float | None = config.REVISION_AVISOS_SEGUNDOS,
+              repositorio_refugios: RepositorioRefugios | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
@@ -246,6 +264,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     repositorio_avisos = repositorio_avisos or (
         RepositorioAvisosPostgres(motor) if motor is not None
         else getattr(repositorio, "avisos", None) or RepositorioAvisosEnMemoria())
+    # #67 (RF-14): en memoria arranca con el refugio de los cupos (id 1), como la migración 0002.
+    if repositorio_refugios is None:
+        if motor is not None:
+            repositorio_refugios = RepositorioRefugiosPostgres(motor)
+        else:
+            demo = repositorio_cupos.refugio()
+            repositorio_refugios = RepositorioRefugiosEnMemoria(
+                [Refugio(demo.nombre, demo.capacidad, demo.ocupados, id=1)])
     usuarios = ServicioUsuarios(repositorio_usuarios)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
     usuario_actual = Depends(dependencia_usuario)
@@ -343,6 +369,27 @@ def crear_app(repositorio: RepositorioReportes | None = None,
         except CuentaNoEncontrada as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
         return {"correo": normalizar_correo(correo), "activo": datos.activo}
+
+    @app.get("/admin/refugios")
+    def listar_refugios(_admin: Usuario = administracion):
+        return [_refugio(r) for r in repositorio_refugios.todos()]
+
+    @app.post("/admin/refugios", status_code=201)
+    def registrar_refugio(datos: RefugioEntrada, _admin: Usuario = administracion):
+        """RF-14: el refugio nace sin animales; sus cupos los usa el coordinador."""
+        if not datos.nombre.strip():
+            raise HTTPException(status_code=422, detail="El nombre del refugio es obligatorio.")
+        return _refugio(repositorio_refugios.crear(datos.nombre.strip(), datos.capacidad))
+
+    @app.put("/admin/usuarios/{correo}/refugio")
+    def vincular_a_refugio(correo: str, datos: VinculoEntrada,
+                           _admin: Usuario = administracion):
+        correo = normalizar_correo(correo)
+        if datos.refugio_id is not None and not repositorio_refugios.existe(datos.refugio_id):
+            raise HTTPException(status_code=404, detail="Ese refugio no existe.")
+        if not repositorio_usuarios.vincular_refugio(correo, datos.refugio_id):
+            raise HTTPException(status_code=404, detail="No existe una cuenta con ese correo.")
+        return {"correo": correo, "refugio_id": datos.refugio_id}
 
     @app.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response,

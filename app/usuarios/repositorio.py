@@ -23,6 +23,10 @@ class RepositorioUsuarios(Protocol):
         """Todas las cuentas, ordenadas por correo (#67, RF-16)."""
         ...
 
+    def vincular_refugio(self, correo: str, refugio_id: int | None) -> bool:
+        """Vincula la cuenta a un refugio (None la desvincula); False si no existe (RF-14)."""
+        ...
+
     def cambiar_activo(self, correo: str, activo: bool) -> bool:
         """Suspende o reactiva; False si el correo no existe (#67, RF-16)."""
         ...
@@ -50,4 +54,10 @@ class RepositorioUsuariosEnMemoria:
         if correo not in self._datos:
             return False
         self._datos[correo].activo = activo
+        return True
+
+    def vincular_refugio(self, correo: str, refugio_id: int | None) -> bool:
+        if correo not in self._datos:
+            return False
+        self._datos[correo].refugio_id = refugio_id
         return True

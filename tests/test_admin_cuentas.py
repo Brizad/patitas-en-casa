@@ -45,14 +45,14 @@ def test_lista_las_cuentas_sin_el_hash_de_la_contrasena(c):
     cuentas = c.get("/admin/usuarios", headers=sesion(c)).json()
     assert [u["correo"] for u in cuentas] == ["admin@patitas.co", "vet@patitas.co"]
     assert cuentas[1] == {"correo": "vet@patitas.co", "nombre": "Ana Vet",
-                          "rol": "veterinario", "activo": True}
+                          "rol": "veterinario", "activo": True, "refugio_id": None}
 
 
 def test_crea_una_cuenta_que_puede_iniciar_sesion(c):
     respuesta = c.post("/admin/usuarios", json=NUEVA, headers=sesion(c))
     assert respuesta.status_code == 201
     assert respuesta.json() == {"correo": "resc@patitas.co", "nombre": "Rita",
-                                "rol": "rescatista", "activo": True}
+                                "rol": "rescatista", "activo": True, "refugio_id": None}
     assert "contrasena" not in respuesta.text
     assert c.post("/auth/token", data={"username": "resc@patitas.co",
                                        "password": NUEVA["contrasena"]}).status_code == 200

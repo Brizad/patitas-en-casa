@@ -21,6 +21,7 @@ class RepositorioUsuariosPostgres:
                 conexion.execute(insert(usuarios).values(
                     correo=usuario.correo, nombre=usuario.nombre, rol=usuario.rol.value,
                     hash_contrasena=usuario.hash_contrasena, activo=usuario.activo,
+                    refugio_id=usuario.refugio_id,
                 ))
         except IntegrityError as error:
             if getattr(error.orig, "sqlstate", None) == VIOLACION_DE_UNICIDAD:
@@ -51,7 +52,14 @@ class RepositorioUsuariosPostgres:
                                       .values(activo=activo))
         return cambio.rowcount == 1
 
+    def vincular_refugio(self, correo: str, refugio_id: int | None) -> bool:
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(update(usuarios).where(usuarios.c.correo == correo)
+                                      .values(refugio_id=refugio_id))
+        return cambio.rowcount == 1
+
 
 def _usuario(fila) -> Usuario:
     return Usuario(correo=fila["correo"], nombre=fila["nombre"], rol=Rol(fila["rol"]),
-                   hash_contrasena=fila["hash_contrasena"], activo=fila["activo"])
+                   hash_contrasena=fila["hash_contrasena"], activo=fila["activo"],
+                   refugio_id=fila["refugio_id"])
