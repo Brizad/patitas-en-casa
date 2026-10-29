@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Cuenta, iniciarSesion, miCuenta } from "./api";
 import Administracion from "./Administracion";
+import Adoptante from "./Adoptante";
 import Cola from "./Cola";
 import { textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
+import RegistroAdoptante from "./RegistroAdoptante";
 import Rescatista from "./Rescatista";
 
 export default function App() {
@@ -35,6 +37,7 @@ export default function App() {
       {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
       {pantalla === "rescates" && <Rescatista token={token} />}
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
+      {pantalla === "adopcion" && <Adoptante token={token} />}
       {pantalla === "administracion" && <Administracion token={token} yo={cuenta.correo} />}
       {pantalla === null && <p className="vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>
@@ -46,6 +49,8 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [registro, setRegistro] = useState(false);
+  const [aviso, setAviso] = useState("");
 
   async function entrar(evento: React.FormEvent) {
     evento.preventDefault();
@@ -61,15 +66,21 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
     }
   }
 
+  if (registro) {
+    return <RegistroAdoptante alTerminar={(m) => { setAviso(m); setRegistro(false); }} />;
+  }
   return (
     <form className="tarjeta inicio" onSubmit={entrar}>
-      <h1>Panel del personal</h1>
+      <h1>Patitas en Casa</h1>
+      {aviso && <p className="resultado" role="status">{aviso}</p>}
       <label>Correo<input type="email" value={correo} required autoComplete="username"
         onChange={(e) => setCorreo(e.target.value)} /></label>
       <label>Contraseña<input type="password" value={clave} required
         autoComplete="current-password" onChange={(e) => setClave(e.target.value)} /></label>
       {error && <p className="error" role="alert">{error}</p>}
       <button className="principal" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
+      <p><button type="button" className="enlace" onClick={() => setRegistro(true)}>
+        ¿Quieres adoptar? Crea tu cuenta</button></p>
     </form>
   );
 }
