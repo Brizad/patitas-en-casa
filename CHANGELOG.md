@@ -10,6 +10,7 @@ Análisis de video con un trabajador local (#125, RF-03, RF-19, RNF-02, DT-10).
 - Clasificador de la marcha (`servicios/video/patitas_video/clasificador.py`): red neuronal pequeña (MLP 5-8-4) entrenada con medidas **sintéticas** y leída del JSON con Python puro; al menos 3 evidencias en lenguaje claro y reglas de seguridad (sin apoyo o sin ponerse de pie nunca queda por debajo de alta). `entrenamiento/entrenar.py --datos` reentrena con medidas etiquetadas por veterinarios (DT-04).
 - Trabajos de análisis de video (`app/video/`): estados pendiente → enviado → terminado / no concluyente / fallido y repositorio en memoria.
 - Tabla `analisis_video` (migración `0025`) y repositorio en PostgreSQL: un trabajo por reporte, reclamo con `FOR UPDATE SKIP LOCKED`. `actualizar_triaje` en los repositorios de reportes: el resultado del video nunca deshace una confirmación o un descarte del veterinario.
+- `ServicioVideo` (`app/video/servicio.py`): solo el teléfono que creó el reporte sube el video (su clave de idempotencia), dentro de 30 min y una vez; RN-07 y RF-19 al recibir el resultado; reintentos (3), reclamos vencidos (10 min) y falla segura: video perdido, no concluyente o sin analizar en 6 h ⇒ manda el texto. El video se borra siempre (RNF-08).
 
 ## [1.0.0] - 2026-10-29
 Plan autónomo de cierre: incremento 3 y fases 1 a 5, más las brechas del ERS (PR #108 a

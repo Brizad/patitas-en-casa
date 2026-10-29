@@ -41,3 +41,13 @@ MAX_INTENTOS_AVISO = 5
 ESPERA_BASE_AVISO_S = 60
 VENCIMIENTO_RECLAMO_AVISO_S = 300
 REVISION_AVISOS_SEGUNDOS = 15
+
+# #125 (RF-03, RNF-02): video del reporte, analizado por un trabajador local.
+# El ciudadano lo adjunta justo después de crear el reporte, con la misma clave.
+VIDEO_VENTANA_SUBIDA_MINUTOS = 30
+# El análisis tarda hasta 3 min (RNF-02); un reclamo sin respuesta en 10 min se vuelve a dar.
+VENCIMIENTO_RECLAMO_VIDEO_S = 600
+MAX_INTENTOS_VIDEO = 3
+# Si el trabajador estuvo apagado tanto tiempo, el video se borra y manda el texto.
+VIDEO_MAX_ESPERA_HORAS = 6
+REVISION_VIDEOS_SEGUNDOS = 60
