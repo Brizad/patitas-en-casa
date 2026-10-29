@@ -326,7 +326,13 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=rescates.avisos_para)
     procesador = ProcesadorAvisos(repositorio_avisos, notificador)
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
-    cupos = ServicioCupos(repositorio_cupos, notificador)
+
+    def cupos_de(usuario: Usuario) -> ServicioCupos:
+        """#75: los cupos del refugio de la persona; sin vínculo, el primer refugio (como
+        antes de RF-14). Así dos coordinadores de refugios distintos no se mezclan."""
+        if usuario.refugio_id is None:
+            return ServicioCupos(repositorio_cupos, notificador)
+        return ServicioCupos(repositorio_cupos.para_refugio(usuario.refugio_id), notificador)
 
     @app.post("/auth/token")
     def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -609,8 +615,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     if (CARPETA_PANEL / "index.html").exists():  # sin compilar, /panel no existe
         app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")
 
-    @app.post("/refugio/ingresos", status_code=201, dependencies=[coordinacion])
-    def registrar_ingreso(datos: IngresoEntrada):
+    @app.post("/refugio/ingresos", status_code=201)
+    def registrar_ingreso(datos: IngresoEntrada, coordinador: Usuario = coordinacion):
+        cupos = cupos_de(coordinador)
         try:
             cupos.registrar_ingreso(Animal(**datos.model_dump()))
         except CupoAgotado as error:
@@ -619,8 +626,9 @@ def crear_app(repositorio: RepositorioReportes | None = None,
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"ocupacion": cupos.texto_ocupacion()}
 
-    @app.get("/refugio/ocupacion", dependencies=[personal])
-    def ocupacion():
+    @app.get("/refugio/ocupacion")
+    def ocupacion(usuario: Usuario = personal):
+        cupos = cupos_de(usuario)
         return {"ocupacion": cupos.texto_ocupacion(),
                 "porcentaje": round(cupos.porcentaje_ocupacion() * 100, 1)}
 

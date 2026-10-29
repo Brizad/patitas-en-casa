@@ -11,6 +11,10 @@ from app.dominio.modelos import Animal, Refugio
 class RepositorioCupos(Protocol):
     def refugio(self) -> Refugio: ...
 
+    def para_refugio(self, refugio_id: int) -> RepositorioCupos:
+        """El mismo almacenamiento, apuntando a otro refugio (#75)."""
+        ...
+
     def ocupar_cupo(self, animal: Animal) -> Refugio | None:
         """Comprueba el cupo, lo ocupa y guarda el animal en una sola operación.
 
@@ -28,6 +32,10 @@ class RepositorioCuposEnMemoria:
 
     def refugio(self) -> Refugio:
         return replace(self._refugio)
+
+    def para_refugio(self, refugio_id: int) -> RepositorioCuposEnMemoria:
+        # En memoria hay un solo refugio (pruebas): todos los vínculos apuntan a él.
+        return self
 
     def ocupar_cupo(self, animal: Animal) -> Refugio | None:
         with self._candado:

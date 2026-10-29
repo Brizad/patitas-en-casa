@@ -28,6 +28,9 @@ class RepositorioCuposPostgres:
             raise LookupError("No hay ningún refugio registrado: ejecuta 'alembic upgrade head'.")
         return cls(motor, refugio_id)
 
+    def para_refugio(self, refugio_id: int) -> RepositorioCuposPostgres:
+        return RepositorioCuposPostgres(self._motor, refugio_id)
+
     def refugio(self) -> Refugio:
         with self._motor.connect() as conexion:
             fila = conexion.execute(
