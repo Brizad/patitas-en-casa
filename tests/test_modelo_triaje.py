@@ -58,7 +58,9 @@ def test_misma_prioridad_conserva_la_confianza_de_las_reglas():
     assert r.confianza == 0.3 and len(r.evidencias) >= 3
 
 
-def test_la_api_usa_reglas_mas_modelo_y_lo_dice_en_la_version():
+def test_la_api_usa_reglas_mas_modelo_y_lo_dice_en_la_version(monkeypatch):
+    """Sin el Transformer (fase 7: PATITAS_TRIAJE_TRANSFORMER=0) vuelve al TF-IDF."""
+    monkeypatch.setenv("PATITAS_TRIAJE_TRANSFORMER", "0")
     clasificador, version = triaje_por_defecto()
     assert version == "reglas-v0+tfidf-lr-v1"
     assert clasificador("Gato convulsionando en la calle 10").prioridad == Prioridad.CRITICA

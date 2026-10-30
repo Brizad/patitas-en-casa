@@ -12,10 +12,13 @@ texto sin señales conocidas sigue yendo a «requiere revisión» aunque el mode
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Callable
 
+from app.triaje import modelo_onnx
 from app.triaje.clasificador import ORDEN_GRAVEDAD, VERSION, Resultado, clasificar
 from app.triaje.modelo import MIN_EVIDENCIAS, ModeloTriaje, cargar_modelo
+from app.triaje.modelo_onnx import ModeloOnnx
 
 log = logging.getLogger(__name__)
 
@@ -36,18 +39,38 @@ def combinar(reglas: Resultado, modelo: Resultado, version_modelo: str) -> Resul
     return Resultado(prioridad, confianza, evidencias)
 
 
-def clasificador_combinado(modelo: ModeloTriaje) -> Callable[[str], Resultado]:
+def clasificador_combinado(modelo: ModeloTriaje | ModeloOnnx) -> Callable[[str], Resultado]:
     def clasificar_combinado(texto: str) -> Resultado:
         return combinar(clasificar(texto), modelo.clasificar(texto), modelo.version)
     return clasificar_combinado
 
 
-def triaje_por_defecto() -> tuple[Callable[[str], Resultado], str]:
-    """(clasificador, versión) para la API. Si el modelo no carga, se sigue solo con reglas:
-    el triaje nunca se cae por el modelo (y la versión guardada lo dice, RF-20)."""
+def _cargar_transformer() -> ModeloOnnx | None:
+    """Fase 7: el Transformer ONNX si sus archivos están en app/triaje/onnx/ (hoy no: ver
+    docs/aprende/fase-7-transformers.md), salvo PATITAS_TRIAJE_TRANSFORMER=0 o si no carga.
+    Sin archivos ni siquiera se importa onnxruntime: no gasta memoria."""
+    if os.environ.get("PATITAS_TRIAJE_TRANSFORMER", "1") == "0":
+        return None
+    if not (modelo_onnx.DIRECTORIO / modelo_onnx.METADATOS).exists():
+        return None
     try:
-        modelo = cargar_modelo()
-    except (OSError, ValueError, KeyError):
-        log.exception("No se pudo cargar el modelo de triaje; se usan solo las reglas.")
-        return clasificar, VERSION
+        return modelo_onnx.cargar_modelo_onnx(modelo_onnx.DIRECTORIO)
+    except ImportError:
+        log.warning("onnxruntime o tokenizers no están instalados; triaje con TF-IDF.")
+    except Exception:  # archivo ausente o dañado, error de onnxruntime: nunca tumba la API
+        log.exception("No se pudo cargar el Transformer de triaje; se usa el TF-IDF.")
+    return None
+
+
+def triaje_por_defecto() -> tuple[Callable[[str], Resultado], str]:
+    """(clasificador, versión) para la API: reglas + Transformer; si no carga, reglas + TF-IDF;
+    si tampoco, solo reglas. El triaje nunca se cae por el modelo (y la versión guardada lo
+    dice, RF-20). Si el modelo falla o tarda AL clasificar, ServicioTriaje aplica RN-03."""
+    modelo = _cargar_transformer()
+    if modelo is None:
+        try:
+            modelo = cargar_modelo()
+        except (OSError, ValueError, KeyError):
+            log.exception("No se pudo cargar el modelo de triaje; se usan solo las reglas.")
+            return clasificar, VERSION
     return clasificador_combinado(modelo), f"{VERSION}+{modelo.version}"
