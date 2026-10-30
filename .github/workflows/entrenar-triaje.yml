@@ -1,0 +1,81 @@
+name: "Triaje: afinar el Transformer"
+
+# Fase 7: afina mALBERT con los datos sintéticos v2, lo exporta a ONNX int8, lo compara con el
+# TF-IDF sobre la prueba fija y mide memoria y tiempo. Se entrena aquí y no en la PC: allá el
+# Control inteligente de aplicaciones bloquea las DLL de torch. Se lanza con un push a una rama
+# entrenamiento/** o a mano. No usa secretos ni toca Render: el resultado es un artefacto que
+# se revisa y, si pasa la puerta de pruebas, se puede llevar a app/triaje/onnx/ en un PR.
+# Duración medida: ~65 min con 3 épocas (unos 20 min por época).
+on:
+  push:
+    branches: ["entrenamiento/**"]
+  workflow_dispatch:
+    inputs:
+      epocas:
+        description: "Épocas de afinado"
+        default: "3"
+      muestras:
+        description: "Reportes de entrenamiento (0 = los 6.000; pocos = prueba rápida)"
+        default: "0"
+
+permissions:
+  contents: read
+
+jobs:
+  entrenar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      EPOCAS: ${{ inputs.epocas || '3' }}
+      MUESTRAS: ${{ inputs.muestras || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Versiones fijas: con torch 2.15 + transformers 5.22 el paso hacia atrás de ALBERT era
+      # ~60 veces más lento (82 s contra 1,3 s por lote de 8, medido en este mismo runner).
+      - name: Instalar torch (CPU), transformers y onnxruntime
+        run: |
+          pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements-transformer.txt pytest==8.4.2 scikit-learn==1.9.1 \
+            transformers==4.46.3 sentencepiece==0.2.2 protobuf onnx==1.23.2
+
+      - name: Afinar, exportar a ONNX y cuantizar a int8
+        timeout-minutes: 90
+        run: |
+          python scripts/ia/entrenar_transformer.py --salida salida/onnx \
+            --epocas "$EPOCAS" --muestras "$MUESTRAS"
+
+      - name: TF-IDF reentrenado con los mismos datos v2 (para comparar con justicia)
+        run: python scripts/ia/entrenar_triaje.py --v2 salida/tfidf_v2.json
+
+      - name: Comparar sobre la prueba fija
+        run: |
+          python scripts/ia/evaluar_triaje.py --onnx-dir salida/onnx --tfidf salida/tfidf_v2.json \
+            --salida salida/metricas.json | tee salida/metricas.md
+          cat salida/metricas.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Memoria y tiempo (proceso nuevo, 1 hilo)
+        run: |
+          python scripts/ia/medir_memoria_triaje.py --onnx-dir salida/onnx \
+            --salida salida/memoria.json
+
+      # Puerta para publicar el modelo: si falla (p. ej. recall de crítica < 0,95 en la prueba
+      # fija, RNF-03), no se lleva a app/triaje/onnx/.
+      - name: Pruebas del triaje con el modelo recién entrenado
+        run: |
+          mkdir -p app/triaje/onnx && cp salida/onnx/* app/triaje/onnx/
+          pytest -q tests/test_modelo_onnx.py tests/test_triaje_transformer.py \
+            tests/test_modelo_triaje.py tests/test_servicio_triaje.py
+
+      - name: Guardar el modelo y las métricas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: triaje-transformer
+          path: salida/
+          if-no-files-found: warn
