@@ -16,6 +16,7 @@ más. Por eso, después de entrenar, se baja el umbral de «crítica» hasta que
 validación llegue a 0,97 (margen sobre 0,95).
 
 Uso:  python scripts/ia/entrenar_triaje.py   (genera los datos sintéticos y escribe el JSON)
+      python scripts/ia/entrenar_triaje.py --v2 salida/tfidf_v2.json   (datos v2, fase 7)
 """
 from __future__ import annotations
 
@@ -39,8 +40,12 @@ SALIDA = RAIZ / "app" / "triaje" / "modelo_tfidf_v1.json"
 RECALL_OBJETIVO = 0.97
 
 
-def entrenar(cantidad: int = 4000, semilla: int = 42) -> dict:
-    textos, etiquetas = zip(*generar(cantidad, semilla), strict=True)
+def entrenar(cantidad: int = 4000, semilla: int = 42, datos: list | None = None,
+             version: str = VERSION, origen: str = "scripts/ia/generar_datos_sinteticos.py"
+             ) -> dict:
+    """Con `datos` [(texto, prioridad)] entrena con esos (fase 7: datos v2)."""
+    textos, etiquetas = zip(*(datos or generar(cantidad, semilla)), strict=True)
+    cantidad = len(textos)
     x_ent, x_val, y_ent, y_val = train_test_split(
         textos, etiquetas, test_size=0.2, stratify=etiquetas, random_state=semilla)
     vectorizador = TfidfVectorizer(preprocessor=normalizar, ngram_range=(1, 2), min_df=2)
@@ -64,9 +69,8 @@ def entrenar(cantidad: int = 4000, semilla: int = 42) -> dict:
     vocabulario = vectorizador.vocabulary_
     terminos = sorted(vocabulario, key=vocabulario.get)
     return {
-        "version": VERSION,
-        "datos": f"sintéticos: {cantidad} reportes, semilla {semilla} "
-                 "(scripts/ia/generar_datos_sinteticos.py)",
+        "version": version,
+        "datos": f"sintéticos: {cantidad} reportes, semilla {semilla} ({origen})",
         "clases": clases,
         "terminos": terminos,
         "idf": [round(float(v), 5) for v in vectorizador.idf_],
@@ -82,8 +86,16 @@ def entrenar(cantidad: int = 4000, semilla: int = 42) -> dict:
 
 
 if __name__ == "__main__":
-    exportado = entrenar()
+    if "--v2" in sys.argv:  # fase 7: mismo método con los datos v2, para comparar
+        from scripts.ia.datos_triaje import conjuntos
+        filas = [(t, e) for nombre in ("entrenamiento", "validacion")
+                 for t, e, _ in conjuntos()[nombre]]
+        SALIDA = Path(sys.argv[sys.argv.index("--v2") + 1])
+        exportado = entrenar(datos=filas, version="tfidf-lr-v2",
+                             origen="scripts/ia/datos_triaje.py")
+    else:
+        exportado = entrenar()
     SALIDA.write_text(json.dumps(exportado, ensure_ascii=False, separators=(",", ":")),
                       encoding="utf-8")
-    print(f"Modelo guardado en {SALIDA.relative_to(RAIZ)} "
+    print(f"Modelo guardado en {SALIDA} "
           f"({SALIDA.stat().st_size // 1024} KB, {len(exportado['terminos'])} términos)")
