@@ -1,0 +1,6 @@
+# Solo para el Transformer del triaje (fase 7). La API desplegada NO lo instala: el modelo no
+# está en el repositorio (ver docs/aprende/fase-7-transformers.md). Lo usa el flujo
+# .github/workflows/entrenar-triaje.yml para evaluar el modelo ONNX como lo correría la API.
+-r requirements.txt
+onnxruntime==1.31.1
+tokenizers>=0.20,<0.24
