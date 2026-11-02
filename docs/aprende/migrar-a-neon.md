@@ -97,10 +97,10 @@ script, y agrega la contraseña de Neon:
 | `POSTGRES_DB` | `neondb` |
 | `POSTGRES_SSLMODE` | `require` (variable nueva) |
 
-**Si Render no te deja editarlas** (aparecen «vinculadas» a `patitas-bd` porque vienen del
-Blueprint), dímelo y preparo el PR que cambia `render.yaml`: las cinco `fromDatabase` pasan a
-`sync: false` y se agrega `POSTGRES_SSLMODE`. No lo hice antes para no romper la conexión
-actual mientras Neon no exista (ver `preguntas-para-brayan.md`, P-11).
+**Estado (P-11, #184):** `render.yaml` ya no vincula estas variables a `patitas-bd`: las cinco
+`POSTGRES_*` y `POSTGRES_SSLMODE` son `sync: false` y se escriben a mano en Render. La base
+`patitas-bd` sigue en el archivo unos días como respaldo; cuando la borres de Render, quita
+también su bloque `databases` de `render.yaml`.
 
 ### 5. Enciende y comprueba
 
@@ -125,7 +125,7 @@ actual mientras Neon no exista (ver `preguntas-para-brayan.md`, P-11).
 | `No encuentro pg_dump` | Instala PostgreSQL 17 o agrega `C:\Program Files\PostgreSQL\17\bin` al PATH |
 | `La base de Neon ya tiene tablas` | En Neon crea otra base vacía (*Databases* → *New*) o borra el proyecto y créalo de nuevo |
 | `pg_restore falló: … version` | Tu `pg_restore` es más viejo que la base de Render: usa el de PostgreSQL 17 |
-| La API no arranca tras el cambio | Vuelve a poner en Render las variables viejas (siguen en la base `patitas-bd`) y *Resume*: vuelves a estar como antes |
+| La API no arranca tras el cambio | Vuelve a poner en Render los datos de `patitas-bd` (Info → Internal Database URL) en las variables `POSTGRES_*`, quita `POSTGRES_SSLMODE` y *Resume*: vuelves a estar como antes |
 | `SSL connection is required` | Falta `POSTGRES_SSLMODE=require` en Render |
 
 **Volver atrás es fácil mientras la base de Render exista:** sus datos no se tocan, el

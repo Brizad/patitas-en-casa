@@ -1,5 +1,6 @@
 # Despliegue en Render (Blueprint). En Render: New > Blueprint > este repositorio.
-# Crea la base PostgreSQL y la API (imagen del Dockerfile: API + PWA en /app/ + panel en /panel/).
+# Crea la API (la base real está en Neon; patitas-bd queda de respaldo temporal)
+# y la base de respaldo patitas-bd (imagen del Dockerfile: API + PWA en /app/ + panel en /panel/).
 databases:
   - name: patitas-bd
     plan: free
@@ -16,16 +17,20 @@ services:
     healthCheckPath: /app/
     autoDeploy: true
     envVars:
+      # Base en Neon (#184, P-11): Brayan escribe estas variables en Render → Environment.
+      # Ya no salen de patitas-bd, que queda unos días solo como respaldo.
       - key: POSTGRES_HOST
-        fromDatabase: { name: patitas-bd, property: host }
+        sync: false
       - key: POSTGRES_PORT
-        fromDatabase: { name: patitas-bd, property: port }
+        sync: false
       - key: POSTGRES_USER
-        fromDatabase: { name: patitas-bd, property: user }
+        sync: false
       - key: POSTGRES_PASSWORD
-        fromDatabase: { name: patitas-bd, property: password }
+        sync: false
       - key: POSTGRES_DB
-        fromDatabase: { name: patitas-bd, property: database }
+        sync: false
+      - key: POSTGRES_SSLMODE        # Neon exige conexión cifrada: «require»
+        sync: false
       - key: PATITAS_JWT_SECRETO
         generateValue: true          # Render genera una clave aleatoria; nadie la escribe a mano
       - key: PATITAS_CLAVE_DATOS     # RNF-08 (#111): cifra el contacto opcional del ciudadano

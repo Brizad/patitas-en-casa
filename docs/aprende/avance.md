@@ -423,3 +423,31 @@ de video de la fase 6 sobre la v1.0.0), desplegada en https://patitas-en-casa-pn
 8. **Calidad**: axe-core y Lighthouse siguen en verde (49 revisiones, 0 fallas, claro y oscuro, celular de 320 px); se corrigió un contraste real de la pestaña activa y una prueba intermitente de RN-14 (la hora coincidía con la latitud).
 9. **Revisión por rol**: en producción las páginas públicas cargan sin errores de consola ni desbordes; los roles con sesión se revisaron en local con las cuentas de demostración (en Render no se escriben contraseñas). Se quitó el 404 de consola de los reportes sin video y los nombres técnicos de modelo.
 10. **Capturas**: «antes» en `docs/manual/antes/` y «después» en `docs/manual/` (mismos nombres que usa `manual-usuario.md`).
+
+
+## Lo que falta del ERS (2 de noviembre de 2026)
+
+Estado real: RF-01 a RF-32 hechos (el video, RF-01, RF-03 y RF-19, funciona con el nodo local);
+la base está en Neon. Todo lo que sigue es lo **único** que no está cerrado del ERS v5.0.
+«Asistente» = lo puedo hacer yo apenas esté lo que depende de otra persona.
+
+| # | Requisito | Qué falta exactamente | Quién | Cómo se cierra |
+|---|-----------|-----------------------|-------|----------------|
+| 1 | RNF-06 | 10 participantes reales: 80 % reporta en ≤ 90 s y SUS ≥ 70 | **Brayan** (con 10 personas) | Usa `guion-demo.md` como tarea, anota tiempos y el cuestionario SUS; el asistente calcula y documenta. |
+| 2 | RNF-03 y DT-04 | Conjunto de reportes etiquetados por **veterinarios** para medir recall ≥ 0,95 en crítica (hoy 0,98 solo con datos sintéticos) | **Veterinarios** (los consigue Brayan); luego el asistente reentrena | Los veterinarios confirman reportes reales en el panel (la etiqueta queda en la bitácora, RF-20). |
+| 3 | RF-03 / DT-10 | Validar los umbrales y la red de marcha con videos etiquetados por veterinarios (hoy datos sintéticos); licencia no académica de SuperAnimal si se usa fuera de la universidad | **Veterinarios + Brayan**; el asistente reentrena | Misma recolección que el punto 2, con videos. |
+| 4 | RF-03 (operación) | El nodo local debe estar **encendido** (WSL2) para que se analicen los videos | **Brayan** | `arrancar_nodo.sh`; si está apagado, el reporte sigue con el texto (falla segura). |
+| 5 | RNF-15 | Respaldo diario cifrado (RPO ≤ 24 h, RTO ≤ 4 h) | **Brayan decide** (P-07); el asistente integra | Crear en GitHub los secretos con la URL de **Neon** y `RESPALDO_CLAVE`, y decir «integra el respaldo». Revisar qué restauración da el plan gratis de Neon. |
+| 6 | RNF-04 | Disponibilidad del 99 % y sondeo **cada minuto** (hoy cada 10 min, el mínimo fiable de GitHub Actions; el plan gratis de Render se duerme) | **Brayan** (plan pagado de Render o un sondeo externo) | Decidir y pagar el plan; el asistente ajusta el flujo. |
+| 7 | RNF-01 / RNF-14 | Medir la carga **en Render con Neon** (solo se midió en local) | **Brayan autoriza**; el asistente corre `prueba_carga.py` | Con una base de prueba, para no llenar los 1 GB de Neon con reportes falsos. |
+| 8 | RNF-11 | Recorrido con un **lector de pantalla** (NVDA, TalkBack) | **Brayan** | Anotar fallas; el asistente las corrige. axe-core y Lighthouse ya dan 0 fallas. |
+| 9 | RNF-07 | Probar la PWA en un Android 8 / 2 GB físico | **Brayan** (un teléfono) | Abrir la PWA y reportar con y sin señal. |
+| 10 | RNF-08 | Confirmar el cifrado en reposo de Neon (no se puede verificar desde aquí); los correos de las cuentas no se cifran porque son el usuario | **Brayan** (documentación de Neon) | Anotar la respuesta en `trazabilidad.md`. |
+| 11 | RF-05 / RF-18 | Correo real: sin SMTP los avisos solo quedan en el log y en la app | **Brayan** (P-08) | Crear en Render `PATITAS_SMTP_HOST`, `PATITAS_SMTP_USUARIO`, `PATITAS_SMTP_CONTRASENA`, `PATITAS_SMTP_REMITENTE`. |
+| 12 | RNF-09 | En el texto hoy se muestran **hasta 3** evidencias útiles (#186), no siempre 3. Si el ERS o el profesor exigen siempre 3, hay que decidirlo | **Brayan** (con el profesor) | Si exigen 3, se vuelve a rellenar con lo que opinó cada parte; el asistente lo cambia. |
+
+Operación pendiente (no es del ERS): aplicar la migración `0028` en Neon (Render la corre solo
+al desplegar el #189), borrar la base `patitas-bd` de Render cuando ya no haga falta y
+entonces pedir quitar su bloque `databases` de `render.yaml` (**Brayan**, P-11), crear la
+etiqueta/versión nueva (**Brayan**) y construir la imagen de Docker en tu PC (DT-08, **Brayan**).
+DT-07 (escalamiento por el outbox) sigue abierta (**asistente**, si se prioriza).

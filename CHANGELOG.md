@@ -7,6 +7,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ### Corregido
 - Evidencias del triaje de texto con sentido clínico (#186): se filtran palabras vacías del español («se», «bien», «no se»), pares sin contenido y lugares o tiempos; van primero las señales de las reglas y el modelo no las repite. Si no hay 3 evidencias útiles se muestran menos (antes se rellenaba). RNF-09 queda como «las evidencias que haya, siempre útiles» para el texto.
 
+### Documentación
+- Estado real de hoy en `docs/aprende/trazabilidad.md` (video funcionando con el nodo local, base en Neon, #186 a #188) y lista exacta de lo que falta del ERS, con responsable, en `docs/aprende/avance.md` (#190).
+
 ### Agregado
 - Revisión por rol (#182): en Indicadores el acuerdo del veterinario nombra el modelo por lo que hace (no `reglas-v0+tfidf-lr-v1`); capturas del manual «antes» (`docs/manual/antes/`) y «después» (`docs/manual/`) y resumen del rediseño en `docs/aprende/avance.md`.
 - Detalle del reporte entendible de un vistazo para el veterinario (#180): `GET /cola` trae `descripcion`, `ubicacion`, `creado_en` (UTC) y `video_segundos` (nunca el contacto). El panel muestra qué pasó, dónde (con «Abrir en Google Maps»), cuánto hace que se reportó, la sugerencia explicada en lenguaje sencillo («prioridad crítica con confianza alta (90 %), según reglas de urgencia y modelo de texto») sin nombres como `tfidf-lr-v1`, las evidencias como frases y el análisis de video con su estado en insignia y la tira de 3 imágenes en un marco con pie de foto. Sin video ya no se pide el análisis (desaparece el 404 en la consola).
@@ -34,6 +37,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - `GET /reportes/{codigo}` acepta el código en minúsculas o con espacios («f2hw 5rtb»), igual que `/seguimiento`: usa `normalizar_codigo` en vez de solo pasar a mayúsculas (antes daba 404).
 
 ### Cambiado
+- `render.yaml` (#184, P-11): las variables `POSTGRES_HOST`, `_PORT`, `_USER`, `_PASSWORD` y `_DB` ya no vienen de `patitas-bd` (`sync: false`) y se agrega `POSTGRES_SSLMODE` (`sync: false`) para la base en Neon. `patitas-bd` se conserva unos días como respaldo.
 - Datos de demostración: la veterinaria también queda vinculada al refugio de demostración y ve sus fichas (#156).
 - `revisar.mjs` espera a que cada pestaña cargue sus datos antes de medir (antes podía medir la pantalla vacía); el resultado sigue en 0 fallas (#156).
 - Panel: el inicio de sesión y el registro de adoptante van dentro de `<main>`, y la barra con sesión tiene un título de nivel 1 (axe `landmark-one-main`, `region`, `page-has-heading-one`; Lighthouse pasó de 96 a 100) (#147).
