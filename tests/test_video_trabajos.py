@@ -28,6 +28,9 @@ class AlmacenFalso:
     def borrar(self, ruta):
         self.archivos.discard(ruta)
 
+    def purgar_antes_de(self, limite):
+        return 0
+
 
 class Reloj:
     def __init__(self):
@@ -151,3 +154,39 @@ def test_si_el_trabajador_estuvo_apagado_el_video_vence_y_se_borra(entorno):
     assert servicio.revisar() == 1
     assert almacen.archivos == set()
     assert servicio.reclamar() is None
+
+
+def test_a_lo_sumo_cinco_videos_esperando_a_la_vez(entorno):
+    """#188: cuida el espacio de la base; el sexto manda solo el texto (503)."""
+    servicio, reportes, almacen, _ = entorno
+    for n in range(config.MAX_VIDEOS_PENDIENTES):
+        codigo = f"CODE000{n}"
+        reportes.guardar_con_clave(Reporte(
+            codigo, "Perro cojeando cerca del parque", Ubicacion(direccion="Calle 10"),
+            creado_en=INICIO), f"clave-del-telefono-000{n + 2}")
+        almacen.archivos.add(f"/tmp/{n}.mp4")
+        servicio.registrar(codigo, f"/tmp/{n}.mp4", 1000)
+    with pytest.raises(VideoRechazado) as error:
+        servicio.autorizar_subida("ABCD1234", CLAVE)
+    assert error.value.estado_http == 503
+    almacen.archivos.add("/tmp/sexto.mp4")
+    with pytest.raises(VideoRechazado) as error:
+        servicio.registrar("ABCD1234", "/tmp/sexto.mp4", 1000)
+    assert error.value.estado_http == 503
+    assert "/tmp/sexto.mp4" not in almacen.archivos  # no queda basura
+
+
+def test_al_terminar_un_trabajo_se_libera_un_lugar(entorno):
+    servicio, _, almacen, _ = entorno
+    subir(servicio, almacen)
+    assert servicio._videos.contar_esperando() == 1
+    servicio.terminar(servicio.reclamar().id, VIDEO_ALTA)
+    assert servicio._videos.contar_esperando() == 0
+
+
+def test_revisar_purga_los_huerfanos_y_cierra_los_vencidos(entorno):
+    servicio, _, almacen, reloj = entorno
+    subir(servicio, almacen)
+    reloj.ahora += timedelta(hours=config.VIDEO_MAX_ESPERA_HORAS + 1)
+    assert servicio.revisar() == 1
+    assert almacen.archivos == set()

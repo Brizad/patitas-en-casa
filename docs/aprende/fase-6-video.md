@@ -42,7 +42,7 @@ MediaPipe pero para otra tarea:
 3. **Cola en PostgreSQL, como el outbox de avisos.** Cada video es una fila de
    `analisis_video` con estados `pendiente → enviado → terminado / no_concluyente / fallido`.
    El reclamo usa `FOR UPDATE SKIP LOCKED`: dos trabajadores nunca reciben el mismo video.
-4. **El video vive poco.** Se escribe por partes en el disco temporal de Render (nunca entero
+4. **El video vive poco.** Se escribe por partes (trozos de 1 MB) en PostgreSQL (#188; antes, el disco temporal de Render) (nunca entero
    en memoria) y se borra apenas el trabajador entrega el resultado. Si Render se reinicia y
    el archivo se pierde, el trabajo queda «fallido» y **manda el texto** (falla segura).
 5. **Solo quien creó el reporte sube su video.** El ciudadano no tiene cuenta; la prueba de
@@ -159,9 +159,8 @@ y DeepLabCut SuperAnimal-Quadruped, que sí está entrenado con cuadrúpedos, pa
 
 <details><summary>Respuesta 2</summary>
 
-El video queda `pendiente` en el disco temporal de Render. Si Render se duerme o se reinicia,
-el archivo se pierde y el trabajo pasa a `fallido`; si no, a las 6 horas `revisar()` lo da por
-vencido y lo borra. En cualquier caso el reporte sigue con la prioridad del texto y en la cola
+El video queda `pendiente` en PostgreSQL (tabla `videos_trozos`), así que sobrevive a un reinicio de Render. Si pasan 6 horas sin que nadie lo analice,
+`revisar()` lo da por vencido (`fallido`) y borra el video. En cualquier caso el reporte sigue con la prioridad del texto y en la cola
 del veterinario: el video ayuda, pero nunca detiene la atención (falla segura).
 
 </details>

@@ -53,4 +53,7 @@ VENCIMIENTO_RECLAMO_VIDEO_S = 600
 MAX_INTENTOS_VIDEO = 3
 # Si el trabajador estuvo apagado tanto tiempo, el video se borra y manda el texto.
 VIDEO_MAX_ESPERA_HORAS = 6
+# #188: videos esperando a la vez (50 MB cada uno): cuida el 1 GB de la base gratis.
+MAX_VIDEOS_PENDIENTES = 5
+TROZO_VIDEO_BYTES = 1024 * 1024
 REVISION_VIDEOS_SEGUNDOS = 60
