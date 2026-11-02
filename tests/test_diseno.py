@@ -45,3 +45,7 @@ def test_tiene_modo_oscuro_y_sin_recursos_externos():
 def test_las_casillas_se_alinean_con_su_texto():
     css = CSS.read_text(encoding="utf-8")
     assert 'label:has(> input[type="checkbox"])' in css
+
+
+def test_el_sistema_ofrece_formularios_en_rejilla():
+    assert ".ds-form" in CSS.read_text(encoding="utf-8")

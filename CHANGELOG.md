@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Pantallas del coordinador con el sistema de diseño (#174): formularios de ingreso, publicación y foto en rejilla de dos columnas (`ds-form`), un estado vacío con explicación en solicitudes, adopciones aprobadas, seguimientos y animales del refugio, e insignias para «en el refugio», «egresó» y «vencido».
 - Pantalla del rescatista con el sistema de diseño (#172): la zona por comunas son botones grandes que se marcan con ✓, las ofertas son tarjetas con borde de prioridad y «Mi rescate» trae el enlace «Abrir en Google Maps» (`enlaceMapa`: GPS o dirección en Cúcuta). En el sistema, las casillas se alinean con su texto.
 - Panel del personal con el sistema de diseño (#170): barra de marca con el rol de la sesión, pestañas, inicio de sesión con logo, tarjetas, mensajes de error y éxito, estados vacíos, tablas e insignias de prioridad (crítica, alta, media y baja) compartidas con la página de inicio y la PWA. La pestaña activa conserva su contraste en modo oscuro al pasar el ratón.
 - PWA ciudadana rediseñada (#168) con el sistema de diseño: cabecera de marca, pestañas con subrayado, formulario en tarjetas, botones de 44 px, código de seguimiento grande y línea de tiempo. El service worker (v4) guarda también `/diseno/sistema.css` para abrir sin señal. En el sistema, la regla base de los botones baja su especificidad para que las variantes (`ds-btn--pri`) siempre ganen.
