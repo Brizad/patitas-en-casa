@@ -69,5 +69,14 @@ def test_sin_javascript_ni_recursos_externos():
 def test_se_ve_bien_en_celular():
     css = (CARPETA / "inicio.css").read_text(encoding="utf-8")
     assert "min-height: 56px" in css  # botones grandes (objetivo ≥ 24 px, WCAG 2.5.8)
-    assert "@media (min-width: 640px)" in css  # una columna en celular, tres en pantalla ancha
-    assert "prefers-color-scheme: dark" in css
+    assert "@media (min-width: 720px)" in css  # una columna en celular, varias en pantalla ancha
+    # El modo oscuro viene del sistema de diseño compartido (#164).
+    assert "prefers-color-scheme: dark" in (CARPETA.parent / "diseno" / "sistema.css").read_text(
+        encoding="utf-8")
+
+
+def test_usa_el_sistema_de_diseno(c):
+    html = c.get("/").text
+    assert re.search(r"<body[^>]*class=\"ds\"", html)
+    assert html.index("/diseno/sistema.css") < html.index("/inicio/inicio.css")
+    assert c.get("/diseno/sistema.css").status_code == 200

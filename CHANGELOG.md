@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Página de inicio rediseñada (#166) con el sistema de diseño: portada de marca con la acción urgente primero, pasos numerados, roles en tarjetas y señales de confianza. axe y Lighthouse siguen en 100.
 - Sistema de diseño único (#164, `app/diseno/sistema.css`, servido en `/diseno/sistema.css`): colores de marca y de prioridad (crítica, alta, media, baja) con modo oscuro, tipografía, escala de espaciado, botones, campos, tarjetas, pestañas, tablas, insignias, estados vacíos y mensajes de error, éxito, aviso e información. Los PR siguientes lo aplican por zona (inicio, PWA y cada pantalla del panel).
 - Sección «Forma de trabajo eficiente» en `CLAUDE.md` (#160): flujo completo sin pedir confirmación, merge automático, pruebas locales acotadas y resumen corto.
 - Manual de usuario (#156, `docs/manual-usuario.md`): qué hace cada rol (ciudadano, veterinario, rescatista, coordinador, adoptante, administrador y Alcaldía) en lenguaje sencillo, con 17 capturas de los datos de demostración. `scripts/accesibilidad/capturas.mjs` las vuelve a tomar solas.
