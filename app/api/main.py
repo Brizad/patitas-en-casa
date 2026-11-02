@@ -562,7 +562,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     # #95: reglas + modelo entrenado (el modelo solo sube la prioridad); sin modelo, reglas.
     clasificador, version_triaje = triaje_por_defecto()
     reportes = ServicioReportes(repositorio, ServicioTriaje(clasificador, version=version_triaje))
-    rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador)
+    rescates = ServicioRescates(repositorio, repositorio_rescates, notificador=notificador,
+                                avisos=repositorio_avisos)
     descartes = ServicioDescarte(repositorio)
 
     def avisos_al_confirmar(reporte: Reporte, prioridad: Prioridad):

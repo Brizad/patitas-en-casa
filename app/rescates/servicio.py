@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 
 from app import config
 from app.avisos.modelos import AvisoNuevo
+from app.avisos.repositorio import RepositorioAvisos
 from app.cupos.servicio import Notificador
 from app.dominio.modelos import (
     EstadoReporte,
@@ -59,10 +60,12 @@ class PasoInvalido(Exception):
 class ServicioRescates:
     def __init__(self, reportes: RepositorioReportes, rescates: RepositorioRescates, *,
                  notificador: Notificador | None = None,
-                 reloj: Callable[[], datetime] | None = None) -> None:
+                 reloj: Callable[[], datetime] | None = None,
+                 avisos: RepositorioAvisos | None = None) -> None:
         self._reportes = reportes
         self._rescates = rescates
         self._notificador = notificador
+        self._avisos = avisos  # DT-07: con outbox, el escalamiento no envía, guarda el aviso
         self._reloj = reloj or (lambda: datetime.now(UTC))
 
     @staticmethod
@@ -196,22 +199,33 @@ class ServicioRescates:
             minutos = config.ESCALAMIENTO_MINUTOS[reporte.prioridad.value]
             if not decisiones or ahora - decisiones[-1].decidido_en < timedelta(minutes=minutos):
                 continue
+            if self._avisos is not None:
+                # Primero el aviso y luego la marca: si algo falla entre los dos, el reporte
+                # sigue sin escalar y se reintenta (el aviso repetido se ignora). Nunca se
+                # marca escalado un caso sin su aviso guardado.
+                self._avisos.agregar(reporte.codigo, self.avisos_de_escalamiento(reporte, minutos),
+                                     ahora)
             if not self._rescates.marcar_escalado(reporte.codigo, ahora):
                 continue  # otro proceso lo escaló primero
             escalados.append(reporte.codigo)
-            self._avisar_escalamiento(reporte, minutos)
+            if self._avisos is None:  # sin outbox (pruebas sueltas): envío directo
+                for aviso in self.avisos_de_escalamiento(reporte, minutos):
+                    self._avisar(aviso.destinatario, aviso.mensaje)
         return escalados
 
-    def _avisar_escalamiento(self, reporte: Reporte, minutos: int) -> None:
+    def avisos_de_escalamiento(self, reporte: Reporte, minutos: int) -> list[AvisoNuevo]:
+        """Aviso al grupo de coordinadores y a los rescatistas libres de otras zonas. No envía."""
         nombre = NOMBRE_PRIORIDAD[reporte.prioridad]
-        self._avisar("coordinadores",
-                     f"Rescate {nombre} {reporte.codigo} sin aceptar hace {minutos} min "
-                     f"({_lugar(reporte)}). Se ofreció a todos los rescatistas disponibles.")
+        avisos = [AvisoNuevo(
+            "coordinadores",
+            f"Rescate {nombre} {reporte.codigo} sin aceptar hace {minutos} min "
+            f"({_lugar(reporte)}). Se ofreció a todos los rescatistas disponibles.")]
         mensaje = (f"Rescate {nombre} {reporte.codigo} {_lugar(reporte)} sigue sin rescatista. "
                    "Entra a Patitas en Casa para aceptarlo.")
         # A los de la zona ya se les avisó al confirmar; ahora se amplía a los demás.
-        for correo in self._libres_para_avisar(lambda zona: not en_zona(reporte, zona)):
-            self._avisar(correo, mensaje)
+        avisos += [AvisoNuevo(correo, mensaje)
+                   for correo in self._libres_para_avisar(lambda zona: not en_zona(reporte, zona))]
+        return avisos
 
     def mio(self, rescatista: Usuario) -> tuple[Rescate, Reporte] | None:
         rescate = self._rescates.activo_de(rescatista.correo)
