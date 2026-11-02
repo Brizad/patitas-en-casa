@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { NOMBRE_PRIORIDAD, textoError } from "./mensajes";
+import { NOMBRE_PRIORIDAD, enlaceMapa, textoError } from "./mensajes";
 import {
   EstadoRescatista, MiRescate, NOMBRE_RESULTADO, Oferta, Resultado, cambiarDisponibilidad,
   cambiarZona, miEstado, miRescate, nombreComunas, ofertas, paso, registrarResultado,
@@ -62,10 +62,12 @@ export default function Rescatista({ token }: { token: string }) {
             Disponible para rescates</label>
           <fieldset>
             <legend>Zona: {nombreComunas(estado.comunas)} (sin marcar = toda la ciudad)</legend>
-            {COMUNAS.map((n) => (
-              <label key={n} className="en-linea">
-                <input type="checkbox" checked={estado.comunas.includes(n)}
-                  onChange={() => alternarComuna(n)} /> {n}</label>))}
+            <div className="comunas">
+              {COMUNAS.map((n) => (
+                <label key={n} className="comuna">
+                  <input type="checkbox" checked={estado.comunas.includes(n)}
+                    onChange={() => alternarComuna(n)} /> {n}</label>))}
+            </div>
           </fieldset>
         </div>)}
       {actual ? <RescateActual token={token} rescate={actual} hacer={hacer} /> : (
@@ -76,9 +78,9 @@ export default function Rescatista({ token }: { token: string }) {
           </div>
           {!estado?.disponible && <p className="ds-suave">Marca «Disponible» para ver ofertas.</p>}
           {estado?.disponible && lista.length === 0 && <p className="ds-vacio">No hay ofertas ahora.</p>}
-          <ul className="lista-simple">
+          <ul className="ofertas">
             {lista.map((o) => (
-              <li key={o.codigo}>
+              <li key={o.codigo} className="oferta">
                 <span className={`ds-insignia ds-insignia--${o.prioridad}`}>{NOMBRE_PRIORIDAD[o.prioridad]}</span>
                 {" "}<code>{o.codigo}</code> · comuna {o.comuna ?? "sin dato"}
                 {o.escalado && <b> · escalado a toda la ciudad</b>}
@@ -107,7 +109,9 @@ function RescateActual({ token, rescate, hacer }: {
       <p><span className={`ds-insignia ds-insignia--${rescate.prioridad}`}>{NOMBRE_PRIORIDAD[rescate.prioridad]}</span>
         {" "}{rescate.estado === "en_camino" ? "En camino" : "En el sitio"}</p>
       <p>{rescate.descripcion}</p>
-      <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}</p>
+      <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}
+        {enlaceMapa(u) && <> · <a href={enlaceMapa(u) ?? undefined} target="_blank"
+          rel="noopener noreferrer">Abrir en Google Maps</a></>}</p>
       <div className="acciones">
         {rescate.estado === "en_camino" && (
           <button className="principal" onClick={() => void hacer(

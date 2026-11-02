@@ -75,6 +75,8 @@
 .ds input, .ds select, .ds textarea { display: block; width: 100%; margin-top: var(--ds-e1); min-height: 44px;
   padding: 10px var(--ds-e3); font: var(--ds-t-md) var(--ds-fuente); color: var(--ds-tinta);
   background: var(--ds-superficie); border: 1px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); }
+.ds label:has(> input[type="checkbox"]), .ds label:has(> input[type="radio"]) { display: flex; gap: var(--ds-e2);
+  align-items: flex-start; font-weight: 500; }
 .ds input[type="checkbox"], .ds input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--ds-marca); }
 .ds input[type="file"] { padding: 8px var(--ds-e3); font-size: var(--ds-t-sm); }
 .ds textarea { min-height: 96px; resize: vertical; }

@@ -57,3 +57,14 @@ export function textoAvisos(resumen: Record<string, number>, avisos: Aviso[] = [
   const detalle = conError.map((a) => `${a.ultimo_error} (intento ${a.intentos})`).join("; ");
   return `Avisos: ${partes.join(", ")}.${detalle ? ` Último error: ${detalle}.` : ""}`;
 }
+
+/** Enlace a Google Maps: con GPS abre el punto exacto; con dirección busca en Cúcuta. */
+export function enlaceMapa(u: { latitud: number | null; longitud: number | null;
+  direccion: string | null }): string | null {
+  const base = "https://www.google.com/maps/search/?api=1&query=";
+  if (u.latitud !== null && u.longitud !== null) {
+    return base + encodeURIComponent(`${u.latitud},${u.longitud}`);
+  }
+  const direccion = u.direccion?.trim();
+  return direccion ? base + encodeURIComponent(`${direccion}, Cúcuta`) : null;
+}
