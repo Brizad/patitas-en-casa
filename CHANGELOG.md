@@ -6,6 +6,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ### Agregado
 - Respaldo diario (RNF-15, P-07): flujo `respaldo.yml` con `pg_dump` de Neon, cifrado AES-256, prueba de restauración en una base temporal y artefacto de 14 días; sin los secretos `NEON_DATABASE_URL` y `RESPALDO_CLAVE` avisa y no falla. Guía y restauración en `docs/aprende/respaldo.md`.
+- Avisos por correo con la API HTTPS de Mailjet (P-08): `NotificadorMailjet` se usa si están `PATITAS_MAILJET_API_KEY`, `PATITAS_MAILJET_SECRET_KEY` y `PATITAS_CORREO_REMITENTE` (Render gratis bloquea SMTP); si no, SMTP o el log. El outbox y los reintentos no cambian. Guía en `docs/aprende/correo-mailjet.md`.
 
 ### Corregido
 - Evidencias del triaje de texto con sentido clínico (#186): se filtran palabras vacías del español («se», «bien», «no se»), pares sin contenido y lugares o tiempos; van primero las señales de las reglas y el modelo no las repite. Si no hay 3 evidencias útiles se muestran menos (antes se rellenaba). RNF-09 queda como «las evidencias que haya, siempre útiles» para el texto.
@@ -14,6 +15,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Estado real de hoy en `docs/aprende/trazabilidad.md` (video funcionando con el nodo local, base en Neon, #186 a #188) y lista exacta de lo que falta del ERS, con responsable, en `docs/aprende/avance.md` (#190).
 
 ### Agregado
+- Video temporal en PostgreSQL (#188): el video espera por trozos de 1 MB en la tabla `videos_trozos` (migración 0028) y ya no se pierde si Render se reinicia. Se borra al terminar el análisis o a las 6 horas (también los trozos huérfanos); 50 MB por video y a lo sumo 5 esperando (`MAX_VIDEOS_PENDIENTES`, 250 MB como máximo en los 1 GB de Neon); con el cupo lleno responde 503 y el reporte sigue con el texto. `VIDEO_DIR` mantiene el disco como opción. Falla segura sin cambios.
 - Revisión por rol (#182): en Indicadores el acuerdo del veterinario nombra el modelo por lo que hace (no `reglas-v0+tfidf-lr-v1`); capturas del manual «antes» (`docs/manual/antes/`) y «después» (`docs/manual/`) y resumen del rediseño en `docs/aprende/avance.md`.
 - Detalle del reporte entendible de un vistazo para el veterinario (#180): `GET /cola` trae `descripcion`, `ubicacion`, `creado_en` (UTC) y `video_segundos` (nunca el contacto). El panel muestra qué pasó, dónde (con «Abrir en Google Maps»), cuánto hace que se reportó, la sugerencia explicada en lenguaje sencillo («prioridad crítica con confianza alta (90 %), según reglas de urgencia y modelo de texto») sin nombres como `tfidf-lr-v1`, las evidencias como frases y el análisis de video con su estado en insignia y la tira de 3 imágenes en un marco con pie de foto. Sin video ya no se pide el análisis (desaparece el 404 en la consola).
 - Administración y adopción con el sistema de diseño (#178): rol y estado de las cuentas como insignias (Activa / Suspendida), formularios de cuenta y de refugio en rejilla (el botón queda en su propia fila), tabla de cuentas con desplazamiento en celular, compatibilidad «93/100» y estado de las solicitudes con insignia, y animales recomendados como tarjetas.

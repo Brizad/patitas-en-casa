@@ -162,7 +162,7 @@ from app.usuarios.servicio import (
     ServicioUsuarios,
     normalizar_correo,
 )
-from app.video.almacen import AlmacenEnDisco
+from app.video.almacen import AlmacenEnDisco, AlmacenEnPostgres
 from app.video.repositorio import RepositorioVideos, RepositorioVideosEnMemoria
 from app.video.repositorio_postgres import RepositorioVideosPostgres
 from app.video.servicio import ServicioVideo
@@ -513,8 +513,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         token_video = token_video or (ajustes_video.video_token.get_secret_value()
                                       if ajustes_video.video_token else None)
         directorio_videos = directorio_videos or ajustes_video.video_dir
-    almacen_videos = AlmacenEnDisco(directorio_videos or
-                                    Path(tempfile.gettempdir()) / "patitas-videos")
+    if motor is not None and not directorio_videos:
+        almacen_videos = AlmacenEnPostgres(motor)  # #188: sobrevive al reinicio de Render
+    else:  # sin base (pruebas) o con VIDEO_DIR explícito: disco
+        almacen_videos = AlmacenEnDisco(directorio_videos or
+                                        Path(tempfile.gettempdir()) / "patitas-videos")
     videos = ServicioVideo(repositorio_videos, repositorio, almacen_videos)
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)

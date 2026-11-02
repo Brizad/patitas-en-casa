@@ -39,6 +39,14 @@ services:
         generateValue: true
       - key: PATITAS_SMTP_HOST       # vacío = los avisos quedan en el log y en la app
         sync: false
+      # Correo por la API HTTPS de Mailjet (P-08): Render gratis bloquea SMTP. Si están,
+      # tiene prioridad sobre SMTP. Brayan las escribe en Render → Environment.
+      - key: PATITAS_MAILJET_API_KEY
+        sync: false
+      - key: PATITAS_MAILJET_SECRET_KEY
+        sync: false
+      - key: PATITAS_CORREO_REMITENTE
+        sync: false
       # Primera cuenta de administración (#67): Brayan las escribe en el panel de Render.
       # La cuenta se crea en el primer arranque y no se reemplaza en los siguientes.
       - key: PATITAS_ADMIN_CORREO

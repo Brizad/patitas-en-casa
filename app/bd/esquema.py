@@ -407,3 +407,17 @@ analisis_video = Table(
                     name="ck_analisis_video_tira"),
     Index("ix_analisis_video_estado_creado", "estado", "creado_en"),
 )
+
+# #188: el video espera aquí, por trozos de 1 MB, mientras el trabajador local lo descarga. Así
+# sobrevive a un reinicio de Render. Se borra al terminar el análisis o a las 6 horas (la base
+# gratis de Neon tiene 1 GB: a lo sumo 5 videos de 50 MB a la vez = 250 MB).
+videos_trozos = Table(
+    "videos_trozos",
+    metadata,
+    Column("ruta", String(40), primary_key=True),
+    Column("orden", Integer, primary_key=True),
+    Column("datos", LargeBinary, nullable=False),
+    Column("creado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint("octet_length(datos) <= 1048576", name="ck_videos_trozos_tamano"),
+    Index("ix_videos_trozos_creado", "creado_en"),
+)
