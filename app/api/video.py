@@ -14,11 +14,11 @@ import hmac
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.dominio.modelos import Prioridad
-from app.video.almacen import MAX_BYTES, AlmacenEnDisco, ArchivoInvalido
+from app.video.almacen import MAX_BYTES, AlmacenEnDisco, AlmacenEnPostgres, ArchivoInvalido
 from app.video.modelos import ResultadoVideo, TrabajoVideo
 from app.video.servicio import ServicioVideo, VideoRechazado
 
@@ -63,7 +63,7 @@ def vista_para_personal(t: TrabajoVideo) -> dict:
 
 
 # C901: como en crear_app, mccabe suma las rutas anidadas; cada una por separado es sencilla.
-def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco,  # noqa: C901
+def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | AlmacenEnPostgres,  # noqa: C901
                       token: str | None, personal) -> APIRouter:
     rutas = APIRouter()
 
@@ -108,8 +108,8 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco,  # noqa:
 
     @rutas.get("/video/trabajos/{id_}/archivo", dependencies=solo_trabajador)
     def descargar_video(id_: int):
-        return FileResponse(_ejecutar(servicio.ruta_para_descargar, id_),
-                            media_type="application/octet-stream")
+        ruta = _ejecutar(servicio.ruta_para_descargar, id_)
+        return StreamingResponse(almacen.leer(ruta), media_type="application/octet-stream")
 
     @rutas.post("/video/trabajos/{id_}/resultado", dependencies=solo_trabajador)
     def entregar_resultado(id_: int, datos: ResultadoEntrada):

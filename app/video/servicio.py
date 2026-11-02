@@ -33,6 +33,7 @@ class VideoRechazado(Exception):
 class AlmacenVideos(Protocol):
     def existe(self, ruta: str) -> bool: ...
     def borrar(self, ruta: str) -> None: ...
+    def purgar_antes_de(self, limite: datetime) -> int: ...
 
 
 class ServicioVideo:
@@ -53,8 +54,21 @@ class ServicioVideo:
                                       "reporte.")
         if self._videos.de_reporte(codigo) is not None:
             raise VideoRechazado(409, "Este reporte ya tiene un video.")
+        self._exigir_cupo()
+
+    def _exigir_cupo(self) -> None:
+        """#188: a lo sumo MAX_VIDEOS_PENDIENTES esperando (cuida el espacio de la base). Con
+        el cupo lleno el reporte ya llegó y se atiende con la descripción."""
+        if self._videos.contar_esperando() >= config.MAX_VIDEOS_PENDIENTES:
+            raise VideoRechazado(503, "Hay muchos videos esperando análisis. Tu reporte ya "
+                                      "llegó y se atiende con la descripción.")
 
     def registrar(self, codigo: str, ruta: str, tamano: int) -> TrabajoVideo:
+        try:
+            self._exigir_cupo()  # otra subida pudo llenar el cupo mientras llegaba esta
+        except VideoRechazado:
+            self._almacen.borrar(ruta)
+            raise
         trabajo = self._videos.crear(codigo, ruta, tamano, self._reloj())
         if trabajo is None:  # otro envío del mismo reporte ganó la carrera
             self._almacen.borrar(ruta)
@@ -126,6 +140,7 @@ class ServicioVideo:
         trabajador local estuvo apagado) y su video se borra."""
         limite = self._reloj() - timedelta(hours=config.VIDEO_MAX_ESPERA_HORAS)
         vencidos = self._videos.esperando_desde_antes(limite)
+        self._almacen.purgar_antes_de(limite)  # huérfanos de subidas cortadas
         for trabajo in vencidos:
             self._cerrar(trabajo, EstadoVideo.FALLIDO, "nadie lo analizó a tiempo; manda el "
                          "texto")
