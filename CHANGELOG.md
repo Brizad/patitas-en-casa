@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Corregido
+- Evidencias del triaje de texto con sentido clínico (#186): se filtran palabras vacías del español («se», «bien», «no se»), pares sin contenido y lugares o tiempos; van primero las señales de las reglas y el modelo no las repite. Si no hay 3 evidencias útiles se muestran menos (antes se rellenaba). RNF-09 queda como «las evidencias que haya, siempre útiles» para el texto.
+
 ### Agregado
 - Revisión por rol (#182): en Indicadores el acuerdo del veterinario nombra el modelo por lo que hace (no `reglas-v0+tfidf-lr-v1`); capturas del manual «antes» (`docs/manual/antes/`) y «después» (`docs/manual/`) y resumen del rediseño en `docs/aprende/avance.md`.
 - Detalle del reporte entendible de un vistazo para el veterinario (#180): `GET /cola` trae `descripcion`, `ubicacion`, `creado_en` (UTC) y `video_segundos` (nunca el contacto). El panel muestra qué pasó, dónde (con «Abrir en Google Maps»), cuánto hace que se reportó, la sugerencia explicada en lenguaje sencillo («prioridad crítica con confianza alta (90 %), según reglas de urgencia y modelo de texto») sin nombres como `tfidf-lr-v1`, las evidencias como frases y el análisis de video con su estado en insignia y la tira de 3 imágenes en un marco con pie de foto. Sin video ya no se pide el análisis (desaparece el 404 en la consola).

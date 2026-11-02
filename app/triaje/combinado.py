@@ -15,7 +15,7 @@ import logging
 from collections.abc import Callable
 
 from app.triaje.clasificador import ORDEN_GRAVEDAD, VERSION, Resultado, clasificar
-from app.triaje.modelo import MIN_EVIDENCIAS, ModeloTriaje, cargar_modelo
+from app.triaje.modelo import ModeloTriaje, cargar_modelo
 
 log = logging.getLogger(__name__)
 
@@ -25,15 +25,24 @@ def combinar(reglas: Resultado, modelo: Resultado, version_modelo: str) -> Resul
         prioridad, confianza = modelo.prioridad, modelo.confianza
     else:
         prioridad, confianza = reglas.prioridad, reglas.confianza
-    evidencias = list(dict.fromkeys(reglas.evidencias + modelo.evidencias))
-    # RNF-09: al menos 3 evidencias. Si el texto da pocas, se dice qué opinó cada parte.
-    for extra in (f"modelo {version_modelo}: {modelo.prioridad.value} "
-                  f"({modelo.confianza:.2f})",
-                  f"reglas {VERSION}: {reglas.prioridad.value} ({reglas.confianza:.2f})",
-                  f"se sugiere {prioridad.value}: la más grave entre reglas y modelo"):
-        if len(evidencias) < MIN_EVIDENCIAS:
-            evidencias.append(extra)
+    # Primero las señales de las reglas (validadas por el veterinario); del modelo solo lo que
+    # no repite una señal. Si no hay evidencias útiles se muestran menos, sin rellenar.
+    del_modelo = [e for e in modelo.evidencias if not _repite_senal(e, reglas.evidencias)]
+    evidencias = list(dict.fromkeys(reglas.evidencias + del_modelo))
     return Resultado(prioridad, confianza, evidencias)
+
+
+def _repite_senal(evidencia_modelo: str, senales: list[str]) -> bool:
+    """«sarna» apunta a baja repite «señal 'sarna' -> baja»."""
+    if "«" not in evidencia_modelo:
+        return False
+    termino = evidencia_modelo.split("«")[1].split("»")[0]
+    return any(f in termino or termino in f for f in map(_fragmento, senales))
+
+
+def _fragmento(senal: str) -> str:
+    partes = senal.split("'")
+    return partes[1] if len(partes) > 2 else senal
 
 
 def clasificador_combinado(modelo: ModeloTriaje) -> Callable[[str], Resultado]:

@@ -99,7 +99,7 @@ Significa que el modelo aprendió bien las plantillas con las que se generaron l
 
 <details><summary>Respuesta 3</summary>
 
-Con al menos 3 evidencias (RNF-09): las palabras o pares de palabras que más empujaron hacia esa prioridad (por ejemplo «atropellado»), las señales de las reglas y, si faltan, lo que opinó cada parte. Una evidencia es una razón concreta que el veterinario puede revisar en el texto.
+Con hasta 3 evidencias del modelo (RNF-09, #186; si no hay útiles se muestran menos): las palabras o pares de palabras que más empujaron hacia esa prioridad (por ejemplo «atropellado»), las señales de las reglas. Una evidencia es una razón concreta que el veterinario puede revisar en el texto.
 
 </details>
 
