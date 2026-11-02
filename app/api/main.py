@@ -1017,7 +1017,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
 
     @app.get("/reportes/{codigo}")
     def estado_reporte(codigo: str):
-        r = repositorio.buscar(codigo.upper())
+        r = repositorio.buscar(normalizar_codigo(codigo))
         if r is None:
             raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
         return {"codigo": r.codigo, "estado": r.estado.value}
