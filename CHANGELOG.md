@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Documentación
+- Estado real de hoy en `docs/aprende/trazabilidad.md` (video funcionando con el nodo local, base en Neon, #186 a #188) y lista exacta de lo que falta del ERS, con responsable, en `docs/aprende/avance.md` (#190).
+
 ### Agregado
 - Revisión por rol (#182): en Indicadores el acuerdo del veterinario nombra el modelo por lo que hace (no `reglas-v0+tfidf-lr-v1`); capturas del manual «antes» (`docs/manual/antes/`) y «después» (`docs/manual/`) y resumen del rediseño en `docs/aprende/avance.md`.
 - Detalle del reporte entendible de un vistazo para el veterinario (#180): `GET /cola` trae `descripcion`, `ubicacion`, `creado_en` (UTC) y `video_segundos` (nunca el contacto). El panel muestra qué pasó, dónde (con «Abrir en Google Maps»), cuánto hace que se reportó, la sugerencia explicada en lenguaje sencillo («prioridad crítica con confianza alta (90 %), según reglas de urgencia y modelo de texto») sin nombres como `tfidf-lr-v1`, las evidencias como frases y el análisis de video con su estado en insignia y la tira de 3 imágenes en un marco con pie de foto. Sin video ya no se pide el análisis (desaparece el 404 en la consola).
