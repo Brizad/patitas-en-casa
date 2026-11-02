@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Sistema de diseño único (#164, `app/diseno/sistema.css`, servido en `/diseno/sistema.css`): colores de marca y de prioridad (crítica, alta, media, baja) con modo oscuro, tipografía, escala de espaciado, botones, campos, tarjetas, pestañas, tablas, insignias, estados vacíos y mensajes de error, éxito, aviso e información. Los PR siguientes lo aplican por zona (inicio, PWA y cada pantalla del panel).
 - Sección «Forma de trabajo eficiente» en `CLAUDE.md` (#160): flujo completo sin pedir confirmación, merge automático, pruebas locales acotadas y resumen corto.
 - Manual de usuario (#156, `docs/manual-usuario.md`): qué hace cada rol (ciudadano, veterinario, rescatista, coordinador, adoptante, administrador y Alcaldía) en lenguaje sencillo, con 17 capturas de los datos de demostración. `scripts/accesibilidad/capturas.mjs` las vuelve a tomar solas.
 - Migración a Neon preparada (#154): `POSTGRES_SSLMODE` opcional en la conexión (Neon exige TLS), `scripts/operacion/migrar_a_neon.py` (pide las dos direcciones sin mostrarlas, copia con `pg_dump`/`pg_restore` sin poner la contraseña en la línea de comandos, compara las filas de cada tabla e imprime las variables para Render) y la guía `docs/aprende/migrar-a-neon.md`. No se ejecutó contra Render ni Neon: necesita las cuentas de Brayan.

@@ -1,0 +1,118 @@
+/* Sistema de diseño de Patitas en Casa (#164). Una sola hoja para la página de inicio, la PWA
+   del ciudadano y el panel del personal. Sin fuentes ni recursos externos (CSP: solo 'self').
+   Orden: 1) tokens (:root), 2) base, 3) componentes con prefijo «ds-». */
+:root {
+  /* Color: verde azulado de marca, neutros y un color por prioridad. */
+  --ds-fondo: #F4F7F6; --ds-superficie: #FFFFFF; --ds-linea: #D9E1DE; --ds-linea-fuerte: #B7C4C0;
+  --ds-tinta: #14211F; --ds-suave: #475753;
+  --ds-marca: #0B5D52; --ds-marca-fuerte: #08443C; --ds-marca-tenue: #E1F0EC; --ds-sobre-marca: #FFFFFF;
+  --ds-acento: #E8913A;
+  --ds-critica-bg: #FDE3E0; --ds-critica: #86160C;
+  --ds-alta-bg: #FEEAD0; --ds-alta: #7A3F05;
+  --ds-media-bg: #FFF4C2; --ds-media: #644D00;
+  --ds-baja-bg: #DFF2E3; --ds-baja: #1B5429;
+  --ds-info-bg: #E1EDF9; --ds-info: #17487E;
+  --ds-peligro: #A3170B; --ds-sobre-peligro: #FFFFFF;
+  /* Tipografía y medidas (escala de 4 px). */
+  --ds-fuente: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ds-mono: ui-monospace, 'JetBrains Mono', Consolas, monospace;
+  --ds-t-xs: .8125rem; --ds-t-sm: .9375rem; --ds-t-md: 1rem; --ds-t-lg: 1.25rem; --ds-t-xl: 1.75rem;
+  --ds-e1: 4px; --ds-e2: 8px; --ds-e3: 12px; --ds-e4: 16px; --ds-e5: 24px; --ds-e6: 32px;
+  --ds-radio: 10px; --ds-radio-lg: 16px;
+  --ds-sombra: 0 1px 2px rgb(20 33 31 / .06), 0 4px 14px rgb(20 33 31 / .06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ds-fondo: #0D1514; --ds-superficie: #15211F; --ds-linea: #28393A; --ds-linea-fuerte: #3C5250;
+    --ds-tinta: #E8F0EE; --ds-suave: #A9BDB8;
+    --ds-marca: #7DD3C2; --ds-marca-fuerte: #A5E4D7; --ds-marca-tenue: #19302D; --ds-sobre-marca: #06201B;
+    --ds-critica-bg: #4A1C18; --ds-critica: #FFB8AF; --ds-alta-bg: #46300F; --ds-alta: #FFCB8E;
+    --ds-media-bg: #3F3607; --ds-media: #F5DD73; --ds-baja-bg: #16341F; --ds-baja: #A3DDB1;
+    --ds-info-bg: #14304D; --ds-info: #A9CDF2; --ds-peligro: #F3A8A0; --ds-sobre-peligro: #2A0F0C;
+    --ds-sombra: none; color-scheme: dark;
+  }
+}
+
+/* Base: aplica con <body class="ds">. */
+.ds { margin: 0; background: var(--ds-fondo); color: var(--ds-tinta); font: var(--ds-t-md)/1.5 var(--ds-fuente); }
+.ds *, .ds *::before, .ds *::after { box-sizing: border-box; }
+.ds h1, .ds h2, .ds h3 { line-height: 1.25; margin: 0 0 var(--ds-e2); letter-spacing: -.01em; }
+.ds h1 { font-size: var(--ds-t-xl); } .ds h2 { font-size: var(--ds-t-lg); } .ds h3 { font-size: var(--ds-t-md); }
+.ds a { color: var(--ds-marca); text-underline-offset: 3px; }
+.ds :focus-visible { outline: 3px solid var(--ds-marca); outline-offset: 2px; border-radius: 4px; }
+.ds [hidden] { display: none !important; }
+.ds .ds-saltar { position: absolute; left: var(--ds-e2); top: -64px; z-index: 20; padding: var(--ds-e2) var(--ds-e3);
+  background: var(--ds-superficie); color: var(--ds-tinta); border-radius: var(--ds-radio); font-weight: 700; }
+.ds .ds-saltar:focus { top: var(--ds-e2); }
+.ds .ds-suave { color: var(--ds-suave); }
+.ds .ds-mono { font-family: var(--ds-mono); letter-spacing: .02em; }
+
+/* Barra superior y contenedor. */
+.ds-cabecera { display: flex; align-items: center; gap: var(--ds-e3); padding: var(--ds-e3) var(--ds-e4);
+  background: #08443C; color: #fff; font-weight: 800; }
+.ds-cabecera .ds-marca { font-size: var(--ds-t-md); margin: 0; }
+.ds-cabecera .ds-derecha { margin-left: auto; display: flex; align-items: center; gap: var(--ds-e3);
+  font-weight: 500; font-size: var(--ds-t-sm); }
+.ds-contenedor { max-width: 960px; margin: 0 auto; padding: var(--ds-e4); display: grid; gap: var(--ds-e4); }
+
+/* Botones: el <button> sin clase y <a class="ds-btn"> comparten forma. 44 px de alto para el dedo. */
+.ds-btn, .ds button { display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-e2);
+  min-height: 44px; padding: 0 var(--ds-e4); border-radius: var(--ds-radio); border: 1px solid var(--ds-linea-fuerte);
+  background: var(--ds-superficie); color: var(--ds-tinta); font: 700 var(--ds-t-sm)/1.2 var(--ds-fuente);
+  text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s; }
+.ds-btn:hover, .ds button:hover:not(:disabled) { background: var(--ds-marca-tenue); border-color: var(--ds-marca); }
+.ds-btn--pri, .ds button.principal { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
+.ds-btn--pri:hover, .ds button.principal:hover:not(:disabled) { background: var(--ds-marca-fuerte); border-color: var(--ds-marca-fuerte); color: var(--ds-sobre-marca); }
+.ds-btn--peligro { background: var(--ds-peligro); border-color: var(--ds-peligro); color: var(--ds-sobre-peligro); }
+.ds-btn--peligro:hover { background: var(--ds-peligro); filter: brightness(.92); }
+.ds-btn--chico { min-height: 36px; padding: 0 var(--ds-e3); font-size: var(--ds-t-xs); }
+.ds-btn--grande { min-height: 56px; font-size: var(--ds-t-md); border-radius: var(--ds-radio-lg); }
+.ds-btn:disabled, .ds button:disabled { opacity: .55; cursor: default; }
+
+/* Campos. */
+.ds label { display: block; margin: var(--ds-e3) 0; font-weight: 700; font-size: var(--ds-t-sm); }
+.ds input, .ds select, .ds textarea { display: block; width: 100%; margin-top: var(--ds-e1); min-height: 44px;
+  padding: 10px var(--ds-e3); font: var(--ds-t-md) var(--ds-fuente); color: var(--ds-tinta);
+  background: var(--ds-superficie); border: 1px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); }
+.ds input[type="checkbox"], .ds input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--ds-marca); }
+.ds textarea { min-height: 96px; resize: vertical; }
+.ds [aria-invalid="true"] { border-color: var(--ds-peligro); }
+.ds fieldset { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio); margin: var(--ds-e3) 0; padding: var(--ds-e3) var(--ds-e4); }
+.ds legend { font-weight: 700; padding: 0 var(--ds-e2); }
+
+/* Tarjeta y pestañas. */
+.ds-tarjeta { background: var(--ds-superficie); border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg);
+  padding: var(--ds-e4); box-shadow: var(--ds-sombra); min-width: 0; }
+.ds-pestanas { display: flex; gap: var(--ds-e2); flex-wrap: wrap; padding: var(--ds-e3) var(--ds-e4) 0; }
+.ds-pestanas [aria-current="page"] { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
+
+/* Insignias de prioridad y de estado: texto + punto, nunca solo color. */
+.ds-insignia { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px;
+  font-size: var(--ds-t-xs); font-weight: 700; line-height: 1.6; white-space: nowrap;
+  background: var(--ds-marca-tenue); color: var(--ds-marca-fuerte); }
+.ds-insignia::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.ds-insignia--critica { background: var(--ds-critica-bg); color: var(--ds-critica); }
+.ds-insignia--alta { background: var(--ds-alta-bg); color: var(--ds-alta); }
+.ds-insignia--media { background: var(--ds-media-bg); color: var(--ds-media); }
+.ds-insignia--baja { background: var(--ds-baja-bg); color: var(--ds-baja); }
+.ds-insignia--info { background: var(--ds-info-bg); color: var(--ds-info); }
+
+/* Tablas: en celular se desplazan dentro de su caja sin romper la página. */
+.ds-tabla { width: 100%; border-collapse: collapse; font-size: var(--ds-t-sm); }
+.ds-tabla th { text-align: left; font-size: var(--ds-t-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--ds-suave); }
+.ds-tabla th, .ds-tabla td { padding: 10px var(--ds-e2); border-bottom: 1px solid var(--ds-linea); vertical-align: top; }
+.ds-tabla tbody tr:hover { background: var(--ds-marca-tenue); }
+.ds-tabla-caja { overflow-x: auto; }
+
+/* Estados vacíos y mensajes (error, éxito, aviso, información). */
+.ds-vacio { text-align: center; padding: var(--ds-e6) var(--ds-e4); color: var(--ds-suave);
+  border: 1px dashed var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg); }
+.ds-vacio strong { display: block; color: var(--ds-tinta); font-size: var(--ds-t-md); margin-bottom: var(--ds-e1); }
+.ds-msg { padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio); border: 1px solid var(--ds-linea);
+  border-left-width: 4px; background: var(--ds-superficie); margin: var(--ds-e3) 0; }
+.ds-msg--error { background: var(--ds-critica-bg); color: var(--ds-critica); border-color: var(--ds-critica); font-weight: 600; }
+.ds-msg--ok { background: var(--ds-baja-bg); color: var(--ds-baja); border-color: var(--ds-baja); }
+.ds-msg--aviso { background: var(--ds-alta-bg); color: var(--ds-alta); border-color: var(--ds-alta); }
+.ds-msg--info { background: var(--ds-info-bg); color: var(--ds-info); border-color: var(--ds-info); }
+@media (prefers-reduced-motion: reduce) { .ds * { transition: none !important; } }

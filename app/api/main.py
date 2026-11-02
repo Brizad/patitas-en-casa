@@ -173,6 +173,8 @@ logger = logging.getLogger(__name__)
 CARPETA_PWA = Path(__file__).resolve().parents[1] / "pwa"
 # Página de inicio pública (#145): HTML y CSS sin JavaScript, en la raíz del sitio.
 CARPETA_INICIO = Path(__file__).resolve().parents[1] / "inicio"
+# Sistema de diseño compartido (#164): una hoja de estilo para inicio, PWA y panel.
+CARPETA_DISENO = Path(__file__).resolve().parents[1] / "diseno"
 # II-03 (#64): panel del personal en React; se compila con «npm run build» en panel/.
 CARPETA_PANEL = Path(__file__).resolve().parents[1] / "panel_web"
 # Windows puede asociar .js a text/plain en el registro; el navegador exige estos tipos.
@@ -1195,7 +1197,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
         if peticion.url.path == "/" or peticion.url.path.startswith(("/app", "/panel",
-                                                                  "/inicio")):
+                                                                  "/inicio", "/diseno")):
             respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
             respuesta.headers["Referrer-Policy"] = "no-referrer"
         return respuesta
@@ -1290,6 +1292,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal))
     app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")
     app.mount("/inicio", StaticFiles(directory=CARPETA_INICIO), name="inicio")
+    app.mount("/diseno", StaticFiles(directory=CARPETA_DISENO), name="diseno")
     if (CARPETA_PANEL / "index.html").exists():  # sin compilar, /panel no existe
         app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")
 
