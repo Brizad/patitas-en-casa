@@ -86,3 +86,69 @@ export function nombreIndicador(clave: string): string {
 export function plural(n: number, singular: string, pluralTexto: string): string {
   return `${n} ${n === 1 ? singular : pluralTexto}`;
 }
+
+/** El nombre técnico de la versión → lo que hace, para quien no es de sistemas (#180). */
+export function nombreModelo(version: string | null): string {
+  if (!version) return "sin sugerencia automática";
+  if (version.startsWith("marcha")) return "modelo de marcha del video";
+  if (version.includes("tfidf") && version.startsWith("reglas")) {
+    return "reglas de urgencia y modelo de texto";
+  }
+  if (version.includes("tfidf")) return "modelo de texto";
+  if (version.startsWith("reglas")) return "reglas de urgencia";
+  return "modelo automático";
+}
+
+export function nivelConfianza(c: number): string {
+  return c >= 0.8 ? "alta" : c >= 0.6 ? "media" : "baja";
+}
+
+const prioridadEnTexto = (p: string) => (NOMBRE_PRIORIDAD[p] ?? p).toLowerCase();
+
+/** Por qué el sistema sugiere esa prioridad, en una o dos frases (RN-02, RN-03, RN-06). */
+export function explicarSugerencia(estado: string, prioridad: string, confianza: number | null,
+                                   version: string | null): string {
+  if (estado === "sin_clasificar") {
+    return "El sistema no pudo analizar este reporte, así que por seguridad lo trata como "
+      + "prioridad alta. Léelo con cuidado y decide tú.";
+  }
+  if (estado === "requiere_revision") {
+    return "El sistema no está seguro de la prioridad (confianza baja). Lee la descripción y "
+      + "decide tú.";
+  }
+  const nivel = confianza === null ? "" : ` con confianza ${nivelConfianza(confianza)} `
+    + `(${Math.round(confianza * 100)} %)`;
+  return `El sistema sugiere prioridad ${prioridadEnTexto(prioridad)}${nivel}, según `
+    + `${nombreModelo(version)}. Tú decides si la confirmas o la cambias.`;
+}
+
+/** Las evidencias salen de la API como notas técnicas; aquí se leen como frases. */
+export function evidenciaLegible(texto: string): string {
+  const senal = texto.match(/^señal '(.+)' -> (\w+)$/);
+  if (senal) return `Detectó «${senal[1]}»: indica prioridad ${prioridadEnTexto(senal[2])}`;
+  const termino = texto.match(/^«(.+)» apunta a (\w+)$/);
+  if (termino) {
+    return `La expresión «${termino[1]}» aparece en casos de prioridad ${prioridadEnTexto(termino[2])}`;
+  }
+  const opinion = texto.match(/^(modelo|reglas) \S+: (\w+) \(([\d.]+)\)$/);
+  if (opinion) {
+    const quien = opinion[1] === "modelo" ? "El modelo de texto sugería" : "Las reglas de urgencia sugerían";
+    return `${quien} prioridad ${prioridadEnTexto(opinion[2])} `
+      + `(${Math.round(Number(opinion[3]) * 100)} % de seguridad)`;
+  }
+  const mas = texto.match(/^se sugiere (\w+): la más grave entre reglas y modelo$/);
+  if (mas) {
+    return `Se sugiere prioridad ${prioridadEnTexto(mas[1])}: se toma la más grave entre las `
+      + "reglas y el modelo";
+  }
+  return texto;
+}
+
+/** «hace 25 min»: cuánto lleva esperando el reporte. `ahora` se inyecta para poder probarla. */
+export function haceCuanto(fechaIso: string, ahora: number = Date.now()): string {
+  const minutos = Math.floor((ahora - Date.parse(fechaIso)) / 60000);
+  if (minutos < 1) return "hace un momento";
+  if (minutos < 60) return `hace ${minutos} min`;
+  if (minutos < 1440) return `hace ${Math.floor(minutos / 60)} h`;
+  return `hace ${Math.floor(minutos / 1440)} días`;
+}

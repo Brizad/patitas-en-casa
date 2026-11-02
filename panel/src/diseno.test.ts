@@ -49,3 +49,16 @@ describe("administrador y adoptante (#178)", () => {
     expect(fuentes).toMatch(/ds-insignia[^"]*">\{a\.puntaje\}/);
   });
 });
+
+describe("detalle del reporte para el veterinario (#180)", () => {
+  it("muestra qué pasó, dónde y cuándo, y explica la sugerencia en lenguaje sencillo", () => {
+    for (const pieza of ["detalle.descripcion", "Abrir en Google Maps", "haceCuanto(",
+      "explicarSugerencia(", "evidenciaLegible(", "nombreModelo("]) {
+      expect(fuentes, pieza).toContain(pieza);
+    }
+    expect(fuentes).not.toContain("Sugerida por {detalle.version_modelo}");
+  });
+  it("no pide el análisis de video si el reporte no trae video", () => {
+    expect(fuentes).toContain("detalle.video_segundos !== null");
+  });
+});

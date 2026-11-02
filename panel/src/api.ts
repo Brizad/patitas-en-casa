@@ -13,6 +13,11 @@ export interface ReporteEnCola {
   evidencias: string[];
   version_modelo: string | null; // RF-20
   posibles_duplicados: string[]; // RF-17: a menos de 200 m y 2 horas
+  descripcion: string; // lo que escribió el ciudadano
+  creado_en: string; // UTC (D-06)
+  video_segundos: number | null; // null: el reporte no trae video
+  ubicacion: { latitud: number | null; longitud: number | null; direccion: string | null;
+               comuna: number | null };
 }
 
 export interface RespuestaConfirmacion {

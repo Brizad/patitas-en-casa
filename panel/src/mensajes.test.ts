@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ErrorApi } from "./api";
 import {
-  enlaceMapa, etiquetaEstado, nombreIndicador, plural, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos,
+  enlaceMapa, etiquetaEstado, evidenciaLegible, explicarSugerencia, haceCuanto, nombreIndicador,
+  nombreModelo, plural, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos,
   textoError,
 } from "./mensajes";
 
@@ -106,5 +107,45 @@ describe("nombreIndicador y plural (#176)", () => {
     expect(plural(1, "perfil", "perfiles")).toBe("1 perfil");
     expect(plural(3, "perfil", "perfiles")).toBe("3 perfiles");
     expect(plural(0, "decisión", "decisiones")).toBe("0 decisiones");
+  });
+});
+
+describe("explicación de la sugerencia en lenguaje sencillo (#180)", () => {
+  it("nunca muestra el nombre técnico del modelo", () => {
+    const t = explicarSugerencia("clasificado", "critica", 0.9, "reglas-v0+tfidf-lr-v1");
+    expect(t).toMatch(/prioridad crítica/);
+    expect(t).toMatch(/confianza alta \(90 %\)/);
+    expect(t).toMatch(/Tú decides/);
+    expect(t).not.toMatch(/tfidf|lr-v1|reglas-v0/);
+  });
+  it("explica la baja confianza y la falla segura sin jerga", () => {
+    expect(explicarSugerencia("requiere_revision", "media", 0.4, "reglas-v0")).toMatch(
+      /no está seguro/);
+    expect(explicarSugerencia("sin_clasificar", "alta", null, null)).toMatch(
+      /no pudo analizar.*prioridad alta/);
+  });
+  it("nombra el modelo por lo que hace", () => {
+    expect(nombreModelo("reglas-v0+tfidf-lr-v1")).toBe("reglas de urgencia y modelo de texto");
+    expect(nombreModelo("marcha-mlp-v1")).toBe("modelo de marcha del video");
+    expect(nombreModelo(null)).toBe("sin sugerencia automática");
+  });
+  it("las evidencias se leen como frases", () => {
+    expect(evidenciaLegible("señal 'cojea' -> media")).toBe(
+      "Detectó «cojea»: indica prioridad media");
+    expect(evidenciaLegible("«se» apunta a critica")).toBe(
+      "La expresión «se» aparece en casos de prioridad crítica");
+    expect(evidenciaLegible("modelo tfidf-lr-v1: critica (0.90)")).toBe(
+      "El modelo de texto sugería prioridad crítica (90 % de seguridad)");
+    expect(evidenciaLegible("reglas reglas-v0: alta (0.65)")).toBe(
+      "Las reglas de urgencia sugerían prioridad alta (65 % de seguridad)");
+    expect(evidenciaLegible("apoya las cuatro patas")).toBe("apoya las cuatro patas");
+  });
+  it("la hora se dice como una persona", () => {
+    const ahora = Date.parse("2026-11-02T12:00:00Z");
+    expect(haceCuanto("2026-11-02T11:59:40Z", ahora)).toBe("hace un momento");
+    expect(haceCuanto("2026-11-02T11:35:00Z", ahora)).toBe("hace 25 min");
+    expect(haceCuanto("2026-11-02T09:00:00Z", ahora)).toBe("hace 3 h");
+    expect(haceCuanto("2026-10-30T12:00:00Z", ahora)).toBe("hace 3 días");
+    expect(haceCuanto("2026-11-02T11:59:00Z", ahora)).toBe("hace 1 min");
   });
 });

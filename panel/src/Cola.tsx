@@ -3,7 +3,10 @@ import { Cuenta, ReporteEnCola, cola } from "./api";
 import Confirmar, { resumenAvisos } from "./Confirmar";
 import Descartar from "./Descartar";
 import VideoDelReporte from "./VideoDelReporte";
-import { etiquetaEstado, textoError } from "./mensajes";
+import {
+  enlaceMapa, etiquetaEstado, evidenciaLegible, explicarSugerencia, haceCuanto, nombreModelo,
+  textoError,
+} from "./mensajes";
 
 /** Cola priorizada (RF-04): mismo orden que GET /cola; el detalle muestra las evidencias. */
 export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta }) {
@@ -72,7 +75,8 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
                 onClick={() => setElegido(r.codigo)} aria-pressed={r.codigo === elegido}>
                 <code>{r.codigo}</code>
                 <span className={`ds-insignia ds-insignia--${r.prioridad}`}>{etiquetaEstado(r.estado, r.prioridad)}</span>
-                <span>{r.confianza === null ? "—" : r.confianza.toFixed(2)}</span>
+                <span className="ds-suave">{haceCuanto(r.creado_en)}</span>
+                <span className="resumen">{r.descripcion}</span>
                 {r.posibles_duplicados.length > 0 && (
                   <span className="ds-insignia ds-insignia--info">posible duplicado</span>)}
               </button>
@@ -82,18 +86,36 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
       <div className="detalle ds-tarjeta">
         {!detalle ? <p className="ds-vacio">Elige un reporte de la cola.</p> : (
           <>
-            <h2 tabIndex={-1} ref={tituloDetalle}>Reporte <code>{detalle.codigo}</code></h2>
-            <p>Sugerida: <b>{etiquetaEstado(detalle.estado, detalle.prioridad)}</b>
-              {detalle.confianza !== null && <> · confianza {detalle.confianza.toFixed(2)}</>}</p>
-            {detalle.version_modelo && (
-              <p className="ds-suave">Sugerida por {detalle.version_modelo} (RF-20).</p>)}
+            <div className="fila-titulo">
+              <h2 tabIndex={-1} ref={tituloDetalle}>Reporte <code>{detalle.codigo}</code></h2>
+              <span className={`ds-insignia ds-insignia--${detalle.prioridad}`}>
+                {etiquetaEstado(detalle.estado, detalle.prioridad)}</span>
+            </div>
+            <p className="ds-suave" title={new Date(detalle.creado_en).toLocaleString()}>
+              Reportado {haceCuanto(detalle.creado_en)} · {new Date(detalle.creado_en).toLocaleString()}</p>
+            <h3>Qué pasó</h3>
+            <blockquote className="relato">{detalle.descripcion}</blockquote>
+            <h3>Dónde</h3>
+            <p>{detalle.ubicacion.direccion ?? (detalle.ubicacion.latitud !== null
+              ? `GPS ${detalle.ubicacion.latitud}, ${detalle.ubicacion.longitud}` : "Sin dato")}
+              {detalle.ubicacion.comuna ? ` · comuna ${detalle.ubicacion.comuna}` : ""}
+              {enlaceMapa(detalle.ubicacion) && <> · <a href={enlaceMapa(detalle.ubicacion) ?? undefined}
+                target="_blank" rel="noopener noreferrer">Abrir en Google Maps</a></>}</p>
+            <h3>Sugerencia del sistema</h3>
+            <p className="ds-msg ds-msg--info">{explicarSugerencia(detalle.estado, detalle.prioridad,
+              detalle.confianza, detalle.version_modelo)}</p>
             {detalle.posibles_duplicados.length > 0 && (
               <p className="ds-msg ds-msg--ok">Posible duplicado de {detalle.posibles_duplicados.join(", ")}:
                 {" "}reportado a menos de 200 m y 2 horas (RF-17).</p>)}
-            <h3>Evidencias del triaje</h3>
+            <h3>En qué se basa</h3>
             {detalle.evidencias.length === 0 ? <p className="ds-vacio">Sin evidencias.</p> : (
-              <ol>{detalle.evidencias.map((ev) => <li key={ev}>{ev}</li>)}</ol>)}
-            <VideoDelReporte token={token} codigo={detalle.codigo} />
+              <ul className="evidencias">{detalle.evidencias.map((ev) => (
+                <li key={ev}>{evidenciaLegible(ev)}</li>))}</ul>)}
+            {detalle.version_modelo && (
+              <p className="ds-suave">Sugerencia hecha con {nombreModelo(detalle.version_modelo)}.</p>)}
+            {detalle.video_segundos !== null
+              ? <VideoDelReporte token={token} codigo={detalle.codigo} />
+              : <p className="ds-suave">Este reporte no trae video.</p>}
             {cuenta.rol === "veterinario" ? (
               <>
                 <Confirmar key={detalle.codigo} token={token} reporte={detalle}
