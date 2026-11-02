@@ -150,6 +150,20 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 7. Registrar cambios en `CHANGELOG.md` (Keep a Changelog, SemVer) y actualizar
    `DEUDA_TECNICA.md` cuando se pague o se cree deuda.
 
+## Forma de trabajo eficiente
+
+Decisión del autor (#160). Esta sección tiene prioridad sobre la regla 2 de «Reglas de trabajo»
+en lo que toca a esperar la revisión del autor antes de integrar.
+
+1. Cada tarea sigue el flujo completo sin pedir confirmación: issue, rama, cambios con su
+   prueba, commit, push, PR y merge automático con `gh pr merge --auto --squash`. No esperar
+   el CI: GitHub une el PR solo cuando quede en verde.
+2. En local, correr solo las pruebas relacionadas con el cambio y `ruff`; la suite completa
+   la corre el CI.
+3. No usar agentes en paralelo ni tareas exploratorias largas.
+4. Si algo falla 2 veces, detenerse y explicarle el problema al autor en 3 líneas.
+5. Al terminar, resumir en máximo 5 líneas qué cambió y el número del PR.
+
 ## Deuda técnica abierta
 
 Ver `DEUDA_TECNICA.md`: DT-04 (pagada en parte: falta validar el modelo con datos reales),
