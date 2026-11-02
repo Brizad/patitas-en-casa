@@ -152,3 +152,18 @@ def test_video_opcional_en_el_formulario_y_blob_solo_local():
     politica = respuesta.headers["Content-Security-Policy"]
     assert "img-src 'self' blob:" in politica and "media-src blob:" in politica
     assert "http" not in politica
+
+
+# --- #168: sistema de diseño compartido ------------------------------------------------
+
+def test_la_pwa_usa_el_sistema_de_diseno(c):
+    html = c.get("/app/").text
+    assert re.search(r"<body[^>]*class=\"ds\"", html)
+    assert html.index("/diseno/sistema.css") < html.index("estilos.css")
+    assert 'class="ds-btn ds-btn--pri' in html and 'class="ds-tarjeta"' in html
+
+
+def test_el_service_worker_guarda_la_hoja_compartida_para_abrir_sin_senal():
+    sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+    assert "/diseno/sistema.css" in sw
+    assert "patitas-pwa-v3'" not in sw  # versión nueva: se baja la interfaz rediseñada

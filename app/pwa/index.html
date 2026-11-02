@@ -8,23 +8,24 @@
 <title>Patitas en Casa</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/diseno/sistema.css">
 <link rel="stylesheet" href="estilos.css">
 <script src="app.js" defer></script>
 <script src="reportar.js" defer></script>
 </head>
-<body>
-<header class="phd"><img src="icono.svg" alt="" width="28" height="28">Patitas en Casa</header>
+<body class="ds">
+<header class="ds-cabecera"><img src="icono.svg" alt="" width="28" height="28">Patitas en Casa</header>
 <nav class="pestanas" aria-label="Pantallas">
   <a href="#reportar" data-pantalla="reportar">Reportar</a>
   <a href="#estado" data-pantalla="estado">Consultar</a>
 </nav>
-<main class="pbd">
+<main class="pbd" id="contenido">
   <!-- #61: pantalla P-01 "Reportar emergencia" del prototipo (docs/prototipo). -->
   <section id="pantalla-reportar" class="pantalla" aria-labelledby="titulo-reportar">
     <h1 id="titulo-reportar">Reportar emergencia</h1>
-    <div id="pendientes" class="msg aviso" role="status" aria-live="polite" hidden></div>
+    <div id="pendientes" class="ds-msg ds-msg--aviso" role="status" aria-live="polite" hidden></div>
     <form id="reporte" class="pila" novalidate>
-      <div class="card">
+      <div class="ds-tarjeta">
         <label class="f" for="descripcion">¿Qué le pasa al animal?</label>
         <textarea class="in area" id="descripcion" name="descripcion" minlength="20"
                   maxlength="500" required
@@ -32,17 +33,17 @@
         <span class="tag" id="contador">Mínimo 20 caracteres · 0/500</span>
         <span class="err-campo" id="error-descripcion" hidden></span>
       </div>
-      <div class="card">
+      <div class="ds-tarjeta">
         <label class="f" for="direccion">Ubicación</label>
         <input class="in" id="direccion" name="direccion" maxlength="200" autocomplete="street-address"
                placeholder="Barrio o dirección">
         <div class="fila">
-          <button class="btn chico" type="button" id="usar-gps">Usar mi GPS</button>
+          <button class="ds-btn ds-btn--chico" type="button" id="usar-gps">Usar mi GPS</button>
           <span class="tag" id="estado-gps">o escribe la dirección</span>
         </div>
         <span class="err-campo" id="error-ubicacion" hidden></span>
       </div>
-      <div class="card">
+      <div class="ds-tarjeta">
         <label class="f" for="comuna">Comuna (opcional)</label>
         <select class="in" id="comuna" name="comuna">
           <option value="">No sé</option>
@@ -60,7 +61,7 @@
         <span class="tag">Ayuda a avisar primero a los rescatistas de esa zona.</span>
       </div>
       <!-- #125 (RF-03): el video ayuda a ver cómo camina el animal; es opcional. -->
-      <div class="card">
+      <div class="ds-tarjeta">
         <label class="f" for="video">Video del animal (opcional)</label>
         <input class="in" type="file" id="video" accept="video/mp4,video/quicktime,video/webm"
                aria-describedby="info-video error-video">
@@ -68,7 +69,7 @@
           vea el animal completo.</span>
         <span class="err-campo" id="error-video" hidden></span>
       </div>
-      <div class="card">
+      <div class="ds-tarjeta">
         <label class="f" for="contacto">Tu correo o teléfono (opcional)</label>
         <input class="in" id="contacto" name="contacto" autocomplete="email" maxlength="120"
                aria-describedby="error-contacto" placeholder="Para avisarte cuando lo revisen">
@@ -77,8 +78,8 @@
           Se guarda cifrado.</label>
         <span class="err-campo" id="error-contacto" hidden></span>
       </div>
-      <button class="btn pri grande" type="submit" id="enviar">Enviar reporte</button>
-      <div id="mensaje-reporte" class="msg" role="status" aria-live="polite" hidden></div>
+      <button class="ds-btn ds-btn--pri ds-btn--grande" type="submit" id="enviar">Enviar reporte</button>
+      <div id="mensaje-reporte" class="ds-msg" role="status" aria-live="polite" hidden></div>
       <p class="mute pequeno centro">Sin conexión, el reporte se guarda y se envía solo al volver la señal.</p>
     </form>
   </section>
@@ -94,31 +95,31 @@
       <div class="tag rotulo centro">TU CÓDIGO DE SEGUIMIENTO</div>
       <div class="big" id="codigo-grande"></div>
     </div>
-    <div class="card"><span><b>Guárdalo:</b> con este código consultas el estado sin dar tu nombre ni tu número.</span></div>
-    <div id="mensaje-codigo" class="msg" role="status" aria-live="polite" hidden></div>
-    <button class="btn" type="button" id="copiar">Copiar código</button>
-    <button class="btn pri" type="button" id="ver-estado">Ver estado del reporte</button>
-    <a class="btn" href="#reportar" id="otro-reporte">Reportar otra emergencia</a>
+    <div class="ds-tarjeta"><span><b>Guárdalo:</b> con este código consultas el estado sin dar tu nombre ni tu número.</span></div>
+    <div id="mensaje-codigo" class="ds-msg" role="status" aria-live="polite" hidden></div>
+    <button class="ds-btn" type="button" id="copiar">Copiar código</button>
+    <button class="ds-btn ds-btn--pri" type="button" id="ver-estado">Ver estado del reporte</button>
+    <a class="ds-btn" href="#reportar" id="otro-reporte">Reportar otra emergencia</a>
   </section>
 
   <!-- HU-08 (#59): pantalla P-03 "Estado del reporte". -->
   <section id="pantalla-estado" class="pantalla pila" aria-labelledby="titulo-estado" hidden>
     <h1 id="titulo-estado">Estado del reporte</h1>
-    <form id="consulta" class="card" novalidate>
+    <form id="consulta" class="ds-tarjeta" novalidate>
       <label class="f" for="codigo">Código de seguimiento</label>
       <input class="in mono" id="codigo" name="codigo" placeholder="Ej.: F2HW5RTB" maxlength="9"
              autocomplete="off" autocapitalize="characters" spellcheck="false" required>
       <span class="tag">Son 8 letras o números. Lo recibiste al enviar el reporte.</span>
-      <button class="btn pri" type="submit">Consultar</button>
+      <button class="ds-btn ds-btn--pri" type="submit">Consultar</button>
     </form>
-    <div id="mensaje" class="msg" role="status" aria-live="polite" hidden></div>
+    <div id="mensaje" class="ds-msg" role="status" aria-live="polite" hidden></div>
     <section id="resultado" class="pila" aria-live="polite" hidden>
-      <div class="card">
+      <div class="ds-tarjeta">
         <div class="tag rotulo">CÓDIGO</div>
         <div class="mono codigo" id="res-codigo"></div>
         <div class="mute pequeno" id="res-ultimo"></div>
       </div>
-      <div class="card"><ol class="tl" id="res-pasos"></ol></div>
+      <div class="ds-tarjeta"><ol class="tl" id="res-pasos"></ol></div>
     </section>
     <p class="mute pequeno">Por privacidad no se muestran la dirección exacta ni datos de otras personas.</p>
   </section>

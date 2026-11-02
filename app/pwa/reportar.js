@@ -125,7 +125,7 @@
         : 'Tienes ' + n + ' reportes guardados sin enviar. Se enviarán solos cuando vuelva la señal.'));
       const boton = document.createElement('button');
       boton.type = 'button';
-      boton.className = 'btn chico';
+      boton.className = 'ds-btn ds-btn--chico';
       boton.textContent = 'Reintentar ahora';
       boton.addEventListener('click', reintentar);
       partes.push(boton);
@@ -152,7 +152,7 @@
 
   function avisar(texto, esError) {
     mensaje.textContent = texto;
-    mensaje.classList.toggle('err', Boolean(esError));
+    mensaje.classList.toggle('ds-msg--error', Boolean(esError));
     mensaje.hidden = !texto;
   }
 
