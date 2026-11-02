@@ -168,6 +168,6 @@ en lo que toca a esperar la revisión del autor antes de integrar.
 ## Deuda técnica abierta
 
 Ver `DEUDA_TECNICA.md`: DT-04 (pagada en parte: falta validar el modelo con datos reales),
-DT-07 y DT-08. Pagadas: DT-09 (registro con límite por IP, #149), DT-10 (video, fase 6), DT-01 (reportes en
+DT-08. Pagadas: DT-07 (escalamiento por el outbox, #199), DT-09 (registro con límite por IP, #149), DT-10 (video, fase 6), DT-01 (reportes en
 PostgreSQL), DT-02 (JWT + Argon2id), DT-03 (notificador por correo), DT-05 (cupos en
 PostgreSQL) y DT-06 (límite de intentos de inicio de sesión).
