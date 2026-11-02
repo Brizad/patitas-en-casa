@@ -70,9 +70,15 @@ class AjustesCorreo(BaseSettings):
     smtp_contrasena: SecretStr | None = None
     smtp_remitente: str | None = None
     smtp_starttls: bool = True
+    # Mailjet por HTTPS (P-08): Render gratis bloquea SMTP. Si están las dos claves, gana.
+    mailjet_api_key: SecretStr | None = None
+    mailjet_secret_key: SecretStr | None = None
+    correo_remitente: str | None = None
+    mailjet_url: str = "https://api.mailjet.com/v3.1/send"
     correos_coordinadores: str = ""  # separados por comas
 
     @field_validator("smtp_host", "smtp_usuario", "smtp_contrasena", "smtp_remitente",
+                     "mailjet_api_key", "mailjet_secret_key", "correo_remitente",
                      mode="before")
     @classmethod
     def _vacio_es_ninguno(cls, valor):
