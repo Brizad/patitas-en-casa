@@ -163,6 +163,7 @@ en lo que toca a esperar la revisión del autor antes de integrar.
 3. No usar agentes en paralelo ni tareas exploratorias largas.
 4. Si algo falla 2 veces, detenerse y explicarle el problema al autor en 3 líneas.
 5. Al terminar, resumir en máximo 5 líneas qué cambió y el número del PR.
+6. Antes de abrir un PR, actualiza la rama con `main`; y después de unirse un PR, actualiza los demás PR abiertos (`gh pr update-branch <número>`, uno a la vez, esperando a que se una cada uno).
 
 ## Deuda técnica abierta
 
