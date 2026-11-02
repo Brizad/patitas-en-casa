@@ -70,3 +70,19 @@ button.enlace:hover:not(:disabled) { background: none; }
   background: var(--ds-marca-tenue); border: 1px solid var(--ds-linea); }
 .kpi dd { margin: 0; font-size: var(--ds-t-xl); font-weight: 800; color: var(--ds-marca-fuerte); line-height: 1.1; }
 .kpi dt { font-size: var(--ds-t-xs); color: var(--ds-suave); font-weight: 600; margin-top: var(--ds-e1); }
+
+/* Detalle del reporte (#180): relato del ciudadano, evidencias y la tira del video. */
+.relato { margin: 0 0 var(--ds-e3); padding: var(--ds-e3) var(--ds-e4); border-left: 4px solid var(--ds-acento);
+  background: var(--ds-fondo); border-radius: 0 var(--ds-radio) var(--ds-radio) 0; font-size: 1.0625rem; }
+.detalle h3 { margin: var(--ds-e4) 0 var(--ds-e2); font-size: var(--ds-t-sm); text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ds-suave); }
+.detalle .video > h3 { text-transform: none; letter-spacing: 0; font-size: var(--ds-t-md); color: var(--ds-tinta); }
+.cola ul.evidencias { list-style: disc; }
+.evidencias { margin: 0; padding-left: var(--ds-e5); display: grid; gap: var(--ds-e1); }
+.resumen { grid-column: 1 / -1; color: var(--ds-suave); font-size: var(--ds-t-sm); display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.item .ds-insignia--info { grid-column: 1 / -1; justify-self: start; }
+.tira-caja { margin: var(--ds-e3) 0; padding: var(--ds-e2); border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg);
+  background: var(--ds-fondo); }
+.tira-caja .tira { width: 100%; margin: 0; }
+.tira-caja figcaption { margin-top: var(--ds-e2); font-size: var(--ds-t-xs); color: var(--ds-suave); }

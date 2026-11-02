@@ -16,11 +16,11 @@ export interface AnalisisVideo {
 }
 
 export const ESTADOS_VIDEO: Record<EstadoVideo, string> = {
-  pendiente: "pendiente: esperando al trabajador de video",
+  pendiente: "en espera de análisis",
   enviado: "analizando",
   terminado: "listo",
-  no_concluyente: "no concluyente: manda la descripción",
-  fallido: "no se pudo analizar: manda la descripción",
+  no_concluyente: "no concluyente",
+  fallido: "no se pudo analizar",
 };
 
 /** null si el reporte no trae video (404). */

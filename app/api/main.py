@@ -1049,6 +1049,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
              "confianza": r.confianza, "evidencias": r.evidencias,
              "version_modelo": r.version_modelo,
+             # Detalle para decidir de un vistazo: qué pasó, dónde y cuándo. Nunca el contacto.
+             "descripcion": r.descripcion, "creado_en": fecha_utc(r.creado_en),
+             "video_segundos": r.video_segundos,
+             "ubicacion": {"latitud": r.ubicacion.latitud, "longitud": r.ubicacion.longitud,
+                           "direccion": r.ubicacion.direccion, "comuna": r.ubicacion.comuna},
              # RF-17: se compara también con los ya confirmados (el original suele estarlo).
              "posibles_duplicados": posibles_duplicados(r, todos)}
             for r in ordenar_cola(pendientes)

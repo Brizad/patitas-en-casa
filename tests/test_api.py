@@ -184,3 +184,17 @@ def test_rf12_reenvio_de_un_reporte_invalido_sigue_siendo_422():
     respuesta = cliente().post("/reportes", json={**REPORTE, "descripcion": "perro"},
                                headers=CLAVE_PWA)
     assert respuesta.status_code == 422
+
+
+def test_la_cola_trae_lo_que_el_veterinario_necesita_para_decidir():
+    """Detalle del reporte: descripción, ubicación y hora, sin el contacto del ciudadano."""
+    c = cliente()
+    c.post("/reportes", json={**REPORTE, "direccion": "Calle 8 con avenida 5, La Playa",
+                              "comuna": 2})
+    item = c.get("/cola", headers=sesion(c)).json()[0]
+    assert item["descripcion"] == REPORTE["descripcion"]
+    assert item["ubicacion"] == {"latitud": 7.8939, "longitud": -72.5078,
+                                 "direccion": "Calle 8 con avenida 5, La Playa", "comuna": 2}
+    assert item["creado_en"].endswith("+00:00")  # D-06: fechas en UTC
+    assert "contacto" not in str(item).lower()  # el contacto cifrado nunca sale por la cola
+    assert item["video_segundos"] is None  # sin video: el panel no pide el análisis (evita un 404)
