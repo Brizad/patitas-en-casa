@@ -1,13 +1,5 @@
 # Despliegue en Render (Blueprint). En Render: New > Blueprint > este repositorio.
-# Crea la API (la base real está en Neon; patitas-bd queda de respaldo temporal)
-# y la base de respaldo patitas-bd (imagen del Dockerfile: API + PWA en /app/ + panel en /panel/).
-databases:
-  - name: patitas-bd
-    plan: free
-    databaseName: patitas
-    user: patitas
-    postgresMajorVersion: "16"
-
+# Crea la API (imagen del Dockerfile: API + PWA en /app/ + panel en /panel/); la base está en Neon.
 services:
   - type: web
     name: patitas-en-casa
@@ -18,7 +10,6 @@ services:
     autoDeploy: true
     envVars:
       # Base en Neon (#184, P-11): Brayan escribe estas variables en Render → Environment.
-      # Ya no salen de patitas-bd, que queda unos días solo como respaldo.
       - key: POSTGRES_HOST
         sync: false
       - key: POSTGRES_PORT

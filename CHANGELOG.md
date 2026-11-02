@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Cambiado
+- `render.yaml` (#202): se quita el bloque `databases` de `patitas-bd`, que ya se borró en Render; la base real es la de Neon.
+
 ## [1.2.0] - 2026-11-02
 Video temporal en PostgreSQL, base en Neon, avisos por Mailjet y por el outbox, respaldo diario,
 piloto de usabilidad y rediseño del panel, la PWA y la página de inicio. Para actualizar:
