@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ErrorApi } from "./api";
 import {
-  enlaceMapa, etiquetaEstado, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos,
+  enlaceMapa, etiquetaEstado, nombreIndicador, plural, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos,
   textoError,
 } from "./mensajes";
 
@@ -87,5 +87,24 @@ describe("enlaceMapa (#172)", () => {
   it("sin ubicación no hay enlace", () => {
     expect(enlaceMapa({ latitud: null, longitud: null, direccion: null })).toBeNull();
     expect(enlaceMapa({ latitud: null, longitud: null, direccion: "  " })).toBeNull();
+  });
+});
+
+describe("nombreIndicador y plural (#176)", () => {
+  it("traduce las claves técnicas a lenguaje sencillo", () => {
+    expect(nombreIndicador("clasificado")).toBe("Clasificado por la IA");
+    expect(nombreIndicador("requiere_revision")).toBe("Requiere revisión");
+    expect(nombreIndicador("critica")).toBe("Crítica");
+    expect(nombreIndicador("trasladado")).toBe("Trasladado al refugio");
+    expect(nombreIndicador("hechos")).toBe("Hechos");
+  });
+  it("una clave desconocida se muestra legible, no con guiones bajos", () => {
+    expect(nombreIndicador("vivienda: apartamento")).toBe("Vivienda: apartamento");
+    expect(nombreIndicador("algo_nuevo")).toBe("Algo nuevo");
+  });
+  it("plural respeta el singular", () => {
+    expect(plural(1, "perfil", "perfiles")).toBe("1 perfil");
+    expect(plural(3, "perfil", "perfiles")).toBe("3 perfiles");
+    expect(plural(0, "decisión", "decisiones")).toBe("0 decisiones");
   });
 });

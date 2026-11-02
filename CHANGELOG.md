@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Indicadores legibles para la Alcaldía, la coordinación y la administración (#176): cifras clave en tarjetas, nombres en español sencillo («Clasificado por la IA», «Crítica», «Trasladado al refugio») en lugar de claves técnicas, prioridades con insignia, plurales correctos («1 perfil») y bitácora dentro de una caja con desplazamiento.
 - Pantallas del coordinador con el sistema de diseño (#174): formularios de ingreso, publicación y foto en rejilla de dos columnas (`ds-form`), un estado vacío con explicación en solicitudes, adopciones aprobadas, seguimientos y animales del refugio, e insignias para «en el refugio», «egresó» y «vencido».
 - Pantalla del rescatista con el sistema de diseño (#172): la zona por comunas son botones grandes que se marcan con ✓, las ofertas son tarjetas con borde de prioridad y «Mi rescate» trae el enlace «Abrir en Google Maps» (`enlaceMapa`: GPS o dirección en Cúcuta). En el sistema, las casillas se alinean con su texto.
 - Panel del personal con el sistema de diseño (#170): barra de marca con el rol de la sesión, pestañas, inicio de sesión con logo, tarjetas, mensajes de error y éxito, estados vacíos, tablas e insignias de prioridad (crítica, alta, media y baja) compartidas con la página de inicio y la PWA. La pestaña activa conserva su contraste en modo oscuro al pasar el ratón.

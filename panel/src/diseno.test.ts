@@ -34,3 +34,10 @@ describe("pantallas del coordinador (#174)", () => {
     expect(fuentes).toContain("ds-tarjeta ds-form");
   });
 });
+
+describe("indicadores legibles (#176)", () => {
+  it("muestra cifras clave en tarjetas y no claves técnicas", () => {
+    expect(fuentes).toContain("kpi");
+    expect(fuentes).toContain("nombreIndicador(");
+  });
+});

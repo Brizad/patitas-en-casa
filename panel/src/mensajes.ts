@@ -68,3 +68,21 @@ export function enlaceMapa(u: { latitud: number | null; longitud: number | null;
   const direccion = u.direccion?.trim();
   return direccion ? base + encodeURIComponent(`${direccion}, Cúcuta`) : null;
 }
+
+const NOMBRE_INDICADOR: Record<string, string> = {
+  recibido: "Recibido", clasificado: "Clasificado por la IA", requiere_revision: "Requiere revisión",
+  sin_clasificar: "Sin clasificar", confirmado: "Confirmado por el veterinario",
+  descartado: "Descartado", critica: "Crítica", alta: "Alta", media: "Media", baja: "Baja",
+  trasladado: "Trasladado al refugio", atendido_en_sitio: "Atendido en el sitio",
+  no_encontrado: "No encontrado", fallecido: "Fallecido",
+};
+
+/** Clave técnica de un indicador → texto para personas (la clave desconocida se limpia). */
+export function nombreIndicador(clave: string): string {
+  const texto = NOMBRE_INDICADOR[clave] ?? clave.replace(/_/g, " ");
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+export function plural(n: number, singular: string, pluralTexto: string): string {
+  return `${n} ${n === 1 ? singular : pluralTexto}`;
+}

@@ -63,3 +63,10 @@ button.enlace:hover:not(:disabled) { background: none; }
 .ofertas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--ds-e3); }
 .oferta { border: 1px solid var(--ds-linea); border-left: 4px solid var(--ds-marca); border-radius: var(--ds-radio); padding: var(--ds-e3) var(--ds-e4); }
 .oferta p { margin: var(--ds-e2) 0 var(--ds-e3); }
+
+/* Indicadores: cifras clave en tarjetas pequeñas. */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ds-e3); margin: var(--ds-e4) 0; }
+.kpi { display: flex; flex-direction: column-reverse; padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio);
+  background: var(--ds-marca-tenue); border: 1px solid var(--ds-linea); }
+.kpi dd { margin: 0; font-size: var(--ds-t-xl); font-weight: 800; color: var(--ds-marca-fuerte); line-height: 1.1; }
+.kpi dt { font-size: var(--ds-t-xs); color: var(--ds-suave); font-weight: 600; margin-top: var(--ds-e1); }
