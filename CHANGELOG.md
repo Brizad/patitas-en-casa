@@ -4,6 +4,11 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+## [1.2.0] - 2026-11-02
+Video temporal en PostgreSQL, base en Neon, avisos por Mailjet y por el outbox, respaldo diario,
+piloto de usabilidad y rediseño del panel, la PWA y la página de inicio. Para actualizar:
+`alembic upgrade head` (migraciones `0026` a `0028`).
+
 ### Agregado
 - Avisos de escalamiento por el outbox (DT-07, #199): al escalar un rescate sin aceptar (RF-23), el aviso al coordinador y a los rescatistas de otras zonas se guarda en `avisos` y lo envía el procesador con reintentos; antes se enviaba directo y se perdía si el correo fallaba. El aviso se guarda antes de marcar el escalamiento, así que un fallo entre los dos pasos se reintenta.
 - Piloto de usabilidad (RNF-06, #197): plantilla CSV y cuestionario SUS en `docs/piloto/`, script `scripts/operacion/resultados_piloto.py` (% que reporta en ≤ 90 s, meta 80 %; SUS promedio, meta 70) con su prueba, y guía de la sesión en `docs/aprende/piloto.md`.
