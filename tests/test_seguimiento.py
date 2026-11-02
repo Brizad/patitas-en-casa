@@ -3,6 +3,7 @@
 Línea de tiempo tomada del prototipo (docs/prototipo/interaccion.js, "3. Consultar estado").
 """
 import json
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -131,9 +132,12 @@ def test_rn14_no_muestra_datos_personales_ni_detalles_del_caso(c):
     ana = rescatista(c)
     c.post(f"/rescates/{codigo}/aceptar", headers=ana)
     texto = json.dumps(seguimiento(c, codigo), ensure_ascii=False)
-    for dato in ["atropellado", DIRECCION, "Calle 8", "7.89", "-72.5", "critica",
+    for dato in ["atropellado", DIRECCION, "Calle 8", "-72.5", "critica",
                  "vet@patitas.co", "ana@rescate.co", "confianza"]:
         assert dato not in texto
+    # La latitud no debe aparecer, pero «7.89» también cabe en una hora («…:07.891Z»): se busca
+    # solo cuando no está pegada a otros dígitos (antes fallaba al azar según el reloj).
+    assert not re.search(r"(?<![\d:])7\.89(?!\d)", texto)
     assert set(seguimiento(c, codigo)) == {"codigo", "ultimo_cambio", "pasos"}
 
 
