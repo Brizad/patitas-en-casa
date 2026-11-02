@@ -7,11 +7,12 @@
 <meta name="description" content="Patitas en Casa: reporte de animales en emergencia en Cúcuta, triaje con IA, rescate, refugio y adopción.">
 <title>Patitas en Casa · Cúcuta</title>
 <link rel="icon" href="/app/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/diseno/sistema.css">
 <link rel="stylesheet" href="/inicio/inicio.css">
 </head>
-<body>
-<a class="saltar" href="#contenido">Saltar al contenido</a>
-<header class="cabecera">
+<body class="ds">
+<a class="ds-saltar" href="#contenido">Saltar al contenido</a>
+<header class="ds-cabecera">
   <img src="/app/icono.svg" alt="" width="32" height="32">
   <span>Patitas en Casa</span>
 </header>
@@ -19,7 +20,8 @@
 <main id="contenido">
   <!-- #145: página de inicio pública. Sin JavaScript: la misma CSP estricta de la PWA. -->
   <section class="portada" aria-labelledby="titulo">
-    <h1 id="titulo">Un animal herido en Cúcuta no debería esperar a que alguien conteste un chat.</h1>
+    <p class="etiqueta">Emergencias animales en Cúcuta</p>
+    <h1 id="titulo">Un animal herido no debería esperar a que alguien conteste un chat.</h1>
     <p class="entrada">Patitas en Casa conecta a quien lo encuentra con el veterinario, el
       rescatista y el refugio, en orden de gravedad. Sin crear cuenta.</p>
     <nav class="acciones" aria-label="Acciones principales">
@@ -27,16 +29,19 @@
       <a class="boton" href="/panel/#registro">Adoptar</a>
       <a class="boton secundario" href="/panel/">Entrar como personal</a>
     </nav>
+    <ul class="confianza" aria-label="Por qué confiar">
+      <li>Sin crear cuenta</li><li>El veterinario siempre confirma</li><li>Datos de contacto cifrados</li>
+    </ul>
   </section>
 
-  <section aria-labelledby="titulo-problema">
+  <section class="ds-tarjeta" aria-labelledby="titulo-problema">
     <h2 id="titulo-problema">El problema</h2>
     <p>Hoy un reporte llega por redes o mensajes, sin ubicación precisa, mezclado con otros y
       sin saber qué tan grave es. El refugio no sabe si tiene cupo hasta que el animal ya está
       en la puerta, y las adopciones dependen de la suerte.</p>
   </section>
 
-  <section aria-labelledby="titulo-como">
+  <section class="ds-tarjeta" aria-labelledby="titulo-como">
     <h2 id="titulo-como">Cómo funciona</h2>
     <ol class="pasos">
       <li><strong>Reporte.</strong> Cualquier persona describe la emergencia, comparte su
@@ -54,7 +59,7 @@
     </ol>
   </section>
 
-  <section aria-labelledby="titulo-roles">
+  <section class="ds-tarjeta" aria-labelledby="titulo-roles">
     <h2 id="titulo-roles">Quién hace qué</h2>
     <dl class="roles">
       <div><dt>Ciudadano</dt><dd>Reporta y consulta el estado con su código, sin cuenta.</dd></div>
@@ -67,7 +72,7 @@
     </dl>
   </section>
 
-  <section aria-labelledby="titulo-tecnologia">
+  <section class="ds-tarjeta" aria-labelledby="titulo-tecnologia">
     <h2 id="titulo-tecnologia">Tecnología</h2>
     <ul class="tecnologia">
       <li>API en Python con FastAPI y base de datos PostgreSQL.</li>
