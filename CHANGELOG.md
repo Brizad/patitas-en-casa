@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Respaldo diario (RNF-15, P-07): flujo `respaldo.yml` con `pg_dump` de Neon, cifrado AES-256, prueba de restauración en una base temporal y artefacto de 14 días; sin los secretos `NEON_DATABASE_URL` y `RESPALDO_CLAVE` avisa y no falla. Guía y restauración en `docs/aprende/respaldo.md`.
+
 ### Corregido
 - Evidencias del triaje de texto con sentido clínico (#186): se filtran palabras vacías del español («se», «bien», «no se»), pares sin contenido y lugares o tiempos; van primero las señales de las reglas y el modelo no las repite. Si no hay 3 evidencias útiles se muestran menos (antes se rellenaba). RNF-09 queda como «las evidencias que haya, siempre útiles» para el texto.
 

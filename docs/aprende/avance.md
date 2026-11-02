@@ -394,7 +394,7 @@ de video de la fase 6 sobre la v1.0.0), desplegada en https://patitas-en-casa-pn
 - Disponibilidad del 99 % (RNF-04): el plan gratis se duerme; hay sondeo, no garantía.
 - Recall con datos de veterinarios (RNF-03): el modelo se validó con datos sintéticos.
 - Usabilidad con personas (RNF-06): necesita participantes reales.
-- Respaldo diario (RNF-15): listo para integrar, pero es tu decisión (P-07).
+- Respaldo diario (RNF-15): integrado (`respaldo.yml`); falta que crees los secretos `NEON_DATABASE_URL` y `RESPALDO_CLAVE` (`respaldo.md`).
 - Lector de pantalla y contraste medidos con herramienta (RNF-11): falta esa revisión.
 
 **Qué debes hacer tú:**
