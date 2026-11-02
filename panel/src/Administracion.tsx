@@ -3,7 +3,7 @@ import {
   CuentaAdmin, CuentaNueva, ROLES, RefugioAdmin, cambiarActivo, crearCuenta, crearRefugio,
   cuentas, problemaContrasena, refugios, vincular,
 } from "./apiAdmin";
-import { textoError } from "./mensajes";
+import { nombreIndicador, textoError } from "./mensajes";
 
 const NUEVA: CuentaNueva = { correo: "", nombre: "", rol: "veterinario", contrasena: "" };
 
@@ -46,13 +46,13 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
       {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
       <div className="ds-tarjeta">
         <h2>Cuentas del personal</h2>
-        <table className="ds-tabla">
+        <div className="ds-tabla-caja"><table className="ds-tabla">
           <thead><tr><th>Cuenta</th><th>Rol</th><th>Refugio</th><th>Estado</th></tr></thead>
           <tbody>
             {lista.map((c) => (
               <tr key={c.correo}>
                 <td>{c.nombre}<br /><small>{c.correo}</small></td>
-                <td>{c.rol}</td>
+                <td><span className="ds-insignia ds-insignia--info">{nombreIndicador(c.rol)}</span></td>
                 <td>
                   <select aria-label={`Refugio de ${c.correo}`} value={c.refugio_id ?? ""}
                     onChange={(e) => {
@@ -64,7 +64,9 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
                   </select>
                 </td>
                 <td>
-                  {c.activo ? "Activa" : "Suspendida"}{" "}
+                  {c.activo
+                    ? <span className="ds-insignia ds-insignia--baja">Activa</span>
+                    : <span className="ds-insignia ds-insignia--critica">Suspendida</span>}{" "}
                   {c.correo !== yo && (
                     <button onClick={() => void hacer(() => cambiarActivo(token, c.correo, !c.activo),
                       `${c.correo} ${c.activo ? "suspendida: pierde el acceso de inmediato" : "reactivada"}.`)}>
@@ -72,7 +74,7 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
                 </td>
               </tr>))}
           </tbody>
-        </table>
+        </table></div>
       </div>
       <NuevaCuenta hacer={hacer} token={token} />
       <div className="ds-tarjeta">
@@ -93,7 +95,7 @@ function NuevaCuenta({ token, hacer }: { token: string; hacer: Hacer }) {
   const [c, setC] = useState<CuentaNueva>(NUEVA);
   const [aviso, setAviso] = useState("");
   return (
-    <form className="ds-tarjeta" onSubmit={async (e) => {
+    <form className="ds-tarjeta ds-form" onSubmit={async (e) => {
       e.preventDefault();
       const problema = problemaContrasena(c.contrasena);
       setAviso(problema ?? "");
@@ -122,7 +124,7 @@ function NuevoRefugio({ token, hacer }: { token: string; hacer: Hacer }) {
   const [capacidad, setCapacidad] = useState(20);
   const [direccion, setDireccion] = useState("");
   return (
-    <form className="ajuste" onSubmit={async (e) => {
+    <form className="ajuste ds-form" onSubmit={async (e) => {
       e.preventDefault();
       if (await hacer(() => crearRefugio(token, nombre.trim(), capacidad, direccion.trim()),
                       `Refugio ${nombre.trim()} registrado.`)) setNombre("");
