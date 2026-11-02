@@ -57,18 +57,18 @@
 .ds-contenedor { max-width: 960px; margin: 0 auto; padding: var(--ds-e4); display: grid; gap: var(--ds-e4); }
 
 /* Botones: el <button> sin clase y <a class="ds-btn"> comparten forma. 44 px de alto para el dedo. */
-.ds-btn, .ds button { display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-e2);
+.ds-btn, :where(.ds) button { display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-e2);
   min-height: 44px; padding: 0 var(--ds-e4); border-radius: var(--ds-radio); border: 1px solid var(--ds-linea-fuerte);
   background: var(--ds-superficie); color: var(--ds-tinta); font: 700 var(--ds-t-sm)/1.2 var(--ds-fuente);
   text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s; }
-.ds-btn:hover, .ds button:hover:not(:disabled) { background: var(--ds-marca-tenue); border-color: var(--ds-marca); }
+.ds-btn:hover:not(:disabled), :where(.ds) button:hover:not(:disabled) { background: var(--ds-marca-tenue); border-color: var(--ds-marca); }
 .ds-btn--pri, .ds button.principal { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
-.ds-btn--pri:hover, .ds button.principal:hover:not(:disabled) { background: var(--ds-marca-fuerte); border-color: var(--ds-marca-fuerte); color: var(--ds-sobre-marca); }
+.ds-btn--pri:hover:not(:disabled), .ds button.principal:hover:not(:disabled) { background: var(--ds-marca-fuerte); border-color: var(--ds-marca-fuerte); color: var(--ds-sobre-marca); }
 .ds-btn--peligro { background: var(--ds-peligro); border-color: var(--ds-peligro); color: var(--ds-sobre-peligro); }
-.ds-btn--peligro:hover { background: var(--ds-peligro); filter: brightness(.92); }
+.ds-btn--peligro:hover:not(:disabled) { background: var(--ds-peligro); filter: brightness(.92); }
 .ds-btn--chico { min-height: 36px; padding: 0 var(--ds-e3); font-size: var(--ds-t-xs); }
 .ds-btn--grande { min-height: 56px; font-size: var(--ds-t-md); border-radius: var(--ds-radio-lg); }
-.ds-btn:disabled, .ds button:disabled { opacity: .55; cursor: default; }
+.ds-btn:disabled, :where(.ds) button:disabled { opacity: .55; cursor: default; }
 
 /* Campos. */
 .ds label { display: block; margin: var(--ds-e3) 0; font-weight: 700; font-size: var(--ds-t-sm); }
@@ -76,6 +76,7 @@
   padding: 10px var(--ds-e3); font: var(--ds-t-md) var(--ds-fuente); color: var(--ds-tinta);
   background: var(--ds-superficie); border: 1px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); }
 .ds input[type="checkbox"], .ds input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--ds-marca); }
+.ds input[type="file"] { padding: 8px var(--ds-e3); font-size: var(--ds-t-sm); }
 .ds textarea { min-height: 96px; resize: vertical; }
 .ds [aria-invalid="true"] { border-color: var(--ds-peligro); }
 .ds fieldset { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio); margin: var(--ds-e3) 0; padding: var(--ds-e3) var(--ds-e4); }

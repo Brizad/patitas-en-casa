@@ -97,7 +97,7 @@
 
   function avisar(texto, esError) {
     mensaje.textContent = texto;
-    mensaje.classList.toggle('err', Boolean(esError));
+    mensaje.classList.toggle('ds-msg--error', Boolean(esError));
     mensaje.hidden = false;
     resultado.hidden = true;
   }

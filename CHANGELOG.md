@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- PWA ciudadana rediseñada (#168) con el sistema de diseño: cabecera de marca, pestañas con subrayado, formulario en tarjetas, botones de 44 px, código de seguimiento grande y línea de tiempo. El service worker (v4) guarda también `/diseno/sistema.css` para abrir sin señal. En el sistema, la regla base de los botones baja su especificidad para que las variantes (`ds-btn--pri`) siempre ganen.
 - Página de inicio rediseñada (#166) con el sistema de diseño: portada de marca con la acción urgente primero, pasos numerados, roles en tarjetas y señales de confianza. axe y Lighthouse siguen en 100.
 - Sistema de diseño único (#164, `app/diseno/sistema.css`, servido en `/diseno/sistema.css`): colores de marca y de prioridad (crítica, alta, media, baja) con modo oscuro, tipografía, escala de espaciado, botones, campos, tarjetas, pestañas, tablas, insignias, estados vacíos y mensajes de error, éxito, aviso e información. Los PR siguientes lo aplican por zona (inicio, PWA y cada pantalla del panel).
 - Sección «Forma de trabajo eficiente» en `CLAUDE.md` (#160): flujo completo sin pedir confirmación, merge automático, pruebas locales acotadas y resumen corto.
