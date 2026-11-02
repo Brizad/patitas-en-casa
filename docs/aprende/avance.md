@@ -410,3 +410,16 @@ de video de la fase 6 sobre la v1.0.0), desplegada en https://patitas-en-casa-pn
    usuarios).
 5. Estudia en este orden: `00-mapa.md`, las seis guías de fase (cada una con sus 5
    preguntas y respuestas), `preguntas-sustentacion.md` y `trazabilidad.md`.
+
+## Rediseño de la interfaz (PR #165 a #182)
+
+1. **Sistema de diseño único** (`app/diseno/sistema.css`, `/diseno/sistema.css`): colores de marca y de prioridad, tipografía, espaciado, botones, campos, tarjetas, tablas, insignias, estados vacíos y mensajes, con modo oscuro.
+2. **Inicio, PWA y panel** usan esa misma hoja; antes eran tres hojas con colores distintos. La PWA la guarda también el service worker (v4) para abrir sin señal.
+3. **Inicio**: portada de marca con «Reportar emergencia» primero, pasos numerados, roles en tarjetas y señales de confianza.
+4. **PWA**: formulario en tarjetas, pestañas con subrayado, botones de 44 px, código de seguimiento grande y línea de tiempo.
+5. **Panel**: barra con el rol de la sesión, pestañas, inicio de sesión con logo e insignias de prioridad (crítica, alta, media, baja) en todas las pantallas.
+6. **Por rol**: rescatista (comunas como botones y enlace a Google Maps), coordinador (formularios en rejilla y estados vacíos), administrador y adoptante (insignias), Alcaldía e indicadores (cifras clave y nombres sencillos).
+7. **Veterinario**: el detalle muestra qué pasó, dónde (con Google Maps), hace cuánto, la sugerencia explicada sin jerga y el análisis de video con su estado y la tira de 3 imágenes. `GET /cola` ahora trae `descripcion`, `ubicacion`, `creado_en` y `video_segundos` (nunca el contacto).
+8. **Calidad**: axe-core y Lighthouse siguen en verde (49 revisiones, 0 fallas, claro y oscuro, celular de 320 px); se corrigió un contraste real de la pestaña activa y una prueba intermitente de RN-14 (la hora coincidía con la latitud).
+9. **Revisión por rol**: en producción las páginas públicas cargan sin errores de consola ni desbordes; los roles con sesión se revisaron en local con las cuentas de demostración (en Render no se escriben contraseñas). Se quitó el 404 de consola de los reportes sin video y los nombres técnicos de modelo.
+10. **Capturas**: «antes» en `docs/manual/antes/` y «después» en `docs/manual/` (mismos nombres que usa `manual-usuario.md`).

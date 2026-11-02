@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ErrorApi, pedir } from "./api";
-import { nombreIndicador, plural, textoError } from "./mensajes";
+import { nombreIndicador, nombreModelo, plural, textoError } from "./mensajes";
 
 // RF-30, RF-31, RF-32 (#102): indicadores, exportar y (administrador) la bitácora.
 type Conteo = Record<string, number>;
@@ -100,7 +100,7 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
           <Barras titulo="Seguimientos de adopción" datos={datos.adopciones.seguimientos} />
           <h3>Acuerdo del veterinario con cada versión del modelo (RF-20)</h3>
           <ul>{Object.entries(datos.reportes.acuerdo_por_version_modelo).map(([v, a]) => (
-            <li key={v}>{v}: {Math.round(a.confirmadas_sin_cambio * 100)} % sin cambio en{" "}
+            <li key={v}>{nombreModelo(v)}: {Math.round(a.confirmadas_sin_cambio * 100)} % sin cambio en{" "}
               {plural(a.decisiones, "decisión", "decisiones")}</li>))}</ul>
           <h3>Recomendación por tipo de hogar (RNF-16)</h3>
           <p className="ds-suave">Qué parte del catálogo se le recomienda, en promedio, a cada grupo.
