@@ -1,71 +1,53 @@
-/* Colores del prototipo de la Semana 3. Sin dependencias externas (CSP: solo 'self'). */
-:root { --verde: #0f4f47; --fondo: #f4f6f5; --texto: #1d2321; --error: #a12a1f; --borde: #d5dcd9; }
-* { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, sans-serif; background: var(--fondo); color: var(--texto); }
-button { font: inherit; cursor: pointer; border: 1px solid var(--borde); background: #fff;
-  border-radius: 8px; padding: 8px 14px; }
-button:disabled { opacity: .6; cursor: default; }
-button.principal { background: var(--verde); color: #fff; border-color: var(--verde); }
-input, select, textarea { font: inherit; padding: 8px; border: 1px solid var(--borde);
-  border-radius: 8px; width: 100%; margin-top: 4px; }
-label { display: block; margin: 10px 0; font-weight: 600; }
-.tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 12px; padding: 18px; }
-.inicio { max-width: 380px; margin: 10vh auto; }
-.error { color: var(--error); font-weight: 600; }
-.barra { display: flex; gap: 16px; align-items: center; padding: 12px 20px; background: var(--verde);
-  color: #fff; }
-.barra span { margin-left: auto; }
-.marca { font-size: 1rem; margin: 0; }  /* h1 de la barra, del tamaño del texto */
-.vacio { padding: 24px; color: #5a6461; }
-.cola { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 16px; padding: 16px; }
+/* Panel del personal. Las piezas (botones, campos, tarjetas, tablas, insignias, mensajes) salen
+   del sistema de diseño (/diseno/sistema.css); aquí solo está la distribución propia del panel. */
+.inicio { width: calc(100% - 32px); max-width: 400px; margin: 8vh auto; text-align: center; }
+.inicio label { text-align: left; }
+.inicio .logo { padding: 10px; border-radius: 50%; background: var(--ds-marca-fuerte); margin-bottom: var(--ds-e2); }
+.inicio .ds-msg { text-align: left; }
+.inicio button.principal { width: 100%; margin-top: var(--ds-e2); }
+.quien { color: #D9ECE8; }
+.rol { text-transform: capitalize; font-weight: 700; color: #fff; }
+.pagina { display: grid; gap: var(--ds-e4); padding: var(--ds-e4); max-width: 960px; margin: 0 auto; }
+.ds-vacio { margin: var(--ds-e3) 0; }
+.ds-tarjeta h2 { margin-bottom: var(--ds-e3); }
+
+/* Cola: lista a la izquierda, detalle a la derecha; en celular una columna. */
+.cola { display: grid; grid-template-columns: minmax(300px, 1fr) 2fr; gap: var(--ds-e4); padding: var(--ds-e4);
+  max-width: 1280px; margin: 0 auto; align-items: start; }
 @media (max-width: 760px) { .cola { grid-template-columns: 1fr; } }
-.cola ul { list-style: none; padding: 0; margin: 0; }
-.fila-titulo { display: flex; justify-content: space-between; align-items: center; }
-.item { width: 100%; display: grid; grid-template-columns: 7em 1fr 3em auto; gap: 8px; text-align: left;
-  margin: 4px 0; align-items: center; }
-.item.activo { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde) inset; }
-.chip { border-radius: 99px; padding: 2px 8px; font-size: .85em; font-weight: 600; background: #eef1f0; }
-.chip.critica { background: #fbe1de; color: #8c1d12; }
-.chip.alta { background: #fdebd3; color: #7a4510; }
-.nota { color: #5a6461; font-style: italic; }
-.acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.ajuste { margin-top: 10px; padding: 12px; border-radius: 10px; background: #f7faf9;
-  border: 1px solid var(--borde); }
-.resultado { margin: 10px 0; padding: 10px 12px; border-radius: 10px; background: #e6f2ee;
-  border: 1px solid #b9d9cf; }
-/* Fase 1 (#67): pestañas por rol y pantallas sencillas. */
-.pestanas { display: flex; gap: 8px; padding: 12px 16px 0; flex-wrap: wrap; }
-.pestanas [aria-current="page"] { background: var(--verde); color: #fff; border-color: var(--verde); }
-.pagina { display: grid; gap: 16px; padding: 16px; max-width: 900px; }
-.en-linea { display: inline-flex; gap: 6px; align-items: center; margin-right: 12px; font-weight: 400; }
+.cola ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--ds-e2); }
+.fila-titulo { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-e3); }
+.fila-titulo h2 { margin: 0; }
+.item { width: 100%; display: grid; grid-template-columns: 6.5em 1fr auto; gap: var(--ds-e2) var(--ds-e3);
+  text-align: left; align-items: center; padding: var(--ds-e3); min-height: 56px; font-weight: 500; }
+.item .ds-insignia { justify-self: start; }
+.item code { font-family: var(--ds-mono); font-weight: 700; }
+.item.activo { border-color: var(--ds-marca); background: var(--ds-marca-tenue); box-shadow: inset 0 0 0 2px var(--ds-marca); }
+.acciones { display: flex; gap: var(--ds-e2); margin-top: var(--ds-e3); flex-wrap: wrap; }
+.ajuste { margin-top: var(--ds-e3); padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio);
+  background: var(--ds-fondo); border: 1px solid var(--ds-linea); }
+.descartar { margin-top: var(--ds-e3); }
+.ds-suave { font-size: var(--ds-t-sm); }
+.lista-simple { list-style: none; padding: 0; margin: 0; }
+.lista-simple li { border-top: 1px solid var(--ds-linea); padding: var(--ds-e3) 0; }
+.lista-simple li:first-child { border-top: 0; }
+.en-linea { display: inline-flex; gap: 6px; align-items: center; margin-right: var(--ds-e3); font-weight: 400; }
 .en-linea input { width: auto; margin: 0; }
-fieldset { border: 1px solid var(--borde); border-radius: 10px; margin-top: 10px; }
-.lista-simple { list-style: none; padding: 0; }
-.lista-simple li { border-top: 1px solid var(--borde); padding: 10px 0; }
-.barra-ocupacion { height: 14px; border-radius: 99px; background: #eef1f0; overflow: hidden; }
-.barra-ocupacion span { display: block; height: 100%; background: var(--verde); }
-.barra-ocupacion.alerta span { background: #c77a12; }
-.barra-ocupacion.lleno span { background: var(--error); }
-.tabla { width: 100%; border-collapse: collapse; }
-.tabla th, .tabla td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--borde);
-  vertical-align: top; }
-.tabla select { min-width: 9em; }
-@media (max-width: 760px) { .tabla { display: block; overflow-x: auto; } }
-/* D-08 (#75): enlace para saltar a la cola, visible solo con el foco del teclado. */
-.saltar { position: absolute; left: -9999px; top: 8px; background: #fff; color: var(--verde);
-  padding: 8px 12px; border-radius: 8px; font-weight: 600; z-index: 10; }
-.saltar:focus { left: 8px; }
-#cola:focus { outline: 3px solid var(--verde); outline-offset: 4px; }
-.descartar { margin-top: 12px; }
-button.enlace { border: 0; background: none; padding: 2px 4px; color: var(--verde);
-  text-decoration: underline; font-weight: 600; min-height: 24px; min-width: 24px; }
-/* Fase 5 (#102): barras de indicadores sin librerías. */
-.barras div { display: grid; grid-template-columns: 11em 1fr; gap: 8px; margin: 4px 0; }
-.barras dt { color: #5a6461; }
+.ds-tabla select { min-width: 9em; }
+@media (max-width: 760px) { .ds-tabla { display: block; overflow-x: auto; } }
+
+/* Barra de ocupación del refugio e indicadores sin librerías. */
+.barra-ocupacion { height: 14px; border-radius: 99px; background: var(--ds-linea); overflow: hidden; }
+.barra-ocupacion span { display: block; height: 100%; background: var(--ds-marca); }
+.barra-ocupacion.alerta span { background: #C77A12; }
+.barra-ocupacion.lleno span { background: var(--ds-peligro); }
+.barras div { display: grid; grid-template-columns: 11em 1fr; gap: var(--ds-e2); margin: var(--ds-e1) 0; }
+.barras dt { color: var(--ds-suave); }
 .barras dd { margin: 0; display: flex; align-items: center; gap: 6px; }
-.barras dd span { display: inline-block; height: 12px; border-radius: 6px;
-  background: var(--verde); min-width: 2px; }
-.foto { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 3;
-  object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
-/* #125: tira de 3 cuadros del video con los puntos del cuerpo. */
-.tira { display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; }
+.barras dd span { display: inline-block; height: 12px; border-radius: 6px; background: var(--ds-marca); min-width: 2px; }
+.foto { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--ds-radio); margin-bottom: var(--ds-e2); }
+.tira { display: block; max-width: 100%; height: auto; border-radius: var(--ds-radio); margin: var(--ds-e2) 0; }
+.ds #cola:focus { outline: 3px solid var(--ds-marca); outline-offset: 4px; }
+button.enlace { border: 0; background: none; padding: 2px 4px; color: var(--ds-marca); text-decoration: underline;
+  min-height: 24px; min-width: 24px; display: inline; }
+button.enlace:hover:not(:disabled) { background: none; }

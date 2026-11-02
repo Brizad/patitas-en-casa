@@ -86,7 +86,7 @@
 .ds-tarjeta { background: var(--ds-superficie); border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg);
   padding: var(--ds-e4); box-shadow: var(--ds-sombra); min-width: 0; }
 .ds-pestanas { display: flex; gap: var(--ds-e2); flex-wrap: wrap; padding: var(--ds-e3) var(--ds-e4) 0; }
-.ds-pestanas [aria-current="page"] { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
+.ds-pestanas [aria-current="page"], .ds-pestanas [aria-current="page"]:hover:not(:disabled) { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
 
 /* Insignias de prioridad y de estado: texto + punto, nunca solo color. */
 .ds-insignia { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px;

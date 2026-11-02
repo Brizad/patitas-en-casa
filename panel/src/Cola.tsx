@@ -49,14 +49,14 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
 
   return (
     <section className="cola">
-      <div className="lista tarjeta">
+      <div className="lista ds-tarjeta">
         <div className="fila-titulo">
           <h2 id="cola" tabIndex={-1} ref={titulo}>Cola de triaje</h2>
           <button onClick={() => void recargar()} disabled={cargando}>Actualizar</button>
         </div>
-        {error && <p className="error" role="alert">{error}</p>}
+        {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
         {aviso && (
-          <div className="resultado" role="status">
+          <div className="ds-msg ds-msg--ok" role="status">
             <p><code>{aviso.codigo}</code>: {aviso.texto}</p>
             {aviso.estado && <p>{aviso.estado}</p>}
             <button onClick={async () => setAviso({ ...aviso,
@@ -64,34 +64,34 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
               Ver estado de los avisos</button>
           </div>)}
         {!cargando && !error && reportes.length === 0 && (
-          <p className="vacio">No hay reportes por confirmar.</p>)}
+          <p className="ds-vacio">No hay reportes por confirmar.</p>)}
         <ul>
           {reportes.map((r) => (
             <li key={r.codigo}>
               <button className={r.codigo === elegido ? "item activo" : "item"}
                 onClick={() => setElegido(r.codigo)} aria-pressed={r.codigo === elegido}>
                 <code>{r.codigo}</code>
-                <span className={`chip ${r.prioridad}`}>{etiquetaEstado(r.estado, r.prioridad)}</span>
+                <span className={`ds-insignia ds-insignia--${r.prioridad}`}>{etiquetaEstado(r.estado, r.prioridad)}</span>
                 <span>{r.confianza === null ? "—" : r.confianza.toFixed(2)}</span>
                 {r.posibles_duplicados.length > 0 && (
-                  <span className="chip">posible duplicado</span>)}
+                  <span className="ds-insignia ds-insignia--info">posible duplicado</span>)}
               </button>
             </li>))}
         </ul>
       </div>
-      <div className="detalle tarjeta">
-        {!detalle ? <p className="vacio">Elige un reporte de la cola.</p> : (
+      <div className="detalle ds-tarjeta">
+        {!detalle ? <p className="ds-vacio">Elige un reporte de la cola.</p> : (
           <>
             <h2 tabIndex={-1} ref={tituloDetalle}>Reporte <code>{detalle.codigo}</code></h2>
             <p>Sugerida: <b>{etiquetaEstado(detalle.estado, detalle.prioridad)}</b>
               {detalle.confianza !== null && <> · confianza {detalle.confianza.toFixed(2)}</>}</p>
             {detalle.version_modelo && (
-              <p className="nota">Sugerida por {detalle.version_modelo} (RF-20).</p>)}
+              <p className="ds-suave">Sugerida por {detalle.version_modelo} (RF-20).</p>)}
             {detalle.posibles_duplicados.length > 0 && (
-              <p className="resultado">Posible duplicado de {detalle.posibles_duplicados.join(", ")}:
+              <p className="ds-msg ds-msg--ok">Posible duplicado de {detalle.posibles_duplicados.join(", ")}:
                 {" "}reportado a menos de 200 m y 2 horas (RF-17).</p>)}
             <h3>Evidencias del triaje</h3>
-            {detalle.evidencias.length === 0 ? <p className="vacio">Sin evidencias.</p> : (
+            {detalle.evidencias.length === 0 ? <p className="ds-vacio">Sin evidencias.</p> : (
               <ol>{detalle.evidencias.map((ev) => <li key={ev}>{ev}</li>)}</ol>)}
             <VideoDelReporte token={token} codigo={detalle.codigo} />
             {cuenta.rol === "veterinario" ? (
@@ -102,7 +102,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
                   alTerminar={(texto) => terminado(detalle.codigo, texto)} />
               </>
             ) : (
-              <p className="nota">Solo un veterinario puede confirmar la prioridad (RN-06).</p>)}
+              <p className="ds-suave">Solo un veterinario puede confirmar la prioridad (RN-06).</p>)}
           </>)}
       </div>
     </section>

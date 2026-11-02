@@ -65,7 +65,7 @@ export default function Confirmar({ token, reporte, alTerminar }: {
                 aria-describedby="error-ajuste" /></label>)}
           <button className="principal" disabled={enviando}>Guardar ajuste</button>
         </form>)}
-      {error && <p className="error" id="error-ajuste" role="alert">{error}</p>}
+      {error && <p className="ds-msg ds-msg--error" id="error-ajuste" role="alert">{error}</p>}
     </div>
   );
 }

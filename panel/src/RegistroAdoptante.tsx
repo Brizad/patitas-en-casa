@@ -27,7 +27,7 @@ export default function RegistroAdoptante({ alTerminar }: { alTerminar: (m: stri
   }
 
   return (
-    <form className="tarjeta inicio" onSubmit={crear}>
+    <form className="ds-tarjeta inicio" onSubmit={crear}>
       <h1>Quiero adoptar</h1>
       <label>Correo<input type="email" required value={correo} autoComplete="email"
         onChange={(e) => setCorreo(e.target.value)} /></label>
@@ -39,7 +39,7 @@ export default function RegistroAdoptante({ alTerminar }: { alTerminar: (m: stri
         onChange={(e) => setAutoriza(e.target.checked)} />
         Autorizo a Patitas en Casa a tratar mis datos solo para gestionar la adopción
         (Ley 1581 de 2012).</label>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
       <button className="principal">Crear cuenta</button>
     </form>
   );

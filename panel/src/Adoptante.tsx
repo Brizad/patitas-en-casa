@@ -40,12 +40,12 @@ export default function Adoptante({ token }: { token: string }) {
   const nombre = (id: number) => animales.find((a) => a.animal_id === id)?.nombre ?? `#${id}`;
   return (
     <section className="pagina">
-      {mensaje && <p className="resultado" role="status">{mensaje}</p>}
+      {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
       <FormularioPerfil inicial={perfil ?? PERFIL_VACIO} nuevo={perfil === null}
         alGuardar={(p) => hacer(() => guardarPerfil(token, p), "Perfil guardado.")} />
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>{perfil ? "Recomendados para tu hogar" : "Animales en adopción"}</h2>
-        {animales.length === 0 && <p className="vacio">No hay animales publicados ahora.</p>}
+        {animales.length === 0 && <p className="ds-vacio">No hay animales publicados ahora.</p>}
         <ul className="lista-simple">
           {animales.map((a) => (
             <li key={a.animal_id}>
@@ -53,7 +53,7 @@ export default function Adoptante({ token }: { token: string }) {
                 loading="lazy" />}
               <b>{a.nombre}</b> · {resumenAnimal(a)}<p>{a.descripcion}</p>
               {"puntaje" in a && (
-                <p className="nota">Compatibilidad {a.puntaje}/100: {a.razones.join("; ")}.
+                <p className="ds-suave">Compatibilidad {a.puntaje}/100: {a.razones.join("; ")}.
                   {a.alertas.length > 0 && <> Para conversar: {a.alertas.join("; ")}.</>}</p>)}
               <button className="principal" onClick={() => void hacer(
                 () => solicitar(token, a.animal_id, ""),
@@ -62,9 +62,9 @@ export default function Adoptante({ token }: { token: string }) {
             </li>))}
         </ul>
       </div>
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>Mis solicitudes</h2>
-        {mias.length === 0 && <p className="vacio">Aún no has hecho solicitudes.</p>}
+        {mias.length === 0 && <p className="ds-vacio">Aún no has hecho solicitudes.</p>}
         <ul className="lista-simple">
           {mias.map((s) => (
             <li key={s.id}>Solicitud {s.id} · {nombre(s.animal_id)} · <b>{s.estado}</b>
@@ -88,7 +88,7 @@ function FormularioPerfil({ inicial, nuevo, alGuardar }: {
     <label className="en-linea"><input type="checkbox" checked={p[campo] as boolean}
       onChange={(e) => setP({ ...p, [campo]: e.target.checked })} /> {texto}</label>);
   return (
-    <form className="tarjeta" onSubmit={(e) => { e.preventDefault(); alGuardar(p); }}>
+    <form className="ds-tarjeta" onSubmit={(e) => { e.preventDefault(); alGuardar(p); }}>
       <h2>Mi perfil {nuevo && <small>(llénalo para poder solicitar)</small>}</h2>
       <label>Vivienda<select value={p.vivienda}
         onChange={(e) => setP({ ...p, vivienda: e.target.value as Perfil["vivienda"] })}>
