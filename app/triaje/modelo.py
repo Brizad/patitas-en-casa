@@ -26,7 +26,21 @@ from app.triaje.normalizacion import normalizar
 
 ARCHIVO = Path(__file__).with_name("modelo_tfidf_v1.json")
 PATRON_PALABRA = re.compile(r"(?u)\b\w\w+\b")  # token_pattern por defecto de scikit-learn
-MIN_EVIDENCIAS = 3
+MAX_EVIDENCIAS = 3
+NEGACIONES = {"no", "sin", "nunca"}
+# Palabras vacías del español (y verbos de relleno): solas no explican una prioridad.
+VACIAS = {
+    "a", "al", "algo", "ante", "aqui", "asi", "aun", "bien", "como", "con", "cuando", "de",
+    "del", "desde", "donde", "e", "el", "ella", "ello", "en", "entre", "era", "es", "esa",
+    "ese", "eso", "esta", "estan", "estar", "este", "esto", "estoy", "fue", "ha", "hace",
+    "hacen", "hay", "hasta", "la", "las", "le", "les", "lo", "los", "mas", "me", "mi",
+    "mismo", "mucho", "muy", "o", "otro", "para", "parece", "pero", "poco", "por", "porque",
+    "puede", "pueden", "que", "quien", "se", "ser", "si", "sido", "sobre", "son", "su",
+    "sus", "tal", "tambien", "tan", "tiene", "tienen", "todo", "tras", "u", "un", "una",
+    "uno", "unos", "unas", "va", "ve", "veo", "ven", "y", "ya", "yo",
+    # lugares y tiempos: dicen dónde o cuándo, no qué le pasa al animal
+    "avenida", "barrio", "calle", "colegio", "dia", "dias", "frente", "parque", "tienda",
+}
 
 
 class ModeloTriaje:
@@ -66,11 +80,36 @@ class ModeloTriaje:
         return Resultado(elegida, round(probs[elegida], 2), self._evidencias(texto, elegida))
 
     def _evidencias(self, texto: str, clase: Prioridad) -> list[str]:
+        """Los términos con significado que más empujaron hacia la clase. Si hay menos de
+        MAX_EVIDENCIAS, se muestran menos: no se rellena con palabras vacías."""
         fila = self._coef[self._clases.index(clase)]
         aportes = sorted(((p * fila[i], i) for i, p in self.vector(texto).items()),
                          reverse=True)
-        return [f"«{self._terminos[i]}» apunta a {clase.value}"
-                for aporte, i in aportes[:MIN_EVIDENCIAS] if aporte > 0]
+        elegidos: list[str] = []
+        for aporte, i in aportes:
+            termino = self._terminos[i]
+            if aporte <= 0 or len(elegidos) == MAX_EVIDENCIAS:
+                break
+            if not es_termino_clinico(termino) or _repetido(termino, elegidos):
+                continue
+            elegidos.append(termino)
+        return [f"«{t}» apunta a {clase.value}" for t in elegidos]
+
+
+def es_termino_clinico(termino: str) -> bool:
+    """Una palabra con contenido, o un par que empieza en negación o contenido y acaba en
+    contenido («no respira» sí; «se mueve», «cojea un», «no» solas, no)."""
+    palabras = termino.split()
+    contenido = [p not in VACIAS and p not in NEGACIONES for p in palabras]
+    if not contenido[-1]:
+        return False
+    return len(palabras) == 1 or palabras[0] in NEGACIONES or contenido[0]
+
+
+def _repetido(termino: str, elegidos: list[str]) -> bool:
+    """«herida» sobra si ya está «herida abierta» (y al revés)."""
+    palabras = set(termino.split())
+    return any(palabras <= set(e.split()) or set(e.split()) <= palabras for e in elegidos)
 
 
 @cache
