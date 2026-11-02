@@ -77,6 +77,16 @@ def test_consulta_de_estado_es_publica_para_el_ciudadano():
     assert c.get(f"/reportes/{codigo}").status_code == 200
 
 
+def test_consulta_de_estado_acepta_minusculas_y_espacios_como_el_seguimiento():
+    c = cliente()
+    codigo = c.post("/reportes", json=REPORTE).json()["codigo"]
+    con_espacio = f"{codigo[:4]} {codigo[4:]}".lower().replace(" ", "%20")
+    for escrito in (codigo.lower(), con_espacio):
+        respuesta = c.get(f"/reportes/{escrito}")
+        assert respuesta.status_code == 200
+        assert respuesta.json()["codigo"] == codigo
+
+
 def test_cp07a_ingreso_actualiza_ocupacion():
     c = cliente()
     respuesta = c.post("/refugio/ingresos", json=INGRESO, headers=sesion(c, "coord@patitas.co"))
