@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ErrorApi } from "./api";
 import {
-  etiquetaEstado, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos, textoError,
+  enlaceMapa, etiquetaEstado, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos,
+  textoError,
 } from "./mensajes";
 
 describe("textoError", () => {
@@ -73,5 +74,18 @@ describe("faltaJustificacion con relleno (D-07)", () => {
     expect(faltaJustificacion("critica", "alta", "..........")).toBe(true);
     expect(faltaJustificacion("critica", "alta", "1234567890")).toBe(true);
     expect(faltaJustificacion("critica", "alta", "Sangra mucho")).toBe(false);
+  });
+});
+
+describe("enlaceMapa (#172)", () => {
+  it("prefiere las coordenadas GPS y si no, la dirección", () => {
+    expect(enlaceMapa({ latitud: 7.89, longitud: -72.5, direccion: "Calle 10" }))
+      .toBe("https://www.google.com/maps/search/?api=1&query=7.89%2C-72.5");
+    expect(enlaceMapa({ latitud: null, longitud: null, direccion: "Calle 10 #5, La Playa" }))
+      .toBe("https://www.google.com/maps/search/?api=1&query=Calle%2010%20%235%2C%20La%20Playa%2C%20C%C3%BAcuta");
+  });
+  it("sin ubicación no hay enlace", () => {
+    expect(enlaceMapa({ latitud: null, longitud: null, direccion: null })).toBeNull();
+    expect(enlaceMapa({ latitud: null, longitud: null, direccion: "  " })).toBeNull();
   });
 });

@@ -22,7 +22,7 @@
 .rotulo { font-weight: 700; letter-spacing: .06em; }
 .err-campo { color: var(--ds-critica); font-size: var(--ds-t-xs); font-weight: 600; }
 .fila { display: flex; align-items: center; gap: var(--ds-e2); flex-wrap: wrap; }
-.ds label:has(> input[type="checkbox"]) { display: flex; gap: var(--ds-e2); align-items: flex-start; font-weight: 400; }
+.ds label:has(> input[type="checkbox"]) { font-weight: 400; }
 .ds label > input[type="checkbox"] { margin-top: 4px; width: 20px; height: 20px; flex: none; }
 .centro { text-align: center; }
 .mute { color: var(--ds-suave); }
