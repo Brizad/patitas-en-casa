@@ -53,6 +53,8 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
         hacer(() => subirFoto(token, id, archivo), "Foto guardada: ya se ve en el catálogo.")} />
       <div className="ds-tarjeta">
         <h2>Solicitudes pendientes ({pendientes.length})</h2>
+        {pendientes.length === 0 && <p className="ds-vacio"><strong>No hay solicitudes pendientes.</strong>
+          Cuando alguien pida adoptar, aparecerá aquí.</p>}
         <ul className="lista-simple">
           {pendientes.map((s) => (
             <Solicitud key={s.id} s={s} hacer={hacer} token={token} />))}
@@ -62,6 +64,7 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
         <h2>Adopciones aprobadas ({aprobadas.length})</h2>
         <p className="ds-suave">Si la familia ya no puede cuidarlo, registra la devolución con el
           motivo: el animal vuelve al refugio y al catálogo (RF-10, RN-13).</p>
+        {aprobadas.length === 0 && <p className="ds-vacio">No hay adopciones aprobadas.</p>}
         <ul className="lista-simple">
           {aprobadas.map((s) => (
             <li key={s.id}><b>{s.animal}</b> · {s.adoptante}
@@ -83,10 +86,11 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
       </div>
       <div className="ds-tarjeta">
         <h2>Seguimientos (30, 90 y 180 días)</h2>
+        {seguimientos.length === 0 && <p className="ds-vacio">No hay seguimientos programados.</p>}
         <ul className="lista-simple">
           {seguimientos.map((x) => (
             <li key={x.id}>{x.animal} · día {x.dia} · {x.programado_para.slice(0, 10)}
-              {x.vencido && <b className="ds-msg ds-msg--error"> · vencido</b>}
+              {x.vencido && <> · <span className="ds-insignia ds-insignia--critica">vencido</span></>}
               {x.realizado_en ? <p>Hecho: {x.nota}</p> : (
                 <NotaSeguimiento alGuardar={(nota) => hacer(
                   () => registrarSeguimiento(token, x.id, nota), "Seguimiento registrado.")} />)}
@@ -164,7 +168,7 @@ function Publicar({ presentes, alPublicar }: {
     <label className="en-linea"><input type="checkbox" checked={p[campo]}
       onChange={(e) => setP({ ...p, [campo]: e.target.checked })} /> {texto}</label>);
   return (
-    <form className="ds-tarjeta" onSubmit={(e) => {
+    <form className="ds-tarjeta ds-form" onSubmit={(e) => {
       e.preventDefault();
       if (id !== "") alPublicar(id, { ...p, descripcion: p.descripcion.trim() });
     }}>
@@ -173,7 +177,7 @@ function Publicar({ presentes, alPublicar }: {
         <option value="">Elige un animal</option>
         {presentes.map((a) => <option key={a.id} value={a.id}>{a.nombre} ({a.especie})</option>)}
       </select></label>
-      <label>Descripción (20 caracteres o más)<textarea rows={2} required minLength={20}
+      <label className="ancho">Descripción (20 caracteres o más)<textarea rows={2} required minLength={20}
         value={p.descripcion} onChange={(e) => setP({ ...p, descripcion: e.target.value })} />
       </label>
       <label>Tamaño<select value={p.tamano}
@@ -201,7 +205,7 @@ function Foto({ presentes, alSubir }: {
   const [id, setId] = useState<number | "">("");
   const [archivo, setArchivo] = useState<File | null>(null);
   return (
-    <form className="ds-tarjeta" onSubmit={(e) => {
+    <form className="ds-tarjeta ds-form" onSubmit={(e) => {
       e.preventDefault();
       if (id !== "" && archivo) alSubir(id, archivo);
     }}>

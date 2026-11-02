@@ -84,6 +84,10 @@
 .ds fieldset { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio); margin: var(--ds-e3) 0; padding: var(--ds-e3) var(--ds-e4); }
 .ds legend { font-weight: 700; padding: 0 var(--ds-e2); }
 
+/* Formulario en rejilla: dos columnas en pantalla ancha; lo largo ocupa toda la fila. */
+.ds-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 var(--ds-e4); align-items: start; }
+.ds-form > :is(h2, h3, .ds-msg, .acciones, .ancho, fieldset) { grid-column: 1 / -1; }
+
 /* Tarjeta y pestañas. */
 .ds-tarjeta { background: var(--ds-superficie); border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg);
   padding: var(--ds-e4); box-shadow: var(--ds-sombra); min-width: 0; }

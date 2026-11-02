@@ -77,7 +77,7 @@ function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () 
   }
 
   return (
-    <form className="ds-tarjeta" onSubmit={guardar}>
+    <form className="ds-tarjeta ds-form" onSubmit={guardar}>
       <h2>Registrar ingreso</h2>
       <label>Nombre<input value={ingreso.nombre} required maxLength={80}
         onChange={(e) => cambiar("nombre", e.target.value)} /></label>
@@ -86,7 +86,7 @@ function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () 
           onChange={(e) => cambiar("especie", e.target.value as Ingreso["especie"])}>
           <option value="perro">Perro</option><option value="gato">Gato</option>
         </select></label>
-      <label>Estado de salud<textarea value={ingreso.estado_salud} required rows={2}
+      <label className="ancho">Estado de salud<textarea value={ingreso.estado_salud} required rows={2}
         onChange={(e) => cambiar("estado_salud", e.target.value)} /></label>
       <label className="en-linea"><input type="checkbox" checked={ingreso.vacunado}
         onChange={(e) => cambiar("vacunado", e.target.checked)} /> Vacunado</label>

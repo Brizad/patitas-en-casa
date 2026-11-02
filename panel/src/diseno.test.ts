@@ -22,3 +22,15 @@ describe("sistema de diseño en el panel", () => {
     }
   });
 });
+
+describe("pantallas del coordinador (#174)", () => {
+  it("cada lista vacía explica qué falta en lugar de quedar en blanco", () => {
+    for (const texto of ["No hay solicitudes pendientes.", "No hay adopciones aprobadas.",
+      "No hay seguimientos programados.", "No hay animales en el refugio."]) {
+      expect(fuentes, texto).toContain(texto);
+    }
+  });
+  it("los formularios largos usan la rejilla del sistema", () => {
+    expect(fuentes).toContain("ds-tarjeta ds-form");
+  });
+});

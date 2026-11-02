@@ -38,11 +38,15 @@ export default function Fichas({ token, rol, version, alCambiarCupo }: {
     <div className="ds-tarjeta">
       <h2>Animales del refugio ({presentes.length})</h2>
       {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+      {presentes.length === 0 && <p className="ds-vacio"><strong>No hay animales en el refugio.</strong>
+        Los ingresos que registre coordinación aparecerán aquí.</p>}
       <ul className="lista-simple">
         {lista.map((a) => (
           <li key={a.id}>
             <button className="enlace" onClick={() => void abrir(a.id)}>{a.nombre}</button>
-            {" "}· {a.especie} · {a.egresado_en ? `egresó (${a.motivo_egreso})` : "en el refugio"}
+            {" "}· {a.especie} · {a.egresado_en
+              ? <span className="ds-insignia ds-insignia--info">egresó ({a.motivo_egreso})</span>
+              : <span className="ds-insignia ds-insignia--baja">en el refugio</span>}
           </li>))}
       </ul>
       {elegido && (
