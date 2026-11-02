@@ -62,3 +62,9 @@ describe("detalle del reporte para el veterinario (#180)", () => {
     expect(fuentes).toContain("detalle.video_segundos !== null");
   });
 });
+
+describe("sin textos técnicos a la vista (#182)", () => {
+  it("el acuerdo por versión del modelo se nombra por lo que hace", () => {
+    expect(fuentes).toContain("nombreModelo(v)");
+  });
+});
