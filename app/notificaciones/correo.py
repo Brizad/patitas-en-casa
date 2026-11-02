@@ -18,6 +18,7 @@ from email.message import EmailMessage
 
 from app.ajustes import AjustesCorreo, ConfiguracionIncompleta
 from app.notificaciones.canal import EntregaFallida
+from app.notificaciones.mailjet import NotificadorMailjet
 
 __all__ = ["EntregaFallida", "NotificadorCorreo", "NotificadorRegistro", "crear_notificador"]
 
@@ -82,7 +83,17 @@ class NotificadorCorreo:
                     destinatario, error, mensaje)
 
 
-def crear_notificador(ajustes: AjustesCorreo) -> NotificadorCorreo | NotificadorRegistro:
+def crear_notificador(
+        ajustes: AjustesCorreo) -> NotificadorMailjet | NotificadorCorreo | NotificadorRegistro:
+    """Mailjet si están sus dos claves; si no, SMTP; si no, el log."""
+    if ajustes.mailjet_api_key and ajustes.mailjet_secret_key:
+        if not ajustes.correo_remitente:
+            raise ConfiguracionIncompleta(
+                "Con las claves de Mailjet hay que definir PATITAS_CORREO_REMITENTE.")
+        return NotificadorMailjet(
+            ajustes.mailjet_api_key.get_secret_value(),
+            ajustes.mailjet_secret_key.get_secret_value(), ajustes.correo_remitente,
+            {"coordinadores": ajustes.coordinadores()}, url=ajustes.mailjet_url)
     if not ajustes.smtp_host:
         log.info("PATITAS_SMTP_HOST no configurado: las alertas irán al log.")
         return NotificadorRegistro()

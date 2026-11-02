@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Avisos por correo con la API HTTPS de Mailjet (P-08): `NotificadorMailjet` se usa si están `PATITAS_MAILJET_API_KEY`, `PATITAS_MAILJET_SECRET_KEY` y `PATITAS_CORREO_REMITENTE` (Render gratis bloquea SMTP); si no, SMTP o el log. El outbox y los reintentos no cambian. Guía en `docs/aprende/correo-mailjet.md`.
+
 ### Corregido
 - Evidencias del triaje de texto con sentido clínico (#186): se filtran palabras vacías del español («se», «bien», «no se»), pares sin contenido y lugares o tiempos; van primero las señales de las reglas y el modelo no las repite. Si no hay 3 evidencias útiles se muestran menos (antes se rellenaba). RNF-09 queda como «las evidencias que haya, siempre útiles» para el texto.
 
