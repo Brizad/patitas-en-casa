@@ -46,21 +46,21 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
   const aprobadas = solicitudes.filter((s) => s.estado === "aprobada");
   return (
     <section className="pagina">
-      {mensaje && <p className="resultado" role="status">{mensaje}</p>}
+      {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
       <Publicar presentes={presentes} alPublicar={(id, p) =>
         hacer(() => publicar(token, id, p), "Animal publicado en el catálogo.")} />
       <Foto presentes={presentes} alSubir={(id, archivo) =>
         hacer(() => subirFoto(token, id, archivo), "Foto guardada: ya se ve en el catálogo.")} />
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>Solicitudes pendientes ({pendientes.length})</h2>
         <ul className="lista-simple">
           {pendientes.map((s) => (
             <Solicitud key={s.id} s={s} hacer={hacer} token={token} />))}
         </ul>
       </div>
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>Adopciones aprobadas ({aprobadas.length})</h2>
-        <p className="nota">Si la familia ya no puede cuidarlo, registra la devolución con el
+        <p className="ds-suave">Si la familia ya no puede cuidarlo, registra la devolución con el
           motivo: el animal vuelve al refugio y al catálogo (RF-10, RN-13).</p>
         <ul className="lista-simple">
           {aprobadas.map((s) => (
@@ -70,23 +70,23 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
                   `Devolución de ${s.animal} registrada: volvió al refugio.`)} /></li>))}
         </ul>
       </div>
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>Jornada de adopción</h2>
-        <p className="nota">Propone quién con qué animal para que la compatibilidad total sea la
+        <p className="ds-suave">Propone quién con qué animal para que la compatibilidad total sea la
           más alta (RF-28). Es una sugerencia: cada solicitud se aprueba aparte.</p>
         <button onClick={() => void hacer(async () => setJornada(await propuestaJornada(token)),
           "Propuesta calculada.")}>Calcular propuesta</button>
-        {jornada && (jornada.length === 0 ? <p className="vacio">Sin parejas posibles.</p> : (
+        {jornada && (jornada.length === 0 ? <p className="ds-vacio">Sin parejas posibles.</p> : (
           <ul className="lista-simple">{jornada.map((p) => (
             <li key={p.adoptante}>{p.adoptante} → <b>{p.animal}</b> · {p.puntaje}/100
               {!p.solicito_este_animal && " · no lo pidió: conversarlo"}</li>))}</ul>))}
       </div>
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>Seguimientos (30, 90 y 180 días)</h2>
         <ul className="lista-simple">
           {seguimientos.map((x) => (
             <li key={x.id}>{x.animal} · día {x.dia} · {x.programado_para.slice(0, 10)}
-              {x.vencido && <b className="error"> · vencido</b>}
+              {x.vencido && <b className="ds-msg ds-msg--error"> · vencido</b>}
               {x.realizado_en ? <p>Hecho: {x.nota}</p> : (
                 <NotaSeguimiento alGuardar={(nota) => hacer(
                   () => registrarSeguimiento(token, x.id, nota), "Seguimiento registrado.")} />)}
@@ -105,12 +105,12 @@ function Solicitud({ s, token, hacer }: { s: SolicitudRefugio; token: string; ha
     <li>
       <b>{s.animal}</b> · {s.adoptante}<br /><small>{resumenPerfil(s.perfil)}</small>
       {s.compatibilidad && (
-        <p className="nota">Compatibilidad {s.compatibilidad.puntaje}/100
+        <p className="ds-suave">Compatibilidad {s.compatibilidad.puntaje}/100
           {[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].length > 0 &&
             `: ${[...s.compatibilidad.restricciones, ...s.compatibilidad.alertas].join("; ")}`}
         </p>)}
       {s.mensaje && <p>«{s.mensaje}»</p>}
-      {s.estado === "visita" && <p className="nota">Visita pedida: {s.razon}</p>}
+      {s.estado === "visita" && <p className="ds-suave">Visita pedida: {s.razon}</p>}
       <div className="acciones">
         <button className="principal" onClick={() => void hacer(() => decidir(token, s.id, true),
           `Adopción de ${s.animal} aprobada: egresó del refugio y se programaron los seguimientos.`)}>
@@ -164,7 +164,7 @@ function Publicar({ presentes, alPublicar }: {
     <label className="en-linea"><input type="checkbox" checked={p[campo]}
       onChange={(e) => setP({ ...p, [campo]: e.target.checked })} /> {texto}</label>);
   return (
-    <form className="tarjeta" onSubmit={(e) => {
+    <form className="ds-tarjeta" onSubmit={(e) => {
       e.preventDefault();
       if (id !== "") alPublicar(id, { ...p, descripcion: p.descripcion.trim() });
     }}>
@@ -201,7 +201,7 @@ function Foto({ presentes, alSubir }: {
   const [id, setId] = useState<number | "">("");
   const [archivo, setArchivo] = useState<File | null>(null);
   return (
-    <form className="tarjeta" onSubmit={(e) => {
+    <form className="ds-tarjeta" onSubmit={(e) => {
       e.preventDefault();
       if (id !== "" && archivo) alSubir(id, archivo);
     }}>

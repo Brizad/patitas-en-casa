@@ -26,12 +26,12 @@ export default function Refugio({ token, rol }: { token: string; rol: string }) 
 
   return (
     <section className="pagina">
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <div className="fila-titulo">
           <h2>Ocupación del refugio</h2>
           <button onClick={() => void recargar()}>Actualizar</button>
         </div>
-        {error && <p className="error" role="alert">{error}</p>}
+        {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
         {datos && (
           <>
             <p><b>{datos.ocupacion}</b> cupos ocupados ({datos.porcentaje} %)</p>
@@ -39,13 +39,13 @@ export default function Refugio({ token, rol }: { token: string; rol: string }) 
               aria-valuemax={100} aria-valuenow={datos.porcentaje} aria-label="Ocupación">
               <span style={{ width: `${Math.min(datos.porcentaje, 100)}%` }} />
             </div>
-            {nivel === "alerta" && <p className="error">Ocupación en nivel de alerta
+            {nivel === "alerta" && <p className="ds-msg ds-msg--error">Ocupación en nivel de alerta
               (90 % o más, RN-04).</p>}
-            {nivel === "lleno" && <p className="error">Sin cupos: los ingresos se rechazan.</p>}
+            {nivel === "lleno" && <p className="ds-msg ds-msg--error">Sin cupos: los ingresos se rechazan.</p>}
           </>)}
       </div>
       {rol === "coordinador" ? <FormularioIngreso token={token} alGuardar={recargar} /> : (
-        <p className="nota">Solo coordinación registra ingresos (pantalla P-06).</p>)}
+        <p className="ds-suave">Solo coordinación registra ingresos (pantalla P-06).</p>)}
       {/* La ocupación cambia con cada ingreso o egreso: la lista se vuelve a pedir. */}
       <Fichas version={datos?.ocupacion} token={token} rol={rol}
         alCambiarCupo={() => void recargar()} />
@@ -77,7 +77,7 @@ function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () 
   }
 
   return (
-    <form className="tarjeta" onSubmit={guardar}>
+    <form className="ds-tarjeta" onSubmit={guardar}>
       <h2>Registrar ingreso</h2>
       <label>Nombre<input value={ingreso.nombre} required maxLength={80}
         onChange={(e) => cambiar("nombre", e.target.value)} /></label>
@@ -92,8 +92,8 @@ function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () 
         onChange={(e) => cambiar("vacunado", e.target.checked)} /> Vacunado</label>
       <label className="en-linea"><input type="checkbox" checked={ingreso.esterilizado}
         onChange={(e) => cambiar("esterilizado", e.target.checked)} /> Esterilizado</label>
-      {error && <p className="error" role="alert">{error}</p>}
-      {mensaje && <p className="resultado" role="status">{mensaje}</p>}
+      {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+      {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
       <div className="acciones"><button className="principal">Registrar ingreso</button></div>
     </form>
   );

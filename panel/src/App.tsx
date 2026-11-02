@@ -24,14 +24,17 @@ export default function App() {
   return (
     <main className="panel">
       {/* D-08: el primer Tab ofrece ir directo a la cola sin recorrer la barra. */}
-      {pantalla === "cola" && <a className="saltar" href="#cola">Saltar a la cola</a>}
-      <header className="barra">
-        <h1 className="marca">Patitas en Casa · Panel</h1>
-        <span>{cuenta.nombre} · {cuenta.rol}</span>
-        <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
+      {pantalla === "cola" && <a className="ds-saltar" href="#cola">Saltar a la cola</a>}
+      <header className="ds-cabecera">
+        <img src="/app/icono.svg" alt="" width="28" height="28" />
+        <h1 className="ds-marca">Patitas en Casa · Panel</h1>
+        <div className="ds-derecha">
+          <span className="quien">{cuenta.nombre} · <span className="rol">{cuenta.rol}</span></span>
+          <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
+        </div>
       </header>
       {pantallas.length > 1 && (
-        <nav className="pestanas" aria-label="Secciones">
+        <nav className="ds-pestanas" aria-label="Secciones">
           {pantallas.map((p) => (
             <button key={p} aria-current={p === pantalla ? "page" : undefined}
               onClick={() => setPantalla(p)}>{NOMBRE_PANTALLA[p]}</button>))}
@@ -43,7 +46,7 @@ export default function App() {
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}
       {pantalla === "indicadores" && <Indicadores token={token} rol={cuenta.rol} />}
       {pantalla === "administracion" && <Administracion token={token} yo={cuenta.correo} />}
-      {pantalla === null && <p className="vacio">Tu rol no tiene pantallas en el panel.</p>}
+      {pantalla === null && <p className="ds-vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>
   );
 }
@@ -80,14 +83,16 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
   }
   return (
     <main>
-      <form className="tarjeta inicio" onSubmit={entrar}>
+      <form className="ds-tarjeta inicio" onSubmit={entrar}>
+        <img src="/app/icono.svg" alt="" width="56" height="56" className="logo" />
         <h1>Patitas en Casa</h1>
-        {aviso && <p className="resultado" role="status">{aviso}</p>}
+        <p className="ds-suave">Panel del personal. Entra con tu cuenta.</p>
+        {aviso && <p className="ds-msg ds-msg--ok" role="status">{aviso}</p>}
         <label>Correo<input type="email" value={correo} required autoComplete="username"
           onChange={(e) => setCorreo(e.target.value)} /></label>
         <label>Contraseña<input type="password" value={clave} required
           autoComplete="current-password" onChange={(e) => setClave(e.target.value)} /></label>
-        {error && <p className="error" role="alert">{error}</p>}
+        {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
         <button className="principal" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
         <p><button type="button" className="enlace" onClick={() => setRegistro(true)}>
           ¿Quieres adoptar? Crea tu cuenta</button></p>

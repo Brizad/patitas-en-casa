@@ -50,10 +50,10 @@ export default function Rescatista({ token }: { token: string }) {
 
   return (
     <section className="pagina">
-      {error && <p className="error" role="alert">{error}</p>}
-      {mensaje && <p className="resultado" role="status">{mensaje}</p>}
+      {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+      {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
       {estado && (
-        <div className="tarjeta">
+        <div className="ds-tarjeta">
           <h2>Mi disponibilidad</h2>
           <label className="en-linea">
             <input type="checkbox" checked={estado.disponible}
@@ -69,17 +69,17 @@ export default function Rescatista({ token }: { token: string }) {
           </fieldset>
         </div>)}
       {actual ? <RescateActual token={token} rescate={actual} hacer={hacer} /> : (
-        <div className="tarjeta">
+        <div className="ds-tarjeta">
           <div className="fila-titulo">
             <h2>Ofertas de rescate</h2>
             <button onClick={() => void recargar()}>Actualizar</button>
           </div>
-          {!estado?.disponible && <p className="nota">Marca «Disponible» para ver ofertas.</p>}
-          {estado?.disponible && lista.length === 0 && <p className="vacio">No hay ofertas ahora.</p>}
+          {!estado?.disponible && <p className="ds-suave">Marca «Disponible» para ver ofertas.</p>}
+          {estado?.disponible && lista.length === 0 && <p className="ds-vacio">No hay ofertas ahora.</p>}
           <ul className="lista-simple">
             {lista.map((o) => (
               <li key={o.codigo}>
-                <span className={`chip ${o.prioridad}`}>{NOMBRE_PRIORIDAD[o.prioridad]}</span>
+                <span className={`ds-insignia ds-insignia--${o.prioridad}`}>{NOMBRE_PRIORIDAD[o.prioridad]}</span>
                 {" "}<code>{o.codigo}</code> · comuna {o.comuna ?? "sin dato"}
                 {o.escalado && <b> · escalado a toda la ciudad</b>}
                 <p>{o.descripcion}</p>
@@ -102,9 +102,9 @@ function RescateActual({ token, rescate, hacer }: {
   // La dirección exacta solo la ve quien aceptó el rescate (el servidor la envía solo aquí).
   const donde = u.direccion ?? (u.latitud !== null ? `GPS ${u.latitud}, ${u.longitud}` : "sin dato");
   return (
-    <div className="tarjeta">
+    <div className="ds-tarjeta">
       <h2>Mi rescate <code>{rescate.codigo}</code></h2>
-      <p><span className={`chip ${rescate.prioridad}`}>{NOMBRE_PRIORIDAD[rescate.prioridad]}</span>
+      <p><span className={`ds-insignia ds-insignia--${rescate.prioridad}`}>{NOMBRE_PRIORIDAD[rescate.prioridad]}</span>
         {" "}{rescate.estado === "en_camino" ? "En camino" : "En el sitio"}</p>
       <p>{rescate.descripcion}</p>
       <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}</p>

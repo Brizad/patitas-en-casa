@@ -35,9 +35,9 @@ export default function Fichas({ token, rol, version, alCambiarCupo }: {
 
   const presentes = lista.filter((a) => !a.egresado_en);
   return (
-    <div className="tarjeta">
+    <div className="ds-tarjeta">
       <h2>Animales del refugio ({presentes.length})</h2>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
       <ul className="lista-simple">
         {lista.map((a) => (
           <li key={a.id}>
@@ -82,7 +82,7 @@ function Ficha({ token, rol, animal, alCambiar }: {
         {" "}· {animal.esterilizado ? "esterilizado" : "sin esterilizar"}</p>
       {mensaje && <p role="status">{mensaje}</p>}
       <h4>Historial clínico</h4>
-      {animal.historial.length === 0 ? <p className="vacio">Sin notas todavía.</p> : (
+      {animal.historial.length === 0 ? <p className="ds-vacio">Sin notas todavía.</p> : (
         <ol>{animal.historial.map((n, i) => (
           <li key={i}><b>{TIPOS_NOTA[n.tipo]}</b> · {new Date(n.registrada_en).toLocaleString()}
             {" "}· {n.autor}<br />{n.texto}</li>))}</ol>)}

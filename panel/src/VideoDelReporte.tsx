@@ -29,9 +29,9 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
     };
   }, [token, codigo]);
 
-  if (error) return <p className="error" role="alert">{error}</p>;
+  if (error) return <p className="ds-msg ds-msg--error" role="alert">{error}</p>;
   if (analisis === undefined) return null;
-  if (analisis === null) return <p className="nota">Este reporte no trae video.</p>;
+  if (analisis === null) return <p className="ds-suave">Este reporte no trae video.</p>;
   return (
     <div>
       <h3>Análisis de video: {ESTADOS_VIDEO[analisis.estado]}</h3>
@@ -40,9 +40,9 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
           {analisis.confianza !== null && <> · confianza {analisis.confianza.toFixed(2)}</>}
           {analisis.version_modelo && <> · {analisis.version_modelo}</>}</p>)}
       {analisis.discrepancia && (
-        <p className="resultado">El texto y el video sugieren prioridades distintas; gana la más
+        <p className="ds-msg ds-msg--ok">El texto y el video sugieren prioridades distintas; gana la más
           {" "}alta (RN-07, RF-19).</p>)}
-      {analisis.motivo && <p className="nota">{analisis.motivo}</p>}
+      {analisis.motivo && <p className="ds-suave">{analisis.motivo}</p>}
       {analisis.evidencias.length > 0 && (
         <ol>{analisis.evidencias.map((ev) => <li key={ev}>{ev}</li>)}</ol>)}
       {tira && <img className="tira" src={tira}

@@ -42,11 +42,11 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
 
   return (
     <section className="pagina">
-      {error && <p className="error" role="alert">{error}</p>}
-      {mensaje && <p className="resultado" role="status">{mensaje}</p>}
-      <div className="tarjeta">
+      {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+      {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
+      <div className="ds-tarjeta">
         <h2>Cuentas del personal</h2>
-        <table className="tabla">
+        <table className="ds-tabla">
           <thead><tr><th>Cuenta</th><th>Rol</th><th>Refugio</th><th>Estado</th></tr></thead>
           <tbody>
             {lista.map((c) => (
@@ -75,7 +75,7 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
         </table>
       </div>
       <NuevaCuenta hacer={hacer} token={token} />
-      <div className="tarjeta">
+      <div className="ds-tarjeta">
         <h2>Refugios</h2>
         <ul className="lista-simple">
           {sedes.map((s) => <li key={s.id}>{s.nombre}{s.direccion && ` (${s.direccion})`}:{" "}
@@ -93,7 +93,7 @@ function NuevaCuenta({ token, hacer }: { token: string; hacer: Hacer }) {
   const [c, setC] = useState<CuentaNueva>(NUEVA);
   const [aviso, setAviso] = useState("");
   return (
-    <form className="tarjeta" onSubmit={async (e) => {
+    <form className="ds-tarjeta" onSubmit={async (e) => {
       e.preventDefault();
       const problema = problemaContrasena(c.contrasena);
       setAviso(problema ?? "");
@@ -111,7 +111,7 @@ function NuevaCuenta({ token, hacer }: { token: string; hacer: Hacer }) {
       <label>Contraseña inicial (12 caracteres o más)<input type="password" required
         autoComplete="new-password" value={c.contrasena}
         onChange={(e) => setC({ ...c, contrasena: e.target.value })} /></label>
-      {aviso && <p className="error" role="alert">{aviso}</p>}
+      {aviso && <p className="ds-msg ds-msg--error" role="alert">{aviso}</p>}
       <button className="principal">Crear cuenta</button>
     </form>
   );

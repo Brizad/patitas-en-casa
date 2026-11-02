@@ -54,7 +54,7 @@ export default function Descartar({ token, reporte, alTerminar }: {
           <label>Justificación (obligatoria)
             <textarea rows={3} value={texto} onChange={(e) => setTexto(e.target.value)}
               aria-describedby="error-descarte" /></label>
-          {error && <p className="error" id="error-descarte" role="alert">{error}</p>}
+          {error && <p className="ds-msg ds-msg--error" id="error-descarte" role="alert">{error}</p>}
           <button className="principal">Descartar</button>
         </form>)}
     </div>

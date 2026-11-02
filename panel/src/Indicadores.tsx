@@ -36,7 +36,7 @@ function Barras({ titulo, datos }: { titulo: string; datos: Conteo }) {
   const maximo = Math.max(1, ...Object.values(datos));
   return (
     <div><h3>{titulo}</h3>
-      {Object.keys(datos).length === 0 ? <p className="vacio">Sin datos.</p> : (
+      {Object.keys(datos).length === 0 ? <p className="ds-vacio">Sin datos.</p> : (
         <dl className="barras">{Object.entries(datos).map(([k, v]) => (
           <div key={k}><dt>{k}</dt><dd><span style={{ width: `${(v / maximo) * 100}%` }} />
             {v}</dd></div>))}</dl>)}
@@ -69,8 +69,8 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
     descargar(token, ruta, nombre).catch((e) => setError(textoError(e)));
   return (
     <section className="pagina">
-      {error && <p className="error" role="alert">{error}</p>}
-      <div className="tarjeta">
+      {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+      <div className="ds-tarjeta">
         <div className="fila-titulo"><h2>Indicadores</h2>
           <div className="acciones">
             <button onClick={() => void bajar("/indicadores/reportes.csv", "reportes.csv")}>
@@ -80,7 +80,7 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
             {rol !== "alcaldia" && (
               <button onClick={() => void bajar("/indicadores/fichas.csv", "fichas.csv")}>
                 Fichas CSV</button>)}</div></div>
-        <p className="nota">Anonimizados: sin nombres, direcciones, correos ni códigos (RF-31).</p>
+        <p className="ds-suave">Anonimizados: sin nombres, direcciones, correos ni códigos (RF-31).</p>
         {datos && (<>
           <p>Reportes: <b>{datos.reportes.total}</b> · minutos hasta confirmar (mediana):{" "}
             <b>{datos.reportes.minutos_hasta_confirmar.mediana ?? "—"}</b> · adopciones
@@ -99,7 +99,7 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
             <li key={v}>{v}: {Math.round(a.confirmadas_sin_cambio * 100)} % sin cambio en{" "}
               {a.decisiones} decisiones</li>))}</ul>
           <h3>Recomendación por tipo de hogar (RNF-16)</h3>
-          <p className="nota">Qué parte del catálogo se le recomienda, en promedio, a cada grupo.
+          <p className="ds-suave">Qué parte del catálogo se le recomienda, en promedio, a cada grupo.
             Una diferencia grande es una señal para revisar los pesos.</p>
           <ul>{Object.entries(datos.adopciones.tasa_recomendacion_por_segmento).map(([s, t]) => (
             <li key={s}>{s}: {Math.round(t.tasa_recomendacion * 100)} % ({t.perfiles} perfiles)
@@ -110,10 +110,10 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
           </ul></>)}
       </div>
       {rol === "administrador" && (
-        <div className="tarjeta">
+        <div className="ds-tarjeta">
           <h2>Bitácora (últimos 50 cambios)</h2>
-          <p className="nota">Inmutable: no se puede editar ni borrar (RF-32).</p>
-          <table className="tabla"><thead><tr><th>Cuándo</th><th>Quién</th><th>Qué</th><th>Antes → después</th></tr>
+          <p className="ds-suave">Inmutable: no se puede editar ni borrar (RF-32).</p>
+          <table className="ds-tabla"><thead><tr><th>Cuándo</th><th>Quién</th><th>Qué</th><th>Antes → después</th></tr>
           </thead><tbody>{eventos.map((e, i) => (
             <tr key={i}><td>{new Date(e.momento).toLocaleString()}</td><td>{e.actor}</td>
               <td><code>{e.accion}</code> {Object.values(e.objeto).join(", ")}</td>
