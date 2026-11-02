@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Respaldo diario (RNF-15, P-07): flujo `respaldo.yml` con `pg_dump` de Neon, cifrado AES-256, prueba de restauración en una base temporal y artefacto de 14 días; sin los secretos `NEON_DATABASE_URL` y `RESPALDO_CLAVE` avisa y no falla. Guía y restauración en `docs/aprende/respaldo.md`.
 - Avisos por correo con la API HTTPS de Mailjet (P-08): `NotificadorMailjet` se usa si están `PATITAS_MAILJET_API_KEY`, `PATITAS_MAILJET_SECRET_KEY` y `PATITAS_CORREO_REMITENTE` (Render gratis bloquea SMTP); si no, SMTP o el log. El outbox y los reintentos no cambian. Guía en `docs/aprende/correo-mailjet.md`.
 
 ### Corregido

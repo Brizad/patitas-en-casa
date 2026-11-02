@@ -1,0 +1,93 @@
+name: Respaldo diario
+
+# RNF-15 (P-07): copia diaria de la base de Neon con pg_dump, cifrada con AES-256 y guardada
+# 14 días como artefacto. En el mismo flujo se restaura en una base temporal para comprobar
+# que la copia sirve. Sin los secretos NEON_DATABASE_URL y RESPALDO_CLAVE avisa y no falla.
+# Guía: docs/aprende/respaldo.md
+
+on:
+  schedule:
+    - cron: "17 7 * * *"   # 02:17 hora de Colombia
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # El cliente de pg_dump debe ser de la misma versión que el servidor de Neon, o mayor.
+  PG_VERSION: "17"
+
+jobs:
+  respaldar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Revisar los secretos
+        id: secretos
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          if [ -z "$NEON_DATABASE_URL" ] || [ -z "$RESPALDO_CLAVE" ]; then
+            echo "hay=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Falta el secreto NEON_DATABASE_URL o RESPALDO_CLAVE: no se hizo el respaldo. Ver docs/aprende/respaldo.md"
+          else
+            echo "hay=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Copia de la base (pg_dump)
+        if: steps.secretos.outputs.hay == 'true'
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          docker run --rm -e NEON_DATABASE_URL "postgres:${PG_VERSION}" \
+            sh -c 'pg_dump --format=custom --no-owner --no-privileges "$NEON_DATABASE_URL"' \
+            > patitas.dump
+          test -s patitas.dump
+          ls -l patitas.dump
+
+      - name: Cifrar (AES-256-CBC, PBKDF2)
+        if: steps.secretos.outputs.hay == 'true'
+        env:
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+            -pass env:RESPALDO_CLAVE -in patitas.dump -out patitas.dump.enc
+          rm patitas.dump
+          sha256sum patitas.dump.enc > patitas.dump.enc.sha256
+
+      - name: Probar la restauración en una base temporal
+        if: steps.secretos.outputs.hay == 'true'
+        env:
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+            -pass env:RESPALDO_CLAVE -in patitas.dump.enc -out prueba.dump
+          docker run -d --name temporal -e POSTGRES_HOST_AUTH_METHOD=trust "postgres:${PG_VERSION}"
+          for i in $(seq 1 30); do
+            docker exec temporal pg_isready -U postgres && break
+            sleep 2
+          done
+          docker exec temporal createdb -U postgres restaurada
+          docker cp prueba.dump temporal:/tmp/prueba.dump
+          docker exec temporal pg_restore -U postgres -d restaurada --no-owner --exit-on-error /tmp/prueba.dump
+          esperadas=$(docker exec temporal pg_restore --list /tmp/prueba.dump | grep -c ' TABLE public ')
+          restauradas=$(docker exec temporal psql -U postgres -d restaurada -Atc \
+            "select count(*) from information_schema.tables where table_schema='public' and table_type='BASE TABLE'")
+          echo "Tablas en la copia: $esperadas · restauradas: $restauradas"
+          test "$esperadas" -gt 0
+          test "$esperadas" = "$restauradas"
+          docker exec temporal psql -U postgres -d restaurada -Atc "select version_num from alembic_version"
+          rm -f prueba.dump
+          docker rm -f temporal
+
+      - name: Guardar el respaldo cifrado 14 días
+        if: steps.secretos.outputs.hay == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_id }}
+          path: |
+            patitas.dump.enc
+            patitas.dump.enc.sha256
+          retention-days: 14
+          if-no-files-found: error
