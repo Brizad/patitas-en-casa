@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Engine, and_, or_, select, update
+from sqlalchemy import Engine, and_, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from app.bd.esquema import analisis_video as tabla
@@ -79,3 +79,8 @@ class RepositorioVideosPostgres:
                 tabla.c.estado.in_(ESPERANDO), tabla.c.creado_en < limite)
                 .order_by(tabla.c.id)).mappings().all()
         return [_a_trabajo(f) for f in filas]
+
+    def contar_esperando(self) -> int:
+        with self._motor.connect() as conexion:
+            return conexion.execute(select(func.count()).select_from(tabla).where(
+                tabla.c.estado.in_(ESPERANDO))).scalar_one()
