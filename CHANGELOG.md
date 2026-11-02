@@ -31,6 +31,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - `GET /reportes/{codigo}` acepta el código en minúsculas o con espacios («f2hw 5rtb»), igual que `/seguimiento`: usa `normalizar_codigo` en vez de solo pasar a mayúsculas (antes daba 404).
 
 ### Cambiado
+- `render.yaml` (#184, P-11): las variables `POSTGRES_HOST`, `_PORT`, `_USER`, `_PASSWORD` y `_DB` ya no vienen de `patitas-bd` (`sync: false`) y se agrega `POSTGRES_SSLMODE` (`sync: false`) para la base en Neon. `patitas-bd` se conserva unos días como respaldo.
 - Datos de demostración: la veterinaria también queda vinculada al refugio de demostración y ve sus fichas (#156).
 - `revisar.mjs` espera a que cada pestaña cargue sus datos antes de medir (antes podía medir la pantalla vacía); el resultado sigue en 0 fallas (#156).
 - Panel: el inicio de sesión y el registro de adoptante van dentro de `<main>`, y la barra con sesión tiene un título de nivel 1 (axe `landmark-one-main`, `region`, `page-has-heading-one`; Lighthouse pasó de 96 a 100) (#147).
