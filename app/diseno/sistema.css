@@ -86,7 +86,8 @@
 
 /* Formulario en rejilla: dos columnas en pantalla ancha; lo largo ocupa toda la fila. */
 .ds-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 var(--ds-e4); align-items: start; }
-.ds-form > :is(h2, h3, .ds-msg, .acciones, .ancho, fieldset) { grid-column: 1 / -1; }
+.ds-form > :is(h2, h3, .ds-msg, .acciones, .ancho, fieldset, button) { grid-column: 1 / -1; }
+.ds-form > button { justify-self: start; }
 
 /* Tarjeta y pestañas. */
 .ds-tarjeta { background: var(--ds-superficie); border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg);

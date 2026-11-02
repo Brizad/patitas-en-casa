@@ -41,3 +41,11 @@ describe("indicadores legibles (#176)", () => {
     expect(fuentes).toContain("nombreIndicador(");
   });
 });
+
+describe("administrador y adoptante (#178)", () => {
+  it("el estado de cuentas y solicitudes se ve como insignia", () => {
+    expect(fuentes).toContain("ds-insignia ds-insignia--baja\">Activa");
+    expect(fuentes).toContain("Compatibilidad");
+    expect(fuentes).toMatch(/ds-insignia[^"]*">\{a\.puntaje\}/);
+  });
+});

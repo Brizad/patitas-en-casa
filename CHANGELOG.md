@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Administración y adopción con el sistema de diseño (#178): rol y estado de las cuentas como insignias (Activa / Suspendida), formularios de cuenta y de refugio en rejilla (el botón queda en su propia fila), tabla de cuentas con desplazamiento en celular, compatibilidad «93/100» y estado de las solicitudes con insignia, y animales recomendados como tarjetas.
 - Indicadores legibles para la Alcaldía, la coordinación y la administración (#176): cifras clave en tarjetas, nombres en español sencillo («Clasificado por la IA», «Crítica», «Trasladado al refugio») en lugar de claves técnicas, prioridades con insignia, plurales correctos («1 perfil») y bitácora dentro de una caja con desplazamiento.
 - Pantallas del coordinador con el sistema de diseño (#174): formularios de ingreso, publicación y foto en rejilla de dos columnas (`ds-form`), un estado vacío con explicación en solicitudes, adopciones aprobadas, seguimientos y animales del refugio, e insignias para «en el refugio», «egresó» y «vencido».
 - Pantalla del rescatista con el sistema de diseño (#172): la zona por comunas son botones grandes que se marcan con ✓, las ofertas son tarjetas con borde de prioridad y «Mi rescate» trae el enlace «Abrir en Google Maps» (`enlaceMapa`: GPS o dirección en Cúcuta). En el sistema, las casillas se alinean con su texto.

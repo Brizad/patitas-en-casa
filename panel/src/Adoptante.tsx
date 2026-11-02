@@ -4,7 +4,7 @@ import {
   descargarCompromiso, guardarPerfil, miPerfil, misSolicitudes, recomendaciones, resumenAnimal,
   solicitar,
 } from "./apiAdopcion";
-import { textoError } from "./mensajes";
+import { nombreIndicador, textoError } from "./mensajes";
 
 /** Pantalla del adoptante: perfil (RF-08), catálogo y solicitudes (RF-27), compromiso (RF-29). */
 export default function Adoptante({ token }: { token: string }) {
@@ -46,14 +46,15 @@ export default function Adoptante({ token }: { token: string }) {
       <div className="ds-tarjeta">
         <h2>{perfil ? "Recomendados para tu hogar" : "Animales en adopción"}</h2>
         {animales.length === 0 && <p className="ds-vacio">No hay animales publicados ahora.</p>}
-        <ul className="lista-simple">
+        <ul className="ofertas">
           {animales.map((a) => (
-            <li key={a.animal_id}>
+            <li key={a.animal_id} className="oferta">
               {a.foto && <img className="foto" src={a.foto} alt={`Foto de ${a.nombre}`}
                 loading="lazy" />}
               <b>{a.nombre}</b> · {resumenAnimal(a)}<p>{a.descripcion}</p>
               {"puntaje" in a && (
-                <p className="ds-suave">Compatibilidad {a.puntaje}/100: {a.razones.join("; ")}.
+                <p className="ds-suave"><span className="ds-insignia ds-insignia--baja">{a.puntaje}/100</span>
+                  {" "}Compatibilidad: {a.razones.join("; ")}.
                   {a.alertas.length > 0 && <> Para conversar: {a.alertas.join("; ")}.</>}</p>)}
               <button className="principal" onClick={() => void hacer(
                 () => solicitar(token, a.animal_id, ""),
@@ -67,7 +68,9 @@ export default function Adoptante({ token }: { token: string }) {
         {mias.length === 0 && <p className="ds-vacio">Aún no has hecho solicitudes.</p>}
         <ul className="lista-simple">
           {mias.map((s) => (
-            <li key={s.id}>Solicitud {s.id} · {nombre(s.animal_id)} · <b>{s.estado}</b>
+            <li key={s.id}>Solicitud {s.id} · {nombre(s.animal_id)} ·{" "}
+              <span className={`ds-insignia ds-insignia--${s.estado === "aprobada" ? "baja" : s.estado === "rechazada" ? "critica" : "info"}`}>
+                {nombreIndicador(s.estado)}</span>
               {s.estado === "aprobada" && (
                 <> {" "}<button onClick={() => void hacer(() => descargarCompromiso(token, s.id),
                   "Compromiso descargado: imprímelo y fírmalo en el refugio.")}>
