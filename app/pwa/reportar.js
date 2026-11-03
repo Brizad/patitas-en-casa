@@ -10,6 +10,9 @@
 
   const PENDIENTES = 'patitas.pendientes';
   const MIN_CARACTERES = 20;  // RN-01
+  const MIN_PALABRAS = 4;  // RN-01: palabras de 2 letras o más
+  const VOCALES_MIN = 0.30;  // y entre 30 % y 70 % de vocales (igual que la API)
+  const VOCALES_MAX = 0.70;
   const REINTENTO_MS = 30000;
   const VIDEO_MAX_SEGUNDOS = 60;  // RN-01
   const VIDEO_MAX_MB = 50;
@@ -161,19 +164,30 @@
       + descripcion.value.trim().length + '/500';
   }
 
+  function conSentido(texto) {
+    const t = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if ((t.match(/\p{L}{2,}/gu) || []).length < MIN_PALABRAS) return false;
+    const letras = t.match(/\p{L}/gu) || [];
+    const proporcion = letras.filter((c) => 'aeiou'.includes(c)).length / letras.length;
+    return proporcion >= VOCALES_MIN && proporcion <= VOCALES_MAX;
+  }
+
   function validar() {
-    const corta = descripcion.value.trim().length < MIN_CARACTERES;
+    const texto = descripcion.value.trim();
+    const corta = texto.length < MIN_CARACTERES;
+    const sinSentido = !corta && !conSentido(texto);
     const sinUbicacion = !gps && !direccion.value.trim();
     errorEn(descripcion, 'error-descripcion', corta
-      ? 'Describe un poco más: mínimo ' + MIN_CARACTERES + ' caracteres (RN-01).' : '');
+      ? 'Describe un poco más: mínimo ' + MIN_CARACTERES + ' caracteres (RN-01).'
+      : sinSentido ? 'Describe con palabras qué le pasa al animal.' : '');
     errorEn(direccion, 'error-ubicacion', sinUbicacion
       ? 'Indica la ubicación o usa el GPS (RN-01).' : '');
-    if (corta) descripcion.focus();
+    if (corta || sinSentido) descripcion.focus();
     else if (sinUbicacion) direccion.focus();
     const sinPermiso = $('contacto').value.trim() !== '' && !$('autoriza-contacto').checked;
     errorEn($('contacto'), 'error-contacto', sinPermiso
       ? 'Marca la autorización o deja el contacto vacío.' : '');
-    return !corta && !sinUbicacion && !sinPermiso;
+    return !corta && !sinSentido && !sinUbicacion && !sinPermiso;
   }
 
   // --- Video opcional (#125) ---------------------------------------------------------

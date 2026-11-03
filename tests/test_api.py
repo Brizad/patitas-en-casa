@@ -198,3 +198,10 @@ def test_la_cola_trae_lo_que_el_veterinario_necesita_para_decidir():
     assert item["creado_en"].endswith("+00:00")  # D-06: fechas en UTC
     assert "contacto" not in str(item).lower()  # el contacto cifrado nunca sale por la cola
     assert item["video_segundos"] is None  # sin video: el panel no pide el análisis (evita un 404)
+
+
+def test_rn01_texto_sin_sentido_es_422_con_mensaje_claro():
+    for texto in ("Jsjsisoslqmwnabsnsnans", "Eksowpwpwowowowlwkksksks"):
+        respuesta = cliente().post("/reportes", json={**REPORTE, "descripcion": texto})
+        assert respuesta.status_code == 422
+        assert "Describe con palabras" in respuesta.json()["detail"]

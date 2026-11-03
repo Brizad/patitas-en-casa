@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- RN-01 (#225): ya no se aceptan descripciones sin sentido como «Jsjsisoslqmwnabsnsnans». La descripción necesita al menos 4 palabras de 2 letras o más y entre 30 % y 70 % de vocales (`app/reportes/descripcion.py`); «perro atropellado no se levanta y sangra» sigue pasando. La API responde 422 y la PWA muestra «Describe con palabras qué le pasa al animal.» (misma regla en `reportar.js`; el service worker sube a `patitas-pwa-v6`). Sin migración.
 - RNF-09 (#223): «El perro se está muriendo, porque le grabaron un titkok» salía crítica con 100 % y «Sin evidencias». Causa: el modelo la subió a crítica solo por palabras vacías («se», «esta», «le»), que el filtro de evidencias (#187) descarta, y las reglas no conocían «muriendo». Ahora «muriendo» y «agoniz» son señales críticas del léxico, y toda sugerencia crítica o alta sin evidencia muestra que el modelo no reconoció un término clínico concreto. Sin migración.
 
 ### Agregado

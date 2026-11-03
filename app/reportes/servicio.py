@@ -6,6 +6,8 @@ import string
 
 from app import config
 from app.dominio.modelos import Reporte, Ubicacion
+from app.reportes.descripcion import MENSAJE as MENSAJE_SIN_SENTIDO
+from app.reportes.descripcion import descripcion_con_sentido
 from app.reportes.repositorio import RepositorioReportes
 from app.triaje.servicio import ServicioTriaje
 
@@ -61,6 +63,8 @@ class ServicioReportes:
     def _validar(descripcion, ubicacion, video_segundos, video_mb) -> None:
         if len(descripcion.strip()) < MIN_CARACTERES_DESCRIPCION:
             raise ReporteInvalido("La descripción debe tener al menos 20 caracteres.")
+        if not descripcion_con_sentido(descripcion):
+            raise ReporteInvalido(MENSAJE_SIN_SENTIDO)
         if not ubicacion.es_valida():
             raise ReporteInvalido("Comparte tu ubicación o escribe una dirección.")
         if video_segundos is not None and video_segundos > config.VIDEO_MAX_SEGUNDOS:
