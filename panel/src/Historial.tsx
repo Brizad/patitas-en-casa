@@ -34,7 +34,7 @@ export default function Historial({ token }: { token: string }) {
         {!cargando && !error && filas.length === 0 && (
           <p className="ds-vacio">Aún no has confirmado ni descartado reportes.</p>)}
         {filas.length > 0 && (
-          <table>
+          <table className="ds-tabla">
             <thead><tr><th>Código</th><th>Fecha</th><th>Acción</th><th>Sugerida</th>
               <th>Final</th><th>Justificación</th><th>Estado actual</th></tr></thead>
             <tbody>
