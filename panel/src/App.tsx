@@ -10,6 +10,7 @@ import { textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
 import RegistroAdoptante from "./RegistroAdoptante";
+import MisRescates from "./MisRescates";
 import Rescatista from "./Rescatista";
 
 export default function App() {
@@ -43,6 +44,7 @@ export default function App() {
       {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
       {pantalla === "historial" && <Historial token={token} />}
       {pantalla === "rescates" && <Rescatista token={token} />}
+      {pantalla === "mis_rescates" && <MisRescates token={token} />}
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
       {pantalla === "adopcion" && <Adoptante token={token} />}
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}

@@ -34,7 +34,7 @@
 .en-linea { display: inline-flex; gap: 6px; align-items: center; margin-right: var(--ds-e3); font-weight: 400; }
 .en-linea input { width: auto; margin: 0; }
 .ds-tabla select { min-width: 9em; }
-@media (max-width: 760px) { .ds-tabla { display: block; overflow-x: auto; } }
+.ds-tabla-caja { overflow-x: auto; }
 
 /* Barra de ocupación del refugio e indicadores sin librerías. */
 .barra-ocupacion { height: 14px; border-radius: 99px; background: var(--ds-linea); overflow: hidden; }

@@ -102,6 +102,14 @@ class RepositorioRescatesPostgres:
         return self._uno(rescates.c.rescatista == rescatista,
                          rescates.c.estado.in_([e.value for e in ACTIVOS]))
 
+    def historial_de(self, rescatista: str) -> list[Rescate]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(
+                select(rescates).where(rescates.c.rescatista == rescatista,
+                                       rescates.c.estado != EstadoRescate.LIBERADO.value)
+                .order_by(rescates.c.aceptado_en.desc())).mappings()
+            return [_a_rescate(f) for f in filas]
+
     def codigos_tomados(self) -> set[str]:
         with self._motor.connect() as conexion:
             return set(conexion.execute(
