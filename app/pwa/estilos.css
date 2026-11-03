@@ -52,3 +52,7 @@
 .tl li:last-child { padding-bottom: 0; }
 .tl li:last-child::after { display: none; }
 .tl .detalle { display: block; }
+
+/* #212: grabadora de video dentro de la página. */
+.vista-video { width: 100%; max-height: 50vh; background: #000; border-radius: 8px; }
+#contador-video { font-variant-numeric: tabular-nums; font-weight: 600; }
