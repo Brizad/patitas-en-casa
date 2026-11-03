@@ -29,8 +29,9 @@ class ClienteApi:
 
     def _pedir(self, metodo: str, ruta: str, **opciones) -> httpx.Response:
         try:
+            encabezados = {**self._encabezados, **opciones.pop("headers", {})}
             respuesta = self._http.request(metodo, self._url + ruta,
-                                           headers=self._encabezados, **opciones)
+                                           headers=encabezados, **opciones)
         except httpx.HTTPError as error:
             raise ApiNoDisponible(f"sin conexión con la API: {type(error).__name__}") from error
         if respuesta.status_code >= 500:
@@ -60,6 +61,11 @@ class ClienteApi:
                         archivo.write(trozo)
         except httpx.HTTPError as error:
             raise ApiNoDisponible(f"descarga interrumpida: {type(error).__name__}") from error
+
+    def subir_vista(self, id_: int, mp4: bytes) -> None:
+        """La vista previa del veterinario (MP4 de ≤ 5 MB), antes de entregar el resultado."""
+        self._pedir("POST", f"/video/trabajos/{id_}/vista", content=mp4,
+                    headers={"Content-Type": "video/mp4"})
 
     def entregar(self, id_: int, resultado: dict) -> dict:
         return self._pedir("POST", f"/video/trabajos/{id_}/resultado", json=resultado).json()

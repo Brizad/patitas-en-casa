@@ -55,6 +55,12 @@ def procesar_uno(cliente: ClienteApi, analizar: Analizador) -> bool:
             return True
     if isinstance(resultado.get("tira"), bytes):
         resultado["tira_png_base64"] = base64.b64encode(resultado.pop("tira")).decode()
+    vista = resultado.pop("vista", None)
+    if isinstance(vista, bytes):
+        try:  # antes del resultado: al entregarlo el trabajo se cierra
+            cliente.subir_vista(id_, vista)
+        except (TrabajoPerdido, ApiNoDisponible) as error:  # es opcional: no frena el resultado
+            logger.warning("vista previa del trabajo %s no subida: %s", id_, error)
     try:
         cliente.entregar(id_, resultado)
     except TrabajoPerdido as error:  # llegó tarde: el reclamo venció y lo tomó otro
@@ -95,6 +101,7 @@ def main() -> None:
         if opciones.video:
             resultado = analizar(opciones.video)
             resultado.pop("tira", None)
+            resultado.pop("vista", None)
             print(resultado)
             return
         logger.info("trabajando contra %s", url)  # nunca se imprime el token
