@@ -107,10 +107,15 @@ class RepositorioPostgres:
         return cambio.rowcount == 1
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
+        return self._decisiones(decisiones_triaje.c.reporte_codigo == codigo)
+
+    def decisiones_de(self, veterinario: str) -> list[DecisionTriaje]:
+        return self._decisiones(decisiones_triaje.c.veterinario == veterinario)
+
+    def _decisiones(self, condicion) -> list[DecisionTriaje]:
         with self._motor.connect() as conexion:
             filas = conexion.execute(
-                select(decisiones_triaje).where(decisiones_triaje.c.reporte_codigo == codigo)
-                .order_by(decisiones_triaje.c.decidido_en)
+                select(decisiones_triaje).where(condicion).order_by(decisiones_triaje.c.decidido_en)
             ).mappings()
             return [DecisionTriaje(
                 codigo=f["reporte_codigo"], veterinario=f["veterinario"],
@@ -119,6 +124,12 @@ class RepositorioPostgres:
                 justificacion=f["justificacion"], decidido_en=f["decidido_en"],
                 version_modelo=f["version_modelo"],
             ) for f in filas]
+
+    def descartes_de(self, veterinario: str) -> list[Descarte]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(descartes).where(descartes.c.veterinario == veterinario)
+                                     .order_by(descartes.c.descartado_en)).mappings()
+            return [_a_descarte(f) for f in filas]
 
     def descartar(self, descarte: Descarte) -> bool:
         """Mismo UPDATE condicional que confirmar: confirmar y descartar a la vez no pueden
@@ -139,11 +150,13 @@ class RepositorioPostgres:
         with self._motor.connect() as conexion:
             f = conexion.execute(select(descartes).where(descartes.c.reporte_codigo == codigo)
                                  ).mappings().first()
-        if f is None:
-            return None
-        return Descarte(codigo=f["reporte_codigo"], veterinario=f["veterinario"],
-                        motivo=MotivoDescarte(f["motivo"]), justificacion=f["justificacion"],
-                        duplicado_de=f["duplicado_de"], descartado_en=f["descartado_en"])
+        return None if f is None else _a_descarte(f)
+
+
+def _a_descarte(f) -> Descarte:
+    return Descarte(codigo=f["reporte_codigo"], veterinario=f["veterinario"],
+                    motivo=MotivoDescarte(f["motivo"]), justificacion=f["justificacion"],
+                    duplicado_de=f["duplicado_de"], descartado_en=f["descartado_en"])
 
 
 def _a_fila(reporte: Reporte) -> dict:
