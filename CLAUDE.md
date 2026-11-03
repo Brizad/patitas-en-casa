@@ -156,9 +156,10 @@ Decisión del autor (#160). Esta sección tiene prioridad sobre la regla 2 de «
 en lo que toca a esperar la revisión del autor antes de integrar.
 
 1. Cada tarea sigue el flujo completo sin pedir confirmación: issue, rama, cambios con su
-   prueba, commit, push, PR y merge automático con `gh pr merge --auto --squash`. No esperar
-   el CI: GitHub une el PR solo cuando quede en verde.
-2. En local, correr solo las pruebas relacionadas con el cambio y `ruff`; la suite completa
+   prueba, commit, push, PR y merge (ver punto 2: primero `gh pr checks` en verde, luego `gh pr merge --squash`).
+2. Nunca unir un PR sin confirmar antes con `gh pr checks` que el CI está en verde; luego unir
+   con `gh pr merge --squash` (el repositorio es privado: no hay `--auto` ni reglas de rama).
+   En local, correr solo las pruebas relacionadas con el cambio y `ruff`; la suite completa
    la corre el CI.
 3. No usar agentes en paralelo ni tareas exploratorias largas.
 4. Si algo falla 2 veces, detenerse y explicarle el problema al autor en 3 líneas.
