@@ -1,11 +1,12 @@
 // Qué pantallas ve cada rol (fase 1, #67). El servidor es quien decide (401/403): esto solo
 // evita mostrar botones que siempre fallarían. Función pura: se prueba sin navegador.
 
-export type Pantalla = "cola" | "rescates" | "refugio" | "administracion" | "adopcion"
+export type Pantalla = "cola" | "historial" | "rescates" | "refugio" | "administracion" | "adopcion"
   | "adopciones" | "indicadores";
 
 export const NOMBRE_PANTALLA: Record<Pantalla, string> = {
   cola: "Cola de triaje",
+  historial: "Historial",
   rescates: "Mis rescates",
   refugio: "Refugio",
   administracion: "Administración",
@@ -15,7 +16,7 @@ export const NOMBRE_PANTALLA: Record<Pantalla, string> = {
 };
 
 const POR_ROL: Record<string, Pantalla[]> = {
-  veterinario: ["cola", "refugio"],
+  veterinario: ["cola", "historial", "refugio"],
   coordinador: ["refugio", "adopciones", "cola", "indicadores"],
   rescatista: ["rescates"],
   administrador: ["administracion", "indicadores"],

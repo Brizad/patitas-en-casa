@@ -11,6 +11,10 @@ describe("pantallasDelRol", () => {
     expect(pantallasDelRol("adoptante")).toEqual(["adopcion"]);
     expect(pantallasDelRol("alcaldia")).toEqual(["indicadores"]);
   });
+  it("el veterinario tiene la pestaña Historial y el coordinador no", () => {
+    expect(pantallasDelRol("veterinario")).toEqual(["cola", "historial", "refugio"]);
+    expect(pantallasDelRol("coordinador")).not.toContain("historial");
+  });
   it("un rol desconocido no ve ninguna pantalla", () => {
     expect(pantallasDelRol("ciudadano")).toEqual([]);
   });

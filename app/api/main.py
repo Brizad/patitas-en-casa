@@ -1155,6 +1155,31 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                  "decidido_en": fecha_utc(d.decidido_en), "version_modelo": d.version_modelo}
                 for d in repositorio.decisiones(codigo.upper())]
 
+    @app.get("/veterinario/historial")
+    def historial_del_veterinario(veterinario: Usuario = veterinaria):
+        """Lo que este veterinario confirmó, ajustó o descartó, del más reciente al más viejo.
+        Sale de la bitácora `decisiones_triaje` y de los descartes (D-02)."""
+        filas = []
+        for d in repositorio.decisiones_de(veterinario.correo):
+            ajustada = d.prioridad_final != d.prioridad_sugerida
+            filas.append((d.decidido_en, {
+                "codigo": d.codigo, "accion": "ajustado" if ajustada else "confirmado",
+                "prioridad_sugerida": d.prioridad_sugerida.value,
+                "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion}))
+        for x in repositorio.descartes_de(veterinario.correo):
+            reporte = repositorio.buscar(x.codigo)
+            sugerida = reporte.prioridad if reporte else None
+            filas.append((x.descartado_en, {
+                "codigo": x.codigo, "accion": "descartado",
+                "prioridad_sugerida": sugerida.value if sugerida else None,
+                "prioridad_final": None, "justificacion": x.justificacion}))
+        resultado = []
+        for fecha, fila in sorted(filas, key=lambda f: f[0], reverse=True):
+            reporte = repositorio.buscar(fila["codigo"])
+            resultado.append({**fila, "fecha": fecha_utc(fecha),
+                              "estado": reporte.estado.value if reporte else None})
+        return resultado
+
     # --- HU-06: rescatistas (RF-05, RF-15, RN-08) --------------------------------------
 
     @app.put("/rescatistas/yo/disponibilidad")

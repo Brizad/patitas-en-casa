@@ -4,6 +4,7 @@ import Administracion from "./Administracion";
 import AdopcionesCoordinador from "./AdopcionesCoordinador";
 import Adoptante from "./Adoptante";
 import Cola from "./Cola";
+import Historial from "./Historial";
 import Indicadores from "./Indicadores";
 import { textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
@@ -40,6 +41,7 @@ export default function App() {
               onClick={() => setPantalla(p)}>{NOMBRE_PANTALLA[p]}</button>))}
         </nav>)}
       {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
+      {pantalla === "historial" && <Historial token={token} />}
       {pantalla === "rescates" && <Rescatista token={token} />}
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
       {pantalla === "adopcion" && <Adoptante token={token} />}

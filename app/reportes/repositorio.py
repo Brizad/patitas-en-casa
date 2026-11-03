@@ -23,6 +23,14 @@ class RepositorioReportes(Protocol):
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]: ...
 
+    def decisiones_de(self, veterinario: str) -> list[DecisionTriaje]:
+        """Confirmaciones y ajustes de un veterinario (historial del panel)."""
+        ...
+
+    def descartes_de(self, veterinario: str) -> list[Descarte]:
+        """Descartes de un veterinario (historial del panel)."""
+        ...
+
     def descartar(self, descarte: Descarte) -> bool:
         """D-02: marca el reporte descartado y guarda el descarte, en una operación. False si
         ya estaba confirmado o descartado."""
@@ -74,6 +82,13 @@ class RepositorioEnMemoria:
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
         return list(self._decisiones.get(codigo, []))
+
+    def decisiones_de(self, veterinario: str) -> list[DecisionTriaje]:
+        return [d for lista in self._decisiones.values() for d in lista
+                if d.veterinario == veterinario]
+
+    def descartes_de(self, veterinario: str) -> list[Descarte]:
+        return [d for d in self._descartes.values() if d.veterinario == veterinario]
 
     def descartar(self, descarte: Descarte) -> bool:
         with self._candado:
