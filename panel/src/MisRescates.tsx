@@ -36,7 +36,7 @@ export default function MisRescates({ token }: { token: string }) {
         {!cargando && !error && filas.length === 0 && (
           <p className="ds-vacio">Aún no has aceptado rescates.</p>)}
         {filas.length > 0 && (
-          <table className="ds-tabla">
+          <div className="ds-tabla-caja"><table className="ds-tabla">
             <thead><tr><th>Código</th><th>Aceptado</th><th>Llegada</th><th>Resultado</th>
               <th>Estado actual</th></tr></thead>
             <tbody>
@@ -49,7 +49,7 @@ export default function MisRescates({ token }: { token: string }) {
                   <td>{NOMBRE_ESTADO_RESCATE[f.estado]}</td>
                 </tr>))}
             </tbody>
-          </table>)}
+          </table></div>)}
       </div>
     </section>
   );
