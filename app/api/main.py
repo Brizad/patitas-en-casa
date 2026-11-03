@@ -1222,6 +1222,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         la dirección exacta se muestra únicamente en el rescate en curso."""
         return [{"codigo": r.codigo, "aceptado_en": fecha_utc(r.aceptado_en),
                  "llego": r.estado in (EstadoRescate.EN_SITIO, EstadoRescate.ATENDIDO),
+                 "llegada_en": fecha_utc(r.llegada_en) if r.llegada_en else None,
                  "resultado": r.resultado.value if r.resultado else None,
                  "estado": r.estado.value, "actualizado_en": fecha_utc(r.actualizado_en)}
                 for r in repositorio_rescates.historial_de(rescatista.correo)]

@@ -65,8 +65,12 @@ def test_historial_muestra_mis_rescates_con_llegada_y_resultado(c):
         "atendido", True, "trasladado")
     assert atendido["aceptado_en"].endswith("+00:00")
     # Nada del reporte: ni descripción ni dirección.
-    assert set(en_camino) == {"codigo", "aceptado_en", "llego", "resultado", "estado",
-                              "actualizado_en"}
+    assert set(en_camino) == {"codigo", "aceptado_en", "llego", "llegada_en", "resultado",
+                              "estado", "actualizado_en"}
+    # La hora de llegada se guarda al pulsar «Llegué» y no cambia después de atender.
+    assert en_camino["llegada_en"] is None
+    assert atendido["llegada_en"].endswith("+00:00")
+    assert atendido["aceptado_en"] <= atendido["llegada_en"] <= atendido["actualizado_en"]
 
 
 def test_historial_no_incluye_rescates_de_otro_ni_liberados(c):
