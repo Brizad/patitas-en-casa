@@ -4,6 +4,12 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Avisos al ciudadano por el outbox (#204): si dejó un correo y autorizó el contacto (RF-18), recibe un aviso cuando un rescatista registra el resultado «trasladado» o «atendido en el sitio» y cuando el animal ingresa al refugio. `POST /refugio/ingresos` acepta `reporte` (opcional) con el código. Los mensajes solo llevan el código (RN-14).
+
+### Cambiado
+- Migración `0029`: la unicidad de `avisos` pasa a (reporte, destinatario, mensaje), para que un mismo destinatario reciba avisos distintos del mismo reporte. Para actualizar: `alembic upgrade head`.
+
 ### Cambiado
 - `render.yaml` (#202): se quita el bloque `databases` de `patitas-bd`, que ya se borró en Render; la base real es la de Neon.
 

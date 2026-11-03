@@ -14,14 +14,14 @@ from app.bd.esquema import avisos as tabla
 def insertar_avisos(conexion: Connection, codigo: str, avisos: Sequence[AvisoNuevo],
                     ahora: datetime) -> int:
     """Usa la conexión de quien llama: así la confirmación y sus avisos quedan en la misma
-    transacción. Los repetidos (mismo reporte y destinatario) se ignoran."""
+    transacción. Los repetidos (mismo reporte, destinatario y mensaje) se ignoran."""
     if not avisos:
         return 0
     filas = [{"reporte_codigo": codigo, "destinatario": a.destinatario, "mensaje": a.mensaje,
               "estado": EstadoAviso.PENDIENTE.value, "creado_en": ahora,
               "proximo_intento_en": ahora} for a in avisos]
     resultado = conexion.execute(insert(tabla).values(filas).on_conflict_do_nothing(
-        constraint="uq_avisos_reporte_destinatario").returning(tabla.c.id))
+        constraint="uq_avisos_reporte_destinatario_mensaje").returning(tabla.c.id))
     return len(resultado.all())
 
 

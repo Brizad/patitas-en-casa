@@ -316,6 +316,7 @@ def _cuenta(usuario: Usuario) -> dict:
 
 
 class IngresoEntrada(BaseModel):
+    reporte: str | None = None  # si viene, el ciudadano que lo reportó recibe un aviso
     nombre: str
     especie: Especie
     estado_salud: str
@@ -566,17 +567,34 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                                 avisos=repositorio_avisos)
     descartes = ServicioDescarte(repositorio)
 
+    def avisos_al_ciudadano(reporte: Reporte, texto: str) -> list[AvisoNuevo]:
+        """RF-18: solo si el ciudadano dejó un correo y autorizó el contacto (el contacto solo
+        se guarda con la autorización). RN-14: el texto lleva el código y nada más; el
+        destinatario va cifrado también en la tabla de avisos."""
+        if not reporte.contacto_cifrado or cifrador is None:
+            return []
+        if "@" not in cifrador.descifrar(reporte.contacto_cifrado):
+            return []  # un teléfono se guarda, pero no hay correo al cual avisar
+        return [AvisoNuevo(PREFIJO_AVISO + reporte.contacto_cifrado,
+                           f"Patitas en Casa: {texto}")]
+
+    def avisar_al_ciudadano(codigo: str, texto: str) -> None:
+        """Guarda el aviso en el outbox; el envío es del procesador. Una falla aquí no deshace
+        el rescate ni el ingreso, que ya ocurrieron: se registra en el log."""
+        try:
+            reporte = repositorio.buscar(codigo)
+            if reporte is not None:
+                repositorio_avisos.agregar(codigo, avisos_al_ciudadano(reporte, texto),
+                                           datetime.now(UTC))
+        except Exception:
+            logger.exception("No se pudo guardar el aviso al ciudadano del reporte %s.", codigo)
+
     def avisos_al_confirmar(reporte: Reporte, prioridad: Prioridad):
         """Rescatistas de la zona (RF-05) y, si dejó un correo, el ciudadano (RF-18). El
         destinatario del ciudadano va cifrado también en la tabla de avisos."""
-        avisos = rescates.avisos_para(reporte, prioridad)
-        if reporte.contacto_cifrado and cifrador is not None:
-            if "@" in cifrador.descifrar(reporte.contacto_cifrado):
-                avisos.append(AvisoNuevo(
-                    PREFIJO_AVISO + reporte.contacto_cifrado,
-                    f"Patitas en Casa: un veterinario revisó tu reporte {reporte.codigo}. "
-                    "Consulta cómo sigue con tu código en la página de seguimiento."))
-        return avisos
+        return rescates.avisos_para(reporte, prioridad) + avisos_al_ciudadano(
+            reporte, f"un veterinario revisó tu reporte {reporte.codigo}. "
+            "Consulta cómo sigue con tu código en la página de seguimiento.")
 
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=avisos_al_confirmar)
     procesador = ProcesadorAvisos(repositorio_avisos, CanalConDescifrado(notificador, cifrador))
@@ -1190,6 +1208,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def resultado_del_rescate(codigo: str, datos: ResultadoEntrada,
                               rescatista: Usuario = rescatista_actual):
         _paso(rescates.registrar_resultado, rescatista, codigo.upper(), datos.resultado)
+        if datos.resultado in (ResultadoRescate.TRASLADADO, ResultadoRescate.ATENDIDO_EN_SITIO):
+            avisar_al_ciudadano(codigo.upper(), (
+                f"un rescatista ya atendió a tu animal del reporte {codigo.upper()}. "
+                "Consulta cómo sigue con tu código en la página de seguimiento."))
         return {"codigo": codigo.upper(), "estado": "atendido",
                 "resultado": datos.resultado.value}
 
@@ -1310,12 +1332,19 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                           coordinador: Usuario = coordinacion):
         cupos = cupos_de(coordinador)
         antes = cupos.texto_ocupacion()
+        codigo = normalizar_codigo(datos.reporte) if datos.reporte else None
+        if codigo and repositorio.buscar(codigo) is None:
+            raise HTTPException(status_code=422, detail="No existe un reporte con ese código.")
         try:
-            cupos.registrar_ingreso(Animal(**datos.model_dump()))
+            cupos.registrar_ingreso(Animal(**datos.model_dump(exclude={"reporte"})))
         except CupoAgotado as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+        if codigo:
+            avisar_al_ciudadano(codigo, (
+                f"el animal de tu reporte {codigo} ya ingresó al refugio. "
+                "Consulta cómo sigue con tu código en la página de seguimiento."))
         _cambio(peticion, {"ocupacion": antes}, {"ocupacion": cupos.texto_ocupacion()})
         return {"ocupacion": cupos.texto_ocupacion()}
 
