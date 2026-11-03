@@ -19,7 +19,8 @@ def _a_trabajo(f) -> TrabajoVideo:
         f["intentos"], f["reclamado_en"], f["terminado_en"],
         Prioridad(f["prioridad"]) if f["prioridad"] else None, f["confianza"],
         list(f["evidencias"]), dict(f["medidas"]), f["version_modelo"], f["motivo"],
-        f["discrepancia"], bytes(f["tira"]) if f["tira"] is not None else None)
+        f["discrepancia"], bytes(f["tira"]) if f["tira"] is not None else None,
+        f["vista_ruta"], f["vista_bytes"], f["vista_en"])
 
 
 class RepositorioVideosPostgres:
@@ -71,13 +72,21 @@ class RepositorioVideosPostgres:
                 prioridad=trabajo.prioridad.value if trabajo.prioridad else None,
                 confianza=trabajo.confianza, evidencias=list(trabajo.evidencias),
                 medidas=dict(trabajo.medidas), version_modelo=trabajo.version_modelo,
-                motivo=trabajo.motivo, discrepancia=trabajo.discrepancia, tira=trabajo.tira))
+                motivo=trabajo.motivo, discrepancia=trabajo.discrepancia, tira=trabajo.tira,
+                vista_ruta=trabajo.vista_ruta, vista_bytes=trabajo.vista_bytes,
+                vista_en=trabajo.vista_en))
 
     def esperando_desde_antes(self, limite: datetime) -> list[TrabajoVideo]:
         with self._motor.connect() as conexion:
             filas = conexion.execute(select(tabla).where(
                 tabla.c.estado.in_(ESPERANDO), tabla.c.creado_en < limite)
                 .order_by(tabla.c.id)).mappings().all()
+        return [_a_trabajo(f) for f in filas]
+
+    def con_vista(self) -> list[TrabajoVideo]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(tabla).where(
+                tabla.c.vista_ruta.is_not(None)).order_by(tabla.c.id)).mappings().all()
         return [_a_trabajo(f) for f in filas]
 
     def contar_esperando(self) -> int:

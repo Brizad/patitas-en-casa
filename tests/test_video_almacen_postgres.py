@@ -75,3 +75,17 @@ def test_purgar_borra_solo_los_huerfanos_viejos(almacen):
     assert almacen.purgar_antes_de(datetime.now(UTC) - timedelta(hours=1)) == 0
     assert almacen.purgar_antes_de(datetime.now(UTC) + timedelta(seconds=1)) == 2
     assert not almacen.existe(vieja) and not almacen.existe(ahora)
+
+
+@pytest.mark.postgres
+def test_las_vistas_van_en_su_tabla_con_tope_de_5_mb_y_no_se_mezclan_con_el_video(bd_limpia):
+    from app.bd.esquema import vistas_trozos
+    vistas = AlmacenEnPostgres(bd_limpia, vistas_trozos, 5 * 1024 * 1024)
+    videos = AlmacenEnPostgres(bd_limpia)
+    ruta, _ = guardar(vistas, MP4)
+    assert vistas.existe(ruta) and not videos.existe(ruta)
+    assert contenido(vistas, ruta) == MP4
+    with pytest.raises(ArchivoInvalido, match="5 MB"):
+        guardar(vistas, MP4 + b"\x00" * (5 * 1024 * 1024))
+    vistas.borrar(ruta)
+    assert not vistas.existe(ruta)

@@ -16,7 +16,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
 from app import config
-from app.dominio.modelos import DECIDIDOS
+from app.dominio.modelos import DECIDIDOS, EstadoReporte
 from app.reportes.repositorio import RepositorioReportes
 from app.triaje.clasificador import Resultado
 from app.triaje.video import aplicar_video
@@ -38,8 +38,12 @@ class AlmacenVideos(Protocol):
 
 class ServicioVideo:
     def __init__(self, videos: RepositorioVideos, reportes: RepositorioReportes,
-                 almacen: AlmacenVideos, reloj: Callable[[], datetime] | None = None) -> None:
+                 almacen: AlmacenVideos, reloj: Callable[[], datetime] | None = None,
+                 almacen_vistas: AlmacenVideos | None = None,
+                 rescate_atendido: Callable[[str], bool] | None = None) -> None:
         self._videos, self._reportes, self._almacen = videos, reportes, almacen
+        self._vistas = almacen_vistas  # None: sin vista previa
+        self._rescate_atendido = rescate_atendido or (lambda _codigo: False)
         self._reloj = reloj or (lambda: datetime.now(UTC))
 
     def autorizar_subida(self, codigo: str, clave: str | None) -> None:
@@ -123,6 +127,48 @@ class ServicioVideo:
         self._cerrar(trabajo, EstadoVideo.TERMINADO, None)
         return trabajo
 
+    def autorizar_vista(self, id_: int) -> None:
+        """Antes de leer el archivo: la vista llega mientras el trabajo se está analizando."""
+        if self._vistas is None:
+            raise VideoRechazado(503, "La vista previa del video no está activada.")
+        self._enviado(id_)
+
+    def registrar_vista(self, id_: int, ruta: str, tamano: int) -> None:
+        """Guarda la vista previa (#214, cambia RNF-08). Una vista nueva reemplaza a la anterior."""
+        try:
+            trabajo = self._enviado(id_)
+        except VideoRechazado:
+            self._vistas.borrar(ruta)
+            raise
+        if trabajo.vista_ruta:
+            self._vistas.borrar(trabajo.vista_ruta)
+        trabajo.vista_ruta, trabajo.vista_bytes = ruta, tamano
+        trabajo.vista_en = self._reloj()
+        self._videos.guardar(trabajo)
+
+    def vista_de(self, codigo: str) -> tuple[str, int] | None:
+        trabajo = self._videos.de_reporte(codigo)
+        if trabajo is None or not trabajo.vista_ruta or self._vistas is None:
+            return None
+        return trabajo.vista_ruta, trabajo.vista_bytes or 0
+
+    def _reporte_cerrado(self, codigo: str) -> bool:
+        reporte = self._reportes.buscar(codigo)
+        descartado = reporte is not None and reporte.estado == EstadoReporte.DESCARTADO
+        return descartado or self._rescate_atendido(codigo)
+
+    def _limpiar_vistas(self) -> None:
+        """La vista se borra a los VISTA_VIDEO_DIAS o cuando el reporte se cierra."""
+        if self._vistas is None:
+            return
+        limite = self._reloj() - timedelta(days=config.VISTA_VIDEO_DIAS)
+        self._vistas.purgar_antes_de(limite)  # huérfanas de subidas cortadas
+        for trabajo in self._videos.con_vista():
+            if trabajo.vista_en < limite or self._reporte_cerrado(trabajo.codigo):
+                self._vistas.borrar(trabajo.vista_ruta)
+                trabajo.vista_ruta = trabajo.vista_bytes = trabajo.vista_en = None
+                self._videos.guardar(trabajo)
+
     def fallar(self, id_: int, motivo: str) -> TrabajoVideo:
         """El trabajador no pudo analizarlo: se reintenta; al agotar los intentos, fallido."""
         trabajo = self._enviado(id_)
@@ -141,7 +187,9 @@ class ServicioVideo:
         limite = self._reloj() - timedelta(hours=config.VIDEO_MAX_ESPERA_HORAS)
         vencidos = self._videos.esperando_desde_antes(limite)
         self._almacen.purgar_antes_de(limite)  # huérfanos de subidas cortadas
+        self._limpiar_vistas()
         for trabajo in vencidos:
             self._cerrar(trabajo, EstadoVideo.FALLIDO, "nadie lo analizó a tiempo; manda el "
                          "texto")
+        self._limpiar_vistas()  # después de cerrar: no pisar con copias viejas
         return len(vencidos)

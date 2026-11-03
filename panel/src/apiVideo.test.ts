@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ESTADOS_VIDEO, analisisVideo } from "./apiVideo";
+import { ESTADOS_VIDEO, analisisVideo, urlVista } from "./apiVideo";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -13,6 +13,15 @@ describe("análisis de video (#125)", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(
       JSON.stringify({ detail: "Este reporte no tiene video." }), { status: 404 })));
     expect(await analisisVideo("t", "ABCD1234")).toBeNull();
+  });
+
+  it("la vista previa se pide con la sesión y se muestra desde un blob local", async () => {
+    const pedido = vi.fn(async () => new Response(new Blob(["mp4"], { type: "video/mp4" })));
+    vi.stubGlobal("fetch", pedido);
+    vi.stubGlobal("URL", { createObjectURL: () => "blob:vista" });
+    expect(await urlVista("t", "ABCD1234")).toBe("blob:vista");
+    expect(pedido).toHaveBeenCalledWith("/reportes/ABCD1234/video/vista.mp4",
+      { headers: { Authorization: "Bearer t" } });
   });
 
   it("otros errores sí se muestran", async () => {

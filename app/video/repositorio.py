@@ -28,6 +28,9 @@ class RepositorioVideos(Protocol):
     def contar_esperando(self) -> int:
         """Cuántos videos esperan análisis (pendientes o enviados)."""
 
+    def con_vista(self) -> list[TrabajoVideo]:
+        """Los trabajos que tienen una vista previa guardada (#214)."""
+
 
 class RepositorioVideosEnMemoria:
     def __init__(self) -> None:
@@ -64,6 +67,9 @@ class RepositorioVideosEnMemoria:
         return [copy.deepcopy(t) for t in self._trabajos.values()
                 if t.estado in (EstadoVideo.PENDIENTE, EstadoVideo.ENVIADO)
                 and t.creado_en < limite]
+
+    def con_vista(self) -> list[TrabajoVideo]:
+        return [copy.deepcopy(t) for t in self._trabajos.values() if t.vista_ruta]
 
     def contar_esperando(self) -> int:
         return sum(t.estado in (EstadoVideo.PENDIENTE, EstadoVideo.ENVIADO)
