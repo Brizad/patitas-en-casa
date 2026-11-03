@@ -14,10 +14,15 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
+from app.dominio.modelos import Prioridad
 from app.triaje.clasificador import ORDEN_GRAVEDAD, VERSION, Resultado, clasificar
 from app.triaje.modelo import ModeloTriaje, cargar_modelo
 
 log = logging.getLogger(__name__)
+
+SIN_TERMINOS_CLINICOS = (
+    "el modelo sugiere {prioridad} sin reconocer un término clínico concreto: revisar el texto"
+)
 
 
 def combinar(reglas: Resultado, modelo: Resultado, version_modelo: str) -> Resultado:
@@ -29,6 +34,11 @@ def combinar(reglas: Resultado, modelo: Resultado, version_modelo: str) -> Resul
     # no repite una señal. Si no hay evidencias útiles se muestran menos, sin rellenar.
     del_modelo = [e for e in modelo.evidencias if not _repite_senal(e, reglas.evidencias)]
     evidencias = list(dict.fromkeys(reglas.evidencias + del_modelo))
+    if not evidencias and prioridad in (Prioridad.CRITICA, Prioridad.ALTA):
+        # RNF-09: una sugerencia crítica o alta nunca va sin evidencia. Si ni las reglas ni
+        # los términos clínicos del modelo la explican, se dice con franqueza (y el veterinario
+        # la revisa) en vez de mostrar «Sin evidencias».
+        evidencias = [SIN_TERMINOS_CLINICOS.format(prioridad=prioridad.value)]
     return Resultado(prioridad, confianza, evidencias)
 
 

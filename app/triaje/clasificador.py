@@ -23,6 +23,8 @@ LEXICO = {
     "inconsciente": Prioridad.CRITICA,
     "hemorragia": Prioridad.CRITICA,
     "envenen": Prioridad.CRITICA,
+    "muriendo": Prioridad.CRITICA,
+    "agoniz": Prioridad.CRITICA,
     "no se para": Prioridad.ALTA,
     "no se puede parar": Prioridad.ALTA,
     "fractura": Prioridad.ALTA,

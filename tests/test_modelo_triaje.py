@@ -90,3 +90,33 @@ def test_la_api_usa_reglas_mas_modelo_y_lo_dice_en_la_version():
     clasificador, version = triaje_por_defecto()
     assert version == "reglas-v0+tfidf-lr-v1"
     assert clasificador("Gato convulsionando en la calle 10").prioridad == Prioridad.CRITICA
+
+
+TEXTO_RNF09 = "El perro se está muriendo, porque le grabaron un titkok"
+
+
+def test_regresion_rnf09_muriendo_es_critica_con_evidencia_de_la_regla():
+    clasificador, _ = triaje_por_defecto()
+    resultado = clasificador(TEXTO_RNF09)
+    assert resultado.prioridad == Prioridad.CRITICA
+    assert any("muriendo" in e for e in resultado.evidencias)
+
+
+@pytest.mark.parametrize("texto", [
+    TEXTO_RNF09,
+    "se esta le un",  # el modelo lo ve crítico solo por palabras vacías
+    "El perro está tirado en la calle y no reacciona",
+])
+def test_toda_sugerencia_critica_o_alta_trae_al_menos_una_evidencia(texto):
+    clasificador, _ = triaje_por_defecto()
+    resultado = clasificador(texto)
+    if resultado.prioridad in (Prioridad.CRITICA, Prioridad.ALTA):
+        assert resultado.evidencias
+
+
+def test_combinar_agrega_evidencia_si_sube_a_critica_sin_ninguna():
+    reglas = Resultado(Prioridad.BAJA, 0.3, [])
+    modelo = Resultado(Prioridad.CRITICA, 1.0, [])
+    resultado = combinar(reglas, modelo, "v")
+    assert resultado.prioridad == Prioridad.CRITICA
+    assert resultado.evidencias

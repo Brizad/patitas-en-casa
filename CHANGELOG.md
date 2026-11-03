@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Corregido
+- RNF-09 (#223): «El perro se está muriendo, porque le grabaron un titkok» salía crítica con 100 % y «Sin evidencias». Causa: el modelo la subió a crítica solo por palabras vacías («se», «esta», «le»), que el filtro de evidencias (#187) descarta, y las reglas no conocían «muriendo». Ahora «muriendo» y «agoniz» son señales críticas del léxico, y toda sugerencia crítica o alta sin evidencia muestra que el modelo no reconoció un término clínico concreto. Sin migración.
+
 ### Agregado
 - Hora de llegada del rescatista (#221): la columna nueva `rescates.llegada_en` (migración `0031`) se llena al pulsar «Llegué al sitio». `GET /rescates/historial` devuelve `llegada_en` (UTC, o `null`) y «Mis rescates» muestra la hora local en vez de «Sí/Aún no»; los rescates anteriores a la migración siguen mostrando «Sí» porque no se inventa una hora. Para actualizar: `alembic upgrade head`.
 - «Mis rescates» del rescatista (#219): `GET /rescates/historial` (solo rescatista) y pestaña en el panel con los rescates que aceptó (código, fecha de aceptación en hora local, si llegó, resultado y estado actual), del más reciente al más viejo; los liberados no aparecen. No muestra descripción ni dirección. La pantalla anterior pasa a llamarse «Ofertas y rescate actual». El servidor no guarda la hora de llegada, solo si llegó. Sin migración.
