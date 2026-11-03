@@ -6,6 +6,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ### Agregado
 - Avisos al ciudadano por el outbox (#204): si dejó un correo y autorizó el contacto (RF-18), recibe un aviso cuando un rescatista registra el resultado «trasladado» o «atendido en el sitio» y cuando el animal ingresa al refugio. `POST /refugio/ingresos` acepta `reporte` (opcional) con el código. Los mensajes solo llevan el código (RN-14).
+- Panel (#206): el formulario «Registrar ingreso» tiene el campo opcional «Código del reporte» y muestra el error si el código no existe (422).
 
 ### Cambiado
 - Migración `0029`: la unicidad de `avisos` pasa a (reporte, destinatario, mensaje), para que un mismo destinatario reciba avisos distintos del mismo reporte. Para actualizar: `alembic upgrade head`.

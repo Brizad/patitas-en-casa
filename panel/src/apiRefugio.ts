@@ -1,5 +1,6 @@
 // Llamadas y textos del refugio (RF-06, RF-07, RN-04). Funciones puras aparte para vitest.
-import { pedir } from "./api";
+import { ErrorApi, pedir } from "./api";
+import { textoError } from "./mensajes";
 
 export interface Ocupacion { ocupacion: string; porcentaje: number }
 export interface Ingreso {
@@ -17,8 +18,26 @@ export function nivelOcupacion(porcentaje: number): "normal" | "alerta" | "lleno
 
 export const ocupacion = (t: string) => pedir<Ocupacion>("/refugio/ocupacion", {}, t);
 
-/** Solo el coordinador (403 para el veterinario); 409 si no hay cupo (RN-04). */
-export const registrarIngreso = (t: string, ingreso: Ingreso) =>
+/** Cuerpo del ingreso: nombre y salud recortados; «reporte» solo si se escribió un código. */
+export function cuerpoIngreso(ingreso: Ingreso, codigo: string): Ingreso & { reporte?: string } {
+  const cuerpo: Ingreso & { reporte?: string } = { ...ingreso, nombre: ingreso.nombre.trim(),
+    estado_salud: ingreso.estado_salud.trim() };
+  if (codigo.trim()) cuerpo.reporte = codigo.trim();
+  return cuerpo;
+}
+
+/** Texto del error al registrar: 409 sin cupos (RN-04); 422 con código = el reporte no existe. */
+export function errorIngreso(e: unknown, hayCodigo: boolean): string {
+  if (e instanceof ErrorApi && e.estado === 409)
+    return "El refugio no tiene cupos: el ingreso no se registró (RN-04).";
+  if (e instanceof ErrorApi && e.estado === 422 && hayCodigo && /reporte/i.test(e.detalle))
+    return "No existe un reporte con ese código. Revisa el código o déjalo vacío.";
+  return textoError(e);
+}
+
+/** Solo el coordinador (403 para el veterinario); 409 si no hay cupo (RN-04); 422 si el
+ *  «reporte» (código opcional, avisa al ciudadano) no existe. */
+export const registrarIngreso = (t: string, ingreso: Ingreso & { reporte?: string }) =>
   pedir<{ ocupacion: string }>("/refugio/ingresos", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(ingreso),

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ErrorApi } from "./api";
-import { Ingreso, Ocupacion, nivelOcupacion, ocupacion, registrarIngreso } from "./apiRefugio";
+import { Ingreso, Ocupacion, cuerpoIngreso, errorIngreso, nivelOcupacion, ocupacion,
+         registrarIngreso } from "./apiRefugio";
 import Fichas from "./Fichas";
 import { textoError } from "./mensajes";
 
@@ -55,6 +55,7 @@ export default function Refugio({ token, rol }: { token: string; rol: string }) 
 
 function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () => void }) {
   const [ingreso, setIngreso] = useState<Ingreso>(VACIO);
+  const [codigo, setCodigo] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
   const cambiar = <K extends keyof Ingreso>(campo: K, valor: Ingreso[K]) =>
@@ -64,15 +65,14 @@ function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () 
     evento.preventDefault();
     setError("");
     try {
-      const r = await registrarIngreso(token, { ...ingreso, nombre: ingreso.nombre.trim(),
-                                                estado_salud: ingreso.estado_salud.trim() });
+      const r = await registrarIngreso(token, cuerpoIngreso(ingreso, codigo));
       setMensaje(`Ingreso de ${ingreso.nombre.trim()} registrado. Ocupación: ${r.ocupacion}.`);
       setIngreso(VACIO);
+      setCodigo("");
       alGuardar();
     } catch (e) {
       setMensaje("");
-      setError(e instanceof ErrorApi && e.estado === 409
-        ? "El refugio no tiene cupos: el ingreso no se registró (RN-04)." : textoError(e));
+      setError(errorIngreso(e, codigo.trim() !== ""));
     }
   }
 
@@ -88,6 +88,9 @@ function FormularioIngreso({ token, alGuardar }: { token: string; alGuardar: () 
         </select></label>
       <label className="ancho">Estado de salud<textarea value={ingreso.estado_salud} required rows={2}
         onChange={(e) => cambiar("estado_salud", e.target.value)} /></label>
+      <label className="ancho">Código del reporte (opcional)
+        <input value={codigo} maxLength={20} autoComplete="off"
+          onChange={(e) => setCodigo(e.target.value)} /></label>
       <label className="en-linea"><input type="checkbox" checked={ingreso.vacunado}
         onChange={(e) => cambiar("vacunado", e.target.checked)} /> Vacunado</label>
       <label className="en-linea"><input type="checkbox" checked={ingreso.esterilizado}
