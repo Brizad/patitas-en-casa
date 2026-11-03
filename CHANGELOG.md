@@ -14,6 +14,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ### Cambiado
 - `render.yaml` (#202): se quita el bloque `databases` de `patitas-bd`, que ya se borró en Render; la base real es la de Neon.
 
+### Corregido
+- Respaldo diario: `pg_dump` 17 fallaba contra Neon (servidor 18.6). `PG_VERSION` pasa a 18 en `respaldo.yml` (también la base temporal de la prueba de restauración) y las guías dicen PostgreSQL 18 para Neon.
+
 ## [1.2.0] - 2026-11-02
 Video temporal en PostgreSQL, base en Neon, avisos por Mailjet y por el outbox, respaldo diario,
 piloto de usabilidad y rediseño del panel, la PWA y la página de inicio. Para actualizar:

@@ -15,7 +15,7 @@ permissions:
 
 env:
   # El cliente de pg_dump debe ser de la misma versión que el servidor de Neon, o mayor.
-  PG_VERSION: "17"
+  PG_VERSION: "18"
 
 jobs:
   respaldar:

@@ -122,7 +122,7 @@ historial), Ruff y pytest con cobertura mínima del 70 %.
 
 ## Base de datos (Incremento 2, DT-01)
 
-- PostgreSQL 17 instalado en Windows (sin Docker), `localhost:5432`, usuario `postgres`.
+- PostgreSQL 17 instalado en Windows (sin Docker), `localhost:5432`, usuario `postgres`. En producción (Neon) la base es PostgreSQL 18, y el respaldo diario usa `pg_dump` 18.
 - Base de la aplicación: `patitas`. Base de las pruebas: `patitas_test` (las pruebas pueden
   borrar datos: nunca apuntarlas a `patitas`).
 - Credenciales en `.env` (copiar de `.env.example`). La contraseña la escribe el autor; el
