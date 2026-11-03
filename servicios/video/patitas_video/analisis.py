@@ -55,9 +55,46 @@ class DibujanteTira(Protocol):
         """PNG pequeño con los cuadros elegidos y sus puntos dibujados."""
 
 
+class EscritorVista(Protocol):
+    """Arma la vista previa del veterinario (MP4 liviano con el esqueleto dibujado)."""
+
+    def escribir(self, imagen: Any, puntos: Cuadro | None) -> None:
+        """Un cuadro; «puntos» es None si no se vio al animal en él."""
+
+    def terminar(self) -> bytes | None:
+        """El MP4 listo, o None si no cupo en el tamaño máximo."""
+
+    def cancelar(self) -> None: ...
+
+
 def _no_concluyente(motivo: str, medidas: dict | None = None) -> dict:
     return {"prioridad": None, "confianza": 0.0, "evidencias": [], "motivo": motivo,
             "medidas": medidas or {}}
+
+
+class _Vista:
+    """Envuelve al escritor: si falla una vez, se suelta y el análisis sigue sin vista."""
+
+    def __init__(self, escritor: EscritorVista | None) -> None:
+        self._escritor = escritor
+
+    def escribir(self, imagen: Any, puntos: Cuadro | None) -> None:
+        if self._escritor is None:
+            return
+        try:
+            self._escritor.escribir(imagen, puntos)
+        except Exception:
+            self._escritor.cancelar()
+            self._escritor = None
+
+    def terminar(self) -> bytes | None:
+        if self._escritor is None:
+            return None
+        try:
+            return self._escritor.terminar()
+        except Exception:
+            self._escritor.cancelar()
+            return None
 
 
 def _tres_muestras(muestras: list[tuple[Any, Cuadro]]) -> list[tuple[Any, Cuadro]]:
@@ -69,8 +106,21 @@ def _tres_muestras(muestras: list[tuple[Any, Cuadro]]) -> list[tuple[Any, Cuadro
 
 def analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
              estimador: EstimadorPuntos, clasificador: ClasificadorMarcha,
-             dibujante: DibujanteTira | None = None) -> dict:
-    """Devuelve el cuerpo que espera POST /video/trabajos/{id}/resultado."""
+             dibujante: DibujanteTira | None = None,
+             escritor_vista: EscritorVista | None = None) -> dict:
+    """Devuelve el cuerpo que espera POST /video/trabajos/{id}/resultado. Si hay vista previa,
+    va en la clave «vista» (bytes); el trabajador la sube aparte."""
+    vista = _Vista(escritor_vista)
+    resultado = _analizar(ruta, lector, detector, estimador, clasificador, dibujante, vista)
+    mp4 = vista.terminar()
+    if mp4 is not None:
+        resultado["vista"] = mp4
+    return resultado
+
+
+def _analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
+              estimador: EstimadorPuntos, clasificador: ClasificadorMarcha,
+              dibujante: DibujanteTira | None, vista: _Vista) -> dict:
     cuadros: list[Cuadro] = []
     muestras: list[tuple[Any, Cuadro]] = []
     especies: dict[str, int] = {}
@@ -82,10 +132,12 @@ def analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
         caja = detector.detectar(imagen)
         if caja is None or caja.especie not in ESPECIES:
             cuadros.append({})
+            vista.escribir(imagen, None)
             continue
         especies[caja.especie] = especies.get(caja.especie, 0) + 1
         puntos = estimador.puntos(imagen, caja)
         cuadros.append(puntos)
+        vista.escribir(imagen, puntos)
         if (sum(especies.values()) - 1) % (2 * FPS) == 0:  # uno cada 2 s: poca memoria
             muestras.append((imagen, puntos))
     con_animal = sum(especies.values())

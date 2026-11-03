@@ -17,7 +17,7 @@ fi
 
 paso "1/5 Programas del sistema (te pedirá la contraseña de Ubuntu)"
 sudo apt-get update -y
-sudo apt-get install -y python3-venv python3-pip git libegl1 libgles2
+sudo apt-get install -y python3-venv python3-pip git libegl1 libgles2 ffmpeg
 
 paso "2/5 Código de Patitas en Casa en $CARPETA"
 if [ -d "$CARPETA/.git" ]; then

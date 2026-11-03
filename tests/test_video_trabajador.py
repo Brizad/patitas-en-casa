@@ -13,9 +13,10 @@ VIDEO = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 100
 class ApiFalsa:
     """Imita las rutas del trabajador en Render y anota lo que recibe."""
 
-    def __init__(self, trabajos=1, caida=False, lenta=False):
+    def __init__(self, trabajos=1, caida=False, lenta=False, sin_vista=False):
         self.trabajos, self.caida, self.lenta = trabajos, caida, lenta
-        self.entregados, self.fallos = [], []
+        self.sin_vista = sin_vista  # una API anterior que no conoce la ruta de la vista
+        self.entregados, self.fallos, self.vistas = [], [], []
 
     def __call__(self, peticion: httpx.Request) -> httpx.Response:
         if self.lenta:
@@ -32,6 +33,11 @@ class ApiFalsa:
             return httpx.Response(200, json={"id": 7, "codigo": "ABCD1234", "bytes": 116})
         if ruta.endswith("/archivo"):
             return httpx.Response(200, content=VIDEO)
+        if ruta.endswith("/vista"):
+            if self.sin_vista:
+                return httpx.Response(404, json={"detail": "no existe"})
+            self.vistas.append((peticion.headers.get("content-type"), peticion.content))
+            return httpx.Response(200, json={"bytes": len(peticion.content)})
         cuerpo = httpx.Response(200, content=peticion.content).json()
         (self.entregados if ruta.endswith("/resultado") else self.fallos).append(cuerpo)
         return httpx.Response(200, json={"estado": "terminado"})
@@ -90,3 +96,20 @@ def test_api_caida_o_lenta_espera_cada_vez_mas(api):
         trabajar(cliente(api), lambda _r: {}, dormir=dormir)
     assert esperas == [ESPERA_SIN_TRABAJO_S * 2, ESPERA_SIN_TRABAJO_S * 4,
                        ESPERA_SIN_TRABAJO_S * 8]
+
+
+RESULTADO_CON_VISTA = {"prioridad": "alta", "confianza": 0.8, "evidencias": ["a", "b", "c"],
+                       "vista": b"0000ftyp-mp4-falso"}
+
+
+def test_la_vista_previa_se_sube_y_no_viaja_en_el_json_del_resultado():
+    api = ApiFalsa()
+    procesar_uno(cliente(api), lambda _r: dict(RESULTADO_CON_VISTA))
+    assert api.vistas == [("video/mp4", b"0000ftyp-mp4-falso")]
+    assert "vista" not in api.entregados[0]
+
+
+def test_si_la_api_no_acepta_la_vista_el_resultado_se_entrega_igual():
+    api = ApiFalsa(sin_vista=True)
+    procesar_uno(cliente(api), lambda _r: dict(RESULTADO_CON_VISTA))
+    assert len(api.entregados) == 1

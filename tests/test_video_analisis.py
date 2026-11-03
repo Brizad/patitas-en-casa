@@ -62,3 +62,45 @@ def test_puntos_poco_confiables_no_son_concluyentes(clasificador):
     r = analizar("v", Lector(borrosos), Detector(), Estimador(), clasificador)
     assert r["prioridad"] is None
     assert "cuerpo completo" in r["motivo"]
+
+
+class EscritorFalso:
+    def __init__(self, falla_en=None):
+        self.cuadros, self.falla_en, self.cancelado = [], falla_en, False
+
+    def escribir(self, _imagen, puntos):
+        if self.falla_en is not None and len(self.cuadros) == self.falla_en:
+            raise OSError("ffmpeg murió")
+        self.cuadros.append(puntos)
+
+    def terminar(self):
+        return b"\x00\x00\x00\x18ftypmp42"
+
+    def cancelar(self):
+        self.cancelado = True
+
+
+def test_la_vista_previa_recibe_todos_los_cuadros_y_viaja_en_el_resultado(clasificador):
+    cuadros = [None] * 4 + caminar(levantada="back_left_paw")
+    escritor = EscritorFalso()
+    r = analizar("v", Lector(cuadros), Detector(), Estimador(), clasificador,
+                 escritor_vista=escritor)
+    assert len(escritor.cuadros) == len(cuadros)  # también los cuadros sin animal
+    assert escritor.cuadros[:4] == [None] * 4  # sin animal: se escribe sin esqueleto
+    assert r["vista"].startswith(b"\x00\x00\x00\x18ftyp")
+
+
+def test_la_vista_tambien_se_entrega_si_el_resultado_no_es_concluyente(clasificador):
+    r = analizar("v", Lector([None] * 50), Detector(), Estimador(), clasificador,
+                 escritor_vista=EscritorFalso())
+    assert r["prioridad"] is None
+    assert "vista" in r
+
+
+def test_si_la_vista_falla_el_analisis_sigue_sin_ella(clasificador):
+    escritor = EscritorFalso(falla_en=3)
+    r = analizar("v", Lector(caminar(levantada="back_left_paw")), Detector(), Estimador(),
+                 clasificador, escritor_vista=escritor)
+    assert r["prioridad"] in ("alta", "critica")  # la vista es opcional: no rompe el triaje
+    assert "vista" not in r
+    assert escritor.cancelado
