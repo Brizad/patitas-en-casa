@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-lint-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       # Base de pruebas temporal (DT-01): se crea y se borra en cada ejecución.
       postgres:
@@ -28,7 +28,7 @@ jobs:
           --health-retries 10
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # historial completo: gitleaks revisa todos los commits
 
@@ -60,7 +60,7 @@ jobs:
           GITLEAKS_IMAGEN: ghcr.io/gitleaks/gitleaks:v8.30.1
 
       - name: Preparar Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -81,7 +81,7 @@ jobs:
 
       # Panel del personal en React (#64): tipos, pruebas y compilación.
       - name: Preparar Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: npm
@@ -110,7 +110,7 @@ jobs:
 
       - name: Guardar el informe de accesibilidad
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: informe-accesibilidad
           path: scripts/accesibilidad/informe.json
