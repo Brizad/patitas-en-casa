@@ -19,7 +19,7 @@ env:
 
 jobs:
   respaldar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Revisar los secretos
@@ -83,7 +83,7 @@ jobs:
 
       - name: Guardar el respaldo cifrado 14 días
         if: steps.secretos.outputs.hay == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: respaldo-${{ github.run_id }}
           path: |
