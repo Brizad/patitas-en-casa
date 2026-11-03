@@ -373,8 +373,10 @@ avisos = Table(
     Column("enviado_en", DateTime(timezone=True)),
     CheckConstraint(f"estado IN ({_valores(EstadoAviso)})", name="ck_avisos_estado"),
     CheckConstraint("intentos >= 0", name="ck_avisos_intentos"),
-    # Un aviso por rescatista y reporte: repetir la confirmación no duplica avisos.
-    UniqueConstraint("reporte_codigo", "destinatario", name="uq_avisos_reporte_destinatario"),
+    # Repetir el mismo aviso (mismo destinatario y mensaje) no lo duplica; un mismo destinatario
+    # puede recibir avisos distintos del mismo reporte (revisado, rescatado, ingreso).
+    UniqueConstraint("reporte_codigo", "destinatario", "mensaje",
+                     name="uq_avisos_reporte_destinatario_mensaje"),
     Index("ix_avisos_estado_proximo_intento", "estado", "proximo_intento_en"),
 )
 

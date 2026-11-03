@@ -13,7 +13,8 @@ from app.avisos.modelos import Aviso, AvisoNuevo, EstadoAviso
 
 class RepositorioAvisos(Protocol):
     def agregar(self, codigo: str, avisos: Sequence[AvisoNuevo], ahora: datetime) -> int:
-        """Guarda los avisos pendientes de un reporte; ignora los repetidos. Devuelve cuántos
+        """Guarda los avisos pendientes de un reporte; ignora los repetidos (mismo destinatario y
+        mismo mensaje). Devuelve cuántos
         quedaron guardados."""
         ...
 
@@ -45,13 +46,14 @@ class RepositorioAvisosEnMemoria:
 
     def agregar(self, codigo: str, avisos: Sequence[AvisoNuevo], ahora: datetime) -> int:
         with self._candado:
-            existentes = {a.destinatario for a in self._datos.values()
+            existentes = {(a.destinatario, a.mensaje) for a in self._datos.values()
                           if a.reporte_codigo == codigo}
             nuevos = 0
             for aviso in avisos:
-                if aviso.destinatario in existentes:
+                clave = (aviso.destinatario, aviso.mensaje)
+                if clave in existentes:
                     continue
-                existentes.add(aviso.destinatario)
+                existentes.add(clave)
                 nuevo_id = len(self._datos) + 1
                 self._datos[nuevo_id] = Aviso(nuevo_id, codigo, aviso.destinatario, aviso.mensaje,
                                               EstadoAviso.PENDIENTE, 0, ahora, ahora)
