@@ -1216,6 +1216,16 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         actual = rescates.mio(rescatista)
         return None if actual is None else _rescate(*actual)
 
+    @app.get("/rescates/historial")
+    def historial_de_rescates(rescatista: Usuario = rescatista_actual):
+        """Mis rescates: los que aceptó, del más reciente al más viejo. Solo fechas y estados:
+        la dirección exacta se muestra únicamente en el rescate en curso."""
+        return [{"codigo": r.codigo, "aceptado_en": fecha_utc(r.aceptado_en),
+                 "llego": r.estado in (EstadoRescate.EN_SITIO, EstadoRescate.ATENDIDO),
+                 "resultado": r.resultado.value if r.resultado else None,
+                 "estado": r.estado.value, "actualizado_en": fecha_utc(r.actualizado_en)}
+                for r in repositorio_rescates.historial_de(rescatista.correo)]
+
     def _paso(accion, *args):
         try:
             return accion(*args)

@@ -48,6 +48,11 @@ class RepositorioRescates(Protocol):
         ...
 
     def activo_de(self, rescatista: str) -> Rescate | None: ...
+
+    def historial_de(self, rescatista: str) -> list[Rescate]:
+        """Rescates que aceptó, del más reciente al más viejo; los liberados no cuentan."""
+        ...
+
     def codigos_tomados(self) -> set[str]: ...
 
     def avanzar(self, codigo: str, rescatista: str, desde: EstadoRescate,
@@ -113,6 +118,10 @@ class RepositorioRescatesEnMemoria:
     def activo_de(self, rescatista: str) -> Rescate | None:
         rescate = self._activo(rescatista)
         return replace(rescate) if rescate else None
+
+    def historial_de(self, rescatista: str) -> list[Rescate]:
+        propios = [replace(r) for r in self._vigentes.values() if r.rescatista == rescatista]
+        return sorted(propios, key=lambda r: r.aceptado_en, reverse=True)
 
     def codigos_tomados(self) -> set[str]:
         return set(self._vigentes)

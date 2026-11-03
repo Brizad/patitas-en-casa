@@ -132,3 +132,17 @@ def test_rn08_un_rescatista_aceptando_dos_rescates_a_la_vez(repositorio):
     resultados = _a_la_vez(lambda: repositorio.aceptar("AAAA0001", ANA, MOMENTO),
                            lambda: repositorio.aceptar("BBBB0002", ANA, MOMENTO))
     assert resultados == ["RescatistaOcupado", "ok"]
+
+
+def test_historial_del_rescatista_del_mas_reciente_al_mas_viejo_sin_liberados(repositorio):
+    repositorio.aceptar("AAAA0001", ANA, MOMENTO)
+    repositorio.avanzar("AAAA0001", ANA, EstadoRescate.EN_CAMINO, EstadoRescate.EN_SITIO, MOMENTO)
+    repositorio.avanzar("AAAA0001", ANA, EstadoRescate.EN_SITIO, EstadoRescate.ATENDIDO, MOMENTO,
+                        ResultadoRescate.TRASLADADO)
+    repositorio.aceptar("BBBB0002", ANA, MOMENTO.replace(hour=11))
+    assert [r.codigo for r in repositorio.historial_de(ANA)] == ["BBBB0002", "AAAA0001"]
+    assert repositorio.historial_de(ANA)[1].resultado == ResultadoRescate.TRASLADADO
+    assert repositorio.historial_de(LUIS) == []
+    # Liberar lo devuelve a las ofertas: ya no es un rescate de Ana.
+    repositorio.avanzar("BBBB0002", ANA, EstadoRescate.EN_CAMINO, EstadoRescate.LIBERADO, MOMENTO)
+    assert [r.codigo for r in repositorio.historial_de(ANA)] == ["AAAA0001"]
