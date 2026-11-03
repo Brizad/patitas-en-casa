@@ -126,12 +126,13 @@ class RepositorioRescatesPostgres:
                        rescates.c.rescatista == rescatista,
                        rescates.c.estado == desde.value)
                 .values(estado=hasta.value, actualizado_en=momento,
-                        resultado=resultado.value if resultado else None))
+                        resultado=resultado.value if resultado else None,
+                        **({"llegada_en": momento} if hasta == EstadoRescate.EN_SITIO else {})))
         return cambio.rowcount == 1
 
 
 def _a_rescate(fila: RowMapping) -> Rescate:
     return Rescate(codigo=fila["reporte_codigo"], rescatista=fila["rescatista"],
                    estado=EstadoRescate(fila["estado"]), aceptado_en=fila["aceptado_en"],
-                   actualizado_en=fila["actualizado_en"],
+                   actualizado_en=fila["actualizado_en"], llegada_en=fila["llegada_en"],
                    resultado=ResultadoRescate(fila["resultado"]) if fila["resultado"] else None)

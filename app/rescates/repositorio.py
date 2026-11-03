@@ -137,4 +137,6 @@ class RepositorioRescatesEnMemoria:
                 del self._vigentes[codigo]
                 return True
             rescate.estado, rescate.resultado, rescate.actualizado_en = hasta, resultado, momento
+            if hasta == EstadoRescate.EN_SITIO:
+                rescate.llegada_en = momento
             return True

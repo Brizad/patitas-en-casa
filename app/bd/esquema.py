@@ -332,6 +332,7 @@ rescates = Table(
     Column("resultado", String(20)),
     Column("aceptado_en", DateTime(timezone=True), nullable=False),
     Column("actualizado_en", DateTime(timezone=True), nullable=False),
+    Column("llegada_en", DateTime(timezone=True)),
     CheckConstraint(f"estado IN ({_valores(EstadoRescate)})", name="ck_rescates_estado"),
     CheckConstraint(f"resultado IN ({_valores(ResultadoRescate)})",
                     name="ck_rescates_resultado"),

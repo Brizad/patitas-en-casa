@@ -180,6 +180,7 @@ class Rescate:
     aceptado_en: datetime
     actualizado_en: datetime
     resultado: ResultadoRescate | None = None
+    llegada_en: datetime | None = None  # cuando el rescatista pulsó «Llegué» (#221)
 
 
 @dataclass
