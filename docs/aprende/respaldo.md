@@ -24,7 +24,7 @@ Repositorio → *Settings* → *Secrets and variables* → *Actions* → *New re
 | `RESPALDO_CLAVE` | Una frase larga y aleatoria (32 caracteres o más). **Guárdala en tu gestor de contraseñas:** sin ella los respaldos no se pueden abrir. |
 
 Nunca los pegues en el chat, en issues ni en el repositorio. Si la versión de Neon es otra que
-la 17, cambia `PG_VERSION` en el flujo (el cliente debe ser igual o más nuevo que el servidor).
+la 18, cambia `PG_VERSION` en el flujo (el cliente debe ser igual o más nuevo que el servidor).
 
 Para probarlo ya: *Actions* → *Respaldo diario* → *Run workflow*.
 

@@ -28,7 +28,7 @@ La aplicación no cambia: es el mismo PostgreSQL. Lo único nuevo en el código 
 
 1. **Crea la cuenta** en https://neon.com → *Sign up* → «Continue with GitHub» (la misma
    cuenta `Brizad`; no pide tarjeta).
-2. **Crea el proyecto**: nombre `patitas`, **Postgres 17** (el mismo que tienes en tu PC) y la
+2. **Crea el proyecto**: nombre `patitas`, **Postgres 18** (la versión que usa Neon; en tu PC puedes tener la 17) y la
    región más cercana a la de Render. El servicio de Render está en **Oregon** (lo ves en
    Render → `patitas-en-casa` → *Settings* → *Region*); en Neon elige **AWS US West 2
    (Oregon)** si aparece, y si no, la de Estados Unidos más cercana. Base: `neondb` (la que

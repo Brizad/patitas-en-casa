@@ -329,7 +329,7 @@ plan gratis permanente. Quedó todo listo para que tú hagas el cambio en unos 2
 siguiendo `docs/aprende/migrar-a-neon.md`:
 
 - **Cuenta que debes crear:** Neon (https://neon.com), con «Continue with GitHub», sin
-  tarjeta. Proyecto `patitas`, Postgres 17, región Oregon.
+  tarjeta. Proyecto `patitas`, Postgres 18, región Oregon.
 - **Qué copiar:** de Neon, la *connection string* con «Connection pooling» apagado; de
   Render, la *External Database URL* de `patitas-bd`. No las pegues en el chat ni en el
   repositorio.
