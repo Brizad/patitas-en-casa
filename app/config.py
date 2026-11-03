@@ -57,3 +57,7 @@ VIDEO_MAX_ESPERA_HORAS = 6
 MAX_VIDEOS_PENDIENTES = 5
 TROZO_VIDEO_BYTES = 1024 * 1024
 REVISION_VIDEOS_SEGUNDOS = 60
+# Vista previa para el veterinario (cambia RNF-08, #214): MP4 liviano con el esqueleto dibujado.
+# Se borra a los 7 días o cuando el reporte se cierra (rescate atendido o descartado).
+VISTA_VIDEO_MAX_MB = 5
+VISTA_VIDEO_DIAS = 7

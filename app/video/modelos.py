@@ -62,3 +62,6 @@ class TrabajoVideo:
     motivo: str | None = None
     discrepancia: bool = False  # RF-19: el video sugirió otra prioridad que el texto
     tira: bytes | None = None
+    vista_ruta: str | None = None  # vista previa del veterinario (#214); no es el video original
+    vista_bytes: int | None = None
+    vista_en: datetime | None = None

@@ -13,10 +13,10 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import Engine, delete, select
+from sqlalchemy import Engine, Table, delete, select
 
 from app import config
-from app.bd.esquema import videos_trozos as tabla
+from app.bd.esquema import videos_trozos
 
 MAX_BYTES = config.VIDEO_MAX_MB * 1024 * 1024
 # Firmas de los formatos que graba un celular: MP4/MOV (caja «ftyp» en el byte 4) y WebM.
@@ -31,22 +31,31 @@ def es_video(inicio: bytes) -> bool:
     return inicio[4:8] == b"ftyp" or inicio.startswith(WEBM)
 
 
+def _limite_texto(max_bytes: int) -> str:
+    megas = max_bytes / (1024 * 1024)
+    return f"El video pasa de {megas:g} MB."
+
+
 class AlmacenEnDisco:
-    def __init__(self, directorio: str | Path) -> None:
+    """`max_bytes` y `extension` permiten un segundo almacén para la vista previa (#214)."""
+
+    def __init__(self, directorio: str | Path, max_bytes: int | None = None,
+                 extension: str = ".video") -> None:
+        self._tope, self._extension = max_bytes, extension
         self._directorio = Path(directorio)
         self._directorio.mkdir(parents=True, exist_ok=True)
 
     async def guardar(self, trozos: AsyncIterator[bytes]) -> tuple[str, int]:
         """Escribe el video por partes (nunca entero en memoria: Render tiene 512 MB). Si pasa
         de 50 MB o no es un video, lo borra y lanza ArchivoInvalido."""
-        ruta = self._directorio / f"{secrets.token_hex(16)}.video"
+        ruta = self._directorio / f"{secrets.token_hex(16)}{self._extension}"
         tamano, inicio = 0, b""
         try:
             with ruta.open("wb") as archivo:
                 async for trozo in trozos:
                     tamano += len(trozo)
-                    if tamano > MAX_BYTES:
-                        raise ArchivoInvalido(f"El video pasa de {config.VIDEO_MAX_MB} MB.")
+                    if tamano > (self._tope or MAX_BYTES):
+                        raise ArchivoInvalido(_limite_texto(self._tope or MAX_BYTES))
                     if len(inicio) < 12:
                         inicio += trozo[:12]
                     archivo.write(trozo)
@@ -80,8 +89,9 @@ class AlmacenEnPostgres:
     terminar el análisis (ServicioVideo) o, si quedó huérfano, a las 6 horas (`purgar_antes_de`).
     """
 
-    def __init__(self, motor: Engine) -> None:
-        self._motor = motor
+    def __init__(self, motor: Engine, tabla: Table = videos_trozos,
+                 max_bytes: int | None = None) -> None:
+        self._motor, self._tabla, self._tope = motor, tabla, max_bytes
 
     async def guardar(self, trozos: AsyncIterator[bytes]) -> tuple[str, int]:
         ruta = secrets.token_hex(16)
@@ -90,8 +100,8 @@ class AlmacenEnPostgres:
         try:
             async for trozo in trozos:
                 tamano += len(trozo)
-                if tamano > MAX_BYTES:
-                    raise ArchivoInvalido(f"El video pasa de {config.VIDEO_MAX_MB} MB.")
+                if tamano > (self._tope or MAX_BYTES):
+                    raise ArchivoInvalido(_limite_texto(self._tope or MAX_BYTES))
                 if len(inicio) < 12:
                     inicio = (inicio + trozo)[:12]
                 pendiente += trozo
@@ -110,21 +120,22 @@ class AlmacenEnPostgres:
 
     def _insertar(self, ruta: str, orden: int, datos: bytes) -> None:
         with self._motor.begin() as conexion:
-            conexion.execute(tabla.insert().values(
+            conexion.execute(self._tabla.insert().values(
                 ruta=ruta, orden=orden, datos=datos, creado_en=datetime.now(UTC)))
 
     def existe(self, ruta: str) -> bool:
         with self._motor.connect() as conexion:
             return conexion.execute(
-                select(tabla.c.orden).where(tabla.c.ruta == ruta).limit(1)).first() is not None
+                select(self._tabla.c.orden).where(self._tabla.c.ruta == ruta).limit(1)
+            ).first() is not None
 
     def leer(self, ruta: str) -> Iterator[bytes]:
         """Un trozo por consulta: en memoria nunca hay más de 1 MB."""
         orden = 0
         while True:
             with self._motor.connect() as conexion:
-                fila = conexion.execute(select(tabla.c.datos).where(
-                    tabla.c.ruta == ruta, tabla.c.orden == orden)).first()
+                fila = conexion.execute(select(self._tabla.c.datos).where(
+                    self._tabla.c.ruta == ruta, self._tabla.c.orden == orden)).first()
             if fila is None:
                 return
             yield bytes(fila[0])
@@ -132,9 +143,10 @@ class AlmacenEnPostgres:
 
     def borrar(self, ruta: str) -> None:
         with self._motor.begin() as conexion:
-            conexion.execute(delete(tabla).where(tabla.c.ruta == ruta))
+            conexion.execute(delete(self._tabla).where(self._tabla.c.ruta == ruta))
 
     def purgar_antes_de(self, limite: datetime) -> int:
         """Trozos huérfanos (una subida cortada, un trabajo que ya no existe)."""
         with self._motor.begin() as conexion:
-            return conexion.execute(delete(tabla).where(tabla.c.creado_en < limite)).rowcount
+            return conexion.execute(
+                delete(self._tabla).where(self._tabla.c.creado_en < limite)).rowcount

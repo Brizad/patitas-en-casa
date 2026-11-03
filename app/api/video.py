@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from app import config
 from app.dominio.modelos import Prioridad
 from app.video.almacen import MAX_BYTES, AlmacenEnDisco, AlmacenEnPostgres, ArchivoInvalido
 from app.video.modelos import ResultadoVideo, TrabajoVideo
@@ -59,12 +60,15 @@ def vista_para_personal(t: TrabajoVideo) -> dict:
     return {"estado": t.estado.value, "prioridad": t.prioridad.value if t.prioridad else None,
             "confianza": t.confianza, "evidencias": t.evidencias, "medidas": t.medidas,
             "discrepancia": t.discrepancia, "motivo": t.motivo,
-            "version_modelo": t.version_modelo, "tiene_tira": t.tira is not None}
+            "version_modelo": t.version_modelo, "tiene_tira": t.tira is not None,
+            "tiene_vista": t.vista_ruta is not None}
 
 
 # C901: como en crear_app, mccabe suma las rutas anidadas; cada una por separado es sencilla.
 def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | AlmacenEnPostgres,  # noqa: C901
-                      token: str | None, personal) -> APIRouter:
+                      token: str | None, personal,
+                      almacen_vistas: AlmacenEnDisco | AlmacenEnPostgres | None = None
+                      ) -> APIRouter:
     rutas = APIRouter()
 
     def _ejecutar(funcion, *argumentos):
@@ -111,6 +115,20 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
         ruta = _ejecutar(servicio.ruta_para_descargar, id_)
         return StreamingResponse(almacen.leer(ruta), media_type="application/octet-stream")
 
+    @rutas.post("/video/trabajos/{id_}/vista", dependencies=solo_trabajador)
+    async def subir_vista(id_: int, peticion: Request):
+        """#214: la vista previa liviana (MP4, 5 MB o menos) que ve el veterinario."""
+        _ejecutar(servicio.autorizar_vista, id_)
+        maximo = config.VISTA_VIDEO_MAX_MB * 1024 * 1024
+        if int(peticion.headers.get("content-length") or 0) > maximo:
+            raise HTTPException(413, f"La vista pasa de {config.VISTA_VIDEO_MAX_MB} MB.")
+        try:
+            ruta, tamano = await almacen_vistas.guardar(peticion.stream())
+        except ArchivoInvalido as error:
+            raise HTTPException(413 if "MB" in str(error) else 415, str(error)) from error
+        _ejecutar(servicio.registrar_vista, id_, ruta, tamano)
+        return {"bytes": tamano}
+
     @rutas.post("/video/trabajos/{id_}/resultado", dependencies=solo_trabajador)
     def entregar_resultado(id_: int, datos: ResultadoEntrada):
         trabajo = _ejecutar(servicio.terminar, id_, _resultado(datos))
@@ -134,5 +152,16 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
             raise HTTPException(404, "Este video no tiene tira de cuadros.")
         return Response(trabajo.tira, media_type="image/png",
                         headers={"Cache-Control": "private, no-store"})
+
+    @rutas.get("/reportes/{codigo}/video/vista.mp4", dependencies=[personal])
+    def vista_del_video(codigo: str):
+        """El personal ve el video con el esqueleto dibujado; nunca el ciudadano (RN-14)."""
+        vista = servicio.vista_de(codigo.upper())
+        if vista is None or not almacen_vistas.existe(vista[0]):
+            raise HTTPException(404, "Este reporte no tiene vista previa del video.")
+        ruta, tamano = vista
+        return StreamingResponse(almacen_vistas.leer(ruta), media_type="video/mp4",
+                                 headers={"Cache-Control": "private, no-store",
+                                          "Content-Length": str(tamano)})
 
     return rutas

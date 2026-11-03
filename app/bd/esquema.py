@@ -402,6 +402,9 @@ analisis_video = Table(
     Column("motivo", Text),
     Column("discrepancia", Boolean, nullable=False, server_default=false()),
     Column("tira", LargeBinary),
+    Column("vista_ruta", String(40)),  # #214: vista previa del veterinario (vistas_trozos)
+    Column("vista_bytes", Integer),
+    Column("vista_en", DateTime(timezone=True)),
     CheckConstraint("estado IN ('pendiente', 'enviado', 'terminado', 'no_concluyente', "
                     "'fallido')", name="ck_analisis_video_estado"),
     CheckConstraint("bytes <= 52428800", name="ck_analisis_video_tamano"),  # RN-01: 50 MB
@@ -422,4 +425,18 @@ videos_trozos = Table(
     Column("creado_en", DateTime(timezone=True), nullable=False),
     CheckConstraint("octet_length(datos) <= 1048576", name="ck_videos_trozos_tamano"),
     Index("ix_videos_trozos_creado", "creado_en"),
+)
+
+# #214 (cambia RNF-08): la vista previa del video (MP4 de 5 MB o menos, con el esqueleto dibujado)
+# se guarda aparte del video original, que se sigue borrando al terminar el análisis. Se borra a
+# los 7 días o al cerrarse el reporte.
+vistas_trozos = Table(
+    "vistas_trozos",
+    metadata,
+    Column("ruta", String(40), primary_key=True),
+    Column("orden", Integer, primary_key=True),
+    Column("datos", LargeBinary, nullable=False),
+    Column("creado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint("octet_length(datos) <= 1048576", name="ck_vistas_trozos_tamano"),
+    Index("ix_vistas_trozos_creado", "creado_en"),
 )

@@ -86,6 +86,7 @@ from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
 from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
+from app.bd.esquema import vistas_trozos
 from app.bd.migraciones import verificar_migraciones
 from app.bitacora.repositorio import Evento, RepositorioBitacora, RepositorioBitacoraEnMemoria
 from app.bitacora.repositorio_postgres import RepositorioBitacoraPostgres
@@ -100,6 +101,7 @@ from app.dominio.modelos import (
     Animal,
     Especie,
     EstadoReporte,
+    EstadoRescate,
     MotivoDescarte,
     MotivoEgreso,
     Prioridad,
@@ -514,12 +516,19 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         token_video = token_video or (ajustes_video.video_token.get_secret_value()
                                       if ajustes_video.video_token else None)
         directorio_videos = directorio_videos or ajustes_video.video_dir
+    maximo_vista = config.VISTA_VIDEO_MAX_MB * 1024 * 1024
     if motor is not None and not directorio_videos:
         almacen_videos = AlmacenEnPostgres(motor)  # #188: sobrevive al reinicio de Render
+        almacen_vistas = AlmacenEnPostgres(motor, vistas_trozos, maximo_vista)  # #214
     else:  # sin base (pruebas) o con VIDEO_DIR explícito: disco
-        almacen_videos = AlmacenEnDisco(directorio_videos or
-                                        Path(tempfile.gettempdir()) / "patitas-videos")
-    videos = ServicioVideo(repositorio_videos, repositorio, almacen_videos)
+        carpeta_videos = directorio_videos or Path(tempfile.gettempdir()) / "patitas-videos"
+        almacen_videos = AlmacenEnDisco(carpeta_videos)
+        almacen_vistas = AlmacenEnDisco(carpeta_videos, maximo_vista, ".vista")
+    videos = ServicioVideo(
+        repositorio_videos, repositorio, almacen_videos, almacen_vistas=almacen_vistas,
+        rescate_atendido=lambda codigo: (
+            (r := repositorio_rescates.vigente(codigo)) is not None
+            and r.estado == EstadoRescate.ATENDIDO))
     usuarios = ServicioUsuarios(repositorio_usuarios)
     adopciones = ServicioAdopciones(repositorio_adopciones)
     dependencia_usuario = crear_dependencia_usuario(repositorio_usuarios, emisor_tokens)
@@ -1320,7 +1329,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def inicio():
         return FileResponse(CARPETA_INICIO / "index.html", media_type="text/html")
 
-    app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal))
+    app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal,
+                                          almacen_vistas))
     app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")
     app.mount("/inicio", StaticFiles(directory=CARPETA_INICIO), name="inicio")
     app.mount("/diseno", StaticFiles(directory=CARPETA_DISENO), name="diseno")

@@ -11,7 +11,7 @@ Issue #125. PR en orden: #126 → #127 → #128 → #129 → #130 → #131 → #
 | RF-03 | Un **trabajador local** analiza la marcha del animal: MediaPipe Object Detector + DeepLabCut SuperAnimal-Quadruped + medidas de la marcha + red neuronal pequeña. |
 | RF-19, RN-07 | El resultado del video se fusiona con el del texto: gana la prioridad más alta y la discrepancia queda registrada y visible en el panel. |
 | RNF-02 | 5 cuadros por segundo para que 60 s de video se analicen en ≤ 3 min (medido en la prueba de humo). |
-| RNF-08 | El video nunca se guarda para siempre: se borra al terminar, falle o no. Solo quedan las medidas, las evidencias y una tira pequeña. |
+| RNF-08 | El video original nunca se guarda para siempre: se borra al terminar, falle o no. Quedan las medidas, las evidencias, una tira pequeña y (desde #214, por decisión del autor) una vista previa de baja calidad para el veterinario, que se borra a los 7 días o al cerrarse el reporte. |
 | RNF-09 | Cada resultado del video trae al menos 3 evidencias en lenguaje claro. |
 
 ## La corrección técnica más importante
