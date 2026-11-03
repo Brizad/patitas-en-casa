@@ -36,7 +36,7 @@ export default function MisRescates({ token }: { token: string }) {
         {!cargando && !error && filas.length === 0 && (
           <p className="ds-vacio">Aún no has aceptado rescates.</p>)}
         {filas.length > 0 && (
-          <div className="ds-tabla-caja"><table className="ds-tabla">
+          <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de mis rescates"><table className="ds-tabla">
             <thead><tr><th>Código</th><th>Aceptado</th><th>Llegada</th><th>Resultado</th>
               <th>Estado actual</th></tr></thead>
             <tbody>
