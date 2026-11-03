@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="/diseno/sistema.css">
 <link rel="stylesheet" href="estilos.css">
 <script src="app.js" defer></script>
+<script src="video.js" defer></script>
 <script src="reportar.js" defer></script>
 </head>
 <body class="ds">
@@ -62,11 +63,25 @@
       </div>
       <!-- #125 (RF-03): el video ayuda a ver cómo camina el animal; es opcional. -->
       <div class="ds-tarjeta">
-        <label class="f" for="video">Video del animal (opcional)</label>
-        <input class="in" type="file" id="video" accept="video/mp4,video/quicktime,video/webm"
-               aria-describedby="info-video error-video">
-        <span class="tag" id="info-video">Máximo 60 segundos y 50 MB. Grábalo de lado, que se
-          vea el animal completo.</span>
+        <span class="f" id="titulo-video">Video del animal (opcional)</span>
+        <div class="fila" id="acciones-video" role="group" aria-labelledby="titulo-video">
+          <button type="button" class="ds-btn" id="grabar-video">Grabar video</button>
+          <button type="button" class="ds-btn" id="elegir-video">Elegir de la galería</button>
+        </div>
+        <!-- Galería: sin capture. Respaldo de «Grabar» si el navegador no tiene MediaRecorder. -->
+        <input type="file" id="video" accept="video/mp4,video/quicktime,video/webm" hidden>
+        <input type="file" id="video-camara" accept="video/*" capture="environment" hidden>
+        <div id="grabadora" hidden>
+          <video id="vista-video" class="vista-video" muted playsinline
+                 aria-label="Vista de la cámara"></video>
+          <div class="fila">
+            <span id="contador-video" role="timer" aria-live="off">0:00</span>
+            <button type="button" class="ds-btn" id="detener-video">Detener</button>
+            <button type="button" class="ds-btn" id="repetir-video" hidden>Repetir</button>
+          </div>
+        </div>
+        <span class="tag" id="info-video" role="status">Máximo 60 segundos y 50 MB. Grábalo de
+          lado, que se vea el animal completo.</span>
         <span class="err-campo" id="error-video" hidden></span>
       </div>
       <div class="ds-tarjeta">

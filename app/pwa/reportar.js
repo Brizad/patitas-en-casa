@@ -190,30 +190,115 @@
     });
   }
 
-  async function elegirVideo() {
-    const campo = $('video');
-    const archivo = campo.files && campo.files[0];
+  const TEXTO_VIDEO = 'Máximo 60 segundos y 50 MB. Grábalo de lado, que se vea el animal completo.';
+  const { MAX_SEGUNDOS, validarVideo, formatoTiempo } = window.PatitasVideo;
+  let grabacion = null;  // { flujo, grabador, trozos, temporizador, inicio } mientras se graba
+  let urlVista = null;
+
+  // Valida (RN-01: 60 s y 50 MB) y deja el video listo para subir. Devuelve true si sirve.
+  async function aceptarVideo(archivo, segundosConocidos) {
     video = null;
-    errorEn(campo, 'error-video', '');
-    $('info-video').textContent = 'Máximo 60 segundos y 50 MB. Grábalo de lado, que se vea el '
-      + 'animal completo.';
-    if (!archivo) return;
-    const mb = archivo.size / (1024 * 1024);
-    const segundos = await duracion(archivo);
-    let problema = '';
-    if (mb > VIDEO_MAX_MB) problema = 'El video pesa ' + mb.toFixed(1) + ' MB; el máximo es 50 MB.';
-    else if (segundos === null) problema = 'No pudimos leer este video. Prueba con otro.';
-    else if (segundos > VIDEO_MAX_SEGUNDOS) {
-      problema = 'El video dura ' + Math.round(segundos) + ' s; el máximo es 60 s.';
-    }
+    errorEn($('video'), 'error-video', '');
+    // El MediaRecorder de algunos navegadores no escribe la duración: vale la del reloj.
+    let segundos = await duracion(archivo);
+    if (!isFinite(segundos) && segundosConocidos) segundos = segundosConocidos;
+    const problema = validarVideo(segundos, archivo.size);
     if (problema) {
-      campo.value = '';
-      errorEn(campo, 'error-video', problema);
-      return;
+      errorEn($('video'), 'error-video', problema);
+      $('info-video').textContent = TEXTO_VIDEO;
+      return false;
     }
+    const mb = archivo.size / (1024 * 1024);
     video = { archivo, segundos: Math.ceil(segundos), mb: Math.round(mb * 10) / 10 };
     const peso = mb < 1 ? Math.max(1, Math.round(archivo.size / 1024)) + ' KB' : video.mb + ' MB';
     $('info-video').textContent = 'Video listo: ' + video.segundos + ' s · ' + peso + '.';
+    return true;
+  }
+
+  async function elegirVideo(evento) {
+    const campo = evento.target;
+    const archivo = campo.files && campo.files[0];
+    campo.value = '';  // permite elegir el mismo archivo otra vez
+    if (!archivo) return;
+    cerrarGrabadora();
+    await aceptarVideo(archivo, 0);
+  }
+
+  function cerrarGrabadora() {
+    if (grabacion) {
+      clearInterval(grabacion.temporizador);
+      grabacion.descartar = true;
+      if (grabacion.grabador.state !== 'inactive') grabacion.grabador.stop();
+      grabacion.flujo.getTracks().forEach((pista) => pista.stop());
+      grabacion = null;
+    }
+    const vista = $('vista-video');
+    vista.pause();
+    vista.srcObject = null;
+    vista.removeAttribute('src');
+    vista.controls = false;
+    if (urlVista) { URL.revokeObjectURL(urlVista); urlVista = null; }
+    $('grabadora').hidden = true;
+  }
+
+  function terminarGrabacion() {
+    const actual = grabacion;
+    if (!actual || actual.grabador.state === 'inactive') return;
+    clearInterval(actual.temporizador);
+    actual.grabador.stop();  // el evento «stop» arma el archivo
+  }
+
+  async function grabarVideo() {
+    errorEn($('video'), 'error-video', '');
+    video = null;
+    if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      $('video-camara').click();  // sin MediaRecorder: la cámara del teléfono
+      return;
+    }
+    cerrarGrabadora();
+    let flujo;
+    try {
+      flujo = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }, audio: false });
+    } catch (error) {
+      errorEn($('video'), 'error-video', 'No pudimos abrir la cámara. Revisa el permiso o '
+        + 'elige un video de la galería.');
+      return;
+    }
+    const grabador = new MediaRecorder(flujo);
+    const estado = { flujo, grabador, trozos: [], temporizador: null, inicio: Date.now(),
+                     descartar: false };
+    grabacion = estado;
+    grabador.addEventListener('dataavailable', (e) => { if (e.data.size) estado.trozos.push(e.data); });
+    grabador.addEventListener('stop', async () => {
+      const segundos = (Date.now() - estado.inicio) / 1000;
+      flujo.getTracks().forEach((pista) => pista.stop());
+      if (estado.descartar) return;
+      const archivo = new Blob(estado.trozos, { type: grabador.mimeType || 'video/webm' });
+      const vista = $('vista-video');
+      vista.srcObject = null;
+      urlVista = URL.createObjectURL(archivo);
+      vista.src = urlVista;
+      vista.controls = true;
+      $('detener-video').hidden = true;
+      $('repetir-video').hidden = false;
+      await aceptarVideo(archivo, Math.min(segundos, MAX_SEGUNDOS));
+    });
+    const vista = $('vista-video');
+    vista.srcObject = flujo;
+    vista.controls = false;
+    vista.play().catch(() => {});
+    $('grabadora').hidden = false;
+    $('detener-video').hidden = false;
+    $('repetir-video').hidden = true;
+    $('contador-video').textContent = formatoTiempo(0);
+    $('info-video').textContent = 'Grabando… se detiene solo a los ' + MAX_SEGUNDOS + ' s.';
+    grabador.start();
+    estado.temporizador = setInterval(() => {
+      const pasados = (Date.now() - estado.inicio) / 1000;
+      $('contador-video').textContent = formatoTiempo(pasados);
+      if (pasados >= MAX_SEGUNDOS) terminarGrabacion();
+    }, 250);
   }
 
   async function subirVideo(codigo, clave, elegido) {
@@ -248,8 +333,9 @@
     formulario.reset();
     gps = null;
     video = null;
-    $('info-video').textContent = 'Máximo 60 segundos y 50 MB. Grábalo de lado, que se vea el '
-      + 'animal completo.';
+    cerrarGrabadora();
+    errorEn($('video'), 'error-video', '');
+    $('info-video').textContent = TEXTO_VIDEO;
     $('estado-gps').textContent = 'o escribe la dirección';
     $('usar-gps').textContent = 'Usar mi GPS';
     contar();
@@ -297,6 +383,11 @@
 
   descripcion.addEventListener('input', contar);
   $('video').addEventListener('change', elegirVideo);
+  $('video-camara').addEventListener('change', elegirVideo);
+  $('elegir-video').addEventListener('click', () => $('video').click());
+  $('grabar-video').addEventListener('click', grabarVideo);
+  $('detener-video').addEventListener('click', terminarGrabacion);
+  $('repetir-video').addEventListener('click', () => { cerrarGrabadora(); grabarVideo(); });
   direccion.addEventListener('input', () => {
     if (direccion.value.trim()) errorEn(direccion, 'error-ubicacion', '');
   });

@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- PWA ciudadana (#212): el video se puede grabar con la cámara trasera dentro de la página (contador, tope de 60 s, vista previa y «Repetir»; sin MediaRecorder usa la cámara del teléfono) o elegir de la galería. Se valida duración (60 s) y tamaño (50 MB) antes de subir. `Permissions-Policy` ahora permite la cámara solo desde el propio sitio; el micrófono sigue bloqueado.
 - Avisos al ciudadano por el outbox (#204): si dejó un correo y autorizó el contacto (RF-18), recibe un aviso cuando un rescatista registra el resultado «trasladado» o «atendido en el sitio» y cuando el animal ingresa al refugio. `POST /refugio/ingresos` acepta `reporte` (opcional) con el código. Los mensajes solo llevan el código (RN-14).
 - Panel (#206): el formulario «Registrar ingreso» tiene el campo opcional «Código del reporte» y muestra el error si el código no existe (422).
 

@@ -183,7 +183,7 @@ for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
                           ("image/svg+xml", ".svg")):
     mimetypes.add_type(_tipo, _extension)
 # Solo recursos del propio servidor: sin scripts en línea ni de terceros (XSS).
-POLITICA_PERMISOS = "geolocation=(self), camera=(), microphone=(), payment=()"
+POLITICA_PERMISOS = "geolocation=(self), camera=(self), microphone=(), payment=()"
 POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
                 # #125: blob: son archivos locales del navegador (la tira del video en el panel
                 # y la duración del video elegido en la PWA); nunca de otro servidor.
@@ -1221,7 +1221,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     async def cabeceras_de_la_pwa(peticion: Request, siguiente):
         respuesta = await siguiente(peticion)
         # Prueba de punta a punta (#121, OWASP ZAP): en todas las respuestas, HTTPS por un año
-        # (HSTS), el GPS solo desde este sitio (la PWA lo usa) y sin cámara ni micrófono, y
+        # (HSTS), el GPS y la cámara solo desde este sitio (la PWA los usa; #212), sin micrófono, y
         # ninguna otra ventana puede manipular esta (COOP).
         respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
         respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS

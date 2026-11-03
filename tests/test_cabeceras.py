@@ -9,7 +9,8 @@ def test_cabeceras_de_seguridad_en_todas_las_respuestas():
         r = c.get(ruta)
         assert r.headers["strict-transport-security"] == "max-age=31536000"
         assert "geolocation=(self)" in r.headers["permissions-policy"]
-        assert "camera=()" in r.headers["permissions-policy"]
+        assert "camera=(self)" in r.headers["permissions-policy"]
+        assert "microphone=()" in r.headers["permissions-policy"]
         assert r.headers["cross-origin-opener-policy"] == "same-origin"
         assert r.headers["x-content-type-options"] == "nosniff"
 
