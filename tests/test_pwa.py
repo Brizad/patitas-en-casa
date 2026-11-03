@@ -167,3 +167,9 @@ def test_el_service_worker_guarda_la_hoja_compartida_para_abrir_sin_senal():
     sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
     assert "/diseno/sistema.css" in sw
     assert "patitas-pwa-v3'" not in sw  # versión nueva: se baja la interfaz rediseñada
+
+
+def test_la_pwa_valida_que_la_descripcion_tenga_palabras():
+    js = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
+    assert "Describe con palabras qué le pasa al animal." in js
+    assert "MIN_PALABRAS = 4" in js and "VOCALES_MIN = 0.30" in js and "VOCALES_MAX = 0.70" in js
