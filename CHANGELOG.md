@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Manual de usuario (#254): 21 capturas nuevas tomadas con Playwright sobre PostgreSQL y datos de demostración (ciudadano a 390 px; veterinario con análisis de video, vista previa e historial; rescatista con rescate en curso y «Mis rescates»; coordinador con el código del reporte en el ingreso; adoptante, administrador y Alcaldía) y `docs/manual-usuario.md` paso a paso por rol. `capturas.mjs` usa por defecto la instancia local de `e2e.md`.
 - `docs/aprende/sustentacion.md` (#247): 60 preguntas de jurado con respuesta corta y el archivo donde se ve en el código, y un recorrido de 5 minutos para la demo en vivo.
 - Documentación de tesis, parte 2 (#243): `docs/tesis/c4.md` (contexto, contenedores y componentes en Mermaid), `docs/tesis/pruebas.md` (plan y reporte con los números del CI: 864 pruebas, 97,22 % de cobertura, 58 de Vitest, 8 e2e, 50 revisiones de axe-core sin fallas) y la matriz de trazabilidad movida a `docs/tesis/trazabilidad.md` y puesta al día (RNF-08 con la vista previa, RNF-15 activo, Mailjet, PostgreSQL 18 en Neon, historiales y avisos al ciudadano).
 - Documentación de tesis generada desde el código (#243): `python -m scripts.tesis.generar_docs` escribe en `docs/tesis/` el E-R en Mermaid y el diccionario de datos (21 tablas, desde `app/bd/esquema.py`) y el catálogo de las 67 rutas con quién puede usarlas, sus códigos de respuesta y los requisitos que cita su código. Una prueba comprueba que el catálogo y el diccionario no dejan nada por fuera.
