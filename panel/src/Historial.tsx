@@ -34,19 +34,19 @@ export default function Historial({ token }: { token: string }) {
         {!cargando && !error && filas.length === 0 && (
           <p className="ds-vacio">Aún no has confirmado ni descartado reportes.</p>)}
         {filas.length > 0 && (
-          <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla del historial"><table className="ds-tabla">
-            <thead><tr><th>Código</th><th>Fecha</th><th>Acción</th><th>Sugerida</th>
-              <th>Final</th><th>Justificación</th><th>Estado actual</th></tr></thead>
+          <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla del historial"><table className="ds-tabla ds-tabla--tarjetas" role="table">
+            <thead><tr role="row"><th role="columnheader">Código</th><th role="columnheader">Fecha</th><th role="columnheader">Acción</th><th role="columnheader">Sugerida</th>
+              <th role="columnheader">Final</th><th role="columnheader">Justificación</th><th role="columnheader">Estado actual</th></tr></thead>
             <tbody>
               {filas.map((f) => (
-                <tr key={`${f.codigo}-${f.fecha}`}>
-                  <td><code>{f.codigo}</code></td>
-                  <td>{fechaLocal(f.fecha)}</td>
-                  <td>{NOMBRE_ACCION[f.accion]}</td>
-                  <td>{prioridad(f.prioridad_sugerida)}</td>
-                  <td>{prioridad(f.prioridad_final)}</td>
-                  <td>{f.justificacion ?? "—"}</td>
-                  <td>{f.estado ? (NOMBRE_ESTADO[f.estado] ?? f.estado) : "—"}</td>
+                <tr role="row" key={`${f.codigo}-${f.fecha}`}>
+                  <td role="cell" data-etiqueta="Código"><code>{f.codigo}</code></td>
+                  <td role="cell" data-etiqueta="Fecha">{fechaLocal(f.fecha)}</td>
+                  <td role="cell" data-etiqueta="Acción">{NOMBRE_ACCION[f.accion]}</td>
+                  <td role="cell" data-etiqueta="Sugerida">{prioridad(f.prioridad_sugerida)}</td>
+                  <td role="cell" data-etiqueta="Final">{prioridad(f.prioridad_final)}</td>
+                  <td role="cell" data-etiqueta="Justificación">{f.justificacion ?? "—"}</td>
+                  <td role="cell" data-etiqueta="Estado actual">{f.estado ? (NOMBRE_ESTADO[f.estado] ?? f.estado) : "—"}</td>
                 </tr>))}
             </tbody>
           </table></div>)}

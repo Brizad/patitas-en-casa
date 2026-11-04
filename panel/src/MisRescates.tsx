@@ -36,17 +36,17 @@ export default function MisRescates({ token }: { token: string }) {
         {!cargando && !error && filas.length === 0 && (
           <p className="ds-vacio">Aún no has aceptado rescates.</p>)}
         {filas.length > 0 && (
-          <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de mis rescates"><table className="ds-tabla">
-            <thead><tr><th>Código</th><th>Aceptado</th><th>Llegada</th><th>Resultado</th>
-              <th>Estado actual</th></tr></thead>
+          <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de mis rescates"><table className="ds-tabla ds-tabla--tarjetas" role="table">
+            <thead><tr role="row"><th role="columnheader">Código</th><th role="columnheader">Aceptado</th><th role="columnheader">Llegada</th><th role="columnheader">Resultado</th>
+              <th role="columnheader">Estado actual</th></tr></thead>
             <tbody>
               {filas.map((f) => (
-                <tr key={f.codigo}>
-                  <td><code>{f.codigo}</code></td>
-                  <td>{fechaLocal(f.aceptado_en)}</td>
-                  <td>{textoLlegada(f)}</td>
-                  <td>{textoResultado(f)}</td>
-                  <td>{NOMBRE_ESTADO_RESCATE[f.estado]}</td>
+                <tr role="row" key={f.codigo}>
+                  <td role="cell" data-etiqueta="Código"><code>{f.codigo}</code></td>
+                  <td role="cell" data-etiqueta="Aceptado">{fechaLocal(f.aceptado_en)}</td>
+                  <td role="cell" data-etiqueta="Llegada">{textoLlegada(f)}</td>
+                  <td role="cell" data-etiqueta="Resultado">{textoResultado(f)}</td>
+                  <td role="cell" data-etiqueta="Estado actual">{NOMBRE_ESTADO_RESCATE[f.estado]}</td>
                 </tr>))}
             </tbody>
           </table></div>)}
