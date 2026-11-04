@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Auditoría de seguridad, calidad y rendimiento (#241) en `docs/aprende/auditoria.md`: OWASP Top 10 por endpoint, sin hallazgos altos; tres medios corregidos (#236, #238, #240) y el resto en `DEUDA_TECNICA.md` (DT-11 a DT-13).
 - Pruebas de punta a punta (#233): `e2e/` con Playwright recorre en el navegador el flujo completo sobre una instancia real (API + PostgreSQL + panel compilado + PWA): reporte desde el teléfono (390 px), confirmación crítica, rescate, ingreso con código, historiales y seguimiento (RN-14), más los errores (descripción sin sentido, 401 y 403). Job `e2e` en el CI con capturas y trazas como artefacto si falla. Guía en `docs/aprende/e2e.md`.
 
 ### Cambiado
