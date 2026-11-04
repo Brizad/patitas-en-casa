@@ -19,6 +19,7 @@ Cada una dice qué se eligió y cómo cambiarla.
 | P-12 | DT-09: ¿qué hacer cuando alguien se registra con un correo que ya tiene cuenta? | Se responde igual que a un registro nuevo y **no se avisa** al dueño (no hay SMTP en producción, P-08). | Con SMTP configurado, pídeme «avisar al dueño del correo»: se encola un aviso «alguien intentó registrarse con tu correo» con el mismo outbox de #63. |
 | P-13 | RNF-08: ¿cifrar los perfiles con la misma clave del contacto del ciudadano? | Sí, `PATITAS_CLAVE_DATOS`: una sola clave que guardar. Si se pierde, los perfiles (y los contactos) no se pueden leer. | Copia la clave de Render → *Environment* a un gestor de contraseñas. Si prefieres otra clave para adopción, pídemelo. |
 | P-14 | RNF-12: ¿guardar en la bitácora los valores del perfil del adoptante? | No: solo los nombres de los campos que cambiaron. La bitácora no está cifrada y el perfil sí. | Si el profesor exige los valores, se pueden guardar cifrados con `PATITAS_CLAVE_DATOS`; pídemelo. |
+| P-15 | Auditoría A-02 (#237): ¿cuántos reportes públicos por IP? | **20 cada 15 minutos** (`REPORTES_MAXIMOS_POR_IP` en `app/config.py`), 429 con `Retry-After` y un mensaje que pide reintentar si es una emergencia. Los reenvíos de la cola sin conexión (misma `Idempotency-Key`) no cuentan. Generoso porque los operadores móviles comparten una IP entre muchos vecinos. | Subir o bajar el número en `app/config.py`, o quitar el límite borrando `contar_reporte` en `crear_reporte`. |
 
 **Texto sugerido para la regla 2 de `CLAUDE.md` (lo pegas tú):**
 
