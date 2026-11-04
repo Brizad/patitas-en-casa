@@ -21,6 +21,16 @@ erDiagram
     text clave
     timestamp_with_time_zone ocurrido_en
   }
+  piloto {
+    varchar codigo PK
+    varchar token_hash UK
+    timestamp_with_time_zone creado_en
+    timestamp_with_time_zone vence_en
+    timestamp_with_time_zone reporte_en
+    integer segundos
+    smallint_ sus
+    timestamp_with_time_zone respondido_en
+  }
   refugios {
     integer id PK
     text nombre

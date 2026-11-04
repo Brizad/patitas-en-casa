@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Modo piloto, parte 2 (#258): tabla `piloto` (migración `0033`: código P01, hash del token, fechas, segundos y `sus` como arreglo de 10) y `RepositorioPilotoPostgres`, con las mismas pruebas de contrato que el de memoria. Para actualizar: `alembic upgrade head`.
 - Modo piloto, parte 1 (#258, RNF-06): `ServicioPiloto` invita participantes anónimos (P01, P02…) con un token de un solo uso de 24 h, valida el reporte de prueba con las mismas reglas que uno real (RN-01) **sin guardarlo** como reporte, guarda los segundos y las 10 respuestas del SUS y arma el CSV de `scripts/operacion/resultados_piloto.py`. `ServicioReportes.validar` queda público.
 - `ESTADO_PROYECTO.md` (#256): estado al 4 de noviembre de 2026 con lo hecho (PR #230 a #255), lo que falló y por qué, y lo pendiente.
 - Manual de usuario (#254): 21 capturas nuevas tomadas con Playwright sobre PostgreSQL y datos de demostración (ciudadano a 390 px; veterinario con análisis de video, vista previa e historial; rescatista con rescate en curso y «Mis rescates»; coordinador con el código del reporte en el ingreso; adoptante, administrador y Alcaldía) y `docs/manual-usuario.md` paso a paso por rol. `capturas.mjs` usa por defecto la instancia local de `e2e.md`.

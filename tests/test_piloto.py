@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from app.piloto.repositorio_postgres import RepositorioPilotoPostgres
 from app.piloto.servicio import RepositorioPilotoEnMemoria, ServicioPiloto, puntaje_sus
 from scripts.operacion.resultados_piloto import calcular
 
@@ -11,8 +12,10 @@ REPORTE = {"descripcion": TEXTO, "direccion": "Parque Santander, Cúcuta"}
 SUS = [4, 2, 5, 1, 4, 2, 5, 1, 4, 2]  # SUS = 85
 
 
-@pytest.fixture
-def repositorio():
+@pytest.fixture(params=["memoria", pytest.param("postgres", marks=pytest.mark.postgres)])
+def repositorio(request):
+    if request.param == "postgres":
+        return RepositorioPilotoPostgres(request.getfixturevalue("bd_limpia"))
     return RepositorioPilotoEnMemoria()
 
 

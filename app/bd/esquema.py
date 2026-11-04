@@ -444,3 +444,20 @@ vistas_trozos = Table(
     CheckConstraint("octet_length(datos) <= 1048576", name="ck_vistas_trozos_tamano"),
     Index("ix_vistas_trozos_creado", "creado_en"),
 )
+
+# RNF-06 (#258): piloto de usabilidad. Un participante anónimo por fila (P01, P02…); el reporte
+# de prueba no se guarda en `reportes`. Solo segundos y respuestas del SUS, sin datos personales.
+piloto = Table(
+    "piloto",
+    metadata,
+    Column("codigo", String(4), primary_key=True),
+    Column("token_hash", String(64), nullable=False, unique=True),  # SHA-256, nunca el token
+    Column("creado_en", DateTime(timezone=True), nullable=False),
+    Column("vence_en", DateTime(timezone=True), nullable=False),
+    Column("reporte_en", DateTime(timezone=True)),
+    Column("segundos", Integer),
+    Column("sus", ARRAY(SmallInteger)),
+    Column("respondido_en", DateTime(timezone=True)),
+    CheckConstraint("segundos BETWEEN 1 AND 3600", name="ck_piloto_segundos"),
+    CheckConstraint("sus IS NULL OR cardinality(sus) = 10", name="ck_piloto_sus"),
+)
