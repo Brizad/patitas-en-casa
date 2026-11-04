@@ -115,6 +115,17 @@
 .ds-tabla th, .ds-tabla td { padding: 10px var(--ds-e2); border-bottom: 1px solid var(--ds-linea); vertical-align: top; }
 .ds-tabla tbody tr:hover { background: var(--ds-marca-tenue); }
 .ds-tabla-caja { overflow-x: auto; }
+/* #252: en el celular cada fila es una tarjeta con la etiqueta de cada dato (data-etiqueta):
+   nada que deslizar de lado. Los roles de la tabla se mantienen en el HTML (role=...). */
+@media (max-width: 600px) {
+  .ds-tabla--tarjetas thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ds-tabla--tarjetas, .ds-tabla--tarjetas tbody, .ds-tabla--tarjetas tr, .ds-tabla--tarjetas td { display: block; width: 100%; }
+  .ds-tabla--tarjetas tr { padding: var(--ds-e2) 0; border-bottom: 1px solid var(--ds-linea-fuerte); }
+  .ds-tabla--tarjetas td { display: flex; justify-content: space-between; gap: var(--ds-e3); padding: 4px 0;
+    border: 0; text-align: right; }
+  .ds-tabla--tarjetas td::before { content: attr(data-etiqueta); font-weight: 700; color: var(--ds-suave);
+    text-align: left; }
+}
 
 /* Estados vacíos y mensajes (error, éxito, aviso, información). */
 .ds-vacio { text-align: center; padding: var(--ds-e6) var(--ds-e4); color: var(--ds-suave);

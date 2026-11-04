@@ -98,7 +98,7 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
           <figcaption>Tres momentos del video, con los puntos del cuerpo que midió el análisis.
             </figcaption>
         </figure>)}
-      {analisis.estado === "terminado" && !tira && (
+      {analisis.estado === "terminado" && !tira && !analisis.tiene_vista && (
         <p className="ds-suave">Este análisis no trae imágenes.</p>)}
     </div>
   );
