@@ -2,7 +2,7 @@
 
 # Diccionario de datos
 
-21 tablas, leídas de `app/bd/esquema.py` (la misma definición que usan las migraciones de Alembic). La descripción es el comentario del código; «—» quiere decir que el código no tiene comentario para esa columna.
+22 tablas, leídas de `app/bd/esquema.py` (la misma definición que usan las migraciones de Alembic). La descripción es el comentario del código; «—» quiere decir que el código no tiene comentario para esa columna.
 
 ## `bitacora`
 
@@ -30,6 +30,23 @@ DT-06: un fallo de inicio de sesión por fila. clave = "correo:<correo>" o "ip:<
 | `ocurrido_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
 
 Restricciones e índices: `ck_intentos_fallidos_clave`: `clave <> ''`; `ix_intentos_fallidos_clave_ocurrido_en`: índice (clave, ocurrido_en).
+
+## `piloto`
+
+RNF-06 (#258): piloto de usabilidad. Un participante anónimo por fila (P01, P02…); el reporte de prueba no se guarda en `reportes`. Solo segundos y respuestas del SUS, sin datos personales.
+
+| Columna | Tipo | Nulo | Clave | Por defecto | Descripción |
+|---|---|---|---|---|---|
+| `codigo` | VARCHAR(4) | no | PK | — | — |
+| `token_hash` | VARCHAR(64) | no | única | — | SHA-256, nunca el token |
+| `creado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
+| `vence_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
+| `reporte_en` | TIMESTAMP WITH TIME ZONE | sí | — | — | — |
+| `segundos` | INTEGER | sí | — | — | — |
+| `sus` | SMALLINT[] | sí | — | — | — |
+| `respondido_en` | TIMESTAMP WITH TIME ZONE | sí | — | — | — |
+
+Restricciones e índices: `ck_piloto_segundos`: `segundos BETWEEN 1 AND 3600`; `ck_piloto_sus`: `sus IS NULL OR cardinality(sus) = 10`.
 
 ## `refugios`
 

@@ -42,7 +42,7 @@ def motor_pruebas():
 
 REFUGIO_DEMO = ("Refugio demo Cúcuta", 40)
 # Todas las tablas con datos; una tabla nueva se agrega aquí.
-TABLAS = ("videos_trozos", "analisis_video", "fotos_animales", "bitacora", "seguimientos",
+TABLAS = ("piloto", "videos_trozos", "analisis_video", "fotos_animales", "bitacora", "seguimientos",
           "solicitudes", "publicaciones", "perfiles_adoptante", "historial_clinico", "descartes",
           "avisos",
           "escalamientos", "rescates", "rescatistas", "decisiones_triaje", "reportes", "animales",
