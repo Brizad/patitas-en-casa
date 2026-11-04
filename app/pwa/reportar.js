@@ -178,10 +178,10 @@
     const sinSentido = !corta && !conSentido(texto);
     const sinUbicacion = !gps && !direccion.value.trim();
     errorEn(descripcion, 'error-descripcion', corta
-      ? 'Describe un poco más: mínimo ' + MIN_CARACTERES + ' caracteres (RN-01).'
+      ? 'Describe un poco más: mínimo ' + MIN_CARACTERES + ' caracteres.'
       : sinSentido ? 'Describe con palabras qué le pasa al animal.' : '');
     errorEn(direccion, 'error-ubicacion', sinUbicacion
-      ? 'Indica la ubicación o usa el GPS (RN-01).' : '');
+      ? 'Escribe dónde está el animal o toca «Usar mi GPS».' : '');
     if (corta || sinSentido) descripcion.focus();
     else if (sinUbicacion) direccion.focus();
     const sinPermiso = $('contacto').value.trim() !== '' && !$('autoriza-contacto').checked;

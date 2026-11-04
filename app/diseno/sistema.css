@@ -43,6 +43,7 @@
 .ds :focus-visible { outline: 3px solid var(--ds-marca); outline-offset: 2px; border-radius: 4px; }
 .ds [hidden] { display: none !important; }
 .ds .ds-saltar { position: absolute; left: var(--ds-e2); top: -64px; z-index: 20; padding: var(--ds-e2) var(--ds-e3);
+  min-height: 44px; display: inline-flex; align-items: center;  /* #250: objetivo de 44 px */
   background: var(--ds-superficie); color: var(--ds-tinta); border-radius: var(--ds-radio); font-weight: 700; }
 .ds .ds-saltar:focus { top: var(--ds-e2); }
 .ds .ds-suave { color: var(--ds-suave); }
@@ -66,7 +67,7 @@
 .ds-btn--pri:hover:not(:disabled), .ds button.principal:hover:not(:disabled) { background: var(--ds-marca-fuerte); border-color: var(--ds-marca-fuerte); color: var(--ds-sobre-marca); }
 .ds-btn--peligro { background: var(--ds-peligro); border-color: var(--ds-peligro); color: var(--ds-sobre-peligro); }
 .ds-btn--peligro:hover:not(:disabled) { background: var(--ds-peligro); filter: brightness(.92); }
-.ds-btn--chico { min-height: 36px; padding: 0 var(--ds-e3); font-size: var(--ds-t-xs); }
+.ds-btn--chico { min-height: 44px; padding: 0 var(--ds-e3); font-size: var(--ds-t-xs); }
 .ds-btn--grande { min-height: 56px; font-size: var(--ds-t-md); border-radius: var(--ds-radio-lg); }
 .ds-btn:disabled, :where(.ds) button:disabled { opacity: .55; cursor: default; }
 
@@ -75,9 +76,11 @@
 .ds input, .ds select, .ds textarea { display: block; width: 100%; margin-top: var(--ds-e1); min-height: 44px;
   padding: 10px var(--ds-e3); font: var(--ds-t-md) var(--ds-fuente); color: var(--ds-tinta);
   background: var(--ds-superficie); border: 1px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); }
+/* #250: toda la etiqueta es el objetivo táctil (44 px) y la casilla mide 22 px. */
 .ds label:has(> input[type="checkbox"]), .ds label:has(> input[type="radio"]) { display: flex; gap: var(--ds-e2);
-  align-items: flex-start; font-weight: 500; }
-.ds input[type="checkbox"], .ds input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--ds-marca); }
+  align-items: center; font-weight: 500; min-height: 44px; }
+.ds input[type="checkbox"], .ds input[type="radio"] { width: 22px; height: 22px; min-height: 0; margin: 0; flex: none;
+  accent-color: var(--ds-marca); }
 .ds input[type="file"] { padding: 8px var(--ds-e3); font-size: var(--ds-t-sm); }
 .ds textarea { min-height: 96px; resize: vertical; }
 .ds [aria-invalid="true"] { border-color: var(--ds-peligro); }

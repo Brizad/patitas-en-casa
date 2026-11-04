@@ -81,3 +81,27 @@ prueba con lector de pantalla y con personas (RNF-06).
   de nivel 1); ninguna de contraste. Ver la tabla de arriba.
 - **«¿Por qué en modo oscuro también?»** Porque los colores cambian: un texto que se lee
   bien sobre blanco puede no leerse sobre gris oscuro.
+
+## Revisión responsive (#250, 4 de noviembre de 2026)
+
+`scripts/accesibilidad/responsive.mjs` recorre con Playwright cada pantalla pública, los
+errores visibles (reporte vacío, contraseña equivocada) y todas las pestañas de los 6 roles a
+**360, 768 y 1440 px, en claro y oscuro** (126 combinaciones), y mide lo que axe no mide:
+desplazamiento horizontal, textos cortados, tablas que se salen sin caja con desplazamiento y
+objetivos táctiles de menos de **44 × 44 px**; además, el contraste con axe-core.
+
+| Hallazgo (antes) | Dónde | Corrección |
+|---|---|---|
+| Casillas de 13 px, desalineadas con su texto | Ingreso (coordinador), disponibilidad (rescatista), perfil (adoptante), PWA | Toda la etiqueta mide 44 px y la casilla 22 px, centrada |
+| Nombres de los animales (botones con aspecto de enlace) de 24 px | Refugio (veterinaria y coordinador) | `button.enlace` de 44 px |
+| «¿Quieres adoptar? Crea tu cuenta» de 24 px | Inicio de sesión del panel | Igual que arriba |
+| «Usar mi GPS» de 36 px | PWA | `.ds-btn--chico` de 44 px |
+| Enlaces «Saltar al contenido» / «Saltar a la cola» de 40 px | Inicio y cola | 44 px |
+| El ciudadano leía «(RN-01)» en los errores | PWA | «Describe un poco más: mínimo 20 caracteres.» y «Escribe dónde está el animal o toca «Usar mi GPS».» |
+
+Sin hallazgos en las 126 combinaciones: desplazamiento horizontal, textos cortados, tablas
+fuera de pantalla ni contraste. **Después: 0 problemas**; `revisar.mjs` sigue en 54 revisiones
+sin fallas y Lighthouse 100. Capturas antes y después (360 px) en `docs/manual/antes/responsive-*`
+y `docs/manual/responsive-*`. Para repetirla:
+`PATITAS_DEMO_CONTRASENA=... node responsive.mjs http://127.0.0.1:8010 carpeta` (instancia de
+`docs/aprende/e2e.md`).
