@@ -18,7 +18,8 @@ def test_el_modo_piloto_se_carga_antes_que_la_app_y_empieza_oculto():
 
 def test_un_reporte_de_prueba_nunca_entra_a_la_cola_sin_senal():
     assert "!piloto && escribirCola(" in REPORTAR
-    cola = REPORTAR[REPORTAR.index("async function vaciarCola"):REPORTAR.index("function enviarPendientes")]
+    inicio = REPORTAR.index("async function vaciarCola")
+    cola = REPORTAR[inicio:REPORTAR.index("function enviarPendientes")]
     assert "enviar(pendiente)" in cola  # la cola siempre manda a /reportes
 
 
