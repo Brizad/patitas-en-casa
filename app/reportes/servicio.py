@@ -41,7 +41,7 @@ class ServicioReportes:
         """RF-12 (#61): la PWA reenvía con la misma clave el reporte guardado sin señal.
         Devuelve el reporte y si es nuevo; con una clave ya usada devuelve el primero, sin
         volver a clasificarlo ni compararlo con los datos nuevos."""
-        self._validar(descripcion, ubicacion, video_segundos, video_mb)
+        self.validar(descripcion, ubicacion, video_segundos, video_mb)
         anterior = self._repositorio.buscar_por_clave(clave)
         if anterior is not None:
             return anterior, False
@@ -50,7 +50,7 @@ class ServicioReportes:
         return guardado, guardado.codigo == reporte.codigo
 
     def _nuevo(self, descripcion, ubicacion, video_segundos, video_mb) -> Reporte:
-        self._validar(descripcion, ubicacion, video_segundos, video_mb)
+        self.validar(descripcion, ubicacion, video_segundos, video_mb)
         codigo = generar_codigo()
         while self._repositorio.buscar(codigo) is not None:
             codigo = generar_codigo()
@@ -60,7 +60,7 @@ class ServicioReportes:
         return reporte
 
     @staticmethod
-    def _validar(descripcion, ubicacion, video_segundos, video_mb) -> None:
+    def validar(descripcion, ubicacion, video_segundos, video_mb) -> None:
         if len(descripcion.strip()) < MIN_CARACTERES_DESCRIPCION:
             raise ReporteInvalido("La descripción debe tener al menos 20 caracteres.")
         if not descripcion_con_sentido(descripcion):
