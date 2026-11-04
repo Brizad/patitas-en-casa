@@ -33,6 +33,9 @@ MAX_CARACTERES_DESCRIPCION = 500
 MAX_CARACTERES_DIRECCION = 200
 MAX_CUERPO_BYTES = 1024 * 1024
 
+# RNF-06 (#258): horas que dura el enlace de un participante del piloto de usabilidad.
+PILOTO_HORAS_VIGENCIA = 24
+
 # RF-17 (#75): dos reportes con GPS a esta distancia y en este rato son posibles duplicados.
 DUPLICADO_METROS = 200
 DUPLICADO_HORAS = 2
