@@ -1,4 +1,5 @@
-"""Límite de intentos fallidos de inicio de sesión (DT-06) y de registros por IP (DT-09).
+"""Límite de intentos fallidos de inicio de sesión (DT-06), de registros por IP (DT-09)
+y de reportes públicos por IP (A-02, #237).
 
 Cada fallo se guarda con una clave ("correo:<correo>" o "ip:<ip>") y la hora en que ocurrió.
 Una clave con el máximo de fallos dentro de la ventana queda bloqueada hasta que el fallo más
@@ -15,6 +16,7 @@ from app.config import (
     INTENTOS_MAXIMOS,
     INTENTOS_MAXIMOS_POR_IP,
     REGISTROS_MAXIMOS_POR_IP,
+    REPORTES_MAXIMOS_POR_IP,
     VENTANA_INTENTOS_MINUTOS,
 )
 
@@ -67,13 +69,19 @@ def clave_registro(ip: str) -> str:
     return f"registro:{ip}"
 
 
+def clave_reporte(ip: str) -> str:
+    """A-02 (#237): cada reporte público nuevo cuenta, salga bien o no."""
+    return f"reporte:{ip}"
+
+
 class LimiteIntentos:
     def __init__(self, repositorio: RepositorioIntentos, *, maximo: int = INTENTOS_MAXIMOS,
                  ventana: timedelta = timedelta(minutes=VENTANA_INTENTOS_MINUTOS),
                  maximos: Mapping[str, int] | None = None,
                  reloj: Callable[[], datetime] | None = None) -> None:
         """«maximos» cambia el máximo por tipo de clave, p. ej. {"ip": 20}."""
-        self._maximos = ({"ip": INTENTOS_MAXIMOS_POR_IP, "registro": REGISTROS_MAXIMOS_POR_IP}
+        self._maximos = ({"ip": INTENTOS_MAXIMOS_POR_IP, "registro": REGISTROS_MAXIMOS_POR_IP,
+                          "reporte": REPORTES_MAXIMOS_POR_IP}
                          if maximos is None else dict(maximos))
         if maximo < 1 or any(m < 1 for m in self._maximos.values()):
             raise ValueError("El máximo de intentos debe ser 1 o más.")

@@ -23,6 +23,9 @@ VENTANA_INTENTOS_MINUTOS = 15
 # DT-09 (#149): registros públicos de adoptante por IP en la misma ventana. Una familia
 # o una oficina con una sola IP puede crear varias cuentas; un robot no, cientos.
 REGISTROS_MAXIMOS_POR_IP = 5
+# Auditoría A-02 (#237): reportes públicos por IP en la misma ventana. Generoso: varios
+# vecinos pueden compartir la IP del operador móvil; un robot manda cientos.
+REPORTES_MAXIMOS_POR_IP = 20
 
 # Auditoría A-01 (#235): topes del reporte público (los mismos de la PWA) y de cualquier
 # cuerpo JSON o de formulario. Las subidas de video y fotos tienen sus propios límites.
