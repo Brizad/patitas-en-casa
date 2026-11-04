@@ -3,17 +3,39 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Protocol
 
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.repositorio import RepositorioAvisosEnMemoria
-from app.dominio.modelos import DECIDIDOS, DecisionTriaje, Descarte, EstadoReporte, Reporte
+from app.dominio.modelos import (
+    DECIDIDOS,
+    DecisionTriaje,
+    Descarte,
+    EstadoReporte,
+    Prioridad,
+    Reporte,
+)
+
+# A-03 (#239): prioridades que se ofrecen a los rescatistas (RN-08).
+DE_RESCATE = (Prioridad.CRITICA, Prioridad.ALTA)
 
 
 class RepositorioReportes(Protocol):
     def guardar(self, reporte: Reporte) -> None: ...
     def buscar(self, codigo: str) -> Reporte | None: ...
     def todos(self) -> list[Reporte]: ...
+
+    # A-03 (#239): consultas acotadas; filtran en la base en vez de leer toda la historia.
+    def pendientes(self) -> list[Reporte]:
+        """Los que aún no confirma ni descarta un veterinario (la cola)."""
+        ...
+
+    def creados_desde(self, limite: datetime) -> list[Reporte]: ...
+
+    def confirmados_de_rescate(self) -> list[Reporte]:
+        """Confirmados con prioridad crítica o alta (los que se ofrecen a rescatistas)."""
+        ...
 
     def confirmar(self, decision: DecisionTriaje, avisos: Sequence[AvisoNuevo] = ()) -> bool:
         """HU-02: si el reporte no está confirmado, lo confirma con la prioridad final y guarda
@@ -68,6 +90,16 @@ class RepositorioEnMemoria:
 
     def todos(self) -> list[Reporte]:
         return list(self._datos.values())
+
+    def pendientes(self) -> list[Reporte]:
+        return [r for r in self._datos.values() if r.estado not in DECIDIDOS]
+
+    def creados_desde(self, limite: datetime) -> list[Reporte]:
+        return [r for r in self._datos.values() if r.creado_en >= limite]
+
+    def confirmados_de_rescate(self) -> list[Reporte]:
+        return [r for r in self._datos.values()
+                if r.estado == EstadoReporte.CONFIRMADO and r.prioridad in DE_RESCATE]
 
     def confirmar(self, decision: DecisionTriaje, avisos: Sequence[AvisoNuevo] = ()) -> bool:
         with self._candado:

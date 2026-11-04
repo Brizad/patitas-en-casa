@@ -20,13 +20,14 @@ SECRETO_PRUEBAS = "secreto-de-pruebas-con-mas-de-32-caracteres"
 CLAVE = "clave-de-prueba-larga"
 
 
-def cliente():
+def cliente(repositorio=None):
     """Repositorios en memoria con una veterinaria y una coordinadora registradas."""
     usuarios = RepositorioUsuariosEnMemoria()
     ServicioUsuarios(usuarios).registrar("vet@patitas.co", "Ana Vet", Rol.VETERINARIO, CLAVE)
     ServicioUsuarios(usuarios).registrar("coord@patitas.co", "Coord", Rol.COORDINADOR, CLAVE)
     cupos = RepositorioCuposEnMemoria(Refugio("Refugio demo Cúcuta", capacidad=40))
-    return TestClient(crear_app(RepositorioEnMemoria(), cupos, repositorio_usuarios=usuarios,
+    return TestClient(crear_app(repositorio or RepositorioEnMemoria(), cupos,
+                                repositorio_usuarios=usuarios,
                                 emisor_tokens=EmisorTokens(SECRETO_PRUEBAS)))
 
 
