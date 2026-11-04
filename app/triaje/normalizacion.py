@@ -11,4 +11,5 @@ def normalizar(texto: str) -> str:
         c for c in unicodedata.normalize("NFD", texto.lower())
         if unicodedata.category(c) != "Mn"
     )
-    return " ".join(sin_tildes.split())
+    # #245: ninguna palabra en español empieza por «rr»; el celular escribe «no rrespira».
+    return " ".join(p[1:] if p.startswith("rr") else p for p in sin_tildes.split())

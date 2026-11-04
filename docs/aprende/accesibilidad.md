@@ -70,7 +70,7 @@ Lo que falta, dicho claro:
 4. **Teclado**: se revisó a mano en la prueba de punta a punta (#122: dos fallas corregidas);
    axe solo confirma que los elementos interactivos son alcanzables y tienen nombre.
 
-Por eso RNF-11 queda **parcial** en `trazabilidad.md`: lo medible está en 100 %, falta la
+Por eso RNF-11 queda **parcial** en `../tesis/trazabilidad.md`: lo medible está en 100 %, falta la
 prueba con lector de pantalla y con personas (RNF-06).
 
 ## Para la sustentación
