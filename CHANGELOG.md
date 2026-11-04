@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- `docs/aprende/sustentacion.md` (#247): 60 preguntas de jurado con respuesta corta y el archivo donde se ve en el código, y un recorrido de 5 minutos para la demo en vivo.
 - Documentación de tesis, parte 2 (#243): `docs/tesis/c4.md` (contexto, contenedores y componentes en Mermaid), `docs/tesis/pruebas.md` (plan y reporte con los números del CI: 864 pruebas, 97,22 % de cobertura, 58 de Vitest, 8 e2e, 50 revisiones de axe-core sin fallas) y la matriz de trazabilidad movida a `docs/tesis/trazabilidad.md` y puesta al día (RNF-08 con la vista previa, RNF-15 activo, Mailjet, PostgreSQL 18 en Neon, historiales y avisos al ciudadano).
 - Documentación de tesis generada desde el código (#243): `python -m scripts.tesis.generar_docs` escribe en `docs/tesis/` el E-R en Mermaid y el diccionario de datos (21 tablas, desde `app/bd/esquema.py`) y el catálogo de las 67 rutas con quién puede usarlas, sus códigos de respuesta y los requisitos que cita su código. Una prueba comprueba que el catálogo y el diccionario no dejan nada por fuera.
 - Auditoría de seguridad, calidad y rendimiento (#241) en `docs/aprende/auditoria.md`: OWASP Top 10 por endpoint, sin hallazgos altos; tres medios corregidos (#236, #238, #240) y el resto en `DEUDA_TECNICA.md` (DT-11 a DT-13).
