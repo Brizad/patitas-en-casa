@@ -26,6 +26,10 @@ class RepositorioReportes(Protocol):
     def buscar(self, codigo: str) -> Reporte | None: ...
     def todos(self) -> list[Reporte]: ...
 
+    def buscar_varios(self, codigos: Sequence[str]) -> dict[str, Reporte]:
+        """DT-12 (#265): varios reportes en una sola consulta; los que no existen no salen."""
+        ...
+
     # A-03 (#239): consultas acotadas; filtran en la base en vez de leer toda la historia.
     def pendientes(self) -> list[Reporte]:
         """Los que aún no confirma ni descarta un veterinario (la cola)."""
@@ -90,6 +94,9 @@ class RepositorioEnMemoria:
 
     def todos(self) -> list[Reporte]:
         return list(self._datos.values())
+
+    def buscar_varios(self, codigos: Sequence[str]) -> dict[str, Reporte]:
+        return {c: self._datos[c] for c in codigos if c in self._datos}
 
     def pendientes(self) -> list[Reporte]:
         return [r for r in self._datos.values() if r.estado not in DECIDIDOS]

@@ -58,6 +58,11 @@ class RepositorioPostgres:
                                      .order_by(reportes.c.creado_en)).mappings()
             return [_a_reporte(fila) for fila in filas]
 
+    def buscar_varios(self, codigos: Sequence[str]) -> dict[str, Reporte]:
+        if not codigos:
+            return {}
+        return {r.codigo: r for r in self._donde(reportes.c.codigo.in_(list(set(codigos))))}
+
     def pendientes(self) -> list[Reporte]:
         return self._donde(reportes.c.estado.not_in([e.value for e in DECIDIDOS]))
 
