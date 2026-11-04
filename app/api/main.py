@@ -8,6 +8,7 @@ import asyncio
 import contextlib
 import hmac
 import logging
+import math
 import mimetypes
 import re
 import tempfile
@@ -153,6 +154,7 @@ from app.usuarios.intentos import (
     clave_correo,
     clave_ip,
     clave_registro,
+    clave_reporte,
 )
 from app.usuarios.intentos_postgres import RepositorioIntentosPostgres
 from app.usuarios.repositorio import CorreoDuplicado, RepositorioUsuarios
@@ -1023,11 +1025,26 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
         return Response(pdf, media_type="application/pdf", headers={
             "Content-Disposition": f'attachment; filename="compromiso-{s.id}.pdf"'})
 
+    def contar_reporte(peticion: Request) -> None:
+        """A-02 (#237): 429 con Retry-After si esta IP ya mandó el máximo de reportes."""
+        limite = [clave_reporte(peticion.client.host if peticion.client else "desconocida")]
+        espera = limite_intentos.segundos_de_bloqueo(limite)
+        if espera:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Recibimos muchos reportes desde esta conexión. Si es una emergencia, "
+                       f"intenta de nuevo en {math.ceil(espera / 60)} minutos.",
+                headers={"Retry-After": str(espera)})
+        limite_intentos.registrar_fallo(limite)
+
     @app.post("/reportes", status_code=201)
-    def crear_reporte(datos: ReporteEntrada, respuesta: Response,
+    def crear_reporte(datos: ReporteEntrada, respuesta: Response, peticion: Request,
                       clave: ClaveIdempotencia = None):
         """RF-01. RF-12 (#61): con Idempotency-Key, reenviar el mismo reporte devuelve el mismo
-        código con 200 en vez de crear otro; sin el encabezado funciona como antes."""
+        código con 200 en vez de crear otro; sin el encabezado funciona como antes.
+        A-02 (#237): máximo REPORTES_MAXIMOS_POR_IP reportes nuevos por IP en la ventana."""
+        if clave is None or repositorio.buscar_por_clave(clave) is None:  # reenvío: no cuenta
+            contar_reporte(peticion)
         ubicacion = Ubicacion(datos.latitud, datos.longitud, datos.direccion, datos.comuna)
         video = (datos.video_segundos, datos.video_mb)
         contacto = None
