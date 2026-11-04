@@ -141,7 +141,7 @@ carga, sondeo y OWASP ZAP RNF-01/04/05/14 (#120) y los arreglos de la prueba de 
 (#122). En el #108 ya habían entrado el rol Alcaldía (RF-13), la dirección del refugio
 (RF-14), el historial de acceso (RF-16), la alerta por refugio (RF-07), el refugio en el
 compromiso (RF-29), la discrepancia texto/video (RF-19) y la complejidad ≤ 10 (RNF-10).
-Detalle completo en `trazabilidad.md`.
+Detalle completo en `../tesis/trazabilidad.md`.
 
 ## Prueba de punta a punta (29 de octubre de 2026)
 
@@ -387,7 +387,7 @@ de video de la fase 6 sobre la v1.0.0), desplegada en https://patitas-en-casa-pn
 - Calidad: más de 650 pruebas con PostgreSQL real, 97 % de cobertura, complejidad ≤ 10,
   gitleaks, sondeo de disponibilidad y OWASP ZAP.
 
-**Qué no y por qué** (detalle en `trazabilidad.md`):
+**Qué no y por qué** (detalle en `../tesis/trazabilidad.md`):
 
 - Video (RF-03): funciona con el trabajador local, pero su modelo no está validado con
   veterinarios y el trabajador debe estar encendido (fase 6, arriba).
@@ -409,7 +409,7 @@ de video de la fase 6 sobre la v1.0.0), desplegada en https://patitas-en-casa-pn
    `CLAUDE.md`), P-07 (respaldo), P-08 (correo real), P-09 (video) y P-10 (prueba con
    usuarios).
 5. Estudia en este orden: `00-mapa.md`, las seis guías de fase (cada una con sus 5
-   preguntas y respuestas), `preguntas-sustentacion.md` y `trazabilidad.md`.
+   preguntas y respuestas), `preguntas-sustentacion.md` y `../tesis/trazabilidad.md`.
 
 ## Rediseño de la interfaz (PR #165 a #182)
 
@@ -442,7 +442,7 @@ la base está en Neon. Todo lo que sigue es lo **único** que no está cerrado d
 | 7 | RNF-01 / RNF-14 | Medir la carga **en Render con Neon** (solo se midió en local) | **Brayan autoriza**; el asistente corre `prueba_carga.py` | Con una base de prueba, para no llenar los 1 GB de Neon con reportes falsos. |
 | 8 | RNF-11 | Recorrido con un **lector de pantalla** (NVDA, TalkBack) | **Brayan** | Anotar fallas; el asistente las corrige. axe-core y Lighthouse ya dan 0 fallas. |
 | 9 | RNF-07 | Probar la PWA en un Android 8 / 2 GB físico | **Brayan** (un teléfono) | Abrir la PWA y reportar con y sin señal. |
-| 10 | RNF-08 | Confirmar el cifrado en reposo de Neon (no se puede verificar desde aquí); los correos de las cuentas no se cifran porque son el usuario | **Brayan** (documentación de Neon) | Anotar la respuesta en `trazabilidad.md`. |
+| 10 | RNF-08 | Confirmar el cifrado en reposo de Neon (no se puede verificar desde aquí); los correos de las cuentas no se cifran porque son el usuario | **Brayan** (documentación de Neon) | Anotar la respuesta en `../tesis/trazabilidad.md`. |
 | 11 | RF-05 / RF-18 | Correo real: sin SMTP los avisos solo quedan en el log y en la app | **Brayan** (P-08) | Crear en Render `PATITAS_SMTP_HOST`, `PATITAS_SMTP_USUARIO`, `PATITAS_SMTP_CONTRASENA`, `PATITAS_SMTP_REMITENTE`. |
 | 12 | RNF-09 | En el texto hoy se muestran **hasta 3** evidencias útiles (#186), no siempre 3. Si el ERS o el profesor exigen siempre 3, hay que decidirlo | **Brayan** (con el profesor) | Si exigen 3, se vuelve a rellenar con lo que opinó cada parte; el asistente lo cambia. |
 

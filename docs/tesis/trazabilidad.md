@@ -1,10 +1,11 @@
 # Trazabilidad de requisitos (ERS v5.0 → código, pruebas y PR)
 
-Fuente de los requisitos: ERS final (Actividad Semana 2, versión 5.0). Estado al 2 de
-noviembre de 2026 (v1.1.0 más los cambios posteriores #165 a #189), con `main` desplegado en
-https://patitas-en-casa-pnnk.onrender.com. **La base de datos real está en Neon** (plan gratis,
-1 GB; ya no en la base de Render, #184) y el análisis de video lo hace el **nodo local** del
-equipo (WSL2), que debe estar encendido.
+Fuente de los requisitos: ERS final (Actividad Semana 2, versión 5.0). Estado al 4 de
+noviembre de 2026 (v1.2.0 más los cambios sin publicar del `CHANGELOG.md`, hasta #243), con
+`main` desplegado en https://patitas-en-casa-pnnk.onrender.com. **La base de datos real es
+PostgreSQL 18 en Neon** (plan gratis, 1 GB; #184, #211) y el análisis de video lo hace el
+**nodo local** del equipo (WSL2), que debe estar encendido. Números de la suite de hoy en
+`pruebas.md`.
 
 **Cómo leer la tabla.** *Hecho*: cumple lo que pide el ERS y hay una prueba que lo verifica.
 *Parcial*: cumple lo esencial y se dice qué falta. *Pendiente*: no está construido; se explica
@@ -12,7 +13,7 @@ por qué. Los PR de las fases 1 a 5 se revisaron uno por uno (#66 a #107) y se i
 `main` juntos en el **#108**; por eso aparecen como «#NN → #108». Todas las rutas de pruebas
 están en `tests/`.
 
-Resumen: **RF: 32 hechos. RNF: 11 hechos, 4 parciales, 1 pendiente** (RNF-06), más RNF-15 que espera la decisión de Brayan. La fase 6 (#125) cerró RF-01, RF-03, RF-19 y RNF-02: el video se sube, el nodo local lo
+Resumen: **RF: 32 hechos. RNF: 11 hechos, 4 parciales, 1 pendiente** (RNF-06). La fase 6 (#125) cerró RF-01, RF-03, RF-19 y RNF-02: el video se sube, el nodo local lo
 analiza y el resultado se fusiona con el texto. Lo que falta del ERS y quién debe hacerlo está
 en `avance.md` (sección «Lo que falta del ERS»).
 
@@ -24,7 +25,7 @@ en `avance.md` (sección «Lo que falta del ERS»).
 | RF-02 | Prioridad sugerida con confianza y evidencias | Hecho; las evidencias del texto solo traen términos con sentido clínico (sin «se», «bien»…) y van primero las señales de las reglas (#187) | `app/triaje/` (`clasificador.py`, `modelo.py`, `combinado.py`) | `test_clasificador.py`, `test_modelo_triaje.py` | #96 → #108, #187 |
 | RF-03 | Analizar el video y la pose del animal | Hecho y funcionando con el **nodo local** (WSL2): MediaPipe Object Detector + DeepLabCut SuperAnimal-Quadruped + medidas de la marcha + MLP. El modelo se entrenó con datos sintéticos y el nodo debe estar encendido; si no, el reporte sigue con el texto (nota 2) | `servicios/video/`, `app/video/` | `test_video_marcha.py`, `test_video_clasificador.py`, `test_video_analisis.py`, `test_video_trabajador.py`, `test_video_nodo.py`, flujo «Video: prueba de humo» | #126 a #142; instalador #143 |
 | RF-04 | Cola por prioridad; confirmar o modificar con justificación | Hecho | `app/reportes/confirmacion.py`, `ordenar_cola` | `test_confirmacion.py`, `test_fechas_y_justificacion.py` | inc. 2, #77 → #108 |
-| RF-05 | Notificar a los rescatistas de la zona (crítico o alto) | Hecho (el envío real necesita SMTP, nota 3) | `app/rescates/servicio.py`, `app/avisos/` | `test_rescates_zona.py`, `test_avisos_procesador.py` | #58, #64 |
+| RF-05 | Notificar a los rescatistas de la zona (crítico o alto) | Hecho: los avisos salen por el outbox y la API HTTPS de Mailjet (nota 3) | `app/rescates/servicio.py`, `app/avisos/` | `test_rescates_zona.py`, `test_avisos_procesador.py` | #58, #64 |
 | RF-06 | Ingreso con ficha: especie, salud, tratamientos, vacunas, esterilización | Hecho | `app/cupos/servicio.py`, `app/cupos/fichas.py` | `test_cupos.py`, `test_ficha_clinica.py` | inc. 1, #81 → #108 |
 | RF-07 | Ocupación por refugio y alerta al 90 % a **sus** coordinadores | Hecho | `cupos_de` en `app/api/main.py`, `ServicioCupos` | `test_cupos_por_refugio.py`, `test_brechas_ers.py` | #80 → #108, #108 |
 | RF-08 | Perfil del adoptante sin datos de ingresos | Hecho | `app/adopciones/modelos.py` | `test_adoptante_perfil.py` | #86 → #108 |
@@ -64,14 +65,14 @@ en `avance.md` (sección «Lo que falta del ERS»).
 | RNF-05 | TLS ≥ 1.2, Argon2id, RBAC, bloqueo tras 5 intentos, ZAP sin altos | Hecho: TLS 1.0/1.1 rechazados y 1.2 aceptado (medido en Render); ZAP: **0 altos**; de 5 advertencias bajas quedan 3 informativas tras #122 (COEP y caché) | `zap.yml`, `test_limite_intentos.py`, `test_cabeceras.py` | inc. 2, #120, #122 |
 | RNF-06 | 80 % reporta en ≤ 90 s; SUS ≥ 70 | **Pendiente**: necesita 10 participantes reales (nota 5) | — | — |
 | RNF-07 | PWA en Android 8 / 2 GB; carga inicial ≤ 1,5 MB | Hecho: la PWA pesa **28 KB** y el panel 61 KB (medido en Render); gzip desde #122. No se probó en un teléfono físico | `app/pwa/` | #60, #122 |
-| RNF-08 | Datos personales cifrados (AES-256); minimización | Parcial: el contacto del ciudadano y el perfil del adoptante (#149) van con AES-256-GCM y se piden datos mínimos; el video original se borra al terminar el análisis, pero desde #214 el veterinario ve una vista previa de baja calidad (480p, ≤ 5 MB, con el esqueleto dibujado) que se guarda en PostgreSQL y se borra a los 7 días o al cerrarse el reporte (decisión del autor); los correos de las cuentas no se cifran porque son el usuario con el que se inicia sesión (nota 6) | `app/seguridad/cifrado.py` | #112 |
+| RNF-08 | Datos personales cifrados (AES-256); minimización | Parcial: el contacto del ciudadano y el perfil del adoptante (#149) van con AES-256-GCM y se piden datos mínimos; el video original se borra al terminar el análisis, pero desde #214 el veterinario ve una vista previa de baja calidad (480p, ≤ 5 MB, con el esqueleto dibujado) que se guarda en PostgreSQL y se borra a los 7 días o al cerrarse el reporte (decisión del autor). #231: si el nodo no genera la vista o la API la rechaza, el log del nodo y el panel lo dicen; los correos de las cuentas no se cifran porque son el usuario con el que se inicia sesión (nota 6) | `app/seguridad/cifrado.py`, `app/video/servicio.py` | #112, #149, #216, #232 |
 | RNF-09 | ≥ 3 evidencias o factores | Hecho en video y adopción (mínimo 3). En el texto, por decisión del autor (#186), se muestran **hasta 3 evidencias útiles**: si el texto no da 3 con sentido clínico se muestran menos y no se rellena. Ver `avance.md` | `app/triaje/combinado.py`, `compatibilidad.py` | #96, #97 → #108 |
-| RNF-10 | Cobertura ≥ 70 %, complejidad ≤ 10, ruff | Hecho: cobertura del 97 %; complejidad ≤ 10 en el CI (ruff C901) | `pyproject.toml`, `.github/workflows/ci.yml` | #108 |
+| RNF-10 | Cobertura ≥ 70 %, complejidad ≤ 10, ruff | Hecho: cobertura del **97,22 %** (864 pruebas, CI del 4-nov); complejidad ≤ 10 en el CI (ruff C901) | `pyproject.toml`, `.github/workflows/ci.yml` | #108 |
 | RNF-11 | WCAG 2.2 AA (contraste, teclado, lectores, objetivos ≥ 24 px) | Parcial: **medido** con axe-core y Lighthouse en cada PR (todas las pantallas y roles, claro, oscuro y 320 px): 0 fallas y Lighthouse 100 después de corregir 2 fallas del panel (`accesibilidad.md`). Teclado revisado a mano (#122). Falta escuchar el recorrido con un lector de pantalla | `panel/src/`, `app/pwa/` | #84 → #108, #122 |
 | RNF-12 | Bitácora con actor, fecha, valor anterior y nuevo, sin edición | Hecho (#149): actor, fecha, acción, objeto y, en los cambios importantes, el valor anterior y el nuevo (prioridad, estado del reporte, cuenta activa, refugio, solicitud, ocupación; del perfil solo los campos). Inmutable por disparador. No guarda valores personales | `app/bitacora/` | #103 → #108 |
-| RNF-13 | Docker, PostgreSQL 16, configuración por entorno | Hecho (Redis no hace falta: el outbox usa PostgreSQL). Desde #184 la base real está en Neon y la configuración sale del entorno (`POSTGRES_*`, `POSTGRES_SSLMODE`) | `Dockerfile`, `render.yaml` | #64 |
+| RNF-13 | Docker, PostgreSQL 16, configuración por entorno | Hecho (Redis no hace falta: el outbox usa PostgreSQL). La base real es **PostgreSQL 18 en Neon** (#184; el respaldo usa `pg_dump` 18, #211); en local y en el CI, PostgreSQL 17 y la configuración sale del entorno (`POSTGRES_*`, `POSTGRES_SSLMODE`) | `Dockerfile`, `render.yaml` | #64 |
 | RNF-14 | 200 reportes/hora y 50 usuarios del panel | Hecho en local: ≈ 58.000 reportes/hora con 50 usuarios del panel a la vez | `scripts/operacion/prueba_carga.py` | #120 |
-| RNF-15 | Respaldo diario cifrado; RPO ≤ 24 h, RTO ≤ 4 h | **Pendiente**: decisión de Brayan (nota 7) | — | — |
+| RNF-15 | Respaldo diario cifrado; RPO ≤ 24 h, RTO ≤ 4 h | Hecho: copia diaria de Neon con `pg_dump` 18, cifrada con AES-256 y con prueba de restauración en una base temporal; Brayan creó los secretos y el flujo está en verde (RPO 24 h). El RTO no se ha cronometrado (nota 7) | `.github/workflows/respaldo.yml`, `docs/aprende/respaldo.md` | #196, #211 |
 | RNF-16 | Sin atributos protegidos; tasa de recomendación por segmento | Hecho | `compatibilidad.py`, `calculo.py` | #97 → #108, #118 |
 
 ## Notas: lo que no se pudo y por qué
@@ -87,9 +88,10 @@ en `avance.md` (sección «Lo que falta del ERS»).
    **sintéticas** (DT-04), los pesos de SuperAnimal son de uso académico y en Windows directo
    el Control inteligente de aplicaciones bloquea DLL de torchvision (por eso WSL2). Ver
    `fase-6-video.md`.
-3. **Correo real (RF-05, RF-18).** Sin `PATITAS_SMTP_HOST` los avisos quedan en el log y en la
-   app (`GET /reportes/{codigo}/avisos`). Configurar un SMTP (por ejemplo, una cuenta de
-   Gmail con contraseña de aplicación) lo hace Brayan.
+3. **Correo real (RF-05, RF-18).** Resuelto con Mailjet por HTTPS (#194; Render gratis
+   bloquea SMTP). Brayan verificó que llegan los correos al confirmar, al ser rescatado y al
+   ingresar al refugio (#205). Sin claves, los avisos quedan en el log y en
+   `GET /reportes/{codigo}/avisos`.
 4. **Carga en Render (RNF-01, RNF-14).** No se corrió contra la base real para no llenarla de
    reportes falsos. Con 0,1 CPU, el plan gratis será más lento que la laptop.
 5. **Usabilidad (RNF-06).** Necesita personas reales y un cronómetro: es trabajo de campo de
@@ -97,11 +99,9 @@ en `avance.md` (sección «Lo que falta del ERS»).
 6. **Cifrado en reposo (RNF-08).** Render informa que cifra el disco de sus bases, pero eso no
    se pudo verificar desde aquí; el cifrado propio de la aplicación cubre el dato más sensible
    del ciudadano (su contacto).
-7. **Respaldo (RNF-15).** Se preparó un flujo de GitHub Actions (copia diaria con `pg_dump`,
-   cifrada con AES-256, con prueba de restauración), pero **no se integró**: saca una copia
-   de los datos reales fuera del proveedor y esa decisión es de Brayan. La base ahora es Neon:
-   el flujo habría que apuntarlo a la URL de Neon (secreto de GitHub). No se verificó qué
-   restauración incluye el plan gratis de Neon. Ver `preguntas-para-brayan.md` (P-07).
+7. **Respaldo (RNF-15).** Integrado y activo (#196, #211): Brayan creó los secretos
+   `NEON_DATABASE_URL` y `RESPALDO_CLAVE` y el flujo diario está en verde. Falta cronometrar
+   una restauración completa para el RTO de 4 h (guía en `docs/aprende/respaldo.md`).
 
 ## Entregables de las tareas de cierre (después de la v1.1.0)
 
@@ -121,3 +121,13 @@ No son requisitos nuevos del ERS: mejoran la presentación y la operación de lo
 | Vista previa del video para el veterinario (cambia RNF-08): el nodo la genera con ffmpeg, la API la guarda por trozos y la sirve solo al personal; se borra a los 7 días o al cerrar el reporte | RNF-08, RF-03 | `app/video/servicio.py`, `app/api/video.py` (`/vista`, `vista.mp4`), `EscritorVistaFfmpeg`, migración `0030`, `panel/src/VideoDelReporte.tsx` | `test_video_vista.py`, `test_video_almacen_postgres.py`, `test_video_trabajador.py`, `apiVideo.test.ts` | #214 / #215 |
 | La API usa la base en Neon | RNF-13 | `render.yaml` | — (configuración) | #184 |
 | Manual de usuario con capturas por rol | RNF-06 (apoya la prueba con usuarios), RF de cada rol | `docs/manual-usuario.md`, `docs/manual/`, `scripts/accesibilidad/capturas.mjs` | capturas tomadas del sistema real con datos de demostración | #156 / #158 |
+| PWA: grabar el video con la cámara o elegirlo de la galería | RF-01, RN-01 | `app/pwa/reportar.js`, `video.js` | `test_pwa_video.py` | #212 / #213 |
+| Avisos al ciudadano al ser rescatado y al ingresar al refugio | RF-18, RN-14 | `app/avisos/`, `POST /refugio/ingresos` (`reporte`) | `test_avisos_ciudadano.py` | #204 / #205 |
+| Código del reporte en el ingreso (panel) | RF-06, RF-18 | `panel/src/Refugio.tsx` | `apiRefugio.test.ts`, e2e | #206 / #207 |
+| Historial del veterinario | RF-04, RF-20 | `GET /veterinario/historial`, `panel/src/Historial.tsx` | `test_historial_veterinario.py`, `apiHistorial.test.ts`, e2e | #217 / #218 |
+| «Mis rescates» y hora de llegada del rescatista | RF-21, RF-22 | `GET /rescates/historial`, `panel/src/MisRescates.tsx`, migración `0031` | `test_historial_rescatista.py`, `apiMisRescates.test.ts`, e2e | #219 a #222 |
+| Toda sugerencia crítica o alta trae evidencia | RF-02, RNF-09 | `app/triaje/combinado.py`, léxico de reglas | `test_modelo_triaje.py` («le grabaron un titkok») | #223 / #224 |
+| Descripciones sin sentido rechazadas | RN-01 | `app/reportes/descripcion.py`, `reportar.js` | `test_descripcion.py`, `test_api.py`, e2e | #225 / #226 |
+| Vista previa: diagnóstico de punta a punta y fallas visibles | RNF-08, RF-03 | `trabajador.py`, `analisis.py`, `VideoDelReporte.tsx` | `test_video_trabajador.py`, `test_video_analisis.py`, `apiVideo.test.ts` | #231 / #232 |
+| Pruebas de punta a punta con Playwright en el CI | RNF-10, todos los RF del flujo de rescate | `e2e/`, job `e2e` | 8 pruebas | #233 / #234 |
+| Auditoría: límites de tamaño, reportes por IP, consultas acotadas | RNF-05, RNF-01, RN-01 | `limitar_cuerpo`, `contar_reporte`, `pendientes()`, migración `0032` | `test_limites_tamano.py`, `test_limite_reportes.py`, `test_consultas_acotadas.py` | #235 a #242 |
