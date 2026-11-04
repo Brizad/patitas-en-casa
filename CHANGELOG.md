@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- `ESTADO_PROYECTO.md` (#256): estado al 4 de noviembre de 2026 con lo hecho (PR #230 a #255), lo que falló y por qué, y lo pendiente.
 - Manual de usuario (#254): 21 capturas nuevas tomadas con Playwright sobre PostgreSQL y datos de demostración (ciudadano a 390 px; veterinario con análisis de video, vista previa e historial; rescatista con rescate en curso y «Mis rescates»; coordinador con el código del reporte en el ingreso; adoptante, administrador y Alcaldía) y `docs/manual-usuario.md` paso a paso por rol. `capturas.mjs` usa por defecto la instancia local de `e2e.md`.
 - `docs/aprende/sustentacion.md` (#247): 60 preguntas de jurado con respuesta corta y el archivo donde se ve en el código, y un recorrido de 5 minutos para la demo en vivo.
 - Documentación de tesis, parte 2 (#243): `docs/tesis/c4.md` (contexto, contenedores y componentes en Mermaid), `docs/tesis/pruebas.md` (plan y reporte con los números del CI: 864 pruebas, 97,22 % de cobertura, 58 de Vitest, 8 e2e, 50 revisiones de axe-core sin fallas) y la matriz de trazabilidad movida a `docs/tesis/trazabilidad.md` y puesta al día (RNF-08 con la vista previa, RNF-15 activo, Mailjet, PostgreSQL 18 en Neon, historiales y avisos al ciudadano).
