@@ -115,3 +115,80 @@ jobs:
           name: informe-accesibilidad
           path: scripts/accesibilidad/informe.json
           if-no-files-found: ignore
+
+  # #233: flujo completo en el navegador sobre una instancia real (API + PostgreSQL + panel
+  # compilado + PWA) con los datos de demostración. Si falla, deja capturas y trazas.
+  e2e:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD }}
+          POSTGRES_DB: patitas_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD }}
+      POSTGRES_DB: patitas_e2e
+      PATITAS_DEMO_ACTIVA: "true"
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+
+      - name: Preparar Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Preparar Node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            panel/package-lock.json
+            e2e/package-lock.json
+
+      - name: Instalar y compilar el panel
+        run: |
+          pip install -r requirements.txt
+          cd panel && npm ci --no-audit --no-fund && npm run build
+
+      # Claves aleatorias que viven solo en esta ejecución (nunca en el repositorio).
+      - name: Claves de la instancia
+        run: |
+          for nombre in PATITAS_JWT_SECRETO PATITAS_CLAVE_DATOS PATITAS_DEMO_CONTRASENA; do
+            valor="$(openssl rand -hex 32)"
+            echo "::add-mask::$valor"
+            echo "$nombre=$valor" >> "$GITHUB_ENV"
+          done
+
+      - name: Migrar la base y arrancar la API
+        run: |
+          alembic upgrade head
+          uvicorn --factory app.api.main:crear_app --port 8010 > api.log 2>&1 &
+          curl -sf -o /dev/null --retry 30 --retry-connrefused --retry-delay 1             http://127.0.0.1:8010/app/
+
+      - name: Pruebas de punta a punta (Playwright)
+        working-directory: e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright test
+
+      - name: Guardar capturas y trazas si falla
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-capturas
+          path: |
+            e2e/resultados/
+            e2e/informe/
+            api.log
+          retention-days: 14

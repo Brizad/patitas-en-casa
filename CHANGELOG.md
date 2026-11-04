@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Pruebas de punta a punta (#233): `e2e/` con Playwright recorre en el navegador el flujo completo sobre una instancia real (API + PostgreSQL + panel compilado + PWA): reporte desde el teléfono (390 px), confirmación crítica, rescate, ingreso con código, historiales y seguimiento (RN-14), más los errores (descripción sin sentido, 401 y 403). Job `e2e` en el CI con capturas y trazas como artefacto si falla. Guía en `docs/aprende/e2e.md`.
+
 ### Cambiado
 - CI: las acciones de todos los flujos suben a versiones con Node 24 (`checkout`, `setup-python`, `setup-node` y `upload-artifact` a v6) y `runs-on` queda fijo en `ubuntu-24.04` en lugar de `ubuntu-latest`. Sin cambios en la aplicación.
 
