@@ -81,6 +81,7 @@ from app.ajustes import (
     cargar_ajustes_seguridad,
     cargar_ajustes_video,
 )
+from app.api.piloto import crear_rutas_piloto
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
 from app.api.video import crear_rutas_video
 from app.avisos.modelos import AvisoNuevo
@@ -118,6 +119,8 @@ from app.indicadores.calculo import Datos
 from app.indicadores.calculo import calcular as calcular_indicadores
 from app.indicadores.exportar import a_csv, fichas_csv, filas_anonimizadas, resumen_pdf
 from app.notificaciones.correo import crear_notificador
+from app.piloto.repositorio_postgres import RepositorioPilotoPostgres
+from app.piloto.servicio import RepositorioPiloto, RepositorioPilotoEnMemoria, ServicioPiloto
 from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
 from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
 from app.reportes.confirmacion import (
@@ -465,6 +468,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               cifrador: Cifrador | None = None,
               repositorio_fotos: RepositorioFotos | None = None,
               repositorio_videos: RepositorioVideos | None = None,
+              repositorio_piloto: RepositorioPiloto | None = None,
               token_video: str | None = None,
               directorio_videos: str | None = None,
               revisar_videos_cada_s: float | None = config.REVISION_VIDEOS_SEGUNDOS) -> FastAPI:
@@ -1402,6 +1406,10 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def inicio():
         return FileResponse(CARPETA_INICIO / "index.html", media_type="text/html")
 
+    repositorio_piloto = repositorio_piloto or (
+        RepositorioPilotoPostgres(motor) if motor is not None else RepositorioPilotoEnMemoria())
+    app.include_router(crear_rutas_piloto(ServicioPiloto(repositorio_piloto), administracion,
+                                          ReporteEntrada))  # RNF-06 (#258)
     app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal,
                                           almacen_vistas))
     app.mount("/app", StaticFiles(directory=CARPETA_PWA, html=True), name="pwa")

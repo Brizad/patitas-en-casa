@@ -5,7 +5,7 @@
 | `c4.md` | Arquitectura en el modelo C4: contexto, contenedores y componentes (Mermaid) | A mano, verificado contra el código |
 | `er.md` | Modelo entidad-relación (Mermaid) | Generado: `python -m scripts.tesis.generar_docs` |
 | `diccionario-datos.md` | Cada tabla y columna con tipo, nulos, claves y restricciones | Generado |
-| `catalogo-endpoints.md` | Las 67 rutas con rol, códigos de respuesta y requisito | Generado |
+| `catalogo-endpoints.md` | Todas las rutas con rol, códigos de respuesta y requisito | Generado |
 | `pruebas.md` | Plan de pruebas y reporte con los números del CI | A mano, con los números del último CI de `main` |
 | `trazabilidad.md` | Matriz RF/RNF → código → prueba → PR | A mano, al cerrar cada cambio |
 
