@@ -18,8 +18,9 @@ atender. Este manual explica, con capturas, qué hace cada persona en el sistema
 | [Administrador](#administrador) | Botón «Entrar como personal» | Sí |
 | [Alcaldía](#alcaldía) | Botón «Entrar como personal» | Sí, la crea el administrador |
 
-Las capturas se tomaron con los **datos de demostración** (nombres, reportes y animales
-inventados).
+Las capturas se tomaron el 4 de noviembre de 2026 con los **datos de demostración** (nombres,
+reportes y animales inventados). El ciudadano, el rescatista y el adoptante se muestran en el
+celular (390 px); los demás, en un computador.
 
 ---
 
@@ -48,10 +49,18 @@ Cualquier persona que encuentre un perro o un gato en peligro. **No necesita cue
 3. En **Ubicación** escribe el barrio o la dirección, o toca **Usar mi GPS** (el teléfono
    te pedirá permiso).
 4. Si sabes la **comuna**, elígela: así avisan primero a los rescatistas que están cerca.
-5. Si puedes, adjunta un **video** corto (máximo 60 segundos). Grábalo de lado y que se vea
-   el animal completo caminando: ayuda a saber si cojea o no se puede parar.
-6. Si quieres que te avisen, deja tu correo o teléfono (es opcional y se guarda cifrado).
+5. Si puedes, agrega un **video** (máximo 60 segundos y 50 MB): toca **Grabar video** para
+   grabarlo ahí mismo con la cámara de atrás, o **Elegir de la galería** si ya lo tienes.
+   Grábalo de lado y que se vea el animal completo caminando: ayuda a saber si cojea o no se
+   puede parar. Si no te gusta, toca **Repetir**.
+6. Si quieres que te avisen, deja tu correo o teléfono y marca la autorización (es opcional y
+   se guarda cifrado). Te avisaremos cuando un veterinario lo revise, cuando lo rescaten y
+   cuando llegue al refugio.
 7. Toca **Enviar reporte**.
+
+Si algo falta, el formulario lo dice debajo del campo, en rojo: por ejemplo «Describe un poco
+más: mínimo 20 caracteres» o «Escribe dónde está el animal o toca «Usar mi GPS»». Si escribes
+letras al azar, te pedirá «Describe con palabras qué le pasa al animal».
 
 Si no hay señal, el reporte queda guardado en el teléfono y se envía solo cuando vuelva la
 conexión.
@@ -90,32 +99,54 @@ Al entrar ve la **cola**: los reportes que esperan revisión, primero los más g
 
 ![Detalle de un reporte](manual/06-veterinario-reporte.jpg)
 
-Al tocar un reporte aparece a la derecha:
+Al tocar un reporte aparece a la derecha (en el celular, debajo):
 
+- qué pasó, dónde (con enlace a Google Maps) y hace cuánto llegó;
 - la prioridad sugerida y su confianza;
 - las **evidencias**: por qué la IA sugirió esa prioridad (palabras como «atropellado» o
-  «sangra»);
-- el análisis del **video**, si el ciudadano envió uno.
+  «sangra»); toda sugerencia crítica o alta trae al menos una;
+- si hay otro reporte a menos de 200 m y 2 horas, el aviso de **posible duplicado**.
 
-Después elige una de tres acciones:
+### 3. Análisis del video
 
-- **Confirmar**: está de acuerdo con la sugerencia.
-- **Ajustar prioridad…**: la cambia (ver abajo).
-- **Descartar reporte…**: si es falso o repetido, con una justificación.
+![Análisis de video con la vista previa](manual/06c-veterinario-video.jpg)
 
-Confirmado o descartado, el reporte sale de la cola y no se puede volver a decidir. Si
-queda crítico o alto, se avisa a los rescatistas.
+Si el ciudadano envió un video, más abajo está **Análisis de video**:
 
-### 3. Ajustar la prioridad
+- el estado: «en espera de análisis», «analizando», «listo», «no concluyente» o «no se pudo
+  analizar». Mientras se analiza, la pantalla se actualiza sola cada 15 segundos; puedes decidir
+  sin esperarlo;
+- la prioridad que sugiere el video, con su seguridad y las razones («cojea: una pata se mueve
+  65 % distinto de su par»);
+- si texto y video no coinciden, un aviso: **gana la más alta**;
+- la **vista previa**: el video en baja calidad con los puntos del cuerpo dibujados. Tócalo para
+  reproducirlo. Se borra a los 7 días o cuando se cierra el reporte. Si el análisis no la trae,
+  la pantalla lo dice.
+
+### 4. Confirmar, ajustar o descartar
 
 ![Ajustar la prioridad](manual/06b-veterinario-ajustar.jpg)
 
-Elige la nueva prioridad. Si es distinta de la sugerida, el sistema pide una
-**justificación** (al menos 10 caracteres y 5 letras). Queda registrada con su nombre.
+- **Confirmar**: está de acuerdo con la sugerencia.
+- **Ajustar prioridad…**: elige otra; si es distinta de la sugerida, el sistema pide una
+  **justificación** (al menos 10 caracteres y 5 letras). Queda registrada con su nombre.
+- **Descartar reporte…**: si es falso o repetido, con una justificación.
 
-### 4. Refugio
+Confirmado o descartado, el reporte sale de la cola y no se puede volver a decidir. Si queda
+crítico o alto, se avisa a los rescatistas. **Ver estado de los avisos** dice si el correo ya
+salió.
 
-![Animales del refugio](manual/07-veterinario-refugio.jpg)
+### 5. Historial
+
+![Historial del veterinario](manual/07-veterinario-historial.jpg)
+
+En **Historial** ve todo lo que confirmó, ajustó o descartó, del más reciente al más viejo:
+código, fecha, prioridad sugerida y final, justificación y en qué va el caso ahora. En el
+celular cada fila se ve como una tarjeta.
+
+### 6. Refugio
+
+![Animales del refugio](manual/07b-veterinario-refugio.jpg)
 
 En **Refugio** ve cuántos cupos hay ocupados y los animales del refugio. Al tocar el nombre
 de un animal abre su **ficha clínica**, donde puede agregar notas al historial (las notas no
@@ -127,18 +158,35 @@ se borran).
 
 Voluntario que va por el animal. Usa el panel **desde el celular**.
 
-![Pantalla del rescatista](manual/08-rescatista.jpg)
+### 1. Ofertas
+
+![Ofertas de rescate](manual/08-rescatista.jpg)
 
 1. En **Mi disponibilidad** marca **Disponible para rescates** cuando pueda salir.
 2. En **Zona** marca las comunas donde puede ir. Si no marca ninguna, recibe toda la ciudad.
 3. En **Ofertas de rescate** aparecen los casos críticos y altos ya confirmados por el
-   veterinario. Toca **Aceptar rescate** en el que vaya a atender. Solo una persona puede
-   aceptar cada rescate, y cada rescatista atiende uno a la vez.
-4. Al llegar toca **Llegué al sitio**; al terminar registra el **resultado** (por ejemplo, trasladado
-   al refugio). Si no puede seguir, **Liberar** lo devuelve a los demás.
+   veterinario, con la comuna (la dirección exacta se ve al aceptar). Toca **Aceptar rescate**
+   en el que vaya a atender. Solo una persona puede aceptar cada rescate, y cada rescatista
+   atiende uno a la vez.
 
-Si nadie acepta un caso a tiempo (15 minutos los críticos), se avisa al coordinador y el
-caso se ofrece a toda la ciudad.
+### 2. Rescate en curso
+
+![Rescate en curso](manual/08b-rescatista-en-curso.jpg)
+
+4. Ahí ve la dirección. Al llegar toca **Llegué al sitio** (queda la hora).
+5. Al terminar elige el **resultado** (trasladado al refugio, atendido en el sitio, no
+   encontrado o fallecido) y toca **Registrar resultado**. Si no puede seguir, **Liberar** lo
+   devuelve a los demás.
+
+Si nadie acepta un caso a tiempo (15 minutos los críticos, 30 los altos), se avisa al
+coordinador y el caso se ofrece a toda la ciudad.
+
+### 3. Mis rescates
+
+![Mis rescates](manual/08c-rescatista-mis-rescates.jpg)
+
+En **Mis rescates** están los rescates que aceptó, del más reciente al más viejo: código, cuándo
+lo aceptó, a qué hora llegó, el resultado y cómo va el caso. No muestra la dirección.
 
 ---
 
@@ -153,7 +201,9 @@ Maneja los cupos, los animales y las adopciones de su refugio.
 - La barra muestra cuántos cupos están ocupados. Al llegar al **90 %** el sistema avisa a
   coordinación; sin cupo, **no deja** registrar más ingresos.
 - **Registrar ingreso**: nombre, especie, estado de salud y si está vacunado o
-  esterilizado. Más abajo están los animales del refugio, su ficha y el botón para registrar
+  esterilizado. Si el animal llega de un rescate, escribe el **código del reporte** (lo ve el
+  rescatista en «Mis rescates»): así el ciudadano recibe el aviso de que llegó al refugio. Si
+  el código no existe, el formulario lo dice. Más abajo están los animales del refugio, su ficha y el botón para registrar
   el **egreso** (adopción, traslado, fallecimiento…), que libera el cupo.
 
 ### 2. Adopciones
@@ -244,7 +294,10 @@ PDF. No ve nombres, direcciones, correos ni códigos.
 ## Preguntas frecuentes
 
 - **Olvidé el código de mi reporte.** Por privacidad no se puede buscar de otra forma. Si
-  dejaste tu correo, el aviso de que un veterinario revisó tu reporte trae el código.
+  dejaste tu correo, los avisos (revisado, rescatado, en el refugio) traen el código.
+- **Mandé muchos reportes y me dice que espere.** Desde una misma conexión se reciben hasta
+  20 reportes cada 15 minutos. Si es una emergencia, espera los minutos que indica y vuelve a
+  enviarlo.
 - **Me dice «Demasiados intentos».** Por seguridad, después de varios intentos fallidos hay
   que esperar unos minutos. El mensaje dice cuánto.
 - **No veo una pestaña que otra persona sí ve.** Cada rol ve solo lo suyo. Si te falta algo
@@ -255,18 +308,16 @@ PDF. No ve nombres, direcciones, correos ni códigos.
 
 ## Para quien mantiene el sistema
 
-Las capturas se toman solas con los datos de demostración, sin tocar la base real:
+Las capturas se toman solas con los datos de demostración, sin tocar la base real. Para que
+salgan el video y los historiales se usa la instancia local con PostgreSQL de
+`docs/aprende/e2e.md` (base `patitas_e2e`, puerto 8010) con un reporte que tenga video
+analizado; con el servidor en memoria (`python servidor_demo.py 8765`) salen las demás.
 
 ```bash
 cd scripts/accesibilidad
 npm ci
-```
-```bash
-python servidor_demo.py 8765
-```
-```bash
-node capturas.mjs
+PATITAS_DEMO_CONTRASENA=<la misma de la instancia> node capturas.mjs http://127.0.0.1:8010
 ```
 
-(Las dos últimas en terminales distintas, con la misma `PATITAS_DEMO_CONTRASENA` inventada en
-las dos; en Windows con Edge, agrega `A11Y_CANAL=msedge`.)
+En Windows con Edge, agrega `A11Y_CANAL=msedge`. El script acepta un rescate y registra un
+resultado: úsalo solo en una base de prueba.
