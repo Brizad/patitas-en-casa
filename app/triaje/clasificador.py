@@ -25,8 +25,21 @@ LEXICO = {
     "envenen": Prioridad.CRITICA,
     "muriendo": Prioridad.CRITICA,
     "agoniz": Prioridad.CRITICA,
+    # #245: así lo escribe un ciudadano (análisis de errores, docs/aprende/errores-ia-texto.md).
+    "convulc": Prioridad.CRITICA,  # «convulciones»
+    "atropey": Prioridad.CRITICA,  # «atropeyado»
+    "desmay": Prioridad.CRITICA,
+    "ojos en blanco": Prioridad.CRITICA,
+    "electrocut": Prioridad.CRITICA,
+    "desangr": Prioridad.CRITICA,
+    "sangra mucho": Prioridad.CRITICA,
+    "mucha sangre": Prioridad.CRITICA,
+    "charco de sangre": Prioridad.CRITICA,
     "no se para": Prioridad.ALTA,
     "no se puede parar": Prioridad.ALTA,
+    "no se levanta": Prioridad.ALTA,  # #245
+    "no se puede levantar": Prioridad.ALTA,
+    "no puede caminar": Prioridad.ALTA,
     "fractura": Prioridad.ALTA,
     "sangr": Prioridad.ALTA,
     "herida": Prioridad.ALTA,

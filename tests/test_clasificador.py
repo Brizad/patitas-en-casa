@@ -50,3 +50,32 @@ def test_bug02_senal_repetida_cuenta_si_una_aparicion_no_esta_negada():
     """Regresión BUG-02 (#16): antes solo se revisaba la primera aparición de la señal."""
     r = clasificar("no sangra por la boca, pero sí sangra mucho por la pata")
     assert any("sangr" in e for e in r.evidencias)
+
+
+# Análisis de errores con textos de ciudadano (docs/aprende/errores-ia-texto.md, #245).
+# Textos escritos por el asistente, no por veterinarios.
+@pytest.mark.parametrize("texto", [
+    "urgente perro con convulciones cada rato en el barrio motilones",
+    "gato no rrespira despues q lo golpearon, ayuda urgente",
+    "perrito atropeyado x un taxi en el centro, chilla mucho",
+    "la perra esta como desmayada y con los ojos en blanco desde hace rato",
+    "perro electrocutado con un cable en el poste de la calle 8, quedo tirado",
+    "perro tirado en la autopista, sangra mucho",
+    "perro que se esta desangrando, hay un charco de sangre",
+])
+def test_regresion_245_urgencias_escritas_como_un_ciudadano_son_criticas(texto):
+    assert clasificar(texto).prioridad == Prioridad.CRITICA
+
+
+@pytest.mark.parametrize("texto", [
+    "perro que no se levanta del anden desde ayer",
+    "perro con la cadera dañada, no se puede levantar solo",
+    "gato que no puede caminar de las patas de atras",
+])
+def test_regresion_245_no_levantarse_o_no_caminar_es_alta(texto):
+    assert clasificar(texto).prioridad == Prioridad.ALTA
+
+
+def test_regresion_245_sangrar_poco_sigue_siendo_alta():
+    assert clasificar("gato con una cortada en la cara q le sale sangre").prioridad == \
+        Prioridad.ALTA
