@@ -17,3 +17,8 @@ datos_sinteticos_*.csv
 # Revisión de accesibilidad (RNF-11)
 scripts/accesibilidad/node_modules/
 scripts/accesibilidad/informe.json
+
+# Pruebas de punta a punta (#233): dependencias, informe y capturas de los fallos.
+e2e/node_modules/
+e2e/informe/
+e2e/resultados/
