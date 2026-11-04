@@ -13,9 +13,10 @@ VIDEO = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 100
 class ApiFalsa:
     """Imita las rutas del trabajador en Render y anota lo que recibe."""
 
-    def __init__(self, trabajos=1, caida=False, lenta=False, sin_vista=False):
+    def __init__(self, trabajos=1, caida=False, lenta=False, sin_vista=False, vista_estado=200):
         self.trabajos, self.caida, self.lenta = trabajos, caida, lenta
         self.sin_vista = sin_vista  # una API anterior que no conoce la ruta de la vista
+        self.vista_estado = vista_estado  # #231: la API (o un proxy) rechaza la vista
         self.entregados, self.fallos, self.vistas = [], [], []
 
     def __call__(self, peticion: httpx.Request) -> httpx.Response:
@@ -36,6 +37,8 @@ class ApiFalsa:
         if ruta.endswith("/vista"):
             if self.sin_vista:
                 return httpx.Response(404, json={"detail": "no existe"})
+            if self.vista_estado != 200:
+                return httpx.Response(self.vista_estado, json={"detail": "rechazada"})
             self.vistas.append((peticion.headers.get("content-type"), peticion.content))
             return httpx.Response(200, json={"bytes": len(peticion.content)})
         cuerpo = httpx.Response(200, content=peticion.content).json()
@@ -113,3 +116,26 @@ def test_si_la_api_no_acepta_la_vista_el_resultado_se_entrega_igual():
     api = ApiFalsa(sin_vista=True)
     procesar_uno(cliente(api), lambda _r: dict(RESULTADO_CON_VISTA))
     assert len(api.entregados) == 1
+
+
+@pytest.mark.parametrize("estado", [400, 403, 413, 415, 422])
+def test_regresion_231_un_rechazo_de_la_vista_no_tumba_al_nodo(estado, caplog):
+    api = ApiFalsa(vista_estado=estado)
+    procesar_uno(cliente(api), lambda _r: dict(RESULTADO_CON_VISTA))
+    assert len(api.entregados) == 1  # el resultado llega igual
+    assert "vista previa del trabajo 7 no subida" in caplog.text
+
+
+def test_regresion_231_el_log_dice_que_la_vista_se_subio_y_su_tamano(caplog):
+    caplog.set_level("INFO", logger="patitas_video")
+    procesar_uno(cliente(ApiFalsa()), lambda _r: dict(RESULTADO_CON_VISTA))
+    assert "vista previa del trabajo 7 subida" in caplog.text
+
+
+def test_regresion_231_sin_vista_el_log_dice_por_que_y_no_viaja_a_la_api(caplog):
+    api = ApiFalsa()
+    resultado = {"prioridad": None, "confianza": 0.0, "evidencias": [],
+                 "sin_vista": "ffmpeg no está instalado"}
+    procesar_uno(cliente(api), lambda _r: dict(resultado))
+    assert "trabajo 7 sin vista previa: ffmpeg no está instalado" in caplog.text
+    assert "sin_vista" not in api.entregados[0] and api.vistas == []

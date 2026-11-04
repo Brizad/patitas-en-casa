@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { AnalisisVideo, ESTADOS_VIDEO, analisisVideo, urlTira, urlVista } from "./apiVideo";
+import {
+  AnalisisVideo, ESPERA_ACTUALIZAR_MS, ESTADOS_VIDEO, analisisVideo, notaDeVista, sigueAnalizando,
+  urlTira, urlVista,
+} from "./apiVideo";
 import { NOMBRE_PRIORIDAD, evidenciaLegible, nombreModelo, textoError } from "./mensajes";
 
 const CLASE_ESTADO: Record<string, string> = {
@@ -12,34 +15,47 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
   const [analisis, setAnalisis] = useState<AnalisisVideo | null | undefined>(undefined);
   const [tira, setTira] = useState("");
   const [vista, setVista] = useState("");
+  const [falloVista, setFalloVista] = useState(false);
+  const [vuelta, setVuelta] = useState(0);  // #231: vuelve a preguntar mientras se analiza
   const [error, setError] = useState("");
+
+  useEffect(() => setVuelta(0), [codigo]);
 
   useEffect(() => {
     let vigente = true;
     let url = "";
     let urlDeVista = "";
-    setAnalisis(undefined);
+    let reloj: ReturnType<typeof setTimeout> | undefined;
+    if (vuelta === 0) setAnalisis(undefined);
     setTira("");
     setVista("");
+    setFalloVista(false);
     setError("");
     analisisVideo(token, codigo).then(async (a) => {
       if (!vigente) return;
       setAnalisis(a);
+      if (a && sigueAnalizando(a.estado)) {
+        reloj = setTimeout(() => setVuelta((v) => v + 1), ESPERA_ACTUALIZAR_MS);
+      }
       if (a?.tiene_tira) {
         url = await urlTira(token, codigo);
         if (vigente) setTira(url);
       }
       if (a?.tiene_vista) {
         urlDeVista = await urlVista(token, codigo).catch(() => "");
-        if (vigente) setVista(urlDeVista);
+        if (vigente) {
+          setVista(urlDeVista);
+          setFalloVista(!urlDeVista);
+        }
       }
     }).catch((e) => vigente && setError(textoError(e)));
     return () => {
       vigente = false;
+      if (reloj) clearTimeout(reloj);
       if (url) URL.revokeObjectURL(url);
       if (urlDeVista) URL.revokeObjectURL(urlDeVista);
     };
-  }, [token, codigo]);
+  }, [token, codigo, vuelta]);
 
   if (error) return <p className="ds-msg ds-msg--error" role="alert">{error}</p>;
   if (analisis === undefined) return null;
@@ -65,6 +81,9 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
       {analisis.evidencias.length > 0 && (
         <ul className="evidencias">{analisis.evidencias.map((ev) => (
           <li key={ev}>{evidenciaLegible(ev)}</li>))}</ul>)}
+      {notaDeVista(analisis, falloVista) && (
+        <p className={falloVista ? "ds-msg ds-msg--error" : "ds-suave"} role={falloVista ? "alert" : undefined}>
+          {notaDeVista(analisis, falloVista)}</p>)}
       {vista && (
         <figure className="tira-caja">
           <video className="tira" src={vista} controls preload="metadata"

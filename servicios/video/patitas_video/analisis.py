@@ -77,24 +77,37 @@ class _Vista:
 
     def __init__(self, escritor: EscritorVista | None) -> None:
         self._escritor = escritor
+        self._cuadros = 0
+        # #231: por qué no hay vista, para que el nodo lo diga en su log.
+        self.motivo = None if escritor else "ffmpeg no está instalado (sudo apt install ffmpeg)"
 
     def escribir(self, imagen: Any, puntos: Cuadro | None) -> None:
         if self._escritor is None:
             return
         try:
             self._escritor.escribir(imagen, puntos)
-        except Exception:
+            self._cuadros += 1
+        except Exception as error:
             self._escritor.cancelar()
             self._escritor = None
+            self.motivo = f"ffmpeg falló al escribir: {type(error).__name__}: {error}"
 
     def terminar(self) -> bytes | None:
         if self._escritor is None:
             return None
-        try:
-            return self._escritor.terminar()
-        except Exception:
+        if self._cuadros == 0:
             self._escritor.cancelar()
+            self.motivo = "no se pudo leer ningún cuadro del video"
             return None
+        try:
+            mp4 = self._escritor.terminar()
+        except Exception as error:
+            self._escritor.cancelar()
+            self.motivo = f"ffmpeg falló al cerrar: {type(error).__name__}: {error}"
+            return None
+        if mp4 is None:
+            self.motivo = "ffmpeg no entregó el MP4 o pasó de 5 MB"
+        return mp4
 
 
 def _tres_muestras(muestras: list[tuple[Any, Cuadro]]) -> list[tuple[Any, Cuadro]]:
@@ -109,12 +122,15 @@ def analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
              dibujante: DibujanteTira | None = None,
              escritor_vista: EscritorVista | None = None) -> dict:
     """Devuelve el cuerpo que espera POST /video/trabajos/{id}/resultado. Si hay vista previa,
-    va en la clave «vista» (bytes); el trabajador la sube aparte."""
+    va en la clave «vista» (bytes); el trabajador la sube aparte. Si no la hay, «sin_vista»
+    dice por qué (#231); no viaja a la API."""
     vista = _Vista(escritor_vista)
     resultado = _analizar(ruta, lector, detector, estimador, clasificador, dibujante, vista)
     mp4 = vista.terminar()
     if mp4 is not None:
         resultado["vista"] = mp4
+    else:
+        resultado["sin_vista"] = vista.motivo
     return resultado
 
 

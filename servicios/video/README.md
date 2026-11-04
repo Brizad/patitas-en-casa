@@ -24,6 +24,14 @@ Ubuntu usa **clic derecho** (Ctrl+V no siempre funciona ahí).
 
 Para probar con un video tuyo sin token (está en `C:\Users\<tú>\Videos\perro.mp4`):
 `bash ~/patitas/servicios/video/arrancar_nodo.sh --video /mnt/c/Users/<tú>/Videos/perro.mp4`.
+La salida dice también si se generó la vista previa del veterinario; añade
+`--guardar-vista ~/vista.mp4` para guardarla y abrirla.
+
+**¿El panel no muestra la vista previa?** (#231) Mira la ventana de Ubuntu tras cada análisis:
+`vista previa del trabajo N subida (494 KB)` = todo bien; `trabajo N sin vista previa: <motivo>`
+= el nodo no la generó (por ejemplo, falta ffmpeg); `vista previa del trabajo N no subida:
+<error>` = la API la rechazó. En ningún caso se pierde el resultado. Si cambiaste el código,
+**detén el nodo con Ctrl+C y arráncalo otra vez**: el proceso que ya corre sigue con el viejo.
 Para actualizar el trabajador, repite el paso 2. Para olvidar el token guardado:
 `rm ~/.patitas-video/token`.
 

@@ -24,6 +24,25 @@ export const ESTADOS_VIDEO: Record<EstadoVideo, string> = {
   fallido: "no se pudo analizar",
 };
 
+/** #231: mientras el video espera o se analiza, el panel vuelve a preguntar cada 15 s. */
+export const ESPERA_ACTUALIZAR_MS = 15000;
+export function sigueAnalizando(estado: EstadoVideo): boolean {
+  return estado === "pendiente" || estado === "enviado";
+}
+
+/** #231: qué decir de la vista previa cuando no se puede mostrar (null: nada que decir). */
+export function notaDeVista(analisis: AnalisisVideo, falloAlCargar: boolean): string | null {
+  if (analisis.tiene_vista) {
+    return falloAlCargar ? "No se pudo cargar la vista previa del video. Vuelve a abrir el " +
+      "reporte; si sigue igual, avisa al administrador." : null;
+  }
+  if (analisis.estado === "terminado" || analisis.estado === "no_concluyente") {
+    return "Este análisis no trae vista previa del video (el equipo que analiza no la generó " +
+      "o ya se borró).";
+  }
+  return null;
+}
+
 /** null si el reporte no trae video (404). */
 export async function analisisVideo(token: string, codigo: string): Promise<AnalisisVideo | null> {
   try {

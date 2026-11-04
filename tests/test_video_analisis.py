@@ -104,3 +104,33 @@ def test_si_la_vista_falla_el_analisis_sigue_sin_ella(clasificador):
     assert r["prioridad"] in ("alta", "critica")  # la vista es opcional: no rompe el triaje
     assert "vista" not in r
     assert escritor.cancelado
+
+
+class EscritorQueNoTermina(EscritorFalso):
+    def terminar(self):
+        return None  # ffmpeg falló o la vista pasó de 5 MB
+
+
+def test_regresion_231_sin_ffmpeg_el_resultado_dice_por_que_no_hay_vista(clasificador):
+    r = analizar("v", Lector([None] * 5), Detector(), Estimador(), clasificador)
+    assert "vista" not in r
+    assert "ffmpeg" in r["sin_vista"]
+
+
+def test_regresion_231_si_ffmpeg_no_entrega_el_mp4_tambien_se_dice(clasificador):
+    r = analizar("v", Lector([None] * 5), Detector(), Estimador(), clasificador,
+                 escritor_vista=EscritorQueNoTermina())
+    assert "vista" not in r and r["sin_vista"]
+
+
+def test_regresion_231_un_video_ilegible_no_tiene_vista_y_lo_dice(clasificador):
+    r = analizar("v", Lector([]), Detector(), Estimador(), clasificador,
+                 escritor_vista=EscritorQueNoTermina())
+    assert r["motivo"] == "no se pudo leer el video"
+    assert "cuadro" in r["sin_vista"]
+
+
+def test_con_vista_no_hay_motivo_de_ausencia(clasificador):
+    r = analizar("v", Lector([None] * 5), Detector(), Estimador(), clasificador,
+                 escritor_vista=EscritorFalso())
+    assert "vista" in r and "sin_vista" not in r
