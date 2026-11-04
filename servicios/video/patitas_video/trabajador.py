@@ -55,17 +55,28 @@ def procesar_uno(cliente: ClienteApi, analizar: Analizador) -> bool:
             return True
     if isinstance(resultado.get("tira"), bytes):
         resultado["tira_png_base64"] = base64.b64encode(resultado.pop("tira")).decode()
-    vista = resultado.pop("vista", None)
-    if isinstance(vista, bytes):
-        try:  # antes del resultado: al entregarlo el trabajo se cierra
-            cliente.subir_vista(id_, vista)
-        except (TrabajoPerdido, ApiNoDisponible) as error:  # es opcional: no frena el resultado
-            logger.warning("vista previa del trabajo %s no subida: %s", id_, error)
+    _subir_vista(cliente, id_, resultado)
     try:
         cliente.entregar(id_, resultado)
     except TrabajoPerdido as error:  # llegó tarde: el reclamo venció y lo tomó otro
         logger.warning("resultado del trabajo %s no aceptado: %s", id_, error)
     return True
+
+
+def _subir_vista(cliente: ClienteApi, id_: int, resultado: dict) -> None:
+    """La vista previa es opcional (#214): ningún error al subirla frena el resultado ni tumba
+    al nodo (#231), y el log dice siempre si se subió o por qué no."""
+    vista, sin_vista = resultado.pop("vista", None), resultado.pop("sin_vista", None)
+    if not isinstance(vista, bytes):
+        logger.warning("trabajo %s sin vista previa: %s", id_, sin_vista or "el análisis no "
+                       "la generó")
+        return
+    try:  # antes del resultado: al entregarlo el trabajo se cierra
+        cliente.subir_vista(id_, vista)
+        logger.info("vista previa del trabajo %s subida (%d KB)", id_, len(vista) // 1024)
+    except Exception as error:  # 413, 415, un proxy que la bloquea, Render caído...
+        logger.warning("vista previa del trabajo %s no subida: %s: %s", id_,
+                       type(error).__name__, error)
 
 
 def trabajar(cliente: ClienteApi, analizar: Analizador, una_vez: bool = False,
@@ -89,6 +100,8 @@ def main() -> None:
     argumentos = argparse.ArgumentParser(description="Trabajador local de video.")
     argumentos.add_argument("--una-vez", action="store_true", help="un solo ciclo")
     argumentos.add_argument("--video", help="analiza un archivo local y muestra el resultado")
+    argumentos.add_argument("--guardar-vista", help="con --video: guarda aquí el MP4 de la "
+                            "vista previa")
     opciones = argumentos.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     from patitas_video.adaptadores import analizador_completo  # pesado: solo aquí
@@ -101,8 +114,17 @@ def main() -> None:
         if opciones.video:
             resultado = analizar(opciones.video)
             resultado.pop("tira", None)
-            resultado.pop("vista", None)
+            vista, sin_vista = resultado.pop("vista", None), resultado.pop("sin_vista", None)
             print(resultado)
+            if vista is None:  # #231: decir siempre si hubo vista previa
+                print(f"Vista previa: no se generó ({sin_vista}).")
+            elif opciones.guardar_vista:
+                Path(opciones.guardar_vista).write_bytes(vista)
+                print(f"Vista previa: {len(vista) // 1024} KB, guardada en "
+                      f"{opciones.guardar_vista}.")
+            else:
+                print(f"Vista previa: {len(vista) // 1024} KB (usa --guardar-vista archivo.mp4 "
+                      "para verla).")
             return
         logger.info("trabajando contra %s", url)  # nunca se imprime el token
         trabajar(ClienteApi(url, token), analizar, una_vez=opciones.una_vez)
