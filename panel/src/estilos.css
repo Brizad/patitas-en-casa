@@ -31,7 +31,8 @@
 .lista-simple { list-style: none; padding: 0; margin: 0; }
 .lista-simple li { border-top: 1px solid var(--ds-linea); padding: var(--ds-e3) 0; }
 .lista-simple li:first-child { border-top: 0; }
-.en-linea { display: inline-flex; gap: 6px; align-items: center; margin-right: var(--ds-e3); font-weight: 400; }
+.en-linea { display: inline-flex; gap: 6px; align-items: center; margin-right: var(--ds-e3); font-weight: 400;
+  min-height: 44px; }  /* #250 */
 .en-linea input { width: auto; margin: 0; }
 .ds-tabla select { min-width: 9em; }
 .ds-tabla-caja { overflow-x: auto; }
@@ -49,7 +50,7 @@
 .tira { display: block; max-width: 100%; height: auto; border-radius: var(--ds-radio); margin: var(--ds-e2) 0; }
 .ds #cola:focus { outline: 3px solid var(--ds-marca); outline-offset: 4px; }
 button.enlace { border: 0; background: none; padding: 2px 4px; color: var(--ds-marca); text-decoration: underline;
-  min-height: 24px; min-width: 24px; display: inline; }
+  min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }  /* #250: 44 px al dedo */
 button.enlace:hover:not(:disabled) { background: none; }
 
 /* Rescatista: zona por comunas como botones y ofertas como tarjetas con borde de prioridad. */

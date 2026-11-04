@@ -1,0 +1,25 @@
+{
+  "_aviso": "20 descripciones de CONTROL escritas por el asistente DESPUÉS de corregir las reglas con casos_ciudadanos_v1.json; no se usaron para corregir nada. No son datos reales ni etiquetados por veterinarios. Mismo criterio de etiquetado.",
+  "casos": [
+    {"texto": "ayudaaa un perro lo atropello una buseta en la av demetrio mendoza y esta botando sangre", "esperada": "critica"},
+    {"texto": "gatico con convulsiones y babeando en el conjunto, creo q comio algo", "esperada": "critica"},
+    {"texto": "perro q no rrespira bien y tiene la lengua morada, comuna 7", "esperada": "critica"},
+    {"texto": "una perrita desmayada al lado del caño despues del aguacero", "esperada": "critica"},
+    {"texto": "perro envenenado temblando en el parque del barrio belen", "esperada": "critica"},
+    {"texto": "perro tirado q no responde en la calle 13, no se si esta vivo", "esperada": "critica"},
+    {"texto": "gato que lo mordio un perro y le sale mucha sangre del cuello", "esperada": "critica"},
+    {"texto": "perro atropeyado en el anillo vial, esta vivo pero no se mueve", "esperada": "critica"},
+    {"texto": "perro con la cabeza atrapada en una reja, se esta ahogando", "esperada": "critica"},
+    {"texto": "perra pariendo hace horas y no le sale el cachorro, esta agotada y sangra mucho", "esperada": "critica"},
+    {"texto": "perro con una herida en la pata q le sangra un poco", "esperada": "alta"},
+    {"texto": "gato que no se levanta de la acera y llora", "esperada": "alta"},
+    {"texto": "perro con una pata fracturada en la entrada del barrio", "esperada": "alta"},
+    {"texto": "perro cojo que camina despacio pero come bien", "esperada": "media"},
+    {"texto": "perrita vomitando amarillo desde anoche", "esperada": "media"},
+    {"texto": "gato muy flaco que no come hace dias", "esperada": "media"},
+    {"texto": "perro con sarna y pulgas dormido en la puerta del supermercado", "esperada": "baja"},
+    {"texto": "dejaron unos cachorros abandonados en el parque, estan bien", "esperada": "baja"},
+    {"texto": "perro perdido con collar rojo cerca del estadio, esta tranquilo", "esperada": "baja"},
+    {"texto": "gata callejera con garrapatas q come en mi puerta", "esperada": "baja"}
+  ]
+}
