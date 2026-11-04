@@ -27,6 +27,12 @@ REGISTROS_MAXIMOS_POR_IP = 5
 # vecinos pueden compartir la IP del operador móvil; un robot manda cientos.
 REPORTES_MAXIMOS_POR_IP = 20
 
+# Auditoría A-01 (#235): topes del reporte público (los mismos de la PWA) y de cualquier
+# cuerpo JSON o de formulario. Las subidas de video y fotos tienen sus propios límites.
+MAX_CARACTERES_DESCRIPCION = 500
+MAX_CARACTERES_DIRECCION = 200
+MAX_CUERPO_BYTES = 1024 * 1024
+
 # RF-17 (#75): dos reportes con GPS a esta distancia y en este rato son posibles duplicados.
 DUPLICADO_METROS = 200
 DUPLICADO_HORAS = 2

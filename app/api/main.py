@@ -30,7 +30,7 @@ from fastapi import (
     status,
 )
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -195,6 +195,15 @@ POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
                 "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
                 "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 
+# A-01 (#235): el video, la vista previa y las fotos llegan por partes y tienen su propio tope.
+_SUBIDAS_DE_ARCHIVO = re.compile(r"^/(reportes/[^/]+/video|video/trabajos/\d+/vista"
+                                 r"|refugio/animales/\d+/foto)$")
+
+
+def es_subida_de_archivo(ruta: str) -> bool:
+    return _SUBIDAS_DE_ARCHIVO.match(ruta) is not None
+
+
 # DT-09 (#149): igual si el correo es nuevo o ya tenía cuenta.
 MENSAJE_REGISTRO = ("Listo. Si este correo no tenía cuenta, ya puedes entrar con él y tu "
                     "contraseña. Si ya tenía una, entra con tu contraseña de siempre.")
@@ -205,10 +214,10 @@ ROLES_PERSONAL = (Rol.VETERINARIO, Rol.COORDINADOR)
 
 
 class ReporteEntrada(BaseModel):
-    descripcion: str
+    descripcion: str = Field(max_length=config.MAX_CARACTERES_DESCRIPCION)  # A-01 (#235)
     latitud: float | None = None
     longitud: float | None = None
-    direccion: str | None = None
+    direccion: str | None = Field(default=None, max_length=config.MAX_CARACTERES_DIRECCION)
     video_segundos: int | None = Field(default=None, ge=0)
     video_mb: float | None = Field(default=None, ge=0)
     comuna: int | None = Field(default=None, ge=1, le=10)  # HU-06: comunas de Cúcuta
@@ -1278,6 +1287,15 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 "resultado": datos.resultado.value}
 
     # --- HU-08: PWA ciudadana (#59) --------------------------------------------------
+
+    @app.middleware("http")
+    async def limitar_cuerpo(peticion: Request, siguiente):
+        """A-01 (#235): un cuerpo enorme se rechaza antes de leerlo (Render tiene 512 MB)."""
+        largo = peticion.headers.get("content-length", "")
+        if (largo.isdigit() and int(largo) > config.MAX_CUERPO_BYTES
+                and not es_subida_de_archivo(peticion.url.path)):
+            return JSONResponse({"detail": "La petición es demasiado grande."}, status_code=413)
+        return await siguiente(peticion)
 
     @app.middleware("http")
     async def cabeceras_de_la_pwa(peticion: Request, siguiente):
