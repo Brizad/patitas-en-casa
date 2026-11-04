@@ -50,6 +50,8 @@
         entrada.value = normalizar(codigo);
         consultar(entrada.value);
       }
+    } else if (nombre === 'sus' && window.PatitasPiloto && window.PatitasPiloto.activo) {
+      mostrarPantalla('sus');  // RNF-06 (#258): solo en modo piloto
     } else if (nombre === 'codigo' && leer(ULTIMO_CODIGO)) {
       const ultimo = leer(ULTIMO_CODIGO);
       if (normalizar($('codigo-grande').textContent) !== ultimo) pintarCodigo(ultimo);
