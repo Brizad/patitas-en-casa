@@ -42,8 +42,10 @@
 
   $('aviso-piloto').hidden = false;
   const empezar = () => { if (inicio === null) inicio = performance.now(); };
-  document.addEventListener('pointerdown', empezar, { capture: true });
-  document.addEventListener('keydown', empezar, { capture: true });
+  // El primer toque (o tecla, foco o texto escrito, por si usa teclado o autocompletar).
+  for (const evento of ['pointerdown', 'keydown', 'focusin', 'input']) {
+    document.addEventListener(evento, empezar, { capture: true });
+  }
 
   function alRecibirCodigo(codigo) {
     segundos = Math.max(1, Math.round((performance.now() - (inicio ?? performance.now())) / 1000));

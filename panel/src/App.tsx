@@ -11,6 +11,7 @@ import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
 import RegistroAdoptante from "./RegistroAdoptante";
 import MisRescates from "./MisRescates";
+import Piloto from "./Piloto";
 import Rescatista from "./Rescatista";
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
       {pantalla === "adopcion" && <Adoptante token={token} />}
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}
       {pantalla === "indicadores" && <Indicadores token={token} rol={cuenta.rol} />}
+      {pantalla === "piloto" && <Piloto token={token} />}
       {pantalla === "administracion" && <Administracion token={token} yo={cuenta.correo} />}
       {pantalla === null && <p className="ds-vacio">Tu rol no tiene pantallas en el panel.</p>}
     </main>

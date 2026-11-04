@@ -7,7 +7,7 @@ describe("pantallasDelRol", () => {
     expect(pantallasDelRol("veterinario")[0]).toBe("cola");
     expect(pantallasDelRol("coordinador")[0]).toBe("refugio");
     expect(pantallasDelRol("rescatista")).toEqual(["rescates", "mis_rescates"]);
-    expect(pantallasDelRol("administrador")).toEqual(["administracion", "indicadores"]);
+    expect(pantallasDelRol("administrador")).toEqual(["administracion", "piloto", "indicadores"]);
     expect(pantallasDelRol("adoptante")).toEqual(["adopcion"]);
     expect(pantallasDelRol("alcaldia")).toEqual(["indicadores"]);
   });
