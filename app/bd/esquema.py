@@ -82,6 +82,9 @@ reportes = Table(
         name="ck_reportes_ubicacion",
     ),
 )
+# A-03 (#239): la cola filtra por estado y los duplicados por fecha de creación.
+Index("ix_reportes_estado", reportes.c.estado)
+Index("ix_reportes_creado_en", reportes.c.creado_en)
 
 # DT-05: la ocupación vive en la base; el cupo se toma con un UPDATE condicional (RN-04).
 refugios = Table(

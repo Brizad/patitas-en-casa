@@ -14,7 +14,7 @@ import re
 import tempfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated
 
@@ -98,7 +98,6 @@ from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
 from app.demo import Dependencias, cargar_demo
 from app.documentos.pdf import generar_pdf
 from app.dominio.modelos import (
-    DECIDIDOS,
     Animal,
     Especie,
     EstadoReporte,
@@ -1100,8 +1099,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     @app.get("/cola", dependencies=[personal])
     def cola():
         """Reportes pendientes de confirmar (HU-02); los confirmados salen de la cola."""
-        todos = repositorio.todos()
-        pendientes = [r for r in todos if r.estado not in DECIDIDOS]
+        pendientes = repositorio.pendientes()  # A-03 (#239): no toda la historia
+        # RF-17: un duplicado está a 2 horas o menos; basta con lo creado desde entonces.
+        todos = repositorio.creados_desde(
+            min(r.creado_en for r in pendientes) - timedelta(hours=config.DUPLICADO_HORAS)
+        ) if pendientes else []
         return [
             {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
              "confianza": r.confianza, "evidencias": r.evidencias,

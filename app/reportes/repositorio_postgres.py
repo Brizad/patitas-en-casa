@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 
 from sqlalchemy import Engine, RowMapping, select, update
 from sqlalchemy import insert as insertar
@@ -50,6 +51,23 @@ class RepositorioPostgres:
         with self._motor.connect() as conexion:
             filas = conexion.execute(select(reportes).order_by(reportes.c.creado_en)).mappings()
             return [_a_reporte(fila) for fila in filas]
+
+    def _donde(self, *condiciones) -> list[Reporte]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(reportes).where(*condiciones)
+                                     .order_by(reportes.c.creado_en)).mappings()
+            return [_a_reporte(fila) for fila in filas]
+
+    def pendientes(self) -> list[Reporte]:
+        return self._donde(reportes.c.estado.not_in([e.value for e in DECIDIDOS]))
+
+    def creados_desde(self, limite: datetime) -> list[Reporte]:
+        return self._donde(reportes.c.creado_en >= limite)
+
+    def confirmados_de_rescate(self) -> list[Reporte]:
+        return self._donde(reportes.c.estado == EstadoReporte.CONFIRMADO.value,
+                           reportes.c.prioridad.in_([Prioridad.CRITICA.value,
+                                                    Prioridad.ALTA.value]))
 
     def guardar_con_clave(self, reporte: Reporte, clave: str) -> Reporte:
         """ON CONFLICT DO NOTHING sobre la columna única: si dos reenvíos llegan a la vez,
