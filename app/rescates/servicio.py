@@ -95,7 +95,7 @@ class ServicioRescates:
         tomados = self._rescates.codigos_tomados()
         escalados = self._rescates.escalados()
         zona = self._rescates.zona(rescatista.correo)
-        libres = [r for r in self._reportes.todos()
+        libres = [r for r in self._reportes.confirmados_de_rescate()
                   if self.se_ofrece(r) and r.codigo not in tomados
                   and (r.codigo in escalados or en_zona(r, zona))]
         return sorted(libres, key=lambda r: (PRIORIDADES_DE_RESCATE.index(r.prioridad),
@@ -191,7 +191,7 @@ class ServicioRescates:
         tomados = self._rescates.codigos_tomados()
         ya_escalados = self._rescates.escalados()
         escalados = []
-        for reporte in self._reportes.todos():
+        for reporte in self._reportes.confirmados_de_rescate():
             if (not self.se_ofrece(reporte) or reporte.codigo in tomados
                     or reporte.codigo in ya_escalados):
                 continue
