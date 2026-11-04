@@ -150,7 +150,7 @@ abre el archivo que se indica.
     sintéticos y no está validado con veterinarios (DT-04). La
     disponibilidad del 99 % (RNF-04) tampoco se garantiza en el plan gratis (el servicio se
     duerme). La prueba con usuarios reales (RNF-06) requiere participantes. Todo está en
-    `docs/aprende/trazabilidad.md` con su motivo.
+    `docs/tesis/trazabilidad.md` con su motivo.
 
 ## Análisis de video (fase 6, v1.1.0)
 

@@ -148,7 +148,7 @@ quieres, entra con la Alcaldía para mostrar que solo ve esta pantalla.
 con CI (gitleaks, Ruff, más de 650 pruebas con PostgreSQL real y 97 % de cobertura). El análisis
 de video corre en un trabajador local porque no cabe en el plan gratis; lo que sigue
 pendiente —la disponibilidad del 99 % y validar los modelos con veterinarios— está en
-`trazabilidad.md`.»
+`../tesis/trazabilidad.md`.»
 
 ## Si algo falla en vivo
 

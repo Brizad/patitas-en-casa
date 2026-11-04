@@ -118,7 +118,7 @@ cd panel && npm run dev                     # panel en http://127.0.0.1:5173/pan
 - `fase-N-<tema>.md`: una guía por fase del plan.
 - `avance.md`: qué quedó, qué falta y la URL de Render.
 - `preguntas-para-brayan.md`: decisiones que tomé solo y que Brayan debe revisar.
-- `trazabilidad.md`: cada requisito del ERS con su estado, código, prueba y PR.
+- `../tesis/trazabilidad.md`: cada requisito del ERS con su estado, código, prueba y PR.
 - `guion-demo.md`: la demostración de 10 minutos para el profesor.
 - `piloto.md`: cómo hacer la sesión de usabilidad con cada persona (RNF-06).
 - `accesibilidad.md`: cómo se mide RNF-11 (axe-core y Lighthouse), qué salió y qué falta.
