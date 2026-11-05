@@ -78,6 +78,8 @@ class AjustesCorreo(BaseSettings):
     correo_remitente: str | None = None
     mailjet_url: str = "https://api.mailjet.com/v3.1/send"
     correos_coordinadores: str = ""  # separados por comas
+    # #310: dirección pública del sitio para el botón de los correos (enlaces absolutos).
+    url_publica: str = "https://patitas-en-casa-pnnk.onrender.com"
 
     @field_validator("smtp_host", "smtp_usuario", "smtp_contrasena", "smtp_remitente",
                      "mailjet_api_key", "mailjet_secret_key", "correo_remitente",

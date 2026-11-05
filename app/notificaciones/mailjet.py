@@ -13,12 +13,12 @@ import urllib.error
 import urllib.request
 
 from app.notificaciones.canal import EntregaFallida
+from app.notificaciones.plantilla import URL_PUBLICA, componer
 
 log = logging.getLogger(__name__)
 
 URL_MAILJET = "https://api.mailjet.com/v3.1/send"
 TIEMPO_MAXIMO_S = 10
-LARGO_MAXIMO_ASUNTO = 120
 # Un 4xx casi siempre es un mensaje que Mailjet rechaza: reintentar no ayuda. Estos sí se
 # pueden arreglar (clave mal puesta, cuenta por validar) o pasan solos (límite de velocidad).
 CODIGOS_REINTENTABLES = {401, 403, 408, 429}
@@ -26,7 +26,9 @@ CODIGOS_REINTENTABLES = {401, 403, 408, 429}
 
 class NotificadorMailjet:
     def __init__(self, api_key: str, secret_key: str, remitente: str,
-                 grupos: dict[str, list[str]], url: str = URL_MAILJET) -> None:
+                 grupos: dict[str, list[str]], url: str = URL_MAILJET,
+                 url_publica: str = URL_PUBLICA) -> None:
+        self._url_publica = url_publica  # #310: enlaces absolutos del botón del correo
         self._autorizacion = "Basic " + base64.b64encode(
             f"{api_key}:{secret_key}".encode()).decode()
         self._remitente = remitente
@@ -39,11 +41,13 @@ class NotificadorMailjet:
         if not correos:
             raise EntregaFallida(f"No hay correos configurados para {destinatario}.",
                                  permanente=True)
+        partes = componer(mensaje, self._url_publica)
         cuerpo = json.dumps({"Messages": [{
             "From": {"Email": self._remitente, "Name": "Patitas en Casa"},
             "To": [{"Email": c} for c in correos],
-            "Subject": f"[Patitas en Casa] {mensaje}"[:LARGO_MAXIMO_ASUNTO],
-            "TextPart": f"{mensaje}\n\nMensaje automático de Patitas en Casa.",
+            "Subject": partes.asunto,
+            "TextPart": partes.texto,
+            "HTMLPart": partes.html,  # #310: la misma alerta con diseño
         }]}).encode()
         peticion = urllib.request.Request(
             self._url, data=cuerpo, method="POST",
