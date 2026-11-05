@@ -46,12 +46,13 @@ export default function Adoptante({ token }: { token: string }) {
       <div className="ds-tarjeta">
         <h2>{perfil ? "Recomendados para tu hogar" : "Animales en adopción"}</h2>
         {animales.length === 0 && <p className="ds-vacio">No hay animales publicados ahora.</p>}
-        <ul className="ofertas">
+        <ul className="catalogo">
           {animales.map((a) => (
-            <li key={a.animal_id} className="oferta">
+            <li key={a.animal_id} className="animal">
               {a.foto && <img className="foto" src={a.foto} alt={`Foto de ${a.nombre}`}
                 loading="lazy" />}
-              <b>{a.nombre}</b> · {resumenAnimal(a)}<p>{a.descripcion}</p>
+              <h3>{a.nombre}</h3>
+              <p className="ds-suave">{resumenAnimal(a)}</p><p>{a.descripcion}</p>
               {"puntaje" in a && (
                 <p className="ds-suave"><span className="ds-insignia ds-insignia--baja">{a.puntaje}/100</span>
                   {" "}Compatibilidad: {a.razones.join("; ")}.

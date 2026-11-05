@@ -99,3 +99,10 @@ describe("panel del rescatista (#303)", () => {
     expect(pantallas["./Rescatista.tsx"]).toContain("oferta--${rescate.prioridad}");
   });
 });
+
+describe("adoptante (#306)", () => {
+  it("el catálogo es una rejilla de tarjetas y el nombre de cada animal es un encabezado", () => {
+    expect(pantallas["./Adoptante.tsx"]).toContain('className="catalogo"');
+    expect(pantallas["./Adoptante.tsx"]).toContain("<h3>{a.nombre}</h3>");
+  });
+});
