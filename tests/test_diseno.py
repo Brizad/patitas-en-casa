@@ -88,7 +88,7 @@ TEXTO_SOBRE_FONDO = [
     ("ds-tinta", "ds-marca-tenue"), ("ds-sobre-accion", "ds-accion"),
     ("ds-sobre-peligro", "ds-peligro"), ("ds-critica", "ds-critica-bg"),
     ("ds-alta", "ds-alta-bg"), ("ds-media", "ds-media-bg"), ("ds-baja", "ds-baja-bg"),
-    ("ds-info", "ds-info-bg")]
+    ("ds-info", "ds-info-bg"), ("ds-tinta", "ds-realce")]
 
 
 def test_primitivos_de_la_paleta():
@@ -148,3 +148,18 @@ def test_el_panel_no_fija_colores_y_sus_pestanas_no_dependen_del_color():
     css = CSS.read_text(encoding="utf-8")
     actual = re.search(r'\.ds-pestanas \[aria-current="page"\][^{]*\{([^}]*)\}', css).group(1)
     assert "background: var(--ds-tinta)" in actual
+
+
+def test_la_prioridad_se_distingue_por_forma_ademas_del_color():
+    """#302 (WCAG 1.4.1): cada insignia de prioridad tiene una forma propia, y en la cola la fila
+    crítica y la alta llevan una barra lateral de distinto grosor. Sin sombras en el panel."""
+    css = CSS.read_text(encoding="utf-8")
+    formas = {p: re.search(rf"\.ds-insignia--{p}::before \{{([^}}]*)\}}", css) for p in
+              ("critica", "alta", "media", "baja")}
+    assert all(formas.values()), formas
+    assert len({f.group(1) for f in formas.values()}) == 4  # cuatro formas distintas
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    critica = re.search(r"\.item--critica \{([^}]*)\}", panel).group(1)
+    alta = re.search(r"\.item--alta \{([^}]*)\}", panel).group(1)
+    assert "border-left-width: 8px" in critica and "border-left-width: 4px" in alta
+    assert "box-shadow" not in panel

@@ -17,6 +17,7 @@
   --ds-marca: var(--pc-bosque); --ds-marca-fuerte: var(--pc-tinta); --ds-marca-tenue: var(--pc-lavanda);
   --ds-sobre-marca: var(--pc-crema); --ds-acento: var(--pc-ascua);
   --ds-accion: var(--pc-lavanda); --ds-sobre-accion: var(--pc-tinta); /* la acción principal */
+  --ds-realce: var(--pc-piedra); /* #302: al pasar sobre un botón normal (neutro: no se confunde con la acción) */
   /* Prioridades y estados: color propio y siempre con texto (nunca solo color). */
   --ds-critica-bg: #FDE3E0; --ds-critica: #86160C;
   --ds-alta-bg: #FEEAD0; --ds-alta: #7A3F05;
@@ -38,7 +39,7 @@
     --ds-fondo: var(--pc-tinta); --ds-superficie: var(--pc-carbon); --ds-linea: var(--pc-grafito);
     --ds-linea-fuerte: var(--pc-piedra); --ds-tinta: var(--pc-crema); --ds-suave: var(--pc-niebla-noche);
     --ds-marca: var(--pc-lavanda); --ds-marca-fuerte: var(--pc-crema); --ds-marca-tenue: var(--pc-bosque);
-    --ds-sobre-marca: var(--pc-tinta);
+    --ds-sobre-marca: var(--pc-tinta); --ds-realce: var(--pc-grafito);
     --ds-critica-bg: #4A1C18; --ds-critica: #FFB8AF; --ds-alta-bg: #46300F; --ds-alta: #FFCB8E;
     --ds-media-bg: #3F3607; --ds-media: #F5DD73; --ds-baja-bg: #16341F; --ds-baja: #A3DDB1;
     --ds-info-bg: #14304D; --ds-info: #A9CDF2; --ds-peligro: #F3A8A0; --ds-sobre-peligro: #2A0F0C;
@@ -79,7 +80,7 @@
   min-height: 44px; padding: 0 var(--ds-e4); border-radius: var(--ds-radio); border: 2px solid var(--ds-linea-fuerte);
   background: var(--ds-superficie); color: var(--ds-tinta); font: 600 var(--ds-t-sm)/1.2 var(--ds-fuente);
   text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s; }
-.ds-btn:hover:not(:disabled), :where(.ds) button:hover:not(:disabled) { background: var(--ds-marca-tenue); }
+.ds-btn:hover:not(:disabled), :where(.ds) button:hover:not(:disabled) { background: var(--ds-realce); }
 .ds-btn--pri, .ds button.principal { background: var(--ds-accion); color: var(--ds-sobre-accion); }
 .ds-btn--pri:hover:not(:disabled), .ds button.principal:hover:not(:disabled) { background: var(--ds-tinta); color: var(--ds-fondo); }
 .ds-btn--peligro { background: var(--ds-peligro); border-color: var(--ds-peligro); color: var(--ds-sobre-peligro); }
@@ -128,6 +129,12 @@
 .ds-insignia--media { background: var(--ds-media-bg); color: var(--ds-media); }
 .ds-insignia--baja { background: var(--ds-baja-bg); color: var(--ds-baja); }
 .ds-insignia--info { background: var(--ds-info-bg); color: var(--ds-info); }
+/* #302 (WCAG 1.4.1): además del texto y el color, una forma por prioridad: crítica ▲, alta ◆,
+   media ●, baja ○. Así se distinguen también en blanco y negro o con daltonismo. */
+.ds-insignia--critica::before { width: 11px; height: 10px; border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.ds-insignia--alta::before { width: 8px; height: 8px; border-radius: 1px; transform: rotate(45deg); }
+.ds-insignia--media::before { width: 9px; height: 9px; border-radius: 50%; }
+.ds-insignia--baja::before { background: transparent; border: 2px solid currentColor; }
 
 /* Tablas: en celular se desplazan dentro de su caja sin romper la página. */
 .ds-tabla { width: 100%; border-collapse: collapse; font-size: var(--ds-t-sm); }
