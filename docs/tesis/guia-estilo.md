@@ -1,6 +1,6 @@
 # Guía de estilo — Patitas en Casa
 
-Sistema visual del rediseño de noviembre de 2026 (#293 a #310). Todos los valores salen del
+Sistema visual del rediseño de noviembre de 2026 (#293 a #322). Todos los valores salen del
 código; si esta guía y el código no coinciden, manda el código y se corrige la guía.
 
 | Archivo | Qué define |
@@ -66,7 +66,7 @@ marcó sobre la fila elegida de la cola (lavanda, 4,38:1); quedó `#5c5c54` (#29
 - Servidas por el propio servidor (`/diseno/fuentes/`, 44 KB en total, subconjunto latino con
   á é í ó ú ñ ü ¿ ¡ « »), licencia SIL OFL 1.1 junto a cada archivo y `font-display: swap`. La CSP
   (`default-src 'self'`) no cambia y la IP del ciudadano no llega a ningún tercero.
-- La PWA guarda las dos fuentes en su service worker (`patitas-pwa-v9`): abre sin señal con ellas.
+- La PWA guarda las dos fuentes en su service worker (desde `patitas-pwa-v9`; hoy `v10`, con el ícono y las ilustraciones): abre sin señal con ellas.
 - Respaldo: Georgia para la serif y `system-ui` para la sans.
 
 | Elemento | Tamaño |
@@ -155,7 +155,9 @@ revisa que sean XML válido, seguro, con la paleta y que se usen.
 6. `prefers-reduced-motion` apaga las transiciones.
 7. axe-core con las etiquetas de `scripts/accesibilidad/revisar.mjs` (WCAG 2.2 AA y buenas
    prácticas) en las pantallas públicas y las de los seis roles, a 360, 768 y 1440 px, claro y
-   oscuro: sin fallas en cada PR del rediseño (#294 a #310).
+   oscuro: sin fallas en cada PR del rediseño (#294 a #321).
+8. Regresión visual (#316): 16 pantallas comparadas con sus capturas base en cada PR
+   (`e2e/aspecto.spec.mjs`, tolerancia del 1 %); ver `docs/aprende/e2e.md`.
 
 ## 8. Antes y después
 
