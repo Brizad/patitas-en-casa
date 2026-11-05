@@ -2,7 +2,7 @@
 
 # Catálogo de endpoints
 
-67 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+72 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
@@ -58,6 +58,11 @@
 | GET | `/indicadores/resumen.pdf` | administrador, alcaldia, coordinador | 200, 401, 403 | — |
 | GET | `/bitacora` | administrador | 200, 401, 403, 422 | — |
 | GET | `/` | público | 200 | — |
+| POST | `/admin/piloto/participantes` | administrador | 201, 401, 403 | RNF-06 |
+| GET | `/admin/piloto/resultados` | administrador | 200, 401, 403 | — |
+| GET | `/admin/piloto/resultados.csv` | administrador | 200, 401, 403 | — |
+| POST | `/piloto/reportes` | público | 201, 403, 404, 409, 410, 422, 503 | — |
+| POST | `/piloto/resultados` | público | 201, 403, 404, 409, 410, 422, 503 | — |
 | POST | `/reportes/{codigo}/video` | público | 202, 403, 404, 409, 410, 413, 415, 422, 503 | RF-01, RF-03 |
 | POST | `/video/trabajos/reclamar` | trabajador de video | 200, 204, 401, 503 | — |
 | GET | `/video/trabajos/{id_}/archivo` | trabajador de video | 200, 401, 403, 404, 409, 410, 422, 503 | — |
