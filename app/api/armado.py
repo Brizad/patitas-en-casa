@@ -93,8 +93,9 @@ def armar_repositorios(dados: Repositorios,
 def _con_base(dados: Repositorios, motor: Engine) -> Repositorios:
     cifrador = dados.cifrador
     if cifrador is None:
-        clave_datos = cargar_ajustes_datos().clave_datos
-        cifrador = Cifrador(clave_datos.get_secret_value()) if clave_datos else None
+        ajustes = cargar_ajustes_datos()
+        cifrador = (Cifrador(ajustes.clave_datos.get_secret_value(), ajustes.clave_kdf)
+                    if ajustes.clave_datos else None)
     adopciones = dados.repositorio_adopciones
     if adopciones is None:
         # RNF-08 (#149): perfiles cifrados; los que estaban en claro se cifran al arrancar.
