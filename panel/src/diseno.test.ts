@@ -83,3 +83,34 @@ describe("estructura del panel con el sistema visual nuevo (#300)", () => {
     }
   });
 });
+
+describe("panel del veterinario (#302)", () => {
+  it("cada fila de la cola lleva su prioridad como clase (barra de distinto grosor, no solo color)", () => {
+    expect(pantallas["./Cola.tsx"]).toContain("item--${r.prioridad}");
+  });
+  it("descartar se ve como acción de peligro, separada de confirmar", () => {
+    expect(pantallas["./Descartar.tsx"]).toContain('className="ds-btn--peligro"');
+  });
+});
+
+describe("panel del rescatista (#303)", () => {
+  it("ofertas y rescate en curso llevan la prioridad como clase (barra de distinto grosor)", () => {
+    expect(pantallas["./Rescatista.tsx"]).toContain("oferta--${o.prioridad}");
+    expect(pantallas["./Rescatista.tsx"]).toContain("oferta--${rescate.prioridad}");
+  });
+});
+
+describe("adoptante (#306)", () => {
+  it("el catálogo es una rejilla de tarjetas y el nombre de cada animal es un encabezado", () => {
+    expect(pantallas["./Adoptante.tsx"]).toContain('className="catalogo"');
+    expect(pantallas["./Adoptante.tsx"]).toContain("<h3>{a.nombre}</h3>");
+  });
+});
+
+describe("administrador y modo piloto (#307)", () => {
+  it("las cifras del piloto van en tarjetas y cada meta muestra cumple / no cumple como insignia", () => {
+    expect(pantallas["./Piloto.tsx"]).toContain('className="kpis"');
+    expect(pantallas["./Piloto.tsx"]).toContain("ds-insignia--${resumen.cumpleTiempo");
+    expect(pantallas["./Piloto.tsx"]).toContain("ds-insignia--${resumen.cumpleSus");
+  });
+});

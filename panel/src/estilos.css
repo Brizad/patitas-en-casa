@@ -2,7 +2,8 @@
    del sistema de diseño (/diseno/sistema.css); aquí solo está la distribución propia del panel. */
 .inicio { width: calc(100% - 32px); max-width: 400px; margin: 8vh auto; text-align: center; }
 .inicio label { text-align: left; }
-.inicio .logo { padding: 10px; border-radius: 50%; background: var(--ds-marca-fuerte); margin-bottom: var(--ds-e2); }
+.inicio .logo { margin-bottom: var(--ds-e2); } /* #308: el ícono trae su propio fondo */
+.icono-rol { vertical-align: middle; margin-right: 4px; }
 .inicio .ds-msg { text-align: left; }
 .inicio button.principal { width: 100%; margin-top: var(--ds-e2); }
 .rol { text-transform: capitalize; font-weight: 700; }
@@ -17,6 +18,8 @@
 }
 .quien { color: var(--ds-suave); }
 .pagina { display: grid; gap: var(--ds-e4); padding: var(--ds-e4); max-width: 960px; margin: 0 auto; }
+/* #307: una pantalla de una sola tarjeta (modo piloto) también queda centrada, sin tocar los bordes. */
+.panel > .ds-tarjeta { width: calc(100% - 2 * var(--ds-e4)); max-width: 960px; margin: var(--ds-e4) auto; }
 .ds-vacio { margin: var(--ds-e3) 0; }
 .ds-tarjeta h2 { margin-bottom: var(--ds-e3); }
 
@@ -25,16 +28,23 @@
   max-width: 1280px; margin: 0 auto; align-items: start; }
 @media (max-width: 760px) { .cola { grid-template-columns: 1fr; } }
 .cola ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--ds-e2); }
-.fila-titulo { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-e3); }
+.fila-titulo { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-e3); flex-wrap: wrap; } /* #304: en el celular las acciones bajan */
 .fila-titulo h2 { margin: 0; }
 .item { width: 100%; display: grid; grid-template-columns: 6.5em 1fr auto; gap: var(--ds-e2) var(--ds-e3);
   text-align: left; align-items: center; padding: var(--ds-e3); min-height: 56px; font-weight: 500; }
 .item .ds-insignia { justify-self: start; }
+.item > .ds-suave { white-space: nowrap; }
+@media (max-width: 420px) { .item { grid-template-columns: auto 1fr; } .item > .ds-suave { grid-column: 1 / -1; } }
+/* #302: la prioridad también por el grosor de la barra lateral (crítica 8 px, alta 4 px). */
+.item--critica { border-left-width: 8px; border-left-color: var(--ds-critica); }
+.item--alta { border-left-width: 4px; border-left-color: var(--ds-alta); }
 .item code { font-family: var(--ds-mono); font-weight: 700; }
-.item.activo { border-color: var(--ds-marca); background: var(--ds-marca-tenue); box-shadow: inset 0 0 0 2px var(--ds-marca); }
+/* La fila elegida se invierte como la pestaña actual (además de aria-pressed); sin sombra. */
+.item.activo, .item.activo:hover:not(:disabled) { background: var(--ds-tinta); color: var(--ds-fondo); }
+.item.activo .ds-suave, .item.activo .resumen { color: inherit; }
 .acciones { display: flex; gap: var(--ds-e2); margin-top: var(--ds-e3); flex-wrap: wrap; }
-.ajuste { margin-top: var(--ds-e3); padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio);
-  background: var(--ds-fondo); border: 1px solid var(--ds-linea); }
+.ajuste { margin-top: var(--ds-e3); padding: var(--ds-e4); border-radius: var(--ds-radio-lg);
+  background: var(--ds-fondo); border: 2px solid var(--ds-linea); }
 .descartar { margin-top: var(--ds-e3); }
 .ds-suave { font-size: var(--ds-t-sm); }
 .lista-simple { list-style: none; padding: 0; margin: 0; }
@@ -47,15 +57,26 @@
 .ds-tabla-caja { overflow-x: auto; }
 
 /* Barra de ocupación del refugio e indicadores sin librerías. */
-.barra-ocupacion { height: 14px; border-radius: 99px; background: var(--ds-linea); overflow: hidden; }
+/* #304: la barra tiene borde: se ve también vacía (0 %). El nivel lo dice además el mensaje (RN-04). */
+.barra-ocupacion { height: 18px; border: 2px solid var(--ds-linea-fuerte); border-radius: var(--pc-radio-pildora);
+  background: var(--ds-superficie); overflow: hidden; }
 .barra-ocupacion span { display: block; height: 100%; background: var(--ds-marca); }
 .barra-ocupacion.alerta span { background: var(--ds-alta); }
 .barra-ocupacion.lleno span { background: var(--ds-peligro); }
 .barras div { display: grid; grid-template-columns: 11em 1fr; gap: var(--ds-e2); margin: var(--ds-e1) 0; }
 .barras dt { color: var(--ds-suave); }
 .barras dd { margin: 0; display: flex; align-items: center; gap: 6px; }
-.barras dd span { display: inline-block; height: 12px; border-radius: 6px; background: var(--ds-marca); min-width: 2px; }
+.barras dd span { display: inline-block; height: 12px; border-radius: var(--pc-radio-pildora); background: var(--ds-marca); min-width: 2px; }
 .foto { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--ds-radio); margin-bottom: var(--ds-e2); }
+/* #306: catálogo de adopción como rejilla de tarjetas (una columna en el celular). */
+.catalogo { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--ds-e4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.animal { display: flex; flex-direction: column; gap: var(--ds-e2); padding: var(--ds-e4); background: var(--ds-fondo);
+  border: 2px solid var(--ds-linea); border-radius: var(--pc-radio-tarjeta); }
+.animal .foto { max-width: none; margin: 0; border-radius: var(--ds-radio-lg); }
+.animal h3 { margin: 0; font: 400 1.75rem/1.1 var(--pc-serif); }
+.animal p { margin: 0; }
+.animal button { margin-top: auto; align-self: flex-start; }
 .tira { display: block; max-width: 100%; height: auto; border-radius: var(--ds-radio); margin: var(--ds-e2) 0; }
 .ds #cola:focus { outline: 3px solid var(--ds-marca); outline-offset: 4px; }
 button.enlace { border: 0; background: none; padding: 2px 4px; color: var(--ds-marca); text-decoration: underline;
@@ -65,29 +86,37 @@ button.enlace:hover:not(:disabled) { background: none; }
 /* Rescatista: zona por comunas como botones y ofertas como tarjetas con borde de prioridad. */
 .comunas { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: var(--ds-e2); }
 .ds label.comuna:has(> input) { position: relative; align-items: center; justify-content: center; margin: 0; min-height: 44px;
-  border: 1px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); background: var(--ds-superficie); cursor: pointer; font-weight: 700; }
+  border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); background: var(--ds-superficie); cursor: pointer; font-weight: 700; }
 .comuna input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-.ds label.comuna:has(input:checked) { background: var(--ds-marca-tenue); border-color: var(--ds-marca); color: var(--ds-marca-fuerte); }
+/* #303: la comuna elegida se invierte (como la pestaña actual) y lleva ✓: no solo color. */
+.ds label.comuna:has(input:checked) { background: var(--ds-tinta); border-color: var(--ds-tinta); color: var(--ds-fondo); }
 .ds label.comuna:has(input:checked)::before { content: "✓ "; }
 .ds label.comuna:has(input:focus-visible) { outline: 3px solid var(--ds-marca); outline-offset: 2px; }
 .ofertas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--ds-e3); }
-.oferta { border: 1px solid var(--ds-linea); border-left: 4px solid var(--ds-marca); border-radius: var(--ds-radio); padding: var(--ds-e3) var(--ds-e4); }
+.oferta { border: 2px solid var(--ds-linea); border-radius: var(--ds-radio-lg); padding: var(--ds-e3) var(--ds-e4); }
+/* #303: barra lateral por prioridad, como en la cola (crítica 8 px, alta 4 px). */
+.oferta--critica { border-left-width: 8px; border-left-color: var(--ds-critica); }
+.oferta--alta { border-left-width: 4px; border-left-color: var(--ds-alta); }
 .oferta p { margin: var(--ds-e2) 0 var(--ds-e3); }
 
 /* Indicadores: cifras clave en tarjetas pequeñas. */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ds-e3); margin: var(--ds-e4) 0; }
-.kpi { display: flex; flex-direction: column-reverse; padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio);
-  background: var(--ds-marca-tenue); border: 1px solid var(--ds-linea); }
-.kpi dd { margin: 0; font-size: var(--ds-t-xl); font-weight: 800; color: var(--ds-marca-fuerte); line-height: 1.1; }
+/* #304: como las tarjetas comparativas de DESIGN.md: la cifra en serif grande; la primera invertida. */
+.kpi { display: flex; flex-direction: column-reverse; padding: var(--ds-e4); border-radius: var(--ds-radio-lg);
+  background: var(--ds-fondo); border: 2px solid var(--ds-linea); }
+.kpi dd { margin: 0; font: 400 2.75rem/1 var(--pc-serif); color: var(--ds-tinta); }
+.kpi:first-child { background: var(--ds-tinta); border-color: var(--ds-tinta); }
+.kpi:first-child dd, .kpi:first-child dt { color: var(--ds-fondo); }
 .kpi dt { font-size: var(--ds-t-xs); color: var(--ds-suave); font-weight: 600; margin-top: var(--ds-e1); }
 
 /* Detalle del reporte (#180): relato del ciudadano, evidencias y la tira del video. */
 .relato { margin: 0 0 var(--ds-e3); padding: var(--ds-e3) var(--ds-e4); border-left: 4px solid var(--ds-acento);
-  background: var(--ds-fondo); border-radius: 0 var(--ds-radio) var(--ds-radio) 0; font-size: 1.0625rem; }
+  background: var(--ds-fondo); border-radius: 0 var(--ds-radio) var(--ds-radio) 0;
+  font: 1.25rem/1.4 var(--pc-serif); } /* #302: la voz del ciudadano, en serif */
 .detalle h3 { margin: var(--ds-e4) 0 var(--ds-e2); font-size: var(--ds-t-sm); text-transform: uppercase;
   letter-spacing: .05em; color: var(--ds-suave); }
 .detalle .video > h3 { text-transform: none; letter-spacing: 0; font-size: var(--ds-t-md); color: var(--ds-tinta); }
-.cola ul.evidencias { list-style: disc; }
+.cola ul.evidencias { list-style: disc; padding-left: var(--ds-e5); } /* #302: viñetas dentro de la tarjeta */
 .evidencias { margin: 0; padding-left: var(--ds-e5); display: grid; gap: var(--ds-e1); }
 .resumen { grid-column: 1 / -1; color: var(--ds-suave); font-size: var(--ds-t-sm); display: -webkit-box;
   -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

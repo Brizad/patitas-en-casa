@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
+  <!-- Coordinador: el refugio. Original (#308). -->
+  <circle cx="16" cy="16" r="15" fill="#ffffeb" stroke="#1a1a1a" stroke-width="1.5"/>
+  <path d="M10 14.5V24h12v-9.5" fill="#f0d7ff" stroke="#1a1a1a" stroke-width="1.75" stroke-linejoin="round"/>
+  <path d="M8 15.5l8-7 8 7" fill="none" stroke="#1a1a1a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M14.5 24v-5h3v5" fill="#034f46" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

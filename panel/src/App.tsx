@@ -32,7 +32,8 @@ export default function App() {
         <img src="/app/icono.svg" alt="" width="28" height="28" />
         <h1 className="ds-marca">Patitas en Casa · Panel</h1>
         <div className="ds-derecha">
-          <span className="quien">{cuenta.nombre} · <span className="rol">{cuenta.rol}</span></span>
+          <span className="quien">{cuenta.nombre} · <img className="icono-rol" src={`/diseno/roles/${cuenta.rol}.svg`}
+            alt="" width="24" height="24" /><span className="rol">{cuenta.rol}</span></span>
           <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
         </div>
       </header>

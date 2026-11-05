@@ -88,7 +88,7 @@ TEXTO_SOBRE_FONDO = [
     ("ds-tinta", "ds-marca-tenue"), ("ds-sobre-accion", "ds-accion"),
     ("ds-sobre-peligro", "ds-peligro"), ("ds-critica", "ds-critica-bg"),
     ("ds-alta", "ds-alta-bg"), ("ds-media", "ds-media-bg"), ("ds-baja", "ds-baja-bg"),
-    ("ds-info", "ds-info-bg")]
+    ("ds-info", "ds-info-bg"), ("ds-tinta", "ds-realce")]
 
 
 def test_primitivos_de_la_paleta():
@@ -148,3 +148,43 @@ def test_el_panel_no_fija_colores_y_sus_pestanas_no_dependen_del_color():
     css = CSS.read_text(encoding="utf-8")
     actual = re.search(r'\.ds-pestanas \[aria-current="page"\][^{]*\{([^}]*)\}', css).group(1)
     assert "background: var(--ds-tinta)" in actual
+
+
+def test_la_prioridad_se_distingue_por_forma_ademas_del_color():
+    """#302 (WCAG 1.4.1): cada insignia de prioridad tiene una forma propia, y en la cola la fila
+    crítica y la alta llevan una barra lateral de distinto grosor. Sin sombras en el panel."""
+    css = CSS.read_text(encoding="utf-8")
+    formas = {p: re.search(rf"\.ds-insignia--{p}::before \{{([^}}]*)\}}", css) for p in
+              ("critica", "alta", "media", "baja")}
+    assert all(formas.values()), formas
+    assert len({f.group(1) for f in formas.values()}) == 4  # cuatro formas distintas
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    critica = re.search(r"\.item--critica \{([^}]*)\}", panel).group(1)
+    alta = re.search(r"\.item--alta \{([^}]*)\}", panel).group(1)
+    assert "border-left-width: 8px" in critica and "border-left-width: 4px" in alta
+    assert "box-shadow" not in panel
+
+
+def test_rescatista_prioridad_y_comunas_sin_depender_del_color():
+    """#303: oferta crítica con barra de 8 px y alta de 4 px; la comuna elegida se invierte."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    assert "border-left-width: 8px" in re.search(r"\.oferta--critica \{([^}]*)\}", panel).group(1)
+    assert "border-left-width: 4px" in re.search(r"\.oferta--alta \{([^}]*)\}", panel).group(1)
+    elegida = re.search(r"label\.comuna:has\(input:checked\) \{([^}]*)\}", panel).group(1)
+    assert "background: var(--ds-tinta)" in elegida
+
+
+def test_coordinador_cifras_en_serif_y_archivo_con_forma_de_boton():
+    """#304: las cifras clave van en serif grande y el botón «Elegir archivo» tiene la forma del
+    sistema (borde de 2 px), en la PWA y en el panel."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    assert "var(--pc-serif)" in re.search(r"\.kpi dd \{([^}]*)\}", panel).group(1)
+    assert "border: 2px solid" in re.search(r"\.barra-ocupacion \{([^}]*)\}", panel).group(1)
+    archivo = re.search(r"::file-selector-button \{([^}]*)\}", CSS.read_text(encoding="utf-8"))
+    assert archivo and "border: 2px solid var(--ds-linea-fuerte)" in archivo.group(1)
+
+
+def test_una_tarjeta_suelta_del_panel_no_toca_los_bordes():
+    """#307: el modo piloto es una sola tarjeta sin contenedor de página; queda centrada."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    assert "max-width: 960px" in re.search(r"\.panel > \.ds-tarjeta \{([^}]*)\}", panel).group(1)

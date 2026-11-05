@@ -38,6 +38,15 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-d
 .portada { padding: 48px 0 16px; }
 @media (min-width: 720px) { .portada { padding: 96px 0 32px; } }
 .portada h1 { font-size: clamp(2.25rem, 1.25rem + 4.5vw, 4.5rem); line-height: 1.02; max-width: 18ch; margin: 0 0 24px; }
+/* #308: ilustración original (decorativa). En el celular va después de las acciones, para que
+   «Reportar emergencia» siga a la vista; en pantalla ancha, a la derecha del texto. */
+.ilustracion { display: block; width: min(100%, 320px); height: auto; margin: 32px auto 0; }
+@media (min-width: 960px) {
+  .portada { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); column-gap: 48px; align-items: center; }
+  .portada > * { grid-column: 1; }
+  .portada > .etiqueta { justify-self: start; }
+  .portada > .ilustracion { grid-column: 2; grid-row: 1 / span 5; width: 100%; margin: 0; }
+}
 .subrayado { text-decoration: underline wavy var(--lavanda); text-decoration-thickness: 4px;
   text-underline-offset: .14em; text-decoration-skip-ink: none; }
 .etiqueta { display: inline-block; margin: 0 0 24px; padding: 8px 16px; border-radius: 8px;
@@ -77,7 +86,16 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-d
 @media (min-width: 640px) { .roles { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 900px) { .roles { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
 .roles div { padding: 24px; border-radius: 32px; background: var(--rol); color: var(--crema); }
-.roles dt { font: 1.5rem/1.2 var(--serif); }
+.roles dt { font: 1.5rem/1.2 var(--serif); display: flex; align-items: center; gap: 12px; }
+/* #308: un ícono original por rol (decorativo: el nombre ya está escrito). */
+.roles dt::before { content: ""; flex: none; width: 40px; height: 40px; background: center / contain no-repeat; }
+.rol-ciudadano dt::before { background-image: url(/diseno/roles/ciudadano.svg); }
+.rol-veterinario dt::before { background-image: url(/diseno/roles/veterinario.svg); }
+.rol-rescatista dt::before { background-image: url(/diseno/roles/rescatista.svg); }
+.rol-coordinador dt::before { background-image: url(/diseno/roles/coordinador.svg); }
+.rol-adoptante dt::before { background-image: url(/diseno/roles/adoptante.svg); }
+.rol-administrador dt::before { background-image: url(/diseno/roles/administrador.svg); }
+.rol-alcaldia dt::before { background-image: url(/diseno/roles/alcaldia.svg); }
 .roles dd { margin: 4px 0 0; font-size: .9375rem; }
 .tecnologia { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .tecnologia li::marker { color: var(--suave); }

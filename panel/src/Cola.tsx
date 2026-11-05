@@ -67,11 +67,11 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
               Ver estado de los avisos</button>
           </div>)}
         {!cargando && !error && reportes.length === 0 && (
-          <p className="ds-vacio">No hay reportes por confirmar.</p>)}
+          <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-reportes.svg" alt="" width="160" height="120" />No hay reportes por confirmar.</p>)}
         <ul>
           {reportes.map((r) => (
             <li key={r.codigo}>
-              <button className={r.codigo === elegido ? "item activo" : "item"}
+              <button className={`item item--${r.prioridad}${r.codigo === elegido ? " activo" : ""}`}
                 onClick={() => setElegido(r.codigo)} aria-pressed={r.codigo === elegido}>
                 <code>{r.codigo}</code>
                 <span className={`ds-insignia ds-insignia--${r.prioridad}`}>{etiquetaEstado(r.estado, r.prioridad)}</span>

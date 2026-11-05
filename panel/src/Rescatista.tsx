@@ -77,10 +77,10 @@ export default function Rescatista({ token }: { token: string }) {
             <button onClick={() => void recargar()}>Actualizar</button>
           </div>
           {!estado?.disponible && <p className="ds-suave">Marca «Disponible» para ver ofertas.</p>}
-          {estado?.disponible && lista.length === 0 && <p className="ds-vacio">No hay ofertas ahora.</p>}
+          {estado?.disponible && lista.length === 0 && <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-rescates.svg" alt="" width="160" height="120" />No hay ofertas ahora.</p>}
           <ul className="ofertas">
             {lista.map((o) => (
-              <li key={o.codigo} className="oferta">
+              <li key={o.codigo} className={`oferta oferta--${o.prioridad}`}>
                 <span className={`ds-insignia ds-insignia--${o.prioridad}`}>{NOMBRE_PRIORIDAD[o.prioridad]}</span>
                 {" "}<code>{o.codigo}</code> · comuna {o.comuna ?? "sin dato"}
                 {o.escalado && <b> · escalado a toda la ciudad</b>}
@@ -104,10 +104,10 @@ function RescateActual({ token, rescate, hacer }: {
   // La dirección exacta solo la ve quien aceptó el rescate (el servidor la envía solo aquí).
   const donde = u.direccion ?? (u.latitud !== null ? `GPS ${u.latitud}, ${u.longitud}` : "sin dato");
   return (
-    <div className="ds-tarjeta">
+    <div className={`ds-tarjeta oferta--${rescate.prioridad}`}>
       <h2>Mi rescate <code>{rescate.codigo}</code></h2>
       <p><span className={`ds-insignia ds-insignia--${rescate.prioridad}`}>{NOMBRE_PRIORIDAD[rescate.prioridad]}</span>
-        {" "}{rescate.estado === "en_camino" ? "En camino" : "En el sitio"}</p>
+        {" "}<span className="ds-insignia ds-insignia--info">{rescate.estado === "en_camino" ? "En camino" : "En el sitio"}</span></p>
       <p>{rescate.descripcion}</p>
       <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}
         {enlaceMapa(u) && <> · <a href={enlaceMapa(u) ?? undefined} target="_blank"

@@ -66,13 +66,19 @@ export default function Piloto({ token }: { token: string }) {
           Si no se abrió, copia este enlace en el celular (sirve una vez y por 24 horas):{" "}
           <code>{location.origin}{invitacion.enlace}</code></p>)}
       {datos && (
-        <p>Invitados: <b>{datos.invitados}</b> · Terminaron: <b>{datos.completos}</b></p>)}
+        <dl className="kpis">
+          <div className="kpi"><dd>{datos.invitados}</dd><dt>Invitados</dt></div>
+          <div className="kpi"><dd>{datos.completos}</dd><dt>Terminaron</dt></div>
+        </dl>)}
       {resumen && (
         <ul>
           <li>Reportaron en {META_SEGUNDOS} s o menos: <b>{resumen.cumplen}</b> ({resumen.porcentaje} %;
-            meta {META_PORCENTAJE} %) — {resumen.cumpleTiempo ? "cumple" : "no cumple"}</li>
-          <li>SUS promedio: <b>{resumen.sus.toFixed(1)}</b> (meta {META_SUS}) —{" "}
-            {resumen.cumpleSus ? "cumple" : "no cumple"}</li>
+            meta {META_PORCENTAJE} %){" "}
+            <span className={`ds-insignia ds-insignia--${resumen.cumpleTiempo ? "baja" : "critica"}`}>
+              {resumen.cumpleTiempo ? "cumple" : "no cumple"}</span></li>
+          <li>SUS promedio: <b>{resumen.sus.toFixed(1)}</b> (meta {META_SUS}){" "}
+            <span className={`ds-insignia ds-insignia--${resumen.cumpleSus ? "baja" : "critica"}`}>
+              {resumen.cumpleSus ? "cumple" : "no cumple"}</span></li>
         </ul>)}
       {datos && datos.filas.length > 0 && (
         <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Resultados del piloto">
