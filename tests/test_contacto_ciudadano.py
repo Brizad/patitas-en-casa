@@ -109,3 +109,40 @@ def test_en_la_base_no_queda_el_contacto_en_claro(bd_limpia):
     with bd_limpia.connect() as conexion:
         volcado = str(conexion.execute(text("SELECT * FROM reportes")).all())
     assert "lau@correo.co" not in volcado
+
+
+# --- A-09 (#284): clave derivada con scrypt, lista para activar -------------------------------
+
+def test_a09_por_defecto_el_formato_no_cambia():
+    assert not Cifrador(CLAVE_DATOS).cifrar("3001234567").startswith("v2:")
+
+
+def test_a09_con_scrypt_lo_nuevo_va_en_v2_y_lo_viejo_se_sigue_leyendo():
+    viejo = Cifrador(CLAVE_DATOS).cifrar("vecina@correo.co")
+    nuevo_cifrador = Cifrador(CLAVE_DATOS, "scrypt")
+    nuevo = nuevo_cifrador.cifrar("3001234567")
+    assert nuevo.startswith("v2:")
+    assert nuevo_cifrador.descifrar(viejo) == "vecina@correo.co"
+    assert nuevo_cifrador.descifrar(nuevo) == "3001234567"
+    # Apagar el ajuste no deja nada ilegible: sha256 también lee v2.
+    assert Cifrador(CLAVE_DATOS).descifrar(nuevo) == "3001234567"
+
+
+def test_a09_la_clave_v2_no_es_la_v1():
+    nuevo = Cifrador(CLAVE_DATOS, "scrypt").cifrar("3001234567")
+    with pytest.raises(InvalidTag):  # sin «v2:» se intenta con la clave v1 y la etiqueta falla
+        Cifrador(CLAVE_DATOS).descifrar(nuevo.removeprefix("v2:"))
+    with pytest.raises(InvalidTag):
+        Cifrador("otra-clave-de-pruebas-con-mas-de-32-caracteres", "scrypt").descifrar(nuevo)
+
+
+def test_a09_un_kdf_desconocido_se_rechaza():
+    with pytest.raises(ValueError, match="PATITAS_CLAVE_KDF"):
+        Cifrador(CLAVE_DATOS, "md5")
+
+
+def test_a09_el_ajuste_se_lee_del_entorno(monkeypatch):
+    from app.ajustes import cargar_ajustes_datos
+    assert cargar_ajustes_datos(None).clave_kdf == "sha256"
+    monkeypatch.setenv("PATITAS_CLAVE_KDF", "scrypt")
+    assert cargar_ajustes_datos(None).clave_kdf == "scrypt"

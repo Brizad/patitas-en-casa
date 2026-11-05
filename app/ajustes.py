@@ -6,6 +6,7 @@ clave de firma de los tokens.
 from __future__ import annotations
 
 import re
+from typing import Literal
 from urllib.parse import quote
 
 from pydantic import SecretStr, ValidationError, field_validator
@@ -110,6 +111,8 @@ class AjustesDatos(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="PATITAS_", extra="ignore")
 
     clave_datos: SecretStr | None = None
+    # A-09 (#284): «scrypt» cifra lo nuevo con una clave derivada lenta; por defecto, como antes.
+    clave_kdf: Literal["sha256", "scrypt"] = "sha256"
 
     @field_validator("clave_datos", mode="before")
     @classmethod

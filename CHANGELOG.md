@@ -67,6 +67,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Respaldo diario: `pg_dump` 17 fallaba contra Neon (servidor 18.6). `PG_VERSION` pasa a 18 en `respaldo.yml` (también la base temporal de la prueba de restauración) y las guías dicen PostgreSQL 18 para Neon.
 
 ### Seguridad
+- A-09 / DT-11 (#284), lista para activar: `PATITAS_CLAVE_KDF=scrypt` cifra los datos nuevos con una clave derivada por scrypt (prefijo `v2:`) y sigue leyendo los viejos; los dos formatos se leen siempre, así que apagarlo no deja nada ilegible. Por defecto `sha256`, como antes (P-18).
 - A-08 / DT-11 (#283): el tope de 1 MB también vale para las peticiones *chunked* (sin `Content-Length`): `LimiteCuerpoSinLargo` cuenta los bytes que llegan y responde 413 al pasarlo, sin guardar el resto en memoria. Las subidas de video y fotos conservan su propio tope.
 
 ## [1.2.0] - 2026-11-02

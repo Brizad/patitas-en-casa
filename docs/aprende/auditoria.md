@@ -20,7 +20,7 @@ higiene o de mantenimiento. **Info** = revisado y sin hallazgo.
 | A-06 | Baja | Sin índices para los historiales (`decisiones_triaje.veterinario`, `descartes.veterinario`, `rescates.rescatista`) | DT-12 |
 | A-07 | Baja | `crear_app` mide 1 011 líneas (`noqa: C901`) | DT-13 |
 | A-08 | Baja | El tope de 1 MB no cubre peticiones *chunked* sin `Content-Length` | Corregido (#283) |
-| A-09 | Baja | La clave de datos se deriva con un SHA-256 simple (sin sal ni KDF lento) | DT-11 |
+| A-09 | Baja | La clave de datos se deriva con un SHA-256 simple (sin sal ni KDF lento) | Listo para activar (#284) |
 | A-10 | Baja | Código repetido: la IP del cliente se lee igual en 3 lugares; `urlTira`/`urlVista` del panel son casi iguales | DT-13 |
 
 No se encontraron hallazgos de severidad **alta**.
@@ -104,6 +104,10 @@ No se encontraron hallazgos de severidad **alta**.
 - **Evidencia:** `Cifrador` usa `hashlib.sha256(clave)` como clave AES-256
   (`app/seguridad/cifrado.py`). Con una clave aleatoria de 32+ caracteres (lo que pide
   `.env.example`) es suficiente; con una frase humana sería débil frente a fuerza bruta.
+- **Arreglo (#284):** con `PATITAS_CLAVE_KDF=scrypt` lo nuevo se cifra con una clave derivada
+  por scrypt (n = 2^14, sal fija de la aplicación) y lleva el prefijo `v2:`; lo viejo se sigue
+  leyendo con la clave v1 y los dos formatos se leen siempre, así que apagarlo no deja nada
+  ilegible. Por defecto queda `sha256`: la clave de Render es aleatoria (`generateValue`).
 
 ### A-10 · Baja · Código repetido
 - **Evidencia:** `peticion.client.host if peticion.client else "desconocida"` en tres rutas
