@@ -67,7 +67,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
               Ver estado de los avisos</button>
           </div>)}
         {!cargando && !error && reportes.length === 0 && (
-          <p className="ds-vacio">No hay reportes por confirmar.</p>)}
+          <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-reportes.svg" alt="" width="160" height="120" />No hay reportes por confirmar.</p>)}
         <ul>
           {reportes.map((r) => (
             <li key={r.codigo}>

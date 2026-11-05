@@ -184,7 +184,8 @@ def test_la_pwa_usa_las_fuentes_locales_tambien_sin_senal(c):
     for recurso in ("/diseno/fuentes.css", "/diseno/fuentes/eb-garamond-latin-400-normal.woff2",
                     "/diseno/fuentes/figtree-latin-wght-normal.woff2"):
         assert f"'{recurso}'" in sw, recurso
-    assert "patitas-pwa-v9'" in sw  # versión nueva: los teléfonos bajan la interfaz rediseñada
+    # #298 la subió a v9 (interfaz rediseñada); #308 a v10 (ícono nuevo).
+    assert int(re.search(r"patitas-pwa-v(\d+)'", sw).group(1)) >= 9
     assert "url.pathname.startsWith('/diseno/')" in sw
 
 

@@ -77,7 +77,7 @@ export default function Rescatista({ token }: { token: string }) {
             <button onClick={() => void recargar()}>Actualizar</button>
           </div>
           {!estado?.disponible && <p className="ds-suave">Marca «Disponible» para ver ofertas.</p>}
-          {estado?.disponible && lista.length === 0 && <p className="ds-vacio">No hay ofertas ahora.</p>}
+          {estado?.disponible && lista.length === 0 && <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-rescates.svg" alt="" width="160" height="120" />No hay ofertas ahora.</p>}
           <ul className="ofertas">
             {lista.map((o) => (
               <li key={o.codigo} className={`oferta oferta--${o.prioridad}`}>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" aria-hidden="true">
+  <!-- Estado vacío original (#308): la cola está al día; el perro duerme. Paleta de DESIGN.md. -->
+  <ellipse cx="80" cy="98" rx="66" ry="14" fill="#f0d7ff" stroke="#1a1a1a" stroke-width="2.5"/>
+  <path d="M128 90q14-3 10-18" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M38 94c0-26 19-40 46-40s44 14 44 40z" fill="#ffffeb" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="52" cy="80" r="17" fill="#ffffeb" stroke="#1a1a1a" stroke-width="2.5"/>
+  <ellipse cx="60" cy="72" rx="7" ry="13" transform="rotate(-35 60 72)" fill="#034f46" stroke="#1a1a1a" stroke-width="2.5"/>
+  <path d="M42 81q4 3 8 0" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="36" cy="86" r="3.2" fill="#1a1a1a"/>
+  <path d="M98 34h11l-11 12h11M118 18h8l-8 9h8" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

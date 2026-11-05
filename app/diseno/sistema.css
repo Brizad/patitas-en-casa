@@ -161,6 +161,7 @@
 /* Estados vacíos y mensajes (error, éxito, aviso, información). */
 .ds-vacio { text-align: center; padding: var(--ds-e6) var(--ds-e4); color: var(--ds-suave);
   border: 1px dashed var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg); }
+.ds-vacio img { display: block; margin: 0 auto var(--ds-e3); } /* #308: ilustración original */
 .ds-vacio strong { display: block; color: var(--ds-tinta); font-size: var(--ds-t-md); margin-bottom: var(--ds-e1); }
 .ds-msg { padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio); border: 1px solid var(--ds-linea);
   border-left-width: 4px; background: var(--ds-superficie); margin: var(--ds-e3) 0; }
