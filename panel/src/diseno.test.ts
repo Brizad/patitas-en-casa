@@ -83,3 +83,12 @@ describe("estructura del panel con el sistema visual nuevo (#300)", () => {
     }
   });
 });
+
+describe("panel del veterinario (#302)", () => {
+  it("cada fila de la cola lleva su prioridad como clase (barra de distinto grosor, no solo color)", () => {
+    expect(pantallas["./Cola.tsx"]).toContain("item--${r.prioridad}");
+  });
+  it("descartar se ve como acción de peligro, separada de confirmar", () => {
+    expect(pantallas["./Descartar.tsx"]).toContain('className="ds-btn--peligro"');
+  });
+});
