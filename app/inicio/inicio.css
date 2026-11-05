@@ -38,6 +38,15 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-d
 .portada { padding: 48px 0 16px; }
 @media (min-width: 720px) { .portada { padding: 96px 0 32px; } }
 .portada h1 { font-size: clamp(2.25rem, 1.25rem + 4.5vw, 4.5rem); line-height: 1.02; max-width: 18ch; margin: 0 0 24px; }
+/* #308: ilustración original (decorativa). En el celular va después de las acciones, para que
+   «Reportar emergencia» siga a la vista; en pantalla ancha, a la derecha del texto. */
+.ilustracion { display: block; width: min(100%, 320px); height: auto; margin: 32px auto 0; }
+@media (min-width: 960px) {
+  .portada { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); column-gap: 48px; align-items: center; }
+  .portada > * { grid-column: 1; }
+  .portada > .etiqueta { justify-self: start; }
+  .portada > .ilustracion { grid-column: 2; grid-row: 1 / span 5; width: 100%; margin: 0; }
+}
 .subrayado { text-decoration: underline wavy var(--lavanda); text-decoration-thickness: 4px;
   text-underline-offset: .14em; text-decoration-skip-ink: none; }
 .etiqueta { display: inline-block; margin: 0 0 24px; padding: 8px 16px; border-radius: 8px;
