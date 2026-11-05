@@ -3,6 +3,12 @@
 # RNF-03: por debajo de esta confianza el reporte exige revisión humana.
 UMBRAL_CONFIANZA = 0.6
 
+# P-16 (#285): cuántos niveles puede subir el modelo de texto sobre las reglas. None = sin
+# tope, como hasta hoy («el modelo solo sube»). Con 1, un texto que las reglas ven «media» llega
+# a «alta» como mucho. Lo decide Brayan: frena falsas alarmas, pero puede bajar el recall de
+# «crítica» si las reglas no conocen la palabra (ver docs/aprende/errores-ia-texto.md).
+MODELO_SUBE_MAX_NIVELES: int | None = None
+
 # RF-07: porcentaje de ocupación a partir del cual se alerta al coordinador.
 ALERTA_OCUPACION = 0.90  # línea base v1.1 (RF-07)
 
