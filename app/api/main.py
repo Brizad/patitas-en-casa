@@ -1191,15 +1191,19 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def historial_del_veterinario(veterinario: Usuario = veterinaria):
         """Lo que este veterinario confirmó, ajustó o descartó, del más reciente al más viejo.
         Sale de la bitácora `decisiones_triaje` y de los descartes (D-02)."""
+        decisiones = repositorio.decisiones_de(veterinario.correo)
+        descartes = repositorio.descartes_de(veterinario.correo)
+        # DT-12 (#265): todos los reportes en una consulta, no uno por fila.
+        reportes_ = repositorio.buscar_varios([x.codigo for x in [*decisiones, *descartes]])
         filas = []
-        for d in repositorio.decisiones_de(veterinario.correo):
+        for d in decisiones:
             ajustada = d.prioridad_final != d.prioridad_sugerida
             filas.append((d.decidido_en, {
                 "codigo": d.codigo, "accion": "ajustado" if ajustada else "confirmado",
                 "prioridad_sugerida": d.prioridad_sugerida.value,
                 "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion}))
-        for x in repositorio.descartes_de(veterinario.correo):
-            reporte = repositorio.buscar(x.codigo)
+        for x in descartes:
+            reporte = reportes_.get(x.codigo)
             sugerida = reporte.prioridad if reporte else None
             filas.append((x.descartado_en, {
                 "codigo": x.codigo, "accion": "descartado",
@@ -1207,7 +1211,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 "prioridad_final": None, "justificacion": x.justificacion}))
         resultado = []
         for fecha, fila in sorted(filas, key=lambda f: f[0], reverse=True):
-            reporte = repositorio.buscar(fila["codigo"])
+            reporte = reportes_.get(fila["codigo"])
             resultado.append({**fila, "fecha": fecha_utc(fecha),
                               "estado": reporte.estado.value if reporte else None})
         return resultado
