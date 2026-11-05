@@ -8,6 +8,7 @@
 | `catalogo-endpoints.md` | Todas las rutas con rol, códigos de respuesta y requisito | Generado |
 | `pruebas.md` | Plan de pruebas y reporte con los números del CI | A mano, con los números del último CI de `main` |
 | `trazabilidad.md` | Matriz RF/RNF → código → prueba → PR | A mano, al cerrar cada cambio |
+| `guia-estilo.md` | Paleta con contrastes medidos, tipografía, espacios, componentes, correos, ilustraciones, accesibilidad y antes/después | A mano, con los valores de `app/diseno/sistema.css` |
 
 Los generados no se editan a mano: si cambia el esquema o una ruta, se vuelve a correr el script
 (una prueba, `tests/test_docs_tesis.py`, comprueba que no deja nada por fuera).
