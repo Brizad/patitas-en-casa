@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
+  <!-- Rescatista: el punto del mapa al que va. Original (#308). -->
+  <circle cx="16" cy="16" r="15" fill="#ffffeb" stroke="#1a1a1a" stroke-width="1.5"/>
+  <path d="M16 25s-7-6.2-7-11.5a7 7 0 0 1 14 0C23 18.8 16 25 16 25z" fill="#ffa946" stroke="#1a1a1a" stroke-width="1.75" stroke-linejoin="round"/>
+  <circle cx="16" cy="13.5" r="2.6" fill="#ffffeb" stroke="#1a1a1a" stroke-width="1.5"/>
+</svg>

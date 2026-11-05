@@ -40,7 +40,7 @@
 
 /* Pantalla de gracias y código grande para copiar o anotar. */
 .gracias { padding: var(--ds-e4) 0 0; }
-.gracias img { padding: var(--ds-e3); border-radius: 50%; background: var(--ds-marca-fuerte); }
+.gracias img { display: inline-block; } /* #308: el ícono trae su propio fondo */
 .gracias h1 { margin: var(--ds-e3) 0 var(--ds-e1); }
 .big { font-family: var(--ds-mono); font-size: 1.875rem; letter-spacing: .12em; font-weight: 600; text-align: center;
   background: var(--ds-accion); color: var(--ds-sobre-accion); border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg);
