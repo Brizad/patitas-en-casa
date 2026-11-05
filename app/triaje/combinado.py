@@ -14,26 +14,40 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
+from app import config
 from app.dominio.modelos import Prioridad
 from app.triaje.clasificador import ORDEN_GRAVEDAD, VERSION, Resultado, clasificar
 from app.triaje.modelo import ModeloTriaje, cargar_modelo
 
 log = logging.getLogger(__name__)
 
+TOPE_DEL_MODELO = "el modelo sugería {sugerida}; se limitó a {nivel} sobre las reglas (P-16)"
 SIN_TERMINOS_CLINICOS = (
     "el modelo sugiere {prioridad} sin reconocer un término clínico concreto: revisar el texto"
 )
 
 
-def combinar(reglas: Resultado, modelo: Resultado, version_modelo: str) -> Resultado:
-    if ORDEN_GRAVEDAD.index(modelo.prioridad) < ORDEN_GRAVEDAD.index(reglas.prioridad):
+def combinar(reglas: Resultado, modelo: Resultado, version_modelo: str,
+             sube_max: int | None = None) -> Resultado:
+    """«sube_max» (P-16): niveles que el modelo puede subir sobre las reglas; None = sin tope."""
+    tope = []
+    i_reglas, i_modelo = (ORDEN_GRAVEDAD.index(r.prioridad) for r in (reglas, modelo))
+    if sube_max is not None and i_reglas - i_modelo > sube_max:
+        # Ya no es la sugerencia del modelo: la confianza es la menor de las dos (RN-02: ante
+        # la duda, revisión humana) y la evidencia dice qué se limitó.
+        limitada = ORDEN_GRAVEDAD[i_reglas - sube_max]
+        tope = [TOPE_DEL_MODELO.format(sugerida=modelo.prioridad.value,
+                                       nivel=f"{sube_max} nivel" + ("es" if sube_max > 1 else ""))]
+        modelo = Resultado(limitada, min(modelo.confianza, reglas.confianza), modelo.evidencias)
+        i_modelo = i_reglas - sube_max
+    if i_modelo < i_reglas:
         prioridad, confianza = modelo.prioridad, modelo.confianza
     else:
         prioridad, confianza = reglas.prioridad, reglas.confianza
     # Primero las señales de las reglas (validadas por el veterinario); del modelo solo lo que
     # no repite una señal. Si no hay evidencias útiles se muestran menos, sin rellenar.
     del_modelo = [e for e in modelo.evidencias if not _repite_senal(e, reglas.evidencias)]
-    evidencias = list(dict.fromkeys(reglas.evidencias + del_modelo))
+    evidencias = list(dict.fromkeys(reglas.evidencias + del_modelo + tope))
     if not evidencias and prioridad in (Prioridad.CRITICA, Prioridad.ALTA):
         # RNF-09: una sugerencia crítica o alta nunca va sin evidencia. Si ni las reglas ni
         # los términos clínicos del modelo la explican, se dice con franqueza (y el veterinario
@@ -57,7 +71,8 @@ def _fragmento(senal: str) -> str:
 
 def clasificador_combinado(modelo: ModeloTriaje) -> Callable[[str], Resultado]:
     def clasificar_combinado(texto: str) -> Resultado:
-        return combinar(clasificar(texto), modelo.clasificar(texto), modelo.version)
+        return combinar(clasificar(texto), modelo.clasificar(texto), modelo.version,
+                        config.MODELO_SUBE_MAX_NIVELES)
     return clasificar_combinado
 
 

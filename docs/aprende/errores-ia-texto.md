@@ -100,6 +100,20 @@ real, etiquetado por veterinarios, dirá cuánto vale el recall.
    ahogo» sin «no respira», «tieso»). El léxico nunca estará completo: por eso RN-02 manda a
    revisión humana lo dudoso.
 
+## ¿Y si se frena el modelo? (P-16, #285)
+
+`MODELO_SUBE_MAX_NIVELES` (`app/config.py`) limita cuántos niveles sube el modelo sobre las
+reglas; por defecto no hay tope. Se midió con los mismos casos:
+
+| Tope | Aciertos (80) | Recall de crítica (80) | Recall de crítica (20 de control) | Críticas como media o baja |
+|------|---------------|------------------------|-----------------------------------|----------------------------|
+| Sin tope (hoy) | 60 | 1,00 | 1,00 | 0 |
+| 2 niveles | 56 | 0,84 | 0,80 | 0 |
+| 1 nivel | 55 | 0,80 | 0,80 | 4 (+2 en control) |
+
+Frenar el modelo baja las falsas alarmas, pero también deja urgencias por debajo de crítica
+cuando las reglas no conocen la palabra. Por eso queda apagado; la decisión es del autor.
+
 ## Qué decir en la sustentación
 
 «Medimos con 80 textos escritos como los escribe un ciudadano, no con datos reales. Encontramos

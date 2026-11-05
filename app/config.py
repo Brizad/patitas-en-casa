@@ -3,6 +3,12 @@
 # RNF-03: por debajo de esta confianza el reporte exige revisión humana.
 UMBRAL_CONFIANZA = 0.6
 
+# P-16 (#285): cuántos niveles puede subir el modelo de texto sobre las reglas. None = sin
+# tope, como hasta hoy («el modelo solo sube»). Con 1, un texto que las reglas ven «media» llega
+# a «alta» como mucho. Lo decide Brayan: frena falsas alarmas, pero puede bajar el recall de
+# «crítica» si las reglas no conocen la palabra (ver docs/aprende/errores-ia-texto.md).
+MODELO_SUBE_MAX_NIVELES: int | None = None
+
 # RF-07: porcentaje de ocupación a partir del cual se alerta al coordinador.
 ALERTA_OCUPACION = 0.90  # línea base v1.1 (RF-07)
 
@@ -23,6 +29,9 @@ VENTANA_INTENTOS_MINUTOS = 15
 # DT-09 (#149): registros públicos de adoptante por IP en la misma ventana. Una familia
 # o una oficina con una sola IP puede crear varias cuentas; un robot no, cientos.
 REGISTROS_MAXIMOS_POR_IP = 5
+# P-12 (#285): avisar por correo al dueño cuando alguien intenta registrarse con su correo. Por
+# defecto no (como hasta hoy); el aviso sale después de responder, así el tiempo no lo delata.
+AVISAR_REGISTRO_DUPLICADO = False
 # Auditoría A-02 (#237): reportes públicos por IP en la misma ventana. Generoso: varios
 # vecinos pueden compartir la IP del operador móvil; un robot manda cientos.
 REPORTES_MAXIMOS_POR_IP = 20
