@@ -29,7 +29,7 @@
   --ds-mono: ui-monospace, 'JetBrains Mono', Consolas, monospace;
   --ds-t-xs: .8125rem; --ds-t-sm: .9375rem; --ds-t-md: 1rem; --ds-t-lg: 1.25rem; --ds-t-xl: 1.75rem;
   --ds-e1: 4px; --ds-e2: 8px; --ds-e3: 12px; --ds-e4: 16px; --ds-e5: 24px; --ds-e6: 32px;
-  --ds-radio: 10px; --ds-radio-lg: 16px;
+  --ds-radio: 12px; --ds-radio-lg: 24px; /* DESIGN.md: 12 en botones y campos */
   --ds-sombra: none; /* DESIGN.md: sin sombras; separan el borde y el cambio de fondo */
   color-scheme: light;
 }
@@ -72,25 +72,27 @@
   font-weight: 500; font-size: var(--ds-t-sm); }
 .ds-contenedor { max-width: 960px; margin: 0 auto; padding: var(--ds-e4); display: grid; gap: var(--ds-e4); }
 
-/* Botones: el <button> sin clase y <a class="ds-btn"> comparten forma. 44 px de alto para el dedo. */
+/* Botones: el <button> sin clase y <a class="ds-btn"> comparten forma. 44 px de alto para el dedo.
+   #296: borde de 2 px (la firma de DESIGN.md), la acción principal en lavanda y, al pasar encima,
+   el color se invierte (tinta sobre crema ↔ crema sobre tinta). */
 .ds-btn, :where(.ds) button { display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-e2);
-  min-height: 44px; padding: 0 var(--ds-e4); border-radius: var(--ds-radio); border: 1px solid var(--ds-linea-fuerte);
-  background: var(--ds-superficie); color: var(--ds-tinta); font: 700 var(--ds-t-sm)/1.2 var(--ds-fuente);
+  min-height: 44px; padding: 0 var(--ds-e4); border-radius: var(--ds-radio); border: 2px solid var(--ds-linea-fuerte);
+  background: var(--ds-superficie); color: var(--ds-tinta); font: 600 var(--ds-t-sm)/1.2 var(--ds-fuente);
   text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s; }
-.ds-btn:hover:not(:disabled), :where(.ds) button:hover:not(:disabled) { background: var(--ds-marca-tenue); border-color: var(--ds-marca); }
-.ds-btn--pri, .ds button.principal { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
-.ds-btn--pri:hover:not(:disabled), .ds button.principal:hover:not(:disabled) { background: var(--ds-marca-fuerte); border-color: var(--ds-marca-fuerte); color: var(--ds-sobre-marca); }
+.ds-btn:hover:not(:disabled), :where(.ds) button:hover:not(:disabled) { background: var(--ds-marca-tenue); }
+.ds-btn--pri, .ds button.principal { background: var(--ds-accion); color: var(--ds-sobre-accion); }
+.ds-btn--pri:hover:not(:disabled), .ds button.principal:hover:not(:disabled) { background: var(--ds-tinta); color: var(--ds-fondo); }
 .ds-btn--peligro { background: var(--ds-peligro); border-color: var(--ds-peligro); color: var(--ds-sobre-peligro); }
 .ds-btn--peligro:hover:not(:disabled) { background: var(--ds-peligro); filter: brightness(.92); }
 .ds-btn--chico { min-height: 44px; padding: 0 var(--ds-e3); font-size: var(--ds-t-xs); }
-.ds-btn--grande { min-height: 56px; font-size: var(--ds-t-md); border-radius: var(--ds-radio-lg); }
+.ds-btn--grande { min-height: 56px; font-size: var(--ds-t-md); }
 .ds-btn:disabled, :where(.ds) button:disabled { opacity: .55; cursor: default; }
 
 /* Campos. */
 .ds label { display: block; margin: var(--ds-e3) 0; font-weight: 700; font-size: var(--ds-t-sm); }
 .ds input, .ds select, .ds textarea { display: block; width: 100%; margin-top: var(--ds-e1); min-height: 44px;
   padding: 10px var(--ds-e3); font: var(--ds-t-md) var(--ds-fuente); color: var(--ds-tinta);
-  background: var(--ds-superficie); border: 1px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); }
+  background: var(--ds-superficie); border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); }
 /* #250: toda la etiqueta es el objetivo táctil (44 px) y la casilla mide 22 px. */
 .ds label:has(> input[type="checkbox"]), .ds label:has(> input[type="radio"]) { display: flex; gap: var(--ds-e2);
   align-items: center; font-weight: 500; min-height: 44px; }
@@ -108,8 +110,9 @@
 .ds-form > button { justify-self: start; }
 
 /* Tarjeta y pestañas. */
-.ds-tarjeta { background: var(--ds-superficie); border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg);
-  padding: var(--ds-e4); box-shadow: var(--ds-sombra); min-width: 0; }
+.ds-tarjeta { background: var(--ds-superficie); border: 1px solid var(--ds-linea); border-radius: var(--pc-radio-tarjeta);
+  padding: var(--ds-e5) var(--ds-e4); box-shadow: var(--ds-sombra); min-width: 0; }
+@media (min-width: 720px) { .ds-tarjeta { padding: var(--ds-e6); } }
 .ds-pestanas { display: flex; gap: var(--ds-e2); flex-wrap: wrap; padding: var(--ds-e3) var(--ds-e4) 0; }
 .ds-pestanas [aria-current="page"], .ds-pestanas [aria-current="page"]:hover:not(:disabled) { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
 
