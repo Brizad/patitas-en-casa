@@ -29,6 +29,9 @@ VENTANA_INTENTOS_MINUTOS = 15
 # DT-09 (#149): registros públicos de adoptante por IP en la misma ventana. Una familia
 # o una oficina con una sola IP puede crear varias cuentas; un robot no, cientos.
 REGISTROS_MAXIMOS_POR_IP = 5
+# P-12 (#285): avisar por correo al dueño cuando alguien intenta registrarse con su correo. Por
+# defecto no (como hasta hoy); el aviso sale después de responder, así el tiempo no lo delata.
+AVISAR_REGISTRO_DUPLICADO = False
 # Auditoría A-02 (#237): reportes públicos por IP en la misma ventana. Generoso: varios
 # vecinos pueden compartir la IP del operador móvil; un robot manda cientos.
 REPORTES_MAXIMOS_POR_IP = 20

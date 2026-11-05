@@ -2,11 +2,13 @@
 RF-10, RF-25 a RF-29) (DT-13, #267)."""
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     File,
     HTTPException,
     Request,
@@ -17,6 +19,7 @@ from fastapi import (
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
+from app import config
 from app.adopciones.asignacion import asignar
 from app.adopciones.compatibilidad import Compatibilidad, calcular, recomendar
 from app.adopciones.compromiso import lineas_compromiso
@@ -63,6 +66,11 @@ from app.usuarios.servicio import (
 )
 
 # DT-09 (#149): igual si el correo es nuevo o ya tenía cuenta.
+logger = logging.getLogger("app.api.main")  # el mismo de antes: los logs no cambian
+AVISO_REGISTRO_DUPLICADO = (
+    "Patitas en Casa: alguien intentó crear una cuenta de adoptante con este correo. Tu cuenta "
+    "no cambió. Si fuiste tú, entra con tu contraseña de siempre; si no, puedes ignorar este "
+    "mensaje.")
 MENSAJE_REGISTRO = ("Listo. Si este correo no tenía cuenta, ya puedes entrar con él y tu "
                     "contraseña. Si ya tenía una, entra con tu contraseña de siempre.")
 
@@ -151,11 +159,20 @@ def crear_rutas_adopciones(ctx: Contexto) -> APIRouter:  # noqa: C901
     repositorio_adopciones = ctx.repositorio_adopciones
     repositorio_fotos = ctx.repositorio_fotos
     usuarios = ctx.usuarios
+    notificador = ctx.notificador
+
+    def avisar_registro_duplicado(correo: str) -> None:
+        """P-12: corre después de responder (BackgroundTasks). Una falla queda en el log."""
+        try:
+            notificador.enviar(correo, AVISO_REGISTRO_DUPLICADO)
+        except Exception:
+            logger.exception("No se pudo avisar al dueño de un correo ya registrado.")
 
     # --- Fase 3 (#85): adoptante (RF-08) ---------------------------------------------
 
     @rutas.post("/adoptantes", status_code=201)
-    def registrar_adoptante(datos: RegistroAdoptante, peticion: Request):
+    def registrar_adoptante(datos: RegistroAdoptante, peticion: Request,
+                            tareas: BackgroundTasks):
         """Público, como el reporte: el adoptante no es personal y crea su propia cuenta.
         El rol siempre es adoptante; nadie puede registrarse como personal por aquí.
 
@@ -178,7 +195,8 @@ def crear_rutas_adopciones(ctx: Contexto) -> APIRouter:  # noqa: C901
         except CorreoDuplicado:
             # La cuenta existente no cambia. El hash ya se calculó antes de fallar, así que
             # tampoco el tiempo de respuesta delata el correo.
-            pass
+            if config.AVISAR_REGISTRO_DUPLICADO:  # P-12: apagado por defecto
+                tareas.add_task(avisar_registro_duplicado, normalizar_correo(datos.correo))
         except (ContrasenaInvalida, ValueError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"correo": normalizar_correo(datos.correo), "rol": Rol.ADOPTANTE.value,

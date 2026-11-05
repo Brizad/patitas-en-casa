@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- P-12 (#285), listo para activar: con `AVISAR_REGISTRO_DUPLICADO = True` (`app/config.py`), si alguien intenta registrarse con un correo que ya tiene cuenta, el dueño recibe un aviso por el notificador **después** de la respuesta (DT-09 se mantiene: misma respuesta y mismo tiempo). Por defecto apagado.
 - P-16 (#285), listo para activar: `MODELO_SUBE_MAX_NIVELES` (`app/config.py`) limita cuántos niveles sube el modelo de texto sobre las reglas, con la confianza menor de las dos y una evidencia que lo dice. Por defecto `None` (sin tope, como antes). Medido: con tope el recall de crítica baja de 1,00 a 0,80–0,84, así que se recomienda dejarlo apagado (`docs/aprende/errores-ia-texto.md`).
 - `ESTADO_PROYECTO.md` y `docs/tesis/pruebas.md` al 5 de noviembre (#280): PR #259 a #279 y la corrida del CI de `main` (918 pytest, 97,49 % de cobertura, 61 Vitest, 9 e2e, 56 revisiones de axe-core sin fallas).
 - Pruebas de mutación (#272): `scripts/operacion/mutacion.sh` corre mutmut 3 (WSL2) sobre `app/triaje`, `app/cupos`, `app/rescates` y `app/adopciones/reglas.py` (1 352 mutantes, 837 s; fuera del CI). Puntaje 90,5 % → 94,2 %. `tests/test_mutacion.py` cubre los huecos que encontró: regla del patio (RN-05), empate texto/video (RN-07), límite de letras de la nota clínica, rescate ajeno, las 10 comunas y escalamiento con varios casos (RF-23). Detalle en `docs/tesis/pruebas.md`.
