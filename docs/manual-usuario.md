@@ -18,7 +18,7 @@ atender. Este manual explica, con capturas, qué hace cada persona en el sistema
 | [Administrador](#administrador) | Botón «Entrar como personal» | Sí |
 | [Alcaldía](#alcaldía) | Botón «Entrar como personal» | Sí, la crea el administrador |
 
-Las capturas se tomaron el 4 de noviembre de 2026 con los **datos de demostración** (nombres,
+Las capturas se tomaron el 5 de noviembre de 2026, con el diseño nuevo, y los **datos de demostración** (nombres,
 reportes y animales inventados). El ciudadano, el rescatista y el adoptante se muestran en el
 celular (390 px); los demás, en un computador.
 
@@ -92,8 +92,10 @@ artificial **sugiere**, pero **el veterinario decide**.
 ![Cola de triaje](manual/05-veterinario-cola.jpg)
 
 Al entrar ve la **cola**: los reportes que esperan revisión, primero los más graves
-(crítica, alta, media, baja). El número al lado es la confianza de la sugerencia (de 0 a 1).
-**Actualizar** trae los reportes nuevos.
+(crítica, alta, media, baja). Cada prioridad se reconoce por su nombre y su forma, no solo por
+el color: ▲ crítica, ◆ alta, ● media y ○ baja; las críticas y altas llevan además una barra
+gruesa a la izquierda. Al lado se ve hace cuánto llegó el reporte; la confianza de la sugerencia
+(de 0 a 1) aparece al abrirlo. **Actualizar** trae los reportes nuevos.
 
 ### 2. Revisar un reporte
 
@@ -165,7 +167,8 @@ Voluntario que va por el animal. Usa el panel **desde el celular**.
 1. En **Mi disponibilidad** marca **Disponible para rescates** cuando pueda salir.
 2. En **Zona** marca las comunas donde puede ir. Si no marca ninguna, recibe toda la ciudad.
 3. En **Ofertas de rescate** aparecen los casos críticos y altos ya confirmados por el
-   veterinario, con la comuna (la dirección exacta se ve al aceptar). Toca **Aceptar rescate**
+   veterinario, con la comuna (la dirección exacta se ve al aceptar) y la misma forma de la
+   prioridad (▲ crítica, ◆ alta). Toca **Aceptar rescate**
    en el que vaya a atender. Solo una persona puede aceptar cada rescate, y cada rescatista
    atiende uno a la vez.
 
@@ -319,5 +322,7 @@ npm ci
 PATITAS_DEMO_CONTRASENA=<la misma de la instancia> node capturas.mjs http://127.0.0.1:8010
 ```
 
-En Windows con Edge, agrega `A11Y_CANAL=msedge`. El script acepta un rescate y registra un
+En Windows con Edge, agrega `A11Y_CANAL=msedge`. La captura del análisis de video
+(`06c-veterinario-video.jpg`) solo se retoma con el trabajador de video encendido; la del 5 de
+noviembre conserva la anterior. El script acepta un rescate y registra un
 resultado: úsalo solo en una base de prueba.
