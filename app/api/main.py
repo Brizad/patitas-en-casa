@@ -19,13 +19,11 @@ from pathlib import Path
 from fastapi import (
     Depends,
     FastAPI,
-    HTTPException,
     Request,
 )
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
 from starlette.concurrency import run_in_threadpool
 
@@ -49,12 +47,12 @@ from app.ajustes import (
     cargar_ajustes_seguridad,
     cargar_ajustes_video,
 )
-from app.api.comun import Contexto, fecha_utc
-from app.api.comun import cambiar as _cambio
+from app.api.comun import Contexto
 from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_adopciones import crear_rutas_adopciones
 from app.api.rutas_indicadores import crear_rutas_indicadores
+from app.api.rutas_refugio import crear_rutas_refugio
 from app.api.rutas_reportes import ReporteEntrada, crear_rutas_reportes
 from app.api.rutas_rescates import crear_rutas_rescates
 from app.api.rutas_triaje import crear_rutas_triaje
@@ -68,21 +66,16 @@ from app.bd.esquema import vistas_trozos
 from app.bd.migraciones import verificar_migraciones
 from app.bitacora.repositorio import Evento, RepositorioBitacora, RepositorioBitacoraEnMemoria
 from app.bitacora.repositorio_postgres import RepositorioBitacoraPostgres
-from app.cupos.fichas import AnimalNoEncontrado, NotaInvalida, ServicioFichas
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
-from app.cupos.servicio import CupoAgotado, Notificador, ServicioCupos
+from app.cupos.servicio import Notificador, ServicioCupos
 from app.demo import Dependencias, cargar_demo
 from app.dominio.modelos import (
-    Animal,
-    Especie,
     EstadoRescate,
-    MotivoEgreso,
     Prioridad,
     Refugio,
     Reporte,
     Rol,
-    TipoNota,
     Usuario,
 )
 from app.notificaciones.correo import crear_notificador
@@ -96,7 +89,6 @@ from app.reportes.confirmacion import (
 from app.reportes.descarte import ServicioDescarte
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
-from app.reportes.seguimiento import normalizar_codigo
 from app.reportes.servicio import ServicioReportes
 from app.rescates.escalamiento import repetir_cada, vigilar_escalamientos
 from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
@@ -162,32 +154,6 @@ def es_subida_de_archivo(ruta: str) -> bool:
 ROLES_PERSONAL = (Rol.VETERINARIO, Rol.COORDINADOR)
 
 
-class IngresoEntrada(BaseModel):
-    reporte: str | None = None  # si viene, el ciudadano que lo reportó recibe un aviso
-    nombre: str
-    especie: Especie
-    estado_salud: str
-    vacunado: bool = False
-    esterilizado: bool = False
-
-
-class EgresoEntrada(BaseModel):
-    motivo: MotivoEgreso
-
-
-class NotaEntrada(BaseModel):
-    tipo: TipoNota
-    texto: str = Field(max_length=2000)
-
-
-def _ficha(animal: Animal) -> dict:
-    return {"id": animal.id, "nombre": animal.nombre, "especie": animal.especie.value,
-            "estado_salud": animal.estado_salud, "vacunado": animal.vacunado,
-            "esterilizado": animal.esterilizado, "ingresado_en": fecha_utc(animal.ingresado_en),
-            "egresado_en": fecha_utc(animal.egresado_en),
-            "motivo_egreso": animal.motivo_egreso.value if animal.motivo_egreso else None}
-
-
 def motor_desde_entorno() -> Engine:
     """Conexión a PostgreSQL con la configuración del .env; exige la base migrada (DT-01)."""
     motor = create_engine(cargar_ajustes().url(), pool_pre_ping=True)
@@ -204,8 +170,8 @@ def emisor_desde_entorno() -> EmisorTokens:
     return EmisorTokens(ajustes.jwt_secreto.get_secret_value(), minutos=ajustes.jwt_minutos)
 
 
-# C901: mccabe suma aquí las ~70 funciones de endpoint anidadas; cada una por separado es
-# sencilla. crear_app es la «raíz de composición» que conecta adaptadores y rutas.
+# C901: crear_app es la «raíz de composición»: elige cada repositorio (memoria o PostgreSQL),
+# arma los servicios y los middlewares. Las rutas ya viven en app/api/rutas_*.py (DT-13, #267).
 def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
@@ -423,6 +389,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
 
     app.include_router(crear_rutas_rescates(ctx))  # DT-13 (#267)
 
+    app.include_router(crear_rutas_refugio(ctx))  # DT-13 (#267)
+
     # --- HU-08: PWA ciudadana (#59) --------------------------------------------------
 
     @app.middleware("http")
@@ -499,79 +467,5 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     app.mount("/diseno", StaticFiles(directory=CARPETA_DISENO), name="diseno")
     if (CARPETA_PANEL / "index.html").exists():  # sin compilar, /panel no existe
         app.mount("/panel", StaticFiles(directory=CARPETA_PANEL, html=True), name="panel")
-
-    @app.post("/refugio/ingresos", status_code=201)
-    def registrar_ingreso(datos: IngresoEntrada, peticion: Request,
-                          coordinador: Usuario = coordinacion):
-        cupos = cupos_de(coordinador)
-        antes = cupos.texto_ocupacion()
-        codigo = normalizar_codigo(datos.reporte) if datos.reporte else None
-        if codigo and repositorio.buscar(codigo) is None:
-            raise HTTPException(status_code=422, detail="No existe un reporte con ese código.")
-        try:
-            cupos.registrar_ingreso(Animal(**datos.model_dump(exclude={"reporte"})))
-        except CupoAgotado as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
-        except ValueError as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        if codigo:
-            avisar_al_ciudadano(codigo, (
-                f"el animal de tu reporte {codigo} ya ingresó al refugio. "
-                "Consulta cómo sigue con tu código en la página de seguimiento."))
-        _cambio(peticion, {"ocupacion": antes}, {"ocupacion": cupos.texto_ocupacion()})
-        return {"ocupacion": cupos.texto_ocupacion()}
-
-    # --- Fase 2 (#75): ficha clínica e historial (RF-06, RF-24) -----------------------
-
-    @app.get("/refugio/animales")
-    def animales_del_refugio(usuario: Usuario = personal):
-        return [_ficha(a) for a in fichas_de(usuario).animales()]
-
-    @app.get("/refugio/animales/{animal_id}")
-    def ficha_clinica(animal_id: int, usuario: Usuario = personal):
-        repo = fichas_de(usuario)
-        animal = repo.animal(animal_id)
-        if animal is None:
-            raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
-        return {**_ficha(animal), "historial": [
-            {"tipo": n.tipo.value, "texto": n.texto, "autor": n.autor,
-             "registrada_en": fecha_utc(n.registrada_en)} for n in repo.historial(animal_id)]}
-
-    @app.post("/refugio/animales/{animal_id}/historial", status_code=201)
-    def agregar_nota_clinica(animal_id: int, datos: NotaEntrada,
-                             veterinario: Usuario = veterinaria):
-        try:
-            nota = ServicioFichas(fichas_de(veterinario)).agregar_nota(
-                animal_id, veterinario, datos.tipo, datos.texto)
-        except AnimalNoEncontrado as error:
-            raise HTTPException(status_code=404, detail=str(error)) from error
-        except NotaInvalida as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        return {"tipo": nota.tipo.value, "texto": nota.texto, "autor": nota.autor,
-                "registrada_en": fecha_utc(nota.registrada_en)}
-
-    @app.post("/refugio/animales/{animal_id}/egreso")
-    def registrar_egreso(animal_id: int, datos: EgresoEntrada, peticion: Request,
-                         coordinador: Usuario = coordinacion):
-        """RF-26: como el ingreso, es del coordinador. 404 si no está en su refugio y 409 si
-        ya egresó (el cupo no se libera dos veces)."""
-        repo = fichas_de(coordinador)
-        animal = repo.animal(animal_id)
-        if animal is None:
-            raise HTTPException(status_code=404, detail="No hay ese animal en tu refugio.")
-        antes = cupos_de(coordinador).texto_ocupacion()
-        refugio = repo.egresar(animal_id, datos.motivo)
-        if refugio is None:
-            raise HTTPException(status_code=409, detail=f"{animal.nombre} ya egresó.")
-        _cambio(peticion, {"ocupacion": antes, "en_refugio": True},
-                {"ocupacion": refugio.texto_ocupacion(), "en_refugio": False,
-                 "motivo": datos.motivo.value})
-        return {"ocupacion": refugio.texto_ocupacion()}
-
-    @app.get("/refugio/ocupacion")
-    def ocupacion(usuario: Usuario = personal):
-        cupos = cupos_de(usuario)
-        return {"ocupacion": cupos.texto_ocupacion(),
-                "porcentaje": round(cupos.porcentaje_ocupacion() * 100, 1)}
 
     return app
