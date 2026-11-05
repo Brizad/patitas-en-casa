@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Modo piloto, parte 4 (#258): la PWA abierta con el enlace del administrador (`/app/?piloto=TOKEN`) muestra «Modo prueba», cronometra desde el primer toque hasta el código, envía a `/piloto/reportes` (nunca a la cola sin señal ni con video) y luego pide el SUS de 10 frases (opciones de 44 px). Nuevo `app/pwa/piloto.js`; el service worker sube a `patitas-pwa-v8`. Prueba e2e `e2e/piloto.spec.mjs`.
 - Modo piloto, parte 3 (#258): rutas `POST /admin/piloto/participantes`, `GET /admin/piloto/resultados` y `GET /admin/piloto/resultados.csv` (solo administrador) y `POST /piloto/reportes` y `POST /piloto/resultados` (token de un solo uso en `X-Piloto`, sin sesión) en `app/api/piloto.py`. Un reporte de piloto nunca entra a la cola ni a `GET /reportes/{codigo}`.
 - Modo piloto, parte 2 (#258): tabla `piloto` (migración `0033`: código P01, hash del token, fechas, segundos y `sus` como arreglo de 10) y `RepositorioPilotoPostgres`, con las mismas pruebas de contrato que el de memoria. Para actualizar: `alembic upgrade head`.
 - Modo piloto, parte 1 (#258, RNF-06): `ServicioPiloto` invita participantes anónimos (P01, P02…) con un token de un solo uso de 24 h, valida el reporte de prueba con las mismas reglas que uno real (RN-01) **sin guardarlo** como reporte, guarda los segundos y las 10 respuestas del SUS y arma el CSV de `scripts/operacion/resultados_piloto.py`. `ServicioReportes.validar` queda público.

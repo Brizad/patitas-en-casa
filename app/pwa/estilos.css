@@ -56,3 +56,10 @@
 /* #212: grabadora de video dentro de la página. */
 .vista-video { width: 100%; max-height: 50vh; background: #000; border-radius: 8px; }
 #contador-video { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* RNF-06 (#258): cuestionario SUS del modo piloto; cada opción es un objetivo de 44 px. */
+.sus-pregunta { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio); padding: var(--ds-e3); margin: 0; }
+.sus-pregunta legend { font-weight: 600; padding: 0 var(--ds-e1); }
+.sus-escala { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--ds-e2); margin-top: var(--ds-e2); }
+.sus-escala label { justify-content: center; min-height: 44px; border: 1px solid var(--ds-linea-fuerte);
+  border-radius: var(--ds-radio); font-weight: 700; }
