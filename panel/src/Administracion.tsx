@@ -46,14 +46,16 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
       {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
       <div className="ds-tarjeta">
         <h2>Cuentas del personal</h2>
-        <div className="ds-tabla-caja"><table className="ds-tabla">
-          <thead><tr><th>Cuenta</th><th>Rol</th><th>Refugio</th><th>Estado</th></tr></thead>
+        <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de cuentas">
+          <table className="ds-tabla ds-tabla--tarjetas" role="table">
+          <thead><tr role="row"><th role="columnheader">Cuenta</th><th role="columnheader">Rol</th>
+            <th role="columnheader">Refugio</th><th role="columnheader">Estado</th></tr></thead>
           <tbody>
             {lista.map((c) => (
-              <tr key={c.correo}>
-                <td>{c.nombre}<br /><small>{c.correo}</small></td>
-                <td><span className="ds-insignia ds-insignia--info">{nombreIndicador(c.rol)}</span></td>
-                <td>
+              <tr role="row" key={c.correo}>
+                <td role="cell" data-etiqueta="Cuenta"><span>{c.nombre}<br /><small>{c.correo}</small></span></td>
+                <td role="cell" data-etiqueta="Rol"><span className="ds-insignia ds-insignia--info">{nombreIndicador(c.rol)}</span></td>
+                <td role="cell" data-etiqueta="Refugio">
                   <select aria-label={`Refugio de ${c.correo}`} value={c.refugio_id ?? ""}
                     onChange={(e) => {
                       const id = e.target.value ? Number(e.target.value) : null;
@@ -63,7 +65,7 @@ export default function Administracion({ token, yo }: { token: string; yo: strin
                     {sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                   </select>
                 </td>
-                <td>
+                <td role="cell" data-etiqueta="Estado">
                   {c.activo
                     ? <span className="ds-insignia ds-insignia--baja">Activa</span>
                     : <span className="ds-insignia ds-insignia--critica">Suspendida</span>}{" "}

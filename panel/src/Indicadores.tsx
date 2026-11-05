@@ -117,11 +117,15 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
         <div className="ds-tarjeta">
           <h2>Bitácora (últimos 50 cambios)</h2>
           <p className="ds-suave">Inmutable: no se puede editar ni borrar (RF-32).</p>
-          <div className="ds-tabla-caja"><table className="ds-tabla"><thead><tr><th>Cuándo</th><th>Quién</th><th>Qué</th><th>Antes → después</th></tr>
+          <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de la bitácora">
+          <table className="ds-tabla ds-tabla--tarjetas" role="table"><thead><tr role="row">
+            <th role="columnheader">Cuándo</th><th role="columnheader">Quién</th>
+            <th role="columnheader">Qué</th><th role="columnheader">Antes → después</th></tr>
           </thead><tbody>{eventos.map((e, i) => (
-            <tr key={i}><td>{new Date(e.momento).toLocaleString()}</td><td>{e.actor}</td>
-              <td><code>{e.accion}</code> {Object.values(e.objeto).join(", ")}</td>
-              <td>{cambio(e)}</td></tr>))}
+            <tr role="row" key={i}><td role="cell" data-etiqueta="Cuándo">{new Date(e.momento).toLocaleString()}</td>
+              <td role="cell" data-etiqueta="Quién">{e.actor}</td>
+              <td role="cell" data-etiqueta="Qué"><code>{e.accion}</code> {Object.values(e.objeto).join(", ")}</td>
+              <td role="cell" data-etiqueta="Antes → después">{cambio(e)}</td></tr>))}
           </tbody></table></div>
         </div>)}
     </section>

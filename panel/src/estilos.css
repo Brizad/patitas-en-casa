@@ -5,8 +5,17 @@
 .inicio .logo { padding: 10px; border-radius: 50%; background: var(--ds-marca-fuerte); margin-bottom: var(--ds-e2); }
 .inicio .ds-msg { text-align: left; }
 .inicio button.principal { width: 100%; margin-top: var(--ds-e2); }
-.quien { color: #D9ECE8; }
-.rol { text-transform: capitalize; font-weight: 700; color: #fff; }
+.rol { text-transform: capitalize; font-weight: 700; }
+/* #300: cabecera flotante como la página de inicio y la PWA; en el celular, marca y «Salir»
+   arriba y la cuenta en su propia línea. Sin colores fijos: todo sale de los tokens. */
+.panel > .ds-cabecera { margin: var(--ds-e2); border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg);
+  background: var(--ds-fondo); color: var(--ds-tinta); flex-wrap: wrap; padding: var(--ds-e2) var(--ds-e2) var(--ds-e2) var(--ds-e4); }
+.panel > .ds-cabecera .ds-marca { font-size: 1.25rem; }
+@media (max-width: 600px) {
+  .panel > .ds-cabecera .ds-derecha { order: 3; width: 100%; justify-content: space-between; margin-left: 0; }
+  .panel > .ds-cabecera .ds-marca { flex: 1; }
+}
+.quien { color: var(--ds-suave); }
 .pagina { display: grid; gap: var(--ds-e4); padding: var(--ds-e4); max-width: 960px; margin: 0 auto; }
 .ds-vacio { margin: var(--ds-e3) 0; }
 .ds-tarjeta h2 { margin-bottom: var(--ds-e3); }
@@ -40,7 +49,7 @@
 /* Barra de ocupación del refugio e indicadores sin librerías. */
 .barra-ocupacion { height: 14px; border-radius: 99px; background: var(--ds-linea); overflow: hidden; }
 .barra-ocupacion span { display: block; height: 100%; background: var(--ds-marca); }
-.barra-ocupacion.alerta span { background: #C77A12; }
+.barra-ocupacion.alerta span { background: var(--ds-alta); }
 .barra-ocupacion.lleno span { background: var(--ds-peligro); }
 .barras div { display: grid; grid-template-columns: 11em 1fr; gap: var(--ds-e2); margin: var(--ds-e1) 0; }
 .barras dt { color: var(--ds-suave); }

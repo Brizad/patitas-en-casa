@@ -68,3 +68,18 @@ describe("sin textos técnicos a la vista (#182)", () => {
     expect(fuentes).toContain("nombreModelo(v)");
   });
 });
+
+describe("estructura del panel con el sistema visual nuevo (#300)", () => {
+  it("carga las fuentes locales antes de la hoja compartida", () => {
+    expect(html).toContain('href="/diseno/fuentes.css"');
+    expect(html.indexOf("/diseno/fuentes.css")).toBeLessThan(html.indexOf("/diseno/sistema.css"));
+  });
+
+  it("toda tabla del panel se vuelve tarjetas en el celular, con la etiqueta de cada dato", () => {
+    for (const [archivo, codigo] of Object.entries(pantallas)) {
+      const tablas = (codigo as string).match(/<table className="[^"]*"/g) ?? [];
+      for (const tabla of tablas) expect(tabla, archivo).toContain("ds-tabla--tarjetas");
+      if (tablas.length) expect(codigo as string, archivo).toContain("data-etiqueta=");
+    }
+  });
+});
