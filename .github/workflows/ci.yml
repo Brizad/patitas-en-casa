@@ -187,8 +187,11 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: e2e-capturas
+          # #316: resultados/ trae las diferencias de la regresión visual (-actual, -expected y
+          # -diff); capturas/ trae las capturas base nuevas cuando faltaban.
           path: |
             e2e/resultados/
+            e2e/capturas/
             e2e/informe/
             api.log
           retention-days: 14

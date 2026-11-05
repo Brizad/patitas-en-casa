@@ -11,6 +11,9 @@ export default defineConfig({
   timeout: 60_000,
   reporter: [["list"], ["html", { open: "never", outputFolder: "informe" }]],
   outputDir: "resultados",
+  // #316: capturas base de la regresión visual (aspecto.spec.mjs), en el repositorio.
+  snapshotPathTemplate: "{testDir}/capturas/{arg}{ext}",
+  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } }, // tolerancia baja: 1 % de píxeles
   use: {
     baseURL: process.env.E2E_URL ?? "http://127.0.0.1:8010",
     // En el CI, Google Chrome del runner; en Windows, Edge (E2E_CANAL=msedge).

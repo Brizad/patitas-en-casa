@@ -50,3 +50,31 @@ El job `e2e` de `.github/workflows/ci.yml` crea un PostgreSQL 17 temporal, compi
 genera claves aleatorias que solo viven en esa ejecución, arranca la API y corre las pruebas
 con el Chrome del runner. Si algo falla, sube el artefacto `e2e-capturas` (capturas, trazas
 de Playwright y el log de la API). Para ver una traza: `npx playwright show-trace traza.zip`.
+
+## Regresión visual (#316)
+
+`e2e/aspecto.spec.mjs` toma una captura de 16 pantallas (página de inicio, PWA «Reportar» y la
+pantalla de inicio de cada rol del panel, a 360 y 1440 px, en claro) y la compara con su
+**captura base** guardada en `e2e/capturas/`. Si más del 1 % de los píxeles cambia
+(`maxDiffPixelRatio` en `playwright.config.mjs`), la prueba falla: así un cambio de estilo no
+pasa sin que alguien lo mire.
+
+- Corre antes que las demás (orden alfabético), cuando solo están los datos de demostración.
+- Lo que cambia en cada arranque (códigos aleatorios, «hace N min», cifras medidas) se tapa con
+  una máscara magenta; lo demás debe coincidir.
+- Las capturas base son de **Linux** (el Chrome del CI). En Windows las fuentes se dibujan
+  distinto, por eso ahí la prueba se omite.
+
+**Si falla en el CI**, descarga el artefacto `e2e-capturas`: en `resultados/` están, por cada
+pantalla, `-expected.png` (la base), `-actual.png` (lo de ahora) y `-diff.png` (en rojo, lo que
+cambió).
+
+**Actualizar las capturas base a propósito** (solo cuando el cambio de aspecto es querido):
+
+1. Borra de `e2e/capturas/` las capturas de las pantallas que cambiaste.
+2. Sube la rama: el job `e2e` falla porque faltan esas bases y las adjunta, ya tomadas en Linux,
+   en el artefacto `e2e-capturas` (carpeta `capturas/`).
+3. Mira cada imagen nueva; si se ve como debe, cópiala a `e2e/capturas/`, haz commit y vuelve a
+   subir. El CI queda en verde con la base nueva.
+
+Nunca actualices una base para que «pase» sin mirar el `-diff.png`: esa es la regresión.
