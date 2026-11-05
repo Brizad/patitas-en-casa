@@ -49,3 +49,75 @@ def test_las_casillas_se_alinean_con_su_texto():
 
 def test_el_sistema_ofrece_formularios_en_rejilla():
     assert ".ds-form" in CSS.read_text(encoding="utf-8")
+
+
+# --- Tokens compartidos del rediseño (#296): primitivos --pc-* y semánticos --ds-* mapeados. ---
+
+def _tokens(bloque: str) -> dict[str, str]:
+    return {k: v.strip() for k, v in re.findall(r"--([\w-]+):\s*([^;]+);", bloque)}
+
+
+def _resolver(tokens: dict[str, str], nombre: str) -> str:
+    valor = tokens[nombre]
+    while (m := re.fullmatch(r"var\(--([\w-]+)\)", valor)):
+        valor = tokens[m.group(1)]
+    return valor
+
+
+def _contraste(a: str, b: str) -> float:
+    def luz(h):
+        r, g, b_ = (int(h.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
+        f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4  # noqa: E731
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b_)
+    claro, oscuro = sorted((luz(a), luz(b)), reverse=True)
+    return (claro + 0.05) / (oscuro + 0.05)
+
+
+def _temas():
+    css = CSS.read_text(encoding="utf-8")
+    claro, oscuro = css.split("@media (prefers-color-scheme: dark)", 1)
+    base = _tokens(claro.split("/* Base", 1)[0])
+    return base, {**base, **_tokens(oscuro.split("/* Base", 1)[0])}
+
+
+TEXTO_SOBRE_FONDO = [
+    ("ds-tinta", "ds-fondo"), ("ds-tinta", "ds-superficie"), ("ds-suave", "ds-fondo"),
+    ("ds-suave", "ds-superficie"), ("ds-suave", "ds-marca-tenue"), ("ds-marca", "ds-fondo"),
+    ("ds-marca", "ds-superficie"),
+    ("ds-sobre-marca", "ds-marca"), ("ds-marca-fuerte", "ds-marca-tenue"),
+    ("ds-tinta", "ds-marca-tenue"), ("ds-sobre-accion", "ds-accion"),
+    ("ds-sobre-peligro", "ds-peligro"), ("ds-critica", "ds-critica-bg"),
+    ("ds-alta", "ds-alta-bg"), ("ds-media", "ds-media-bg"), ("ds-baja", "ds-baja-bg"),
+    ("ds-info", "ds-info-bg")]
+
+
+def test_primitivos_de_la_paleta():
+    base, _ = _temas()
+    for nombre, valor in (("pc-crema", "#ffffeb"), ("pc-tinta", "#1a1a1a"),
+                          ("pc-lavanda", "#f0d7ff"), ("pc-bosque", "#034f46"),
+                          ("pc-ascua", "#ffa946"), ("pc-piedra", "#e4e4d0")):
+        assert base[nombre].lower() == valor, nombre
+    assert base["pc-niebla"].lower() != "#8a8a80"  # oscurecido para llegar a 4,5:1
+
+
+def test_los_nombres_ds_de_siempre_siguen_definidos():
+    base, oscuro = _temas()
+    for nombre in ("fondo", "superficie", "linea", "linea-fuerte", "tinta", "suave", "marca",
+                   "marca-fuerte", "marca-tenue", "sobre-marca", "acento", "peligro",
+                   "sobre-peligro", "fuente", "mono", "radio", "radio-lg", "e1", "e6", "t-xs",
+                   "t-xl"):
+        assert f"ds-{nombre}" in base and _resolver(oscuro, f"ds-{nombre}"), nombre
+
+
+def test_contraste_aa_en_claro_y_oscuro():
+    for nombre_tema, tema in zip(("claro", "oscuro"), _temas(), strict=True):
+        for texto, fondo in TEXTO_SOBRE_FONDO:
+            r = _contraste(_resolver(tema, texto), _resolver(tema, fondo))
+            assert r >= 4.5, (nombre_tema, texto, fondo, round(r, 2))
+        # Borde de los campos (WCAG 1.4.11): 3:1 contra la superficie.
+        assert _contraste(_resolver(tema, "ds-linea-fuerte"), _resolver(tema, "ds-superficie")) >= 3
+
+
+def test_titulos_en_serif():
+    css = CSS.read_text(encoding="utf-8")
+    assert "'EB Garamond'" in css and re.search(r"\.ds h1, \.ds h2 \{[^}]*var\(--pc-serif\)", css)

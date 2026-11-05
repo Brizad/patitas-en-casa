@@ -102,8 +102,9 @@ def test_usa_las_fuentes_locales(c):
     assert html.index("/diseno/fuentes.css") < html.index("/inicio/inicio.css")
     precargas = re.findall(r'<link rel="preload"[^>]*href="([^"]+)"', html)
     assert precargas and all(p.startswith("/diseno/fuentes/") for p in precargas)
-    css = _css()
-    assert "'EB Garamond'" in css and "'Figtree'" in css
+    compartida = (CARPETA.parent / "diseno" / "sistema.css").read_text(encoding="utf-8")
+    assert "'EB Garamond'" in compartida and "'Figtree'" in compartida  # #296: tokens compartidos
+    assert "var(--pc-serif)" in _css()
     assert c.get(precargas[0]).headers["content-type"] == "font/woff2"
 
 
@@ -122,14 +123,28 @@ def test_botones_con_borde_de_2px_y_sin_sombras_ni_degradados():
     assert "gradient" not in css and not re.search(r"box-shadow: (?!none)", css)
 
 
+def _temas():
+    """Variables en claro y en oscuro: primero la hoja compartida y encima la de la portada."""
+    claro, oscuro = {}, {}
+    for css in ((CARPETA.parent / "diseno" / "sistema.css").read_text(encoding="utf-8"), _css()):
+        luz, noche = css.split("@media (prefers-color-scheme: dark)", 1)
+        claro.update(re.findall(r"--([\w-]+):\s*([^;]+);", luz.split("/* Base", 1)[0]))
+        noche = noche.split("/* Base", 1)[0].split("}", 2)[0]
+        oscuro.update(re.findall(r"--([\w-]+):\s*([^;]+);", noche))
+    return claro, {**claro, **oscuro}
+
+
+def _color(tema, nombre):
+    valor = tema[nombre].strip()
+    while (m := re.fullmatch(r"var\(--([\w-]+)\)", valor)):
+        valor = tema[m.group(1)].strip()
+    return valor
+
+
 def test_colores_con_contraste_aa_en_claro_y_oscuro():
-    css = _css()
-    claro, oscuro = css.split("prefers-color-scheme: dark", 1)
-    tokens = dict(re.findall(r"--(\w[\w-]*): (#[0-9a-fA-F]{6})", claro))
-    assert tokens["suave"].lower() != "#8a8a80"  # el gris de DESIGN.md no llega a 4,5:1
-    for texto, fondo in (("tinta", "crema"), ("suave", "crema"), ("crema", "tinta"),
-                         ("tinta", "lavanda"), ("crema", "bosque")):
-        assert _contraste(tokens[texto], tokens[fondo]) >= 4.5, (texto, fondo)
-    noche = {**tokens, **dict(re.findall(r"--(\w[\w-]*): (#[0-9a-fA-F]{6})", oscuro))}
-    for texto, fondo in (("texto", "lienzo"), ("suave", "lienzo"), ("texto", "camara")):
-        assert _contraste(noche[texto], noche[fondo]) >= 4.5, ("oscuro", texto, fondo)
+    claro, oscuro = _temas()
+    assert _color(claro, "suave").lower() != "#8a8a80"  # el gris de DESIGN.md no llega a 4,5:1
+    for tema in (claro, oscuro):
+        for texto, fondo in (("texto", "lienzo"), ("suave", "lienzo"), ("sobre-camara", "camara"),
+                             ("tinta", "lavanda"), ("crema", "bosque"), ("crema", "rol")):
+            assert _contraste(_color(tema, texto), _color(tema, fondo)) >= 4.5, (texto, fondo)
