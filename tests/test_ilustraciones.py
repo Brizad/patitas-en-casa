@@ -80,3 +80,11 @@ def test_los_estados_vacios_del_panel_tienen_ilustracion():
                                  ("MisRescates.tsx", "sin-rescates")):
         codigo = (src / archivo).read_text(encoding="utf-8")
         assert f'src="/diseno/ilustraciones/{ilustracion}.svg" alt=""' in codigo, archivo
+
+
+def test_el_service_worker_baja_el_icono_y_las_hojas_nuevas():
+    # El ícono (icono.svg) y las hojas cambiaron: con otra versión, el teléfono reemplaza la
+    # copia sin señal; con la misma, seguiría abriendo la interfaz vieja.
+    sw = (RAIZ / "app" / "pwa" / "sw.js").read_text(encoding="utf-8")
+    version = int(re.search(r"patitas-pwa-v(\d+)'", sw).group(1))
+    assert version >= 10 and "'icono.svg'" in sw
