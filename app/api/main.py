@@ -4,14 +4,8 @@ Se inicia con: uvicorn --factory app.api.main:crear_app
 """
 from __future__ import annotations
 
-import asyncio
-import contextlib
-import hmac
 import logging
 import mimetypes
-import re
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -21,10 +15,9 @@ from fastapi import (
     Request,
 )
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import Engine, create_engine
-from starlette.concurrency import run_in_threadpool
 
 from app import config
 from app.adopciones.fotos import (
@@ -44,6 +37,7 @@ from app.ajustes import (
 )
 from app.api.armado import Repositorios, armar_repositorios, armar_video
 from app.api.comun import Contexto, ip_del_cliente
+from app.api.middlewares import ciclo_de_vida, instalar_middlewares
 from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_adopciones import crear_rutas_adopciones
@@ -58,7 +52,7 @@ from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos
 from app.bd.migraciones import verificar_migraciones
-from app.bitacora.repositorio import Evento, RepositorioBitacora
+from app.bitacora.repositorio import RepositorioBitacora
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.servicio import Notificador, ServicioCupos
 from app.demo import Dependencias, cargar_demo
@@ -78,13 +72,12 @@ from app.reportes.confirmacion import (
 from app.reportes.descarte import ServicioDescarte
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.servicio import ServicioReportes
-from app.rescates.escalamiento import repetir_cada, vigilar_escalamientos
 from app.rescates.repositorio import RepositorioRescates
 from app.rescates.servicio import (
     ServicioRescates,
 )
 from app.seguridad.cifrado import PREFIJO_AVISO, CanalConDescifrado, Cifrador
-from app.seguridad.tokens import EmisorTokens, TokenInvalido
+from app.seguridad.tokens import EmisorTokens
 from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje
 from app.usuarios.intentos import (
@@ -112,22 +105,6 @@ for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
                           ("application/manifest+json", ".webmanifest"),
                           ("image/svg+xml", ".svg")):
     mimetypes.add_type(_tipo, _extension)
-# Solo recursos del propio servidor: sin scripts en línea ni de terceros (XSS).
-POLITICA_PERMISOS = "geolocation=(self), camera=(self), microphone=(), payment=()"
-POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
-                # #125: blob: son archivos locales del navegador (la tira del video en el panel
-                # y la duración del video elegido en la PWA); nunca de otro servidor.
-                "img-src 'self' blob:; media-src blob:; "
-                "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
-                "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
-
-# A-01 (#235): el video, la vista previa y las fotos llegan por partes y tienen su propio tope.
-_SUBIDAS_DE_ARCHIVO = re.compile(r"^/(reportes/[^/]+/video|video/trabajos/\d+/vista"
-                                 r"|refugio/animales/\d+/foto)$")
-
-
-def es_subida_de_archivo(ruta: str) -> bool:
-    return _SUBIDAS_DE_ARCHIVO.match(ruta) is not None
 
 
 # Pueden usar /cola y /refugio/ocupacion. Públicos (RF-01): POST /reportes y
@@ -211,31 +188,6 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                          Rol.ALCALDIA)
     adoptante_actual = exigir_rol(dependencia_usuario, Rol.ADOPTANTE)  # #85
 
-    @asynccontextmanager
-    async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
-        tareas = []
-        if revisar_escalamientos_cada_s:
-            # HU-06 (RF-23): rescates sin aceptar a tiempo → aviso al coordinador.
-            tareas.append(asyncio.create_task(
-                vigilar_escalamientos(rescates.escalar_vencidos, revisar_escalamientos_cada_s)))
-        if procesar_avisos_cada_s:
-            tareas.append(asyncio.create_task(repetir_cada(
-                procesador.procesar, procesar_avisos_cada_s, "envío de avisos pendientes")))
-        if revisar_videos_cada_s and token_video:
-            tareas.append(asyncio.create_task(repetir_cada(
-                videos.revisar, revisar_videos_cada_s, "videos sin analizar a tiempo")))
-        yield
-        for tarea in tareas:
-            tarea.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await tarea
-        if motor is not None:
-            motor.dispose()
-
-    app = FastAPI(title="Patitas en Casa", version="1.1.0", lifespan=ciclo_de_vida)
-    # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
-    # en celulares con datos limitados (RNF-07).
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
     # #95: reglas + modelo entrenado (el modelo solo sube la prioridad); sin modelo, reglas.
     clasificador, version_triaje = triaje_por_defecto()
     reportes = ServicioReportes(repositorio, ServicioTriaje(clasificador, version=version_triaje))
@@ -274,6 +226,17 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
 
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=avisos_al_confirmar)
     procesador = ProcesadorAvisos(repositorio_avisos, CanalConDescifrado(notificador, cifrador))
+    # HU-06 (RF-23), #63 y #125: las tareas que se repiten mientras la app corre.
+    periodicas = [(rescates.escalar_vencidos, revisar_escalamientos_cada_s,
+                   "revisión de rescates sin aceptar"),
+                  (procesador.procesar, procesar_avisos_cada_s, "envío de avisos pendientes"),
+                  (videos.revisar, revisar_videos_cada_s if token_video else None,
+                   "videos sin analizar a tiempo")]
+    app = FastAPI(title="Patitas en Casa", version="1.1.0",
+                  lifespan=ciclo_de_vida(periodicas, motor))
+    # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
+    # en celulares con datos limitados (RNF-07).
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
     app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas
@@ -331,62 +294,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
 
     # --- HU-08: PWA ciudadana (#59) --------------------------------------------------
 
-    @app.middleware("http")
-    async def limitar_cuerpo(peticion: Request, siguiente):
-        """A-01 (#235): un cuerpo enorme se rechaza antes de leerlo (Render tiene 512 MB)."""
-        largo = peticion.headers.get("content-length", "")
-        if (largo.isdigit() and int(largo) > config.MAX_CUERPO_BYTES
-                and not es_subida_de_archivo(peticion.url.path)):
-            return JSONResponse({"detail": "La petición es demasiado grande."}, status_code=413)
-        return await siguiente(peticion)
-
-    @app.middleware("http")
-    async def cabeceras_de_la_pwa(peticion: Request, siguiente):
-        respuesta = await siguiente(peticion)
-        # Prueba de punta a punta (#121, OWASP ZAP): en todas las respuestas, HTTPS por un año
-        # (HSTS), el GPS y la cámara solo desde este sitio (la PWA los usa; #212), sin micrófono, y
-        # ninguna otra ventana puede manipular esta (COOP).
-        respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
-        respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS
-        respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-        respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
-        if peticion.url.path == "/" or peticion.url.path.startswith(("/app", "/panel",
-                                                                  "/inicio", "/diseno")):
-            respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
-            respuesta.headers["Referrer-Policy"] = "no-referrer"
-        return respuesta
-
-    @app.middleware("http")
-    async def registrar_en_bitacora(peticion: Request, siguiente):
-        """RF-32: toda petición que cambia datos y sale bien queda en la bitácora. Se guarda
-        la PLANTILLA de la ruta y sus parámetros, nunca el cuerpo (contraseñas, datos
-        personales). El inicio de sesión no cambia datos y ya lo cuenta DT-06."""
-        respuesta = await siguiente(peticion)
-        ruta = peticion.scope.get("route")
-        if (peticion.method in ("POST", "PUT", "PATCH", "DELETE")
-                and 200 <= respuesta.status_code < 300 and ruta is not None
-                and ruta.path != "/auth/token"):
-            # #125: el sondeo del trabajador sin trabajos (204) no es una acción.
-            if respuesta.status_code == 204 and ruta.path == "/video/trabajos/reclamar":
-                return respuesta
-            clave_video = peticion.headers.get("x-video-token", "")
-            actor = ("trabajador de video" if token_video and clave_video
-                     and hmac.compare_digest(clave_video, token_video) else "anónimo")
-            token = peticion.headers.get("authorization", "").removeprefix("Bearer ")
-            if token:
-                with contextlib.suppress(TokenInvalido):
-                    actor = emisor_tokens.validar(token).correo
-            try:
-                # En un hilo: el INSERT no debe frenar las demás peticiones (async).
-                anterior, nuevo = getattr(peticion.state, "cambio", (None, None))
-                await run_in_threadpool(repositorio_bitacora.registrar, Evento(
-                    actor, f"{peticion.method} {ruta.path}",
-                    {k: str(v) for k, v in peticion.path_params.items()},
-                    respuesta.status_code, anterior=anterior, nuevo=nuevo))
-            except Exception:
-                # La acción ya ocurrió; no se le dice al usuario que falló. Queda en el log.
-                logger.exception("No se pudo registrar en la bitácora: %s", ruta.path)
-        return respuesta
+    instalar_middlewares(app, repositorio_bitacora, emisor_tokens, token_video)
 
     app.include_router(crear_rutas_indicadores(ctx))  # DT-13 (#267)
 

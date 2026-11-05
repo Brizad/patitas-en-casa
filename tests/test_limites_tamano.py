@@ -28,7 +28,7 @@ def test_un_cuerpo_json_de_mas_de_un_mega_se_rechaza_sin_leerlo():
 
 
 def test_el_limite_no_aplica_a_las_subidas_de_video_ni_de_fotos():
-    from app.api.main import es_subida_de_archivo
+    from app.api.middlewares import es_subida_de_archivo
     assert es_subida_de_archivo("/reportes/ABCD1234/video")
     assert es_subida_de_archivo("/video/trabajos/7/vista")
     assert es_subida_de_archivo("/refugio/animales/3/foto")
