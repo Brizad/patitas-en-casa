@@ -14,7 +14,6 @@ const CLAVE = process.env.PATITAS_DEMO_CONTRASENA;
 const ANCHOS = [360, 1440];
 
 test.skip(process.platform !== "linux", "Las capturas base son de Linux (CI); ver docs/aprende/e2e.md");
-test.describe.configure({ mode: "serial" });
 
 async function comparar(page, nombre, mascaras = []) {
   await page.waitForLoadState("networkidle");
