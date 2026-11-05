@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 import mimetypes
-from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import (
@@ -31,11 +30,15 @@ from app.ajustes import (
     AjustesIp,
     cargar_ajustes,
     cargar_ajustes_correo,
-    cargar_ajustes_demo,
     cargar_ajustes_ip,
     cargar_ajustes_seguridad,
 )
-from app.api.armado import Repositorios, armar_repositorios, armar_video
+from app.api.armado import (
+    Repositorios,
+    armar_repositorios,
+    armar_video,
+    cargar_demo_al_arrancar,
+)
 from app.api.comun import Contexto, ip_del_cliente
 from app.api.middlewares import ciclo_de_vida, instalar_middlewares
 from app.api.piloto import crear_rutas_piloto
@@ -48,14 +51,14 @@ from app.api.rutas_rescates import crear_rutas_rescates
 from app.api.rutas_triaje import crear_rutas_triaje
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol
 from app.api.video import crear_rutas_video
-from app.avisos.modelos import AvisoNuevo
+from app.avisos.ciudadano import AvisosAlCiudadano
 from app.avisos.procesador import ProcesadorAvisos
 from app.avisos.repositorio import RepositorioAvisos
 from app.bd.migraciones import verificar_migraciones
 from app.bitacora.repositorio import RepositorioBitacora
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.servicio import Notificador, ServicioCupos
-from app.demo import Dependencias, cargar_demo
+from app.demo import Dependencias
 from app.dominio.modelos import (
     EstadoRescate,
     Prioridad,
@@ -76,7 +79,7 @@ from app.rescates.repositorio import RepositorioRescates
 from app.rescates.servicio import (
     ServicioRescates,
 )
-from app.seguridad.cifrado import PREFIJO_AVISO, CanalConDescifrado, Cifrador
+from app.seguridad.cifrado import CanalConDescifrado, Cifrador
 from app.seguridad.tokens import EmisorTokens
 from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje
@@ -128,9 +131,9 @@ def emisor_desde_entorno() -> EmisorTokens:
     return EmisorTokens(ajustes.jwt_secreto.get_secret_value(), minutos=ajustes.jwt_minutos)
 
 
-# C901: crear_app es la «raíz de composición»: arma los servicios y los middlewares. Las rutas
-# viven en app/api/rutas_*.py (DT-13, #267) y los repositorios en app/api/armado.py (#282).
-def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
+# crear_app es la «raíz de composición»: arma los servicios y conecta las rutas
+# (app/api/rutas_*.py, DT-13), los repositorios (armado.py) y los middlewares (#282).
+def crear_app(repositorio: RepositorioReportes | None = None,
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
               emisor_tokens: EmisorTokens | None = None,
@@ -195,32 +198,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                                 avisos=repositorio_avisos)
     descartes = ServicioDescarte(repositorio)
 
-    def avisos_al_ciudadano(reporte: Reporte, texto: str) -> list[AvisoNuevo]:
-        """RF-18: solo si el ciudadano dejó un correo y autorizó el contacto (el contacto solo
-        se guarda con la autorización). RN-14: el texto lleva el código y nada más; el
-        destinatario va cifrado también en la tabla de avisos."""
-        if not reporte.contacto_cifrado or cifrador is None:
-            return []
-        if "@" not in cifrador.descifrar(reporte.contacto_cifrado):
-            return []  # un teléfono se guarda, pero no hay correo al cual avisar
-        return [AvisoNuevo(PREFIJO_AVISO + reporte.contacto_cifrado,
-                           f"Patitas en Casa: {texto}")]
-
-    def avisar_al_ciudadano(codigo: str, texto: str) -> None:
-        """Guarda el aviso en el outbox; el envío es del procesador. Una falla aquí no deshace
-        el rescate ni el ingreso, que ya ocurrieron: se registra en el log."""
-        try:
-            reporte = repositorio.buscar(codigo)
-            if reporte is not None:
-                repositorio_avisos.agregar(codigo, avisos_al_ciudadano(reporte, texto),
-                                           datetime.now(UTC))
-        except Exception:
-            logger.exception("No se pudo guardar el aviso al ciudadano del reporte %s.", codigo)
+    # RF-18: avisos al ciudadano que dejó un correo (app/avisos/ciudadano.py, #282).
+    al_ciudadano = AvisosAlCiudadano(repositorio, repositorio_avisos, cifrador)
+    avisar_al_ciudadano = al_ciudadano.avisar  # los routers del rescate y del refugio
 
     def avisos_al_confirmar(reporte: Reporte, prioridad: Prioridad):
         """Rescatistas de la zona (RF-05) y, si dejó un correo, el ciudadano (RF-18). El
         destinatario del ciudadano va cifrado también en la tabla de avisos."""
-        return rescates.avisos_para(reporte, prioridad) + avisos_al_ciudadano(
+        return rescates.avisos_para(reporte, prioridad) + al_ciudadano.para(
             reporte, f"un veterinario revisó tu reporte {reporte.codigo}. "
             "Consulta cómo sigue con tu código en la página de seguimiento.")
 
@@ -240,18 +225,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
     app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas
-    # #109: datos de demostración. Con PostgreSQL se leen del entorno (Render no tiene
-    # consola); las pruebas pasan la contraseña. Un error aquí no impide que la API arranque.
-    if motor is not None:
-        contrasena_demo = contrasena_demo or cargar_ajustes_demo().contrasena_si_activa()
     servicios_demo = (reportes, confirmaciones, rescates, repositorio_cupos,
                       repositorio_adopciones)
     app.state.demo_servicios = servicios_demo
-    if contrasena_demo:
-        try:
-            cargar_demo(Dependencias(repositorio_usuarios, *servicios_demo), contrasena_demo)
-        except Exception:
-            logger.exception("No se pudieron cargar los datos de demostración.")
+    cargar_demo_al_arrancar(motor, contrasena_demo,
+                            Dependencias(repositorio_usuarios, *servicios_demo))
 
     def cupos_de(usuario: Usuario) -> ServicioCupos:
         """#75: los cupos del refugio de la persona; sin vínculo, el primer refugio (como
@@ -270,8 +248,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
                 else repositorio_cupos.para_refugio(usuario.refugio_id))
 
     # A-04 / DT-11 (#278): de dónde sale la IP del cliente; sin ajustes, como siempre.
-    if ajustes_ip is None:
-        ajustes_ip = cargar_ajustes_ip() if motor is not None else AjustesIp()
+    ajustes_ip = ajustes_ip or (cargar_ajustes_ip() if motor is not None else AjustesIp())
 
     def ip_de(peticion: Request) -> str:
         return ip_del_cliente(peticion, ajustes_ip)
