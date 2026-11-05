@@ -27,6 +27,30 @@ def test_un_cuerpo_json_de_mas_de_un_mega_se_rechaza_sin_leerlo():
     assert "grande" in r.json()["detail"]
 
 
+def _por_partes(total: int, trozo: int = 64 * 1024):
+    """Cuerpo sin Content-Length: httpx lo manda con Transfer-Encoding: chunked."""
+    while total > 0:
+        yield b"x" * min(trozo, total)
+        total -= trozo
+
+
+def test_a08_un_cuerpo_chunked_de_mas_de_un_mega_tambien_se_rechaza():
+    r = cliente().post("/reportes", content=_por_partes(config.MAX_CUERPO_BYTES + 1),
+                       headers={"Content-Type": "application/json"})
+    assert "content-length" not in r.request.headers
+    assert r.status_code == 413
+    assert "grande" in r.json()["detail"]
+
+
+def test_a08_un_reporte_chunked_pequeno_pasa():
+    import json
+    cuerpo = json.dumps({"descripcion": TEXTO, **UBICACION}).encode()
+    r = cliente().post("/reportes", content=iter([cuerpo[:20], cuerpo[20:]]),
+                       headers={"Content-Type": "application/json"})
+    assert "content-length" not in r.request.headers
+    assert r.status_code == 201
+
+
 def test_el_limite_no_aplica_a_las_subidas_de_video_ni_de_fotos():
     from app.api.middlewares import es_subida_de_archivo
     assert es_subida_de_archivo("/reportes/ABCD1234/video")

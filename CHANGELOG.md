@@ -66,6 +66,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ### Corregido
 - Respaldo diario: `pg_dump` 17 fallaba contra Neon (servidor 18.6). `PG_VERSION` pasa a 18 en `respaldo.yml` (también la base temporal de la prueba de restauración) y las guías dicen PostgreSQL 18 para Neon.
 
+### Seguridad
+- A-08 / DT-11 (#283): el tope de 1 MB también vale para las peticiones *chunked* (sin `Content-Length`): `LimiteCuerpoSinLargo` cuenta los bytes que llegan y responde 413 al pasarlo, sin guardar el resto en memoria. Las subidas de video y fotos conservan su propio tope.
+
 ## [1.2.0] - 2026-11-02
 Video temporal en PostgreSQL, base en Neon, avisos por Mailjet y por el outbox, respaldo diario,
 piloto de usabilidad y rediseño del panel, la PWA y la página de inicio. Para actualizar:

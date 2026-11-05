@@ -9,7 +9,7 @@ import re
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import Engine
 from starlette.concurrency import run_in_threadpool
@@ -39,6 +39,34 @@ def es_subida_de_archivo(ruta: str) -> bool:
     return _SUBIDAS_DE_ARCHIVO.match(ruta) is not None
 
 
+class LimiteCuerpoSinLargo:
+    """A-08 (#283): una petición *chunked* no trae Content-Length, así que limitar_cuerpo no
+    puede rechazarla de entrada. Aquí se cuentan los bytes a medida que llegan y, al pasar el
+    tope, la lectura del cuerpo falla con 413 (FastAPI lo responde como cualquier HTTPException)
+    sin guardar el resto en memoria. Las subidas de archivos tienen su propio tope."""
+
+    def __init__(self, app, maximo: int = config.MAX_CUERPO_BYTES) -> None:
+        self.app = app
+        self.maximo = maximo
+
+    async def __call__(self, scope, receive, send):
+        if (scope["type"] != "http" or es_subida_de_archivo(scope["path"])
+                or any(nombre == b"content-length" for nombre, _ in scope["headers"])):
+            return await self.app(scope, receive, send)
+        leidos = 0
+
+        async def recibir():
+            nonlocal leidos
+            mensaje = await receive()
+            if mensaje["type"] == "http.request":
+                leidos += len(mensaje.get("body", b""))
+                if leidos > self.maximo:
+                    raise HTTPException(413, "La petición es demasiado grande.")
+            return mensaje
+
+        await self.app(scope, recibir, send)
+
+
 def ciclo_de_vida(periodicas: list[tuple[Callable[[], object], float | None, str]],
                   motor: Engine | None):
     """Arranca cada tarea periódica con intervalo (None: no se repite, como en las pruebas) y,
@@ -59,7 +87,9 @@ def ciclo_de_vida(periodicas: list[tuple[Callable[[], object], float | None, str
 
 def instalar_middlewares(app: FastAPI, repositorio_bitacora: RepositorioBitacora,
                          emisor_tokens: EmisorTokens, token_video: str | None) -> None:
-    """Tope del cuerpo (A-01), cabeceras de seguridad (#121) y bitácora (RF-32), en ese orden."""
+    """Tope del cuerpo (A-01, A-08), cabeceras de seguridad (#121) y bitácora (RF-32)."""
+    app.add_middleware(LimiteCuerpoSinLargo)
+
     @app.middleware("http")
     async def limitar_cuerpo(peticion: Request, siguiente):
         """A-01 (#235): un cuerpo enorme se rechaza antes de leerlo (Render tiene 512 MB)."""

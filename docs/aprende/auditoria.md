@@ -19,7 +19,7 @@ higiene o de mantenimiento. **Info** = revisado y sin hallazgo.
 | A-05 | Baja | `GET /veterinario/historial` hace una consulta por fila (N+1) | DT-12 |
 | A-06 | Baja | Sin índices para los historiales (`decisiones_triaje.veterinario`, `descartes.veterinario`, `rescates.rescatista`) | DT-12 |
 | A-07 | Baja | `crear_app` mide 1 011 líneas (`noqa: C901`) | DT-13 |
-| A-08 | Baja | El tope de 1 MB no cubre peticiones *chunked* sin `Content-Length` | DT-11 |
+| A-08 | Baja | El tope de 1 MB no cubre peticiones *chunked* sin `Content-Length` | Corregido (#283) |
 | A-09 | Baja | La clave de datos se deriva con un SHA-256 simple (sin sal ni KDF lento) | DT-11 |
 | A-10 | Baja | Código repetido: la IP del cliente se lee igual en 3 lugares; `urlTira`/`urlVista` del panel son casi iguales | DT-13 |
 
@@ -97,6 +97,8 @@ No se encontraron hallazgos de severidad **alta**.
 ### A-08 · Baja · Peticiones *chunked*
 - **Evidencia:** `limitar_cuerpo` mira `Content-Length`. Una petición con
   `Transfer-Encoding: chunked` no lo trae. Los navegadores y la PWA siempre lo mandan.
+- **Arreglo (#283):** `LimiteCuerpoSinLargo` cuenta los bytes a medida que llegan y, al pasar
+  1 MB, responde 413 sin leer el resto. Pruebas en `tests/test_limites_tamano.py`.
 
 ### A-09 · Baja · Derivación de la clave de datos
 - **Evidencia:** `Cifrador` usa `hashlib.sha256(clave)` como clave AES-256
