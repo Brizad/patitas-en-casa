@@ -139,6 +139,7 @@ def _seguimiento(x: Seguimiento, ahora: datetime) -> dict:
 # C901: como en crear_app, mccabe suma las rutas anidadas; cada una es sencilla.
 def crear_rutas_adopciones(ctx: Contexto) -> APIRouter:  # noqa: C901
     rutas = APIRouter()
+    ip_de = ctx.ip_de  # A-04 (#278)
     dependencia_usuario = ctx.dependencia_usuario
     repositorio_refugios = ctx.repositorio_refugios
     repositorio_usuarios = ctx.repositorio_usuarios
@@ -160,7 +161,7 @@ def crear_rutas_adopciones(ctx: Contexto) -> APIRouter:  # noqa: C901
 
         DT-09 (#149): máximo REGISTROS_MAXIMOS_POR_IP intentos por IP en la ventana (429), y
         la misma respuesta exista o no el correo: así nadie averigua quién tiene cuenta."""
-        clave = clave_registro(peticion.client.host if peticion.client else "desconocida")
+        clave = clave_registro(ip_de(peticion))
         espera = limite_intentos.segundos_de_bloqueo([clave])
         if espera:
             raise HTTPException(

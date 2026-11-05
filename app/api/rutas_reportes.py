@@ -66,6 +66,7 @@ ClaveIdempotencia = Annotated[str | None, Header(alias="Idempotency-Key", min_le
 # C901: como en crear_app, mccabe suma las rutas anidadas; cada una es sencilla.
 def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
     rutas = APIRouter()
+    ip_de = ctx.ip_de  # A-04 (#278)
     cifrador = ctx.cifrador
     limite_intentos = ctx.limite_intentos
     reportes = ctx.reportes
@@ -74,7 +75,7 @@ def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
 
     def contar_reporte(peticion: Request) -> None:
         """A-02 (#237): 429 con Retry-After si esta IP ya mandó el máximo de reportes."""
-        limite = [clave_reporte(peticion.client.host if peticion.client else "desconocida")]
+        limite = [clave_reporte(ip_de(peticion))]
         espera = limite_intentos.segundos_de_bloqueo(limite)
         if espera:
             raise HTTPException(
