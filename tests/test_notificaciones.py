@@ -71,7 +71,7 @@ def test_envia_el_correo_a_todo_el_grupo():
     assert mensaje["To"] == "coord1@prueba.local, coord2@prueba.local"
     assert mensaje["From"] == "alertas@prueba.local"
     assert "Ocupación sobre el 90 %" in mensaje["Subject"]
-    assert "Refugio demo Cúcuta" in mensaje.get_content()
+    assert "Refugio demo Cúcuta" in mensaje.get_body(("plain",)).get_content()  # #310: multipart
 
 
 def test_un_destinatario_con_arroba_recibe_el_correo_directo():

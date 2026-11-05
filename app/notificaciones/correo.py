@@ -19,13 +19,13 @@ from email.message import EmailMessage
 from app.ajustes import AjustesCorreo, ConfiguracionIncompleta
 from app.notificaciones.canal import EntregaFallida
 from app.notificaciones.mailjet import NotificadorMailjet
+from app.notificaciones.plantilla import URL_PUBLICA, componer
 
 __all__ = ["EntregaFallida", "NotificadorCorreo", "NotificadorRegistro", "crear_notificador"]
 
 log = logging.getLogger(__name__)
 
 TIEMPO_MAXIMO_SMTP_S = 10
-LARGO_MAXIMO_ASUNTO = 120
 
 
 class NotificadorRegistro:
@@ -41,7 +41,8 @@ class NotificadorRegistro:
 class NotificadorCorreo:
     def __init__(self, host: str, puerto: int, remitente: str, grupos: dict[str, list[str]],
                  usuario: str | None = None, contrasena: str | None = None,
-                 starttls: bool = True) -> None:
+                 starttls: bool = True, url_publica: str = URL_PUBLICA) -> None:
+        self._url_publica = url_publica  # #310: enlaces absolutos del botón del correo
         self._host = host
         self._puerto = puerto
         self._remitente = remitente
@@ -57,11 +58,13 @@ class NotificadorCorreo:
         if not correos:
             raise EntregaFallida(f"No hay correos configurados para {destinatario}.",
                                  permanente=True)
+        partes = componer(mensaje, self._url_publica)
         correo = EmailMessage()
         correo["From"] = self._remitente
         correo["To"] = ", ".join(correos)
-        correo["Subject"] = f"[Patitas en Casa] {mensaje}"[:LARGO_MAXIMO_ASUNTO]
-        correo.set_content(f"{mensaje}\n\nMensaje automático de Patitas en Casa.")
+        correo["Subject"] = partes.asunto
+        correo.set_content(partes.texto)  # el texto de siempre...
+        correo.add_alternative(partes.html, subtype="html")  # ...y su versión con diseño (#310)
         try:
             with smtplib.SMTP(self._host, self._puerto, timeout=TIEMPO_MAXIMO_SMTP_S) as smtp:
                 if self._starttls:
@@ -93,7 +96,8 @@ def crear_notificador(
         return NotificadorMailjet(
             ajustes.mailjet_api_key.get_secret_value(),
             ajustes.mailjet_secret_key.get_secret_value(), ajustes.correo_remitente,
-            {"coordinadores": ajustes.coordinadores()}, url=ajustes.mailjet_url)
+            {"coordinadores": ajustes.coordinadores()}, url=ajustes.mailjet_url,
+            url_publica=ajustes.url_publica)
     if not ajustes.smtp_host:
         log.info("PATITAS_SMTP_HOST no configurado: las alertas irán al log.")
         return NotificadorRegistro()
@@ -105,5 +109,5 @@ def crear_notificador(
     return NotificadorCorreo(
         host=ajustes.smtp_host, puerto=ajustes.smtp_port, remitente=remitente,
         grupos={"coordinadores": ajustes.coordinadores()}, usuario=ajustes.smtp_usuario,
-        contrasena=contrasena, starttls=ajustes.smtp_starttls,
+        contrasena=contrasena, starttls=ajustes.smtp_starttls, url_publica=ajustes.url_publica,
     )
