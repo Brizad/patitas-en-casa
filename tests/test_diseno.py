@@ -121,3 +121,19 @@ def test_contraste_aa_en_claro_y_oscuro():
 def test_titulos_en_serif():
     css = CSS.read_text(encoding="utf-8")
     assert "'EB Garamond'" in css and re.search(r"\.ds h1, \.ds h2 \{[^}]*var\(--pc-serif\)", css)
+
+
+def test_componentes_con_la_forma_de_design_md():
+    """#296, parte 2: borde de 2 px en lo que se toca, radio 12 en botones y campos, 32 en tarjetas
+    y la acción principal en lavanda (--ds-accion)."""
+    css = CSS.read_text(encoding="utf-8")
+    base, _ = _temas()
+    assert base["ds-radio"] == "12px"
+    boton = re.search(r"\.ds-btn, :where\(\.ds\) button \{([^}]*)\}", css).group(1)
+    campo = re.search(r"\.ds input, \.ds select, \.ds textarea \{([^}]*)\}", css).group(1)
+    for regla in (boton, campo):
+        assert "border: 2px solid var(--ds-linea-fuerte)" in regla
+    principal = re.search(r"\.ds-btn--pri, \.ds button\.principal \{([^}]*)\}", css).group(1)
+    assert "var(--ds-accion)" in principal and "var(--ds-sobre-accion)" in principal
+    tarjeta = re.search(r"\.ds-tarjeta \{([^}]*)\}", css).group(1)
+    assert "var(--pc-radio-tarjeta)" in tarjeta
