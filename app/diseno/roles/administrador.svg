@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
+  <!-- Administrador: la llave de las cuentas. Original (#308). -->
+  <circle cx="16" cy="16" r="15" fill="#ffffeb" stroke="#1a1a1a" stroke-width="1.5"/>
+  <circle cx="12" cy="16" r="4" fill="#f0d7ff" stroke="#1a1a1a" stroke-width="1.75"/>
+  <path d="M16 16h9M22.5 16v3.5M19.5 16v2.5" fill="none" stroke="#1a1a1a" stroke-width="1.75" stroke-linecap="round"/>
+</svg>

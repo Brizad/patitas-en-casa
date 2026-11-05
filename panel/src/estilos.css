@@ -2,7 +2,8 @@
    del sistema de diseño (/diseno/sistema.css); aquí solo está la distribución propia del panel. */
 .inicio { width: calc(100% - 32px); max-width: 400px; margin: 8vh auto; text-align: center; }
 .inicio label { text-align: left; }
-.inicio .logo { padding: 10px; border-radius: 50%; background: var(--ds-marca-fuerte); margin-bottom: var(--ds-e2); }
+.inicio .logo { margin-bottom: var(--ds-e2); } /* #308: el ícono trae su propio fondo */
+.icono-rol { vertical-align: middle; margin-right: 4px; }
 .inicio .ds-msg { text-align: left; }
 .inicio button.principal { width: 100%; margin-top: var(--ds-e2); }
 .rol { text-transform: capitalize; font-weight: 700; }
