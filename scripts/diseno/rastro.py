@@ -54,8 +54,9 @@ def rastro(especie, separacion, lado, paso, inicio, tamano):
             tiempo = min(TIEMPOS - 1, int(hx / 1440 * TIEMPOS))
             clases = f"{especie} t{tiempo}" + (" banda" if BANDA[0] < hx < BANDA[1] else "")
             giro = angulo + 90 + (8 if n % 2 else -8)  # la huella apunta hacia donde camina
-            lineas.append(f'<g transform="translate({hx:.0f} {hy:.0f}) rotate({giro:.0f}) scale({tamano})">'
-                          f'<use class="{clases}" href="#huella-{especie}"/></g>')
+            lugar = f"translate({hx:.0f} {hy:.0f}) rotate({giro:.0f}) scale({tamano})"
+            uso = f'<use class="{clases}" href="#huella-{especie}"/>'
+            lineas.append(f'<g transform="{lugar}">{uso}</g>')
         d += separacion
         n += 1
     return lineas

@@ -77,15 +77,15 @@ main > .confianza { justify-content: center; margin-top: 0; }
 @keyframes pulsar { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
 /* Pausar (WCAG 2.2.2): una casilla sin JavaScript detiene todo lo que se mueve solo. */
 .pausa { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.pausa-etiqueta { position: absolute; right: max(16px, calc((100% - 1200px) / 2)); bottom: 0; display: inline-flex;
+.ds .pausa-etiqueta { position: absolute; right: max(16px, calc((100% - 1200px) / 2)); bottom: 0; display: inline-flex;
   align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 2px solid var(--borde); border-radius: 9999px;
   background: var(--lienzo); font-size: .875rem; font-weight: 600; cursor: pointer; }
-.pausa-etiqueta::before { content: ""; width: 10px; height: 12px; border-inline: 3px solid currentColor; box-sizing: border-box; }
+.pausa-etiqueta::before { content: ""; flex: none; width: 10px; height: 12px; border-inline: 3px solid currentColor; box-sizing: border-box; }
 .pausa:checked + .pausa-etiqueta::before { border: 0; border-left: 10px solid currentColor;
   border-block: 6px solid transparent; } /* ▶: seguir */
 .pausa:focus-visible + .pausa-etiqueta { outline: 3px solid var(--ds-marca); outline-offset: 3px; }
 body:has(.pausa:checked) * { animation-play-state: paused !important; }
-@media (max-width: 719px) { .pausa-etiqueta { position: static; margin: 8px auto 0; width: max-content; display: flex; } }
+@media (max-width: 719px) { .ds .pausa-etiqueta { position: static; margin: 8px auto 0; width: max-content; display: flex; } }
 
 .etiqueta { display: inline-block; margin: 0 0 24px; padding: 8px 16px; border-radius: 8px;
   background: var(--texto); color: var(--lienzo); font-size: .875rem; font-weight: 500; }
