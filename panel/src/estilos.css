@@ -17,6 +17,8 @@
 }
 .quien { color: var(--ds-suave); }
 .pagina { display: grid; gap: var(--ds-e4); padding: var(--ds-e4); max-width: 960px; margin: 0 auto; }
+/* #307: una pantalla de una sola tarjeta (modo piloto) también queda centrada, sin tocar los bordes. */
+.panel > .ds-tarjeta { width: calc(100% - 2 * var(--ds-e4)); max-width: 960px; margin: var(--ds-e4) auto; }
 .ds-vacio { margin: var(--ds-e3) 0; }
 .ds-tarjeta h2 { margin-bottom: var(--ds-e3); }
 

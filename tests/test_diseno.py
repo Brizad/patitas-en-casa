@@ -182,3 +182,9 @@ def test_coordinador_cifras_en_serif_y_archivo_con_forma_de_boton():
     assert "border: 2px solid" in re.search(r"\.barra-ocupacion \{([^}]*)\}", panel).group(1)
     archivo = re.search(r"::file-selector-button \{([^}]*)\}", CSS.read_text(encoding="utf-8"))
     assert archivo and "border: 2px solid var(--ds-linea-fuerte)" in archivo.group(1)
+
+
+def test_una_tarjeta_suelta_del_panel_no_toca_los_bordes():
+    """#307: el modo piloto es una sola tarjeta sin contenedor de página; queda centrada."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    assert "max-width: 960px" in re.search(r"\.panel > \.ds-tarjeta \{([^}]*)\}", panel).group(1)

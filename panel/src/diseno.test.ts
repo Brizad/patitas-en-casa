@@ -106,3 +106,11 @@ describe("adoptante (#306)", () => {
     expect(pantallas["./Adoptante.tsx"]).toContain("<h3>{a.nombre}</h3>");
   });
 });
+
+describe("administrador y modo piloto (#307)", () => {
+  it("las cifras del piloto van en tarjetas y cada meta muestra cumple / no cumple como insignia", () => {
+    expect(pantallas["./Piloto.tsx"]).toContain('className="kpis"');
+    expect(pantallas["./Piloto.tsx"]).toContain("ds-insignia--${resumen.cumpleTiempo");
+    expect(pantallas["./Piloto.tsx"]).toContain("ds-insignia--${resumen.cumpleSus");
+  });
+});
