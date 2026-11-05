@@ -3,25 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0F4F47">
+<meta name="theme-color" content="#ffffeb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Patitas en Casa: reporte de animales en emergencia en Cúcuta, triaje con IA, rescate, refugio y adopción.">
 <title>Patitas en Casa · Cúcuta</title>
 <link rel="icon" href="/app/icono.svg" type="image/svg+xml">
+<link rel="preload" href="/diseno/fuentes/eb-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/diseno/fuentes.css">
 <link rel="stylesheet" href="/diseno/sistema.css">
 <link rel="stylesheet" href="/inicio/inicio.css">
 </head>
 <body class="ds">
 <a class="ds-saltar" href="#contenido">Saltar al contenido</a>
-<header class="ds-cabecera">
-  <img src="/app/icono.svg" alt="" width="32" height="32">
-  <span>Patitas en Casa</span>
+<header class="cabecera">
+  <a class="marca" href="/"><img src="/app/icono.svg" alt="" width="32" height="32"><span>Patitas en Casa</span></a>
+  <a class="pildora" href="/app/#reportar">Reportar</a>
 </header>
 
 <main id="contenido">
   <!-- #145: página de inicio pública. Sin JavaScript: la misma CSP estricta de la PWA. -->
   <section class="portada" aria-labelledby="titulo">
     <p class="etiqueta">Emergencias animales en Cúcuta</p>
-    <h1 id="titulo">Un animal herido no debería esperar a que alguien conteste un chat.</h1>
+    <h1 id="titulo">Un animal herido <span class="subrayado">no debería esperar</span> a que alguien conteste un chat.</h1>
     <p class="entrada">Patitas en Casa conecta a quien lo encuentra con el veterinario, el
       rescatista y el refugio, en orden de gravedad. Sin crear cuenta.</p>
     <nav class="acciones" aria-label="Acciones principales">
@@ -34,14 +37,14 @@
     </ul>
   </section>
 
-  <section class="ds-tarjeta" aria-labelledby="titulo-problema">
+  <section class="camara" aria-labelledby="titulo-problema">
     <h2 id="titulo-problema">El problema</h2>
     <p>Hoy un reporte llega por redes o mensajes, sin ubicación precisa, mezclado con otros y
       sin saber qué tan grave es. El refugio no sabe si tiene cupo hasta que el animal ya está
       en la puerta, y las adopciones dependen de la suerte.</p>
   </section>
 
-  <section class="ds-tarjeta" aria-labelledby="titulo-como">
+  <section class="hoja" aria-labelledby="titulo-como">
     <h2 id="titulo-como">Cómo funciona</h2>
     <ol class="pasos">
       <li><strong>Reporte.</strong> Cualquier persona describe la emergencia, comparte su
@@ -59,7 +62,7 @@
     </ol>
   </section>
 
-  <section class="ds-tarjeta" aria-labelledby="titulo-roles">
+  <section class="camara" aria-labelledby="titulo-roles">
     <h2 id="titulo-roles">Quién hace qué</h2>
     <dl class="roles">
       <div><dt>Ciudadano</dt><dd>Reporta y consulta el estado con su código, sin cuenta.</dd></div>
@@ -72,7 +75,7 @@
     </dl>
   </section>
 
-  <section class="ds-tarjeta" aria-labelledby="titulo-tecnologia">
+  <section class="hoja" aria-labelledby="titulo-tecnologia">
     <h2 id="titulo-tecnologia">Tecnología</h2>
     <ul class="tecnologia">
       <li>API en Python con FastAPI y base de datos PostgreSQL.</li>
@@ -85,6 +88,7 @@
 </main>
 
 <footer class="pie">
+  <p class="pie-marca">Patitas en Casa · Cúcuta</p>
   <p>Proyecto integrador de Ingeniería de Software II, Universidad de Pamplona.
     Código abierto en <a href="https://github.com/Brizad/patitas-en-casa">GitHub</a> ·
     <a href="/docs">Documentación de la API</a></p>

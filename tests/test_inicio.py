@@ -80,3 +80,56 @@ def test_usa_el_sistema_de_diseno(c):
     assert re.search(r"<body[^>]*class=\"ds\"", html)
     assert html.index("/diseno/sistema.css") < html.index("/inicio/inicio.css")
     assert c.get("/diseno/sistema.css").status_code == 200
+
+
+# --- Rediseño (#293, parte 2): sistema visual de DESIGN.md con fuentes locales. ---
+
+def _css():
+    return (CARPETA / "inicio.css").read_text(encoding="utf-8")
+
+
+def _contraste(a: str, b: str) -> float:
+    def luz(h):
+        r, g, b_ = (int(h.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
+        f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4  # noqa: E731
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b_)
+    claro, oscuro = sorted((luz(a), luz(b)), reverse=True)
+    return (claro + 0.05) / (oscuro + 0.05)
+
+
+def test_usa_las_fuentes_locales(c):
+    html = c.get("/").text
+    assert html.index("/diseno/fuentes.css") < html.index("/inicio/inicio.css")
+    precargas = re.findall(r'<link rel="preload"[^>]*href="([^"]+)"', html)
+    assert precargas and all(p.startswith("/diseno/fuentes/") for p in precargas)
+    css = _css()
+    assert "'EB Garamond'" in css and "'Figtree'" in css
+    assert c.get(precargas[0]).headers["content-type"] == "font/woff2"
+
+
+def test_el_titulo_no_pasa_de_44_px_en_celular():
+    m = re.search(r"\.portada h1 \{[^}]*font-size: clamp\(([\d.]+)rem, ([\d.]+)rem \+ ([\d.]+)vw, "
+                  r"([\d.]+)rem\)", _css())
+    assert m, "el título de la portada usa clamp(Arem, Brem + Cvw, Drem)"
+    minimo, base, vw, maximo = map(float, m.groups())
+    en_360 = min(max(minimo * 16, base * 16 + vw * 3.6), maximo * 16)
+    assert en_360 <= 44 and maximo * 16 >= 64  # grande en escritorio, contenido en celular
+
+
+def test_botones_con_borde_de_2px_y_sin_sombras_ni_degradados():
+    css = _css()
+    assert re.search(r"\.boton \{[^}]*border: 2px solid", css)
+    assert "gradient" not in css and not re.search(r"box-shadow: (?!none)", css)
+
+
+def test_colores_con_contraste_aa_en_claro_y_oscuro():
+    css = _css()
+    claro, oscuro = css.split("prefers-color-scheme: dark", 1)
+    tokens = dict(re.findall(r"--(\w[\w-]*): (#[0-9a-fA-F]{6})", claro))
+    assert tokens["suave"].lower() != "#8a8a80"  # el gris de DESIGN.md no llega a 4,5:1
+    for texto, fondo in (("tinta", "crema"), ("suave", "crema"), ("crema", "tinta"),
+                         ("tinta", "lavanda"), ("crema", "bosque")):
+        assert _contraste(tokens[texto], tokens[fondo]) >= 4.5, (texto, fondo)
+    noche = {**tokens, **dict(re.findall(r"--(\w[\w-]*): (#[0-9a-fA-F]{6})", oscuro))}
+    for texto, fondo in (("texto", "lienzo"), ("suave", "lienzo"), ("texto", "camara")):
+        assert _contraste(noche[texto], noche[fondo]) >= 4.5, ("oscuro", texto, fondo)
