@@ -13,6 +13,21 @@ El repositorio es **privado**: no hay `--auto`; unir solo con `gh pr checks` en 
 - Historial del veterinario (#218), «Mis rescates» del rescatista (#220) y hora de llegada (#222).
 - Póster de Ingeniería de Software II terminado.
 
+## Hecho el 5 de noviembre de 2026 (tercera sesión autónoma: pendientes y preguntas)
+
+| Tarea | PR | Resultado |
+|---|---|---|
+| Complejidad de `crear_app` | #286, #287, #288 | Repositorios en `app/api/armado.py`, middlewares y ciclo de vida en `app/api/middlewares.py`, avisos al ciudadano en `app/avisos/ciudadano.py`. Complejidad **41 → 8**, ya **sin** `noqa: C901`. Mismo contrato |
+| A-08 / DT-11 | #289 | El tope de 1 MB también vale para peticiones *chunked* (`LimiteCuerpoSinLargo`, 413) |
+| A-09 / DT-11 | #290 | `PATITAS_CLAVE_KDF=scrypt` cifra lo nuevo con clave derivada por scrypt (`v2:`) y sigue leyendo lo viejo. **Apagado** por defecto (P-18) |
+| Preguntas para Brayan | #291 | P-16: `MODELO_SUBE_MAX_NIVELES` (medido: con tope el recall de crítica baja de 1,00 a 0,80–0,84; se recomienda dejarlo apagado). P-12: `AVISAR_REGISTRO_DUPLICADO` (aviso después de responder). Los dos **apagados** por defecto |
+
+Números de la suite al cerrar (CI de `main`, commit 3da9b78): **932 pytest, 97,48 % de
+cobertura, 61 Vitest, 9 e2e, axe-core 56 revisiones sin fallas**.
+
+Fuera de la app: la skill **UI/UX Pro Max** (v2.15.0) quedó en `.claude/skills/` con
+`uipro init --ai claude`. Esa carpeta no la sigue git.
+
 ## Hecho el 5 de noviembre de 2026 (segunda sesión autónoma)
 
 | Tarea | PR | Resultado |
@@ -68,18 +83,21 @@ y capturas; los scripts de diagnóstico `scripts/accesibilidad/_*.mjs` no se sub
   pasó a #260; se reabrió como #264). Desde entonces: primero se cambia la base y después se
   borra la rama. La pila de DT-13 se reconstruyó sobre `main` con un script de traslado para
   evitar conflictos.
+- **5-nov (tercera sesión)**: nada falló dos veces. Los issues #282 a #285 no se cerraron solos
+  porque los PR decían «Cierra #N» (GitHub solo entiende *Closes/Fixes*); se cerraron a mano.
 
 ## Pendiente de código
-1. P-16: decidir si el modelo de texto puede seguir subiendo a «crítica» textos tranquilos.
-2. DT-11 restante: A-08 (peticiones *chunked*) y A-09 (KDF de la clave de datos), baja severidad.
-3. Bajar la complejidad de `crear_app` (39, conserva `noqa: C901`) con una función `armar_repositorios`.
+Nada abierto. Queda listo para activar, si Brayan lo decide: P-12, P-16, P-17 (A-04) y P-18 (A-09).
+DT-04 (validar el modelo con reportes reales) depende del piloto y de datos reales.
 
 ## Pendiente de Brayan (no es código)
 - Copiar `servicios/video/` al nodo en WSL y **reiniciarlo**; enviar un video y mirar el log.
 - Piloto con 10 personas (RNF-06): guía en `docs/aprende/piloto.md` (ahora con el modo
   piloto); luego correr `scripts/operacion/resultados_piloto.py` y actualizar trazabilidad y póster.
-- Revisar las decisiones P-15 (límite de reportes por IP), P-16 y **P-17** (activar la IP real
-  en Render con `/admin/diagnostico/ip`) en `docs/aprende/preguntas-para-brayan.md`.
+- Revisar las decisiones P-12, P-15, P-16, **P-17** (activar la IP real en Render con
+  `/admin/diagnostico/ip`) y P-18 en `docs/aprende/preguntas-para-brayan.md`.
+- Pegar en `CLAUDE.md` el texto sugerido de la regla 2 (P-01): el asistente no cambia sus
+  propias reglas de permiso.
 - Hacer el piloto con el **Modo piloto** del panel (pestaña del administrador) y descargar el CSV.
 - Antes de la sustentación: descartar en el panel los reportes de prueba sin sentido.
 - Agregar al profesor como colaborador del repositorio.
