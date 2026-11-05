@@ -172,3 +172,13 @@ def test_rescatista_prioridad_y_comunas_sin_depender_del_color():
     assert "border-left-width: 4px" in re.search(r"\.oferta--alta \{([^}]*)\}", panel).group(1)
     elegida = re.search(r"label\.comuna:has\(input:checked\) \{([^}]*)\}", panel).group(1)
     assert "background: var(--ds-tinta)" in elegida
+
+
+def test_coordinador_cifras_en_serif_y_archivo_con_forma_de_boton():
+    """#304: las cifras clave van en serif grande y el botón «Elegir archivo» tiene la forma del
+    sistema (borde de 2 px), en la PWA y en el panel."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    assert "var(--pc-serif)" in re.search(r"\.kpi dd \{([^}]*)\}", panel).group(1)
+    assert "border: 2px solid" in re.search(r"\.barra-ocupacion \{([^}]*)\}", panel).group(1)
+    archivo = re.search(r"::file-selector-button \{([^}]*)\}", CSS.read_text(encoding="utf-8"))
+    assert archivo and "border: 2px solid var(--ds-linea-fuerte)" in archivo.group(1)

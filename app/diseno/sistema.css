@@ -100,6 +100,10 @@
 .ds input[type="checkbox"], .ds input[type="radio"] { width: 22px; height: 22px; min-height: 0; margin: 0; flex: none;
   accent-color: var(--ds-marca); }
 .ds input[type="file"] { padding: 8px var(--ds-e3); font-size: var(--ds-t-sm); }
+/* #304: el botón nativo «Elegir archivo» con la forma de los botones del sistema. */
+.ds input[type="file"]::file-selector-button { margin-right: var(--ds-e3); min-height: 36px; padding: 0 var(--ds-e3);
+  border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio); background: var(--ds-superficie);
+  color: var(--ds-tinta); font: 600 var(--ds-t-sm) var(--ds-fuente); cursor: pointer; }
 .ds textarea { min-height: 96px; resize: vertical; }
 .ds [aria-invalid="true"] { border-color: var(--ds-peligro); }
 .ds fieldset { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio); margin: var(--ds-e3) 0; padding: var(--ds-e3) var(--ds-e4); }
