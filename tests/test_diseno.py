@@ -137,3 +137,14 @@ def test_componentes_con_la_forma_de_design_md():
     assert "var(--ds-accion)" in principal and "var(--ds-sobre-accion)" in principal
     tarjeta = re.search(r"\.ds-tarjeta \{([^}]*)\}", css).group(1)
     assert "var(--pc-radio-tarjeta)" in tarjeta
+
+
+def test_el_panel_no_fija_colores_y_sus_pestanas_no_dependen_del_color():
+    """#300: los estilos propios del panel usan solo tokens; la pestaña actual del panel se
+    marca con el fondo invertido (tinta), además de aria-current."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    reglas = re.sub(r"/\*.*?\*/", "", panel, flags=re.S)  # sin comentarios (citan issues: #300)
+    assert len(reglas) > 500 and not re.search(r"#[0-9a-fA-F]{3,6}\b", reglas)
+    css = CSS.read_text(encoding="utf-8")
+    actual = re.search(r'\.ds-pestanas \[aria-current="page"\][^{]*\{([^}]*)\}', css).group(1)
+    assert "background: var(--ds-tinta)" in actual

@@ -114,7 +114,9 @@
   padding: var(--ds-e5) var(--ds-e4); box-shadow: var(--ds-sombra); min-width: 0; }
 @media (min-width: 720px) { .ds-tarjeta { padding: var(--ds-e6); } }
 .ds-pestanas { display: flex; gap: var(--ds-e2); flex-wrap: wrap; padding: var(--ds-e3) var(--ds-e4) 0; }
-.ds-pestanas [aria-current="page"], .ds-pestanas [aria-current="page"]:hover:not(:disabled) { background: var(--ds-marca); border-color: var(--ds-marca); color: var(--ds-sobre-marca); }
+/* #300: pestañas en píldora; la actual con el fondo invertido (no solo color) y aria-current. */
+.ds-pestanas button { border-radius: var(--pc-radio-pildora); padding: 0 var(--ds-e5); }
+.ds-pestanas [aria-current="page"], .ds-pestanas [aria-current="page"]:hover:not(:disabled) { background: var(--ds-tinta); color: var(--ds-fondo); }
 
 /* Insignias de prioridad y de estado: texto + punto, nunca solo color. */
 .ds-insignia { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px;
