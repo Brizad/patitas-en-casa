@@ -166,7 +166,7 @@ def test_la_prioridad_se_distingue_por_forma_ademas_del_color():
 
 
 def test_rescatista_prioridad_y_comunas_sin_depender_del_color():
-    """#303: la oferta crítica tiene barra de 8 px y la alta de 4 px; la comuna elegida se invierte."""
+    """#303: oferta crítica con barra de 8 px y alta de 4 px; la comuna elegida se invierte."""
     panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
     assert "border-left-width: 8px" in re.search(r"\.oferta--critica \{([^}]*)\}", panel).group(1)
     assert "border-left-width: 4px" in re.search(r"\.oferta--alta \{([^}]*)\}", panel).group(1)
