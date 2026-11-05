@@ -50,6 +50,20 @@ Corrida del CI sobre `main` en el commit `ffde3c4` (run `41920309563`), resultad
 | axe-core | **50 revisiones, 0 fallas** | cada pantalla y rol, claro y oscuro |
 | Lighthouse | **100** en las 4 pantallas públicas | Inicio, Reportar, Consultar e Iniciar sesión |
 
+### Corrida del 5 de noviembre de 2026
+
+CI de `main` en el commit `fabd054` (después del modo piloto, DT-12, DT-13, A-04 y las pruebas de
+mutación), resultado **success**:
+
+| Suite | Resultado | Cambio desde el 4-nov |
+|-------|-----------|------------------------|
+| pytest | **918 pasaron**, 0 fallaron, 0 omitidas (3 min 12 s); 174 con PostgreSQL | +54 |
+| Cobertura | **97,49 %** (4 629 sentencias, 116 sin cubrir) | +0,27 puntos |
+| Vitest (panel) | **61 pasaron** en 10 archivos | +3 |
+| e2e (Playwright) | **9 pasaron** (incluye el modo piloto) | +1 |
+| axe-core | **56 revisiones, 0 fallas** (incluye «Modo piloto», claro y oscuro) | +6 revisiones |
+| Ruff y gitleaks | 0 errores, 0 secretos | — |
+
 ### Pruebas de mutación (5 de noviembre de 2026, #272)
 
 `mutmut` cambia el código a propósito (un `<` por `<=`, un `and` por `or`, borra una condición…)
@@ -94,7 +108,8 @@ cd ~/patitas-mut && mutmut browse   # recorre cada sobreviviente con su diff
 - RNF-05 (OWASP ZAP): 0 riesgos altos en la última corrida a mano (#122).
 
 ### Pendiente (no se puede medir desde el código)
-- **RNF-06** (usabilidad: 80 % reporta en ≤ 90 s y SUS ≥ 70): necesita 10 personas reales;
+- **RNF-06** (usabilidad: 80 % reporta en ≤ 90 s y SUS ≥ 70): necesita 10 personas reales.
+  Desde #258 el panel tiene un **Modo piloto** que cronometra, pasa el SUS y arma el CSV;
   guía en `docs/aprende/piloto.md` y script `scripts/operacion/resultados_piloto.py`.
 - **RNF-03** (recall ≥ 0,95 en crítica **con datos de veterinarios**): hoy solo hay datos
   sintéticos y el análisis de errores con textos escritos por el asistente
