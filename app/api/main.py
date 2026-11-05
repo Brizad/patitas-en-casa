@@ -13,7 +13,7 @@ import re
 import tempfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -57,11 +57,12 @@ from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_adopciones import crear_rutas_adopciones
 from app.api.rutas_indicadores import crear_rutas_indicadores
 from app.api.rutas_reportes import ReporteEntrada, crear_rutas_reportes
+from app.api.rutas_triaje import crear_rutas_triaje
 from app.api.seguridad import crear_dependencia_usuario, exigir_rol
 from app.api.video import crear_rutas_video
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
-from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria, resumen
+from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria
 from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
 from app.bd.esquema import vistas_trozos
 from app.bd.migraciones import verificar_migraciones
@@ -75,9 +76,7 @@ from app.demo import Dependencias, cargar_demo
 from app.dominio.modelos import (
     Animal,
     Especie,
-    EstadoReporte,
     EstadoRescate,
-    MotivoDescarte,
     MotivoEgreso,
     Prioridad,
     Refugio,
@@ -94,13 +93,9 @@ from app.piloto.servicio import RepositorioPiloto, RepositorioPilotoEnMemoria, S
 from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
 from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
 from app.reportes.confirmacion import (
-    AjusteSinJustificacion,
-    ReporteNoEncontrado,
-    ReporteYaConfirmado,
     ServicioConfirmacion,
 )
-from app.reportes.descarte import DescarteInvalido, ServicioDescarte
-from app.reportes.duplicados import posibles_duplicados
+from app.reportes.descarte import ServicioDescarte
 from app.reportes.repositorio import RepositorioReportes
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.seguimiento import normalizar_codigo
@@ -109,7 +104,6 @@ from app.rescates.escalamiento import repetir_cada, vigilar_escalamientos
 from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
 from app.rescates.repositorio_postgres import RepositorioRescatesPostgres
 from app.rescates.servicio import (
-    PRIORIDADES_DE_RESCATE,
     PasoInvalido,
     RescateNoOfrecido,
     ServicioRescates,
@@ -117,7 +111,7 @@ from app.rescates.servicio import (
 from app.seguridad.cifrado import PREFIJO_AVISO, CanalConDescifrado, Cifrador
 from app.seguridad.tokens import EmisorTokens, TokenInvalido
 from app.triaje.combinado import triaje_por_defecto
-from app.triaje.servicio import ServicioTriaje, ordenar_cola
+from app.triaje.servicio import ServicioTriaje
 from app.usuarios.admin_inicial import crear_admin_inicial
 from app.usuarios.intentos import (
     LimiteIntentos,
@@ -179,22 +173,6 @@ class ZonaEntrada(BaseModel):
     """Comunas que cubre el rescatista; lista vacía = toda la ciudad (#46)."""
 
     comunas: list[Comuna] = Field(max_length=10)
-
-
-class ConfirmacionEntrada(BaseModel):
-    """Sin prioridad se confirma la sugerida; con otra distinta, la justificación es
-    obligatoria (RN-16)."""
-
-    prioridad: Prioridad | None = None
-    justificacion: str | None = Field(default=None, max_length=1000)
-
-
-class DescarteEntrada(BaseModel):
-    """D-02: falso o duplicado (con el código del original, opcional)."""
-
-    motivo: MotivoDescarte
-    justificacion: str | None = Field(default=None, max_length=1000)
-    duplicado_de: str | None = Field(default=None, max_length=8)
 
 
 class DisponibilidadEntrada(BaseModel):
@@ -475,121 +453,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
 
     app.include_router(crear_rutas_reportes(ctx))  # DT-13 (#267)
 
-    @app.get("/cola", dependencies=[personal])
-    def cola():
-        """Reportes pendientes de confirmar (HU-02); los confirmados salen de la cola."""
-        pendientes = repositorio.pendientes()  # A-03 (#239): no toda la historia
-        # RF-17: un duplicado está a 2 horas o menos; basta con lo creado desde entonces.
-        todos = repositorio.creados_desde(
-            min(r.creado_en for r in pendientes) - timedelta(hours=config.DUPLICADO_HORAS)
-        ) if pendientes else []
-        return [
-            {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
-             "confianza": r.confianza, "evidencias": r.evidencias,
-             "version_modelo": r.version_modelo,
-             # Detalle para decidir de un vistazo: qué pasó, dónde y cuándo. Nunca el contacto.
-             "descripcion": r.descripcion, "creado_en": fecha_utc(r.creado_en),
-             "video_segundos": r.video_segundos,
-             "ubicacion": {"latitud": r.ubicacion.latitud, "longitud": r.ubicacion.longitud,
-                           "direccion": r.ubicacion.direccion, "comuna": r.ubicacion.comuna},
-             # RF-17: se compara también con los ya confirmados (el original suele estarlo).
-             "posibles_duplicados": posibles_duplicados(r, todos)}
-            for r in ordenar_cola(pendientes)
-        ]
-
-    @app.post("/reportes/{codigo}/confirmacion")
-    def confirmar_prioridad(codigo: str, datos: ConfirmacionEntrada, peticion: Request,
-                            veterinario: Usuario = veterinaria):
-        """HU-02: el veterinario confirma la prioridad sugerida o la ajusta con justificación.
-
-        #63 (outbox): si queda crítica o alta, los avisos a los rescatistas de la zona se
-        guardan como pendientes en la misma transacción y el procesador los envía después.
-        La respuesta dice que el aviso está pendiente, nunca que llegó (D-05)."""
-        try:
-            resultado = confirmaciones.confirmar_y_programar(
-                codigo.upper(), veterinario, datos.prioridad, datos.justificacion)
-        except ReporteNoEncontrado as error:
-            raise HTTPException(status_code=404, detail="Reporte no encontrado.") from error
-        except ReporteYaConfirmado as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
-        except AjusteSinJustificacion as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        decision = resultado.decision
-        _cambio(peticion, {"prioridad": decision.prioridad_sugerida.value},
-                {"prioridad": decision.prioridad_final.value,
-                 "estado": EstadoReporte.CONFIRMADO.value})
-        if decision.prioridad_final not in PRIORIDADES_DE_RESCATE:
-            estado_aviso = "no_aplica"  # media y baja las programa el refugio
-        else:
-            estado_aviso = "pendiente" if resultado.avisos else "sin_destinatarios"
-        return {"codigo": decision.codigo, "estado": EstadoReporte.CONFIRMADO.value,
-                "prioridad": decision.prioridad_final.value, "ajustada": decision.ajustada,
-                "avisos": {"programados": resultado.avisos, "estado": estado_aviso}}
-
-    @app.post("/reportes/{codigo}/descarte")
-    def descartar_reporte(codigo: str, datos: DescarteEntrada, peticion: Request,
-                          veterinario: Usuario = veterinaria):
-        """D-02: falso o duplicado. Como confirmar, sale de la cola y es una sola vez (409)."""
-        antes = repositorio.buscar(codigo.upper())
-        original = datos.duplicado_de.upper() if datos.duplicado_de else None
-        try:
-            descartes.descartar(codigo.upper(), veterinario, datos.motivo, datos.justificacion,
-                                duplicado_de=original)
-        except ReporteNoEncontrado as error:
-            raise HTTPException(status_code=404, detail="Reporte no encontrado.") from error
-        except ReporteYaConfirmado as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
-        except DescarteInvalido as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        _cambio(peticion, {"estado": antes.estado.value},
-                {"estado": EstadoReporte.DESCARTADO.value, "motivo": datos.motivo.value})
-        return {"codigo": codigo.upper(), "estado": EstadoReporte.DESCARTADO.value}
-
-    @app.get("/reportes/{codigo}/avisos", dependencies=[personal])
-    def avisos_del_reporte(codigo: str):
-        """#63: estado real de los avisos de un reporte (pendiente, enviado, fallido…)."""
-        codigo = codigo.upper()
-        avisos = repositorio_avisos.de_reporte(codigo)
-        return {"codigo": codigo, "resumen": resumen(avisos),
-                "avisos": [{"destinatario": a.destinatario, "estado": a.estado.value,
-                            "intentos": a.intentos, "ultimo_error": a.ultimo_error}
-                           for a in avisos]}
-
-    @app.get("/reportes/{codigo}/decisiones", dependencies=[personal])
-    def bitacora_de_triaje(codigo: str):
-        return [{"veterinario": d.veterinario, "prioridad_sugerida": d.prioridad_sugerida.value,
-                 "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion,
-                 "decidido_en": fecha_utc(d.decidido_en), "version_modelo": d.version_modelo}
-                for d in repositorio.decisiones(codigo.upper())]
-
-    @app.get("/veterinario/historial")
-    def historial_del_veterinario(veterinario: Usuario = veterinaria):
-        """Lo que este veterinario confirmó, ajustó o descartó, del más reciente al más viejo.
-        Sale de la bitácora `decisiones_triaje` y de los descartes (D-02)."""
-        decisiones = repositorio.decisiones_de(veterinario.correo)
-        descartes = repositorio.descartes_de(veterinario.correo)
-        # DT-12 (#265): todos los reportes en una consulta, no uno por fila.
-        reportes_ = repositorio.buscar_varios([x.codigo for x in [*decisiones, *descartes]])
-        filas = []
-        for d in decisiones:
-            ajustada = d.prioridad_final != d.prioridad_sugerida
-            filas.append((d.decidido_en, {
-                "codigo": d.codigo, "accion": "ajustado" if ajustada else "confirmado",
-                "prioridad_sugerida": d.prioridad_sugerida.value,
-                "prioridad_final": d.prioridad_final.value, "justificacion": d.justificacion}))
-        for x in descartes:
-            reporte = reportes_.get(x.codigo)
-            sugerida = reporte.prioridad if reporte else None
-            filas.append((x.descartado_en, {
-                "codigo": x.codigo, "accion": "descartado",
-                "prioridad_sugerida": sugerida.value if sugerida else None,
-                "prioridad_final": None, "justificacion": x.justificacion}))
-        resultado = []
-        for fecha, fila in sorted(filas, key=lambda f: f[0], reverse=True):
-            reporte = reportes_.get(fila["codigo"])
-            resultado.append({**fila, "fecha": fecha_utc(fecha),
-                              "estado": reporte.estado.value if reporte else None})
-        return resultado
+    app.include_router(crear_rutas_triaje(ctx))  # DT-13 (#267)
 
     # --- HU-06: rescatistas (RF-05, RF-15, RN-08) --------------------------------------
 

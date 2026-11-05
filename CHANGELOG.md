@@ -19,6 +19,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Pruebas de punta a punta (#233): `e2e/` con Playwright recorre en el navegador el flujo completo sobre una instancia real (API + PostgreSQL + panel compilado + PWA): reporte desde el teléfono (390 px), confirmación crítica, rescate, ingreso con código, historiales y seguimiento (RN-14), más los errores (descripción sin sentido, 401 y 403). Job `e2e` en el CI con capturas y trazas como artefacto si falla. Guía en `docs/aprende/e2e.md`.
 
 ### Cambiado
+- DT-13, paso 6 (#267): las rutas del triaje (`/cola`, confirmación, descarte, avisos, decisiones e historial del veterinario) pasan a `app/api/rutas_triaje.py`. Mismo contrato.
 - DT-13, paso 5 (#267): las rutas públicas del ciudadano (`POST /reportes`, `GET /reportes/{codigo}` y `/seguimiento`) pasan a `app/api/rutas_reportes.py` con `ReporteEntrada`, `ClaveIdempotencia` y `normalizar_contacto`. Mismo contrato.
 - DT-13, paso 4 (#267): la gestión de adopciones del coordinador (solicitudes, jornada, decisión, visita, devolución, seguimientos y compromiso en PDF) se suma a `app/api/rutas_adopciones.py`. Nueva prueba `tests/test_rutas_unicas.py`: ninguna ruta se registra dos veces. Mismo contrato.
 - DT-13, paso 3 (#267): las rutas del adoptante, el catálogo, las fotos, las recomendaciones y las solicitudes del adoptante pasan a `app/api/rutas_adopciones.py` con sus modelos. Mismo contrato.
