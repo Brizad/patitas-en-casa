@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Agregado
+- Modo piloto, parte 5 (#258): pestaña **Modo piloto** del administrador (`panel/src/Piloto.tsx`): «Nuevo participante» abre la PWA en modo prueba, muestra invitados, terminados, % en 90 s o menos y SUS promedio contra las metas del ERS, la tabla anónima y **Descargar CSV**. Guía en `docs/aprende/piloto.md`. El cronómetro también arranca con el primer foco o texto escrito.
 - Modo piloto, parte 4 (#258): la PWA abierta con el enlace del administrador (`/app/?piloto=TOKEN`) muestra «Modo prueba», cronometra desde el primer toque hasta el código, envía a `/piloto/reportes` (nunca a la cola sin señal ni con video) y luego pide el SUS de 10 frases (opciones de 44 px). Nuevo `app/pwa/piloto.js`; el service worker sube a `patitas-pwa-v8`. Prueba e2e `e2e/piloto.spec.mjs`.
 - Modo piloto, parte 3 (#258): rutas `POST /admin/piloto/participantes`, `GET /admin/piloto/resultados` y `GET /admin/piloto/resultados.csv` (solo administrador) y `POST /piloto/reportes` y `POST /piloto/resultados` (token de un solo uso en `X-Piloto`, sin sesión) en `app/api/piloto.py`. Un reporte de piloto nunca entra a la cola ni a `GET /reportes/{codigo}`.
 - Modo piloto, parte 2 (#258): tabla `piloto` (migración `0033`: código P01, hash del token, fechas, segundos y `sus` como arreglo de 10) y `RepositorioPilotoPostgres`, con las mismas pruebas de contrato que el de memoria. Para actualizar: `alembic upgrade head`.
