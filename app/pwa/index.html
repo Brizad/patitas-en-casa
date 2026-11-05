@@ -10,6 +10,7 @@
 <link rel="icon" href="icono.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/diseno/sistema.css">
 <link rel="stylesheet" href="estilos.css">
+<script src="piloto.js" defer></script>
 <script src="app.js" defer></script>
 <script src="video.js" defer></script>
 <script src="reportar.js" defer></script>
@@ -21,6 +22,9 @@
   <a href="#estado" data-pantalla="estado">Consultar</a>
 </nav>
 <main class="pbd" id="contenido">
+  <!-- RNF-06 (#258): modo piloto; lo muestra piloto.js solo con el enlace del administrador. -->
+  <p id="aviso-piloto" class="ds-msg ds-msg--aviso" role="status" hidden>Modo prueba: lo que
+    envíes aquí no le llega a nadie. Haz la tarea como si fuera real.</p>
   <!-- #61: pantalla P-01 "Reportar emergencia" del prototipo (docs/prototipo). -->
   <section id="pantalla-reportar" class="pantalla" aria-labelledby="titulo-reportar">
     <h1 id="titulo-reportar">Reportar emergencia</h1>
@@ -115,6 +119,18 @@
     <button class="ds-btn" type="button" id="copiar">Copiar código</button>
     <button class="ds-btn ds-btn--pri" type="button" id="ver-estado">Ver estado del reporte</button>
     <a class="ds-btn" href="#reportar" id="otro-reporte">Reportar otra emergencia</a>
+    <a class="ds-btn ds-btn--pri ds-btn--grande" href="#sus" id="ir-sus" hidden>Responder 10 preguntas cortas</a>
+  </section>
+
+  <!-- RNF-06 (#258): cuestionario SUS del piloto; piloto.js pone las 10 frases. -->
+  <section id="pantalla-sus" class="pantalla pila" aria-labelledby="titulo-sus" hidden>
+    <h1 id="titulo-sus">¿Qué te pareció?</h1>
+    <p>Marca de 1 a 5 qué tan de acuerdo estás con cada frase. <b>1</b> = totalmente en
+      desacuerdo · <b>5</b> = totalmente de acuerdo. No hay respuestas buenas ni malas.</p>
+    <form id="sus" class="pila" novalidate>
+      <button class="ds-btn ds-btn--pri ds-btn--grande" type="submit" id="enviar-sus">Enviar respuestas</button>
+    </form>
+    <div id="mensaje-sus" class="ds-msg" role="status" aria-live="polite" hidden></div>
   </section>
 
   <!-- HU-08 (#59): pantalla P-03 "Estado del reporte". -->

@@ -2,8 +2,8 @@
    Guarda solo la interfaz (/app/) para que abra sin señal. Las peticiones a /reportes/ siempre
    van a la red y nunca se guardan: por privacidad y para mostrar el estado actual. El reporte
    hecho sin señal lo guarda reportar.js en localStorage, no el service worker (RF-12). */
-const VERSION = 'patitas-pwa-v7';  // #250: botones de 44 px y mensajes sin códigos
-const INTERFAZ = ['./', '/diseno/sistema.css', 'index.html', 'estilos.css', 'app.js', 'video.js', 'reportar.js', 'icono.svg', 'manifest.webmanifest'];
+const VERSION = 'patitas-pwa-v8';  // #258: modo piloto
+const INTERFAZ = ['./', '/diseno/sistema.css', 'index.html', 'estilos.css', 'app.js', 'video.js', 'reportar.js', 'piloto.js', 'icono.svg', 'manifest.webmanifest'];
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(INTERFAZ)));

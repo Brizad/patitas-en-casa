@@ -1,7 +1,7 @@
 // Qué pantallas ve cada rol (fase 1, #67). El servidor es quien decide (401/403): esto solo
 // evita mostrar botones que siempre fallarían. Función pura: se prueba sin navegador.
 
-export type Pantalla = "cola" | "historial" | "rescates" | "mis_rescates" | "refugio" | "administracion" | "adopcion"
+export type Pantalla = "cola" | "historial" | "rescates" | "mis_rescates" | "refugio" | "administracion" | "piloto" | "adopcion"
   | "adopciones" | "indicadores";
 
 export const NOMBRE_PANTALLA: Record<Pantalla, string> = {
@@ -11,6 +11,7 @@ export const NOMBRE_PANTALLA: Record<Pantalla, string> = {
   mis_rescates: "Mis rescates",
   refugio: "Refugio",
   administracion: "Administración",
+  piloto: "Modo piloto",
   adopcion: "Adopción",
   adopciones: "Adopciones",
   indicadores: "Indicadores",
@@ -20,7 +21,7 @@ const POR_ROL: Record<string, Pantalla[]> = {
   veterinario: ["cola", "historial", "refugio"],
   coordinador: ["refugio", "adopciones", "cola", "indicadores"],
   rescatista: ["rescates", "mis_rescates"],
-  administrador: ["administracion", "indicadores"],
+  administrador: ["administracion", "piloto", "indicadores"],  // #258: piloto RNF-06
   adoptante: ["adopcion"], // #85: el adoptante no ve nada del personal
   alcaldia: ["indicadores"], // #108 (RF-13): solo indicadores anonimizados
 };
