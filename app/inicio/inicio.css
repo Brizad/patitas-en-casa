@@ -4,23 +4,15 @@
    degradados: las secciones se separan alternando crema y oscuro con radios grandes.
    Sin JavaScript ni recursos externos (CSP de la PWA). */
 :root {
-  --crema: #ffffeb; --tinta: #1a1a1a; --lavanda: #f0d7ff; --bosque: #034f46; --piedra: #e4e4d0;
-  --suave: #66665c; /* el gris #8a8a80 de DESIGN.md da 3,4:1 sobre crema: se oscurece a 5,7:1 */
-  --lienzo: var(--crema); --texto: var(--tinta); --camara: var(--tinta); --sobre-camara: var(--crema);
-  --rol: var(--bosque); --borde: var(--tinta);
-  --serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
-  /* El sistema compartido toma estos colores: salto al contenido, foco y enlaces. */
-  --ds-fondo: var(--lienzo); --ds-superficie: var(--lienzo); --ds-tinta: var(--texto);
-  --ds-suave: var(--suave); --ds-marca: var(--texto);
-  --ds-fuente: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Colores y fuentes de la hoja compartida (#296, primitivos --pc-*); aquí solo los papeles
+     propios de la portada. El gris suave ya viene oscurecido (6,7:1 sobre crema). */
+  --crema: var(--pc-crema); --tinta: var(--pc-tinta); --lavanda: var(--pc-lavanda); --bosque: var(--pc-bosque);
+  --lienzo: var(--ds-fondo); --texto: var(--ds-tinta); --suave: var(--ds-suave); --borde: var(--ds-linea-fuerte);
+  --camara: var(--pc-tinta); --sobre-camara: var(--pc-crema); --rol: var(--pc-bosque); --serif: var(--pc-serif);
+  --ds-superficie: var(--ds-fondo); --ds-marca: var(--ds-tinta); /* salto, foco y enlaces en tinta */
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --lienzo: #1a1a1a; --texto: #ffffeb; --suave: #b8b8a8; --camara: #034f46; --sobre-camara: #ffffeb;
-    --rol: #1a1a1a; --borde: #e4e4d0;
-    --ds-fondo: var(--lienzo); --ds-superficie: var(--lienzo); --ds-tinta: var(--texto);
-    --ds-suave: var(--suave); --ds-marca: var(--lavanda);
-  }
+  :root:not([data-theme="light"]) { --camara: var(--pc-bosque); --rol: var(--pc-tinta); }
 }
 
 html { scroll-padding-top: 96px; } /* la cabecera fija no tapa el foco (WCAG 2.4.11) */
