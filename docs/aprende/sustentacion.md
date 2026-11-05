@@ -1,8 +1,8 @@
-# Sustentación: 60 preguntas de jurado y recorrido de 5 minutos
+# Sustentación: 70 preguntas de jurado y recorrido de 5 minutos
 
 Cada pregunta trae una respuesta corta para decir en voz alta y **dónde se ve en el código**.
 Complementa `preguntas-sustentacion.md` (más larga) y `guion-demo.md`. Cifras al 4 de noviembre
-de 2026 (`docs/tesis/pruebas.md`).
+de 2026 (`docs/tesis/pruebas.md`); las preguntas 61 a 70 (rediseño) son del 5 de noviembre.
 
 ## Arquitectura por capa
 
@@ -156,6 +156,44 @@ de 2026 (`docs/tesis/pruebas.md`).
     una falla debe ser segura y visible (RN-03, #231) y que un PR pequeño con pruebas se revisa
     y se defiende mejor. — `CHANGELOG.md`
 
+## Diseño visual (rediseño de noviembre)
+
+61. **¿Por qué rediseñaron si ya funcionaba?** Para que las tres interfaces (inicio, PWA y panel)
+    se vean como un solo producto y para medir la accesibilidad, no suponerla. El rediseño cambió
+    la apariencia, no los flujos, los textos legales ni las reglas RN. — `docs/tesis/guia-estilo.md`
+62. **¿Cómo comparten el estilo tres interfaces distintas?** Una sola hoja, `sistema.css`, con
+    tres capas: primitivos `--pc-*` (los colores), semánticos `--ds-*` (cambian en modo oscuro)
+    y componentes `ds-*`. El panel no tiene ni un color fijo, y una prueba lo verifica. —
+    `app/diseno/sistema.css`, `tests/test_diseno.py`
+63. **¿Por qué las fuentes van en el propio servidor y no en Google Fonts?** La CSP solo permite
+    recursos propios (`default-src 'self'`) y así la IP del ciudadano no llega a un tercero. Son
+    EB Garamond y Figtree (licencia OFL, 44 KB, `font-display: swap`). — `app/diseno/fuentes.css`,
+    `tests/test_fuentes.py`
+64. **¿Qué es la CSP y qué bloquea?** Una cabecera que le dice al navegador de dónde puede
+    cargar cada cosa: scripts, estilos, imágenes y conexiones solo del mismo sitio; nada en
+    línea. Si alguien inyecta un `<script>`, no corre. — `app/api/middlewares.py` (`POLITICA_PWA`)
+65. **¿Cómo saben que el contraste cumple WCAG AA?** Una prueba calcula el contraste de 17 pares
+    de colores en claro y oscuro con la fórmula de WCAG y falla si alguno baja de 4,5:1 (3:1 en
+    bordes). Por eso el gris de la referencia (#8a8a80, 3,44:1) pasó a #5c5c54 (6,67:1). —
+    `tests/test_diseno.py::test_contraste_aa_en_claro_y_oscuro`
+66. **¿Cómo distingue la prioridad alguien que no ve colores?** Cada insignia tiene texto y una
+    forma (▲ crítica, ◆ alta, ● media, ○ baja), y en la cola una barra de 8 o 4 px (WCAG 1.4.1).
+    — `panel/src/estilos.css`, `tests/test_diseno.py::test_la_prioridad_se_distingue_por_forma_ademas_del_color`
+67. **¿De dónde salen las ilustraciones?** Son SVG dibujados para el proyecto con la paleta, sin
+    nada descargado. Solo atributos de presentación: sin `<style>`, `<script>` ni enlaces externos,
+    así pasan la CSP; son decorativas (`alt=""`). — `app/diseno/ilustraciones/`, `tests/test_ilustraciones.py`
+68. **¿Cómo son los correos con diseño y por qué así?** HTML con tablas y estilos en línea (los
+    clientes de correo ignoran las hojas externas), 600 px, Georgia y Arial, sin imágenes ni
+    píxeles de rastreo, y siempre con la versión de texto plano (`multipart/alternative`). —
+    `app/notificaciones/plantilla.py`
+69. **¿El correo HTML puede filtrar datos o inyectar código?** No: se arma con el mismo texto del
+    aviso (no agrega ubicación ni correos, RN-14) y todo dato pasa por `html.escape`; el outbox
+    solo marca «enviado» tras el éxito real (#63). — `tests/test_correo_html.py`
+70. **¿Qué es la regresión visual?** Playwright toma 16 capturas (inicio, PWA y una pantalla por
+    rol, a 360 y 1440 px) y las compara con capturas base del repositorio; si cambia más del 1 %
+    de los píxeles, el CI falla y adjunta la diferencia. Lo que varía (códigos, horas) va con
+    máscara. — `e2e/aspecto.spec.mjs`, `docs/aprende/e2e.md`
+
 ## Recorrido de 5 minutos para la demo en vivo
 
 Antes: abre https://patitas-en-casa-pnnk.onrender.com 10 minutos antes (despierta el servicio),
@@ -164,12 +202,13 @@ instancia local de `docs/aprende/e2e.md`.
 
 | Minuto | Qué mostrar | Qué decir |
 |--------|-------------|-----------|
-| 0:00–1:00 | Teléfono (o el navegador a 390 px): `/app/`, escribe «Perro atropellado convulsionando en la avenida, sangra mucho», dirección y comuna; envía. Muestra el código | «Sin cuenta, con o sin conexión. La descripción sin sentido se rechaza (RN-01).» |
-| 1:00–2:00 | Panel como **veterinaria**: abre el reporte en la cola, señala la prioridad sugerida, la confianza y las evidencias; confirma crítica | «La IA sugiere y explica; decide la persona (RN-06). Si ajusto, exige justificación (RN-16).» |
+| 0:00–0:20 | Página de inicio en el computador, en claro y luego en oscuro | «Un solo sistema visual: fuentes propias, sin recursos externos (CSP) y contraste AA medido por prueba.» |
+| 0:20–1:00 | Teléfono (o el navegador a 390 px): `/app/`, escribe «Perro atropellado convulsionando en la avenida, sangra mucho», dirección y comuna; envía. Muestra el código | «Sin cuenta, con o sin conexión. La descripción sin sentido se rechaza (RN-01).» |
+| 1:00–2:00 | Panel como **veterinaria**: abre el reporte en la cola, señala la prioridad sugerida (forma ▲ y barra, no solo color), la confianza y las evidencias; confirma crítica | «La IA sugiere y explica; decide la persona (RN-06). Si ajusto, exige justificación (RN-16).» |
 | 2:00–3:00 | Panel como **rescatista**: la oferta aparece; acepta, «Llegué al sitio» y «Trasladado al refugio» | «Un rescate, un rescatista: lo garantiza la base (RN-08).» |
 | 3:00–4:00 | Panel como **coordinador**: registra el ingreso con el código; muestra la ocupación | «El cupo se toma con un UPDATE condicional (RN-04); al 90 % avisa.» |
 | 4:00–4:40 | De vuelta en el teléfono: «Ver estado» con el código | «El ciudadano ve los pasos y nada privado (RN-14).» |
-| 4:40–5:00 | GitHub: el último CI en verde (pytest, e2e, accesibilidad) | «Cada cambio pasa 864 pruebas, la de punta a punta y axe-core antes de unirse.» |
+| 4:40–5:00 | GitHub: el último CI en verde (pytest, e2e con la regresión visual, accesibilidad) | «Cada cambio pasa las pruebas, la de punta a punta, 16 capturas base y axe-core antes de unirse.» |
 
 Si preguntan por el video: abre en la cola un reporte con video y muestra el análisis y la
 vista previa (requiere el nodo encendido; si no, explica la falla segura).
