@@ -1,0 +1,20 @@
+/* Fuentes del sistema visual (#293), servidas por el propio servidor: la CSP solo admite 'self'.
+   EB Garamond (títulos, 400) y Figtree (texto, variable 300-900); ambas SIL OFL 1.1, licencias
+   en /diseno/fuentes/. Subconjunto latino: cubre el español (á é í ó ú ñ ü ¿ ¡ « »).
+   Con font-display en swap se ve el texto con la fuente del sistema mientras la propia llega. */
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/diseno/fuentes/eb-garamond-latin-400-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url(/diseno/fuentes/figtree-latin-wght-normal.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+FEFF, U+FFFD;
+}

@@ -106,7 +106,7 @@ CARPETA_PANEL = Path(__file__).resolve().parents[1] / "panel_web"
 # Windows puede asociar .js a text/plain en el registro; el navegador exige estos tipos.
 for _tipo, _extension in (("text/javascript", ".js"), ("text/css", ".css"),
                           ("application/manifest+json", ".webmanifest"),
-                          ("image/svg+xml", ".svg")):
+                          ("image/svg+xml", ".svg"), ("font/woff2", ".woff2")):
     mimetypes.add_type(_tipo, _extension)
 
 
