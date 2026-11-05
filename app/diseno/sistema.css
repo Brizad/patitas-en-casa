@@ -53,7 +53,7 @@
 .ds h1 { font-size: var(--ds-t-xl); } .ds h2 { font-size: var(--ds-t-lg); } .ds h3 { font-size: var(--ds-t-md); }
 .ds h1, .ds h2 { font-family: var(--pc-serif); font-weight: 400; } /* #296: títulos en serif */
 .ds h1 { font-size: 2rem; } .ds h2 { font-size: 1.5rem; }
-.ds a { color: var(--ds-marca); text-underline-offset: 3px; }
+:where(.ds) a { color: var(--ds-marca); text-underline-offset: 3px; } /* #298: sin ganarle a .ds-btn */
 .ds :focus-visible { outline: 3px solid var(--ds-marca); outline-offset: 2px; border-radius: 4px; }
 .ds [hidden] { display: none !important; }
 .ds .ds-saltar { position: absolute; left: var(--ds-e2); top: -64px; z-index: 20; padding: var(--ds-e2) var(--ds-e3);

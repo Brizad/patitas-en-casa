@@ -173,3 +173,33 @@ def test_la_pwa_valida_que_la_descripcion_tenga_palabras():
     js = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
     assert "Describe con palabras qué le pasa al animal." in js
     assert "MIN_PALABRAS = 4" in js and "VOCALES_MIN = 0.30" in js and "VOCALES_MAX = 0.70" in js
+
+
+# --- #298: rediseño con el sistema visual nuevo -----------------------------------------
+
+def test_la_pwa_usa_las_fuentes_locales_tambien_sin_senal(c):
+    html = c.get("/app/").text
+    assert html.index("/diseno/fuentes.css") < html.index("/diseno/sistema.css")
+    sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+    for recurso in ("/diseno/fuentes.css", "/diseno/fuentes/eb-garamond-latin-400-normal.woff2",
+                    "/diseno/fuentes/figtree-latin-wght-normal.woff2"):
+        assert f"'{recurso}'" in sw, recurso
+    assert "patitas-pwa-v9'" in sw  # versión nueva: los teléfonos bajan la interfaz rediseñada
+    assert "url.pathname.startsWith('/diseno/')" in sw
+
+
+def test_estilo_propio_de_la_pwa_con_el_sistema_nuevo():
+    css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
+    # Pestañas como control segmentado: la actual se marca con fondo invertido, no solo color.
+    actual = r'\.pestanas a\[aria-current="page"\] \{[^}]*background: var\(--ds-tinta\)'
+    assert re.search(actual, css)
+    assert "border-radius: var(--pc-radio-pildora)" in css  # cabecera y pestañas en píldora
+    assert re.search(r"\.big \{[^}]*background: var\(--ds-accion\)", css)  # código en lavanda
+    assert "dashed" not in css and "box-shadow" not in css
+
+
+def test_los_enlaces_con_forma_de_boton_no_toman_el_color_de_enlace():
+    """#298: «Reportar otra emergencia» es un <a class="ds-btn">; la regla general de enlaces
+    no debe ganarle al botón (antes salía en verde)."""
+    css = (CARPETA_PWA.parent / "diseno" / "sistema.css").read_text(encoding="utf-8")
+    assert ":where(.ds) a {" in css and not re.search(r"^\.ds a \{", css, re.M)

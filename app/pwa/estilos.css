@@ -1,17 +1,22 @@
 /* PWA ciudadana (HU-08, #59, #61, #168). Los colores, botones, campos, tarjetas y mensajes salen
    del sistema de diseño (/diseno/sistema.css); aquí solo está lo propio de la PWA.
-   Sin fuentes externas: la PWA abre sin señal y solo usa recursos del propio servidor. */
-.ds-cabecera { font-size: 1.0625rem; }
+   Sin fuentes externas: la PWA abre sin señal y solo usa recursos del propio servidor.
+   #298: cabecera y pestañas en píldora como la página de inicio (DESIGN.md). */
+.ds-cabecera, .pestanas { width: min(100% - 16px, 504px); margin: 8px auto 0; border: 2px solid var(--ds-linea-fuerte);
+  border-radius: var(--pc-radio-pildora); }
+.ds-cabecera { padding: 6px 16px 6px 8px; font-size: 1.0625rem; font-weight: 700; background: var(--ds-fondo); color: var(--ds-tinta); }
 .pbd { max-width: 520px; margin: 0 auto; padding: var(--ds-e4); display: flex; flex-direction: column; gap: var(--ds-e3); }
-.pbd h1 { font-size: 1.375rem; }
+.pbd h1 { font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem); line-height: 1.1; }
 .pila { display: flex; flex-direction: column; gap: var(--ds-e3); }
 .pantalla > h1 { margin-bottom: var(--ds-e3); }
 
-/* Pestañas: barra clara pegada a la cabecera, con subrayado en la pantalla actual. */
-.pestanas { display: flex; background: var(--ds-superficie); border-bottom: 1px solid var(--ds-linea); padding: 0 var(--ds-e2); }
-.pestanas a { flex: 1; text-align: center; color: var(--ds-suave); text-decoration: none; font-weight: 700;
-  font-size: var(--ds-t-sm); padding: 14px var(--ds-e2) 11px; border-bottom: 3px solid transparent; }
-.pestanas a[aria-current="page"] { color: var(--ds-marca); border-bottom-color: var(--ds-marca); }
+/* Pestañas: control segmentado; la pantalla actual con el fondo invertido (no solo color). */
+.pestanas { display: flex; gap: 4px; padding: 4px; background: var(--ds-superficie); }
+.ds .pestanas a { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 44px;
+  border-radius: var(--pc-radio-pildora); color: var(--ds-tinta); text-decoration: none; font-weight: 600;
+  font-size: var(--ds-t-sm); }
+.ds .pestanas a:hover { background: var(--ds-marca-tenue); }
+.ds .pestanas a[aria-current="page"] { background: var(--ds-tinta); color: var(--ds-fondo); }
 
 /* Formulario: cada pregunta es una tarjeta con su ayuda debajo. */
 .ds-tarjeta { display: flex; flex-direction: column; gap: var(--ds-e2); }
@@ -38,7 +43,7 @@
 .gracias img { padding: var(--ds-e3); border-radius: 50%; background: var(--ds-marca-fuerte); }
 .gracias h1 { margin: var(--ds-e3) 0 var(--ds-e1); }
 .big { font-family: var(--ds-mono); font-size: 1.875rem; letter-spacing: .12em; font-weight: 600; text-align: center;
-  background: var(--ds-superficie); border: 2px dashed var(--ds-acento); border-radius: var(--ds-radio-lg);
+  background: var(--ds-accion); color: var(--ds-sobre-accion); border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg);
   padding: var(--ds-e4) var(--ds-e2); margin-top: var(--ds-e2); overflow-wrap: anywhere; }
 
 /* Línea de tiempo del seguimiento: hecho = verde, actual = naranja. */
@@ -54,12 +59,12 @@
 .tl .detalle { display: block; }
 
 /* #212: grabadora de video dentro de la página. */
-.vista-video { width: 100%; max-height: 50vh; background: #000; border-radius: 8px; }
+.vista-video { width: 100%; max-height: 50vh; background: #000; border-radius: var(--ds-radio); }
 #contador-video { font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* RNF-06 (#258): cuestionario SUS del modo piloto; cada opción es un objetivo de 44 px. */
-.sus-pregunta { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio); padding: var(--ds-e3); margin: 0; }
+.sus-pregunta { border: 1px solid var(--ds-linea); border-radius: var(--ds-radio-lg); padding: var(--ds-e3) var(--ds-e4); margin: 0; }
 .sus-pregunta legend { font-weight: 600; padding: 0 var(--ds-e1); }
 .sus-escala { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--ds-e2); margin-top: var(--ds-e2); }
-.sus-escala label { justify-content: center; min-height: 44px; border: 1px solid var(--ds-linea-fuerte);
+.sus-escala label { justify-content: center; min-height: 44px; border: 2px solid var(--ds-linea-fuerte);
   border-radius: var(--ds-radio); font-weight: 700; }
