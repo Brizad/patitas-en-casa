@@ -65,6 +65,15 @@
 .barras dd { margin: 0; display: flex; align-items: center; gap: 6px; }
 .barras dd span { display: inline-block; height: 12px; border-radius: var(--pc-radio-pildora); background: var(--ds-marca); min-width: 2px; }
 .foto { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--ds-radio); margin-bottom: var(--ds-e2); }
+/* #306: catálogo de adopción como rejilla de tarjetas (una columna en el celular). */
+.catalogo { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--ds-e4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.animal { display: flex; flex-direction: column; gap: var(--ds-e2); padding: var(--ds-e4); background: var(--ds-fondo);
+  border: 2px solid var(--ds-linea); border-radius: var(--pc-radio-tarjeta); }
+.animal .foto { max-width: none; margin: 0; border-radius: var(--ds-radio-lg); }
+.animal h3 { margin: 0; font: 400 1.75rem/1.1 var(--pc-serif); }
+.animal p { margin: 0; }
+.animal button { margin-top: auto; align-self: flex-start; }
 .tira { display: block; max-width: 100%; height: auto; border-radius: var(--ds-radio); margin: var(--ds-e2) 0; }
 .ds #cola:focus { outline: 3px solid var(--ds-marca); outline-offset: 4px; }
 button.enlace { border: 0; background: none; padding: 2px 4px; color: var(--ds-marca); text-decoration: underline;
