@@ -2,8 +2,11 @@
    Guarda solo la interfaz (/app/) para que abra sin señal. Las peticiones a /reportes/ siempre
    van a la red y nunca se guardan: por privacidad y para mostrar el estado actual. El reporte
    hecho sin señal lo guarda reportar.js en localStorage, no el service worker (RF-12). */
-const VERSION = 'patitas-pwa-v8';  // #258: modo piloto
-const INTERFAZ = ['./', '/diseno/sistema.css', 'index.html', 'estilos.css', 'app.js', 'video.js', 'reportar.js', 'piloto.js', 'icono.svg', 'manifest.webmanifest'];
+const VERSION = 'patitas-pwa-v9';  // #298: rediseño con fuentes locales
+// #298: la hoja y las fuentes del sistema visual también abren sin señal.
+const FUENTES = ['/diseno/fuentes.css', '/diseno/fuentes/eb-garamond-latin-400-normal.woff2',
+  '/diseno/fuentes/figtree-latin-wght-normal.woff2'];
+const INTERFAZ = [...FUENTES, './', '/diseno/sistema.css', 'index.html', 'estilos.css', 'app.js', 'video.js', 'reportar.js', 'piloto.js', 'icono.svg', 'manifest.webmanifest'];
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(INTERFAZ)));
@@ -19,7 +22,7 @@ self.addEventListener('activate', (evento) => {
 self.addEventListener('fetch', (evento) => {
   const url = new URL(evento.request.url);
   const esInterfaz = url.origin === self.location.origin && !url.pathname.startsWith('/reportes/')
-    && (url.pathname.startsWith('/app/') || url.pathname === '/diseno/sistema.css');
+    && (url.pathname.startsWith('/app/') || url.pathname.startsWith('/diseno/'));
   if (evento.request.method !== 'GET' || !esInterfaz) return;  // la red decide
   // Red primero (versión nueva si hay señal); sin señal, la copia guardada.
   evento.respondWith(fetch(evento.request).catch(() => caches.match(evento.request)

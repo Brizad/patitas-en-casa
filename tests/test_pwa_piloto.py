@@ -32,4 +32,5 @@ def test_piloto_js_no_inserta_html_y_pide_las_10_frases_del_sus():
 
 def test_el_service_worker_guarda_piloto_js():
     sw = (PWA / "sw.js").read_text(encoding="utf-8")
-    assert "'piloto.js'" in sw and "patitas-pwa-v8" in sw
+    version = int(re.search(r"patitas-pwa-v(\d+)'", sw).group(1))
+    assert "'piloto.js'" in sw and version >= 8  # #258 la subió a v8; el rediseño (#298) a v9
