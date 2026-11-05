@@ -13,6 +13,19 @@ El repositorio es **privado**: no hay `--auto`; unir solo con `gh pr checks` en 
 - Historial del veterinario (#218), «Mis rescates» del rescatista (#220) y hora de llegada (#222).
 - Póster de Ingeniería de Software II terminado.
 
+## Hecho el 5 de noviembre de 2026 (segunda sesión autónoma)
+
+| Tarea | PR | Resultado |
+|---|---|---|
+| 1. Modo piloto (RNF-06) | #259, #264, #261, #262, #263 | Pestaña **Modo piloto** del administrador: «Nuevo participante» abre la PWA en modo prueba (P01, P02…, token de un solo uso, 24 h). El reporte de prueba se valida como uno real pero **no se guarda** (nunca llega a la cola ni a los rescatistas). Cronómetro del primer toque al código, SUS de 10 frases en el celular, resultados anónimos y **CSV** compatible con `resultados_piloto.py`. Tabla `piloto` (migración `0033`). Prueba e2e `e2e/piloto.spec.mjs`. Guía en `docs/aprende/piloto.md` |
+| 2a. DT-12 | #266 | Historial del veterinario en 3 consultas (`buscar_varios`) e índices en `decisiones_triaje`, `descartes` y `rescates` (migración `0034`) |
+| 2b. DT-13 | #268, #269, #270, #271, #274, #275, #276, #277 | `crear_app` partido en un router por módulo (`app/api/rutas_*.py`) con un `Contexto`; `main.py` 1 487 → ~470 líneas. Contrato intacto: el catálogo generado salió igual en cada paso y `tests/test_rutas_unicas.py` impide rutas duplicadas (detectó un `include_router` repetido en el camino) |
+| 3. Pruebas de mutación | #273 | mutmut 3 en WSL2: 1 352 mutantes, 837 s (fuera del CI). Puntaje 90,5 % → **94,2 %**. `tests/test_mutacion.py` cubre la regla del patio (RN-05), el empate texto/video (RN-07), el rescate ajeno y el escalamiento con varios casos. `scripts/operacion/mutacion.sh` |
+| 4. A-04 / DT-11 | #279 | La guía de Render no es concluyente: **comportamiento por defecto sin cambios**. Ajustes `PATITAS_ENCABEZADO_IP` y `PATITAS_PROXIES_CONFIANZA` y `GET /admin/diagnostico/ip` (solo administrador) para verificarlo y activarlo (P-17) |
+
+Números de la suite al cerrar (CI de `main`, commit fabd054): **918 pytest, 97,49 % de
+cobertura, 61 Vitest, 9 e2e, axe-core 56 revisiones sin fallas**.
+
 ## Hecho el 4 de noviembre de 2026 (sesión autónoma del asistente)
 
 | Tarea | PR | Resultado |
@@ -45,17 +58,28 @@ y capturas; los scripts de diagnóstico `scripts/accesibilidad/_*.mjs` no se sub
 - **Local en Windows**: el Control de aplicaciones bloquea la DLL de `psycopg-binary` y la de
   scikit-learn. Se usó la libpq de PostgreSQL 17 (`PSYCOPG_IMPL=python` y su `bin` en el PATH);
   la prueba que compara con scikit-learn solo corre en el CI.
-- **A-04 (IP falsificable con `X-Forwarded-For`)**: no se corrigió a ciegas; podría bloquear a
-  todos a la vez. Hay que ver una vez los encabezados reales de Render (DT-11).
+- **A-04 (IP falsificable con `X-Forwarded-For`)**: la documentación de Render no dice cuántos
+  proxies agregan entradas; quedó configurable y con diagnóstico, sin activar (P-17).
+- **5-nov, mutmut**: no corre en Windows (necesita `fork`); en WSL, `mutmut` 3 no compiló con
+  Python 3.14 (sin wheel de `libcst`) → se usó el Python 3.12 del nodo de video. Tres corridas
+  fallaron por configuración (pruebas que leen el panel, `also_copy` que pisaba los mutantes) y
+  la cuarta funcionó; el script final está en `scripts/operacion/mutacion.sh`.
+- **5-nov, PR apilados**: borrar la rama base de un PR apilado **cierra** el PR de arriba (le
+  pasó a #260; se reabrió como #264). Desde entonces: primero se cambia la base y después se
+  borra la rama. La pila de DT-13 se reconstruyó sobre `main` con un script de traslado para
+  evitar conflictos.
 
 ## Pendiente de código
-1. A-04 de la auditoría (DT-11), DT-12 (historiales N+1 e índices) y DT-13 (partir `crear_app`).
-2. P-16: decidir si el modelo de texto puede seguir subiendo a «crítica» textos tranquilos.
+1. P-16: decidir si el modelo de texto puede seguir subiendo a «crítica» textos tranquilos.
+2. DT-11 restante: A-08 (peticiones *chunked*) y A-09 (KDF de la clave de datos), baja severidad.
+3. Bajar la complejidad de `crear_app` (39, conserva `noqa: C901`) con una función `armar_repositorios`.
 
 ## Pendiente de Brayan (no es código)
 - Copiar `servicios/video/` al nodo en WSL y **reiniciarlo**; enviar un video y mirar el log.
-- Piloto con 10 personas (RNF-06): guía en `docs/aprende/piloto.md`; luego correr
-  `scripts/operacion/resultados_piloto.py` y actualizar trazabilidad y póster.
-- Revisar las decisiones P-15 (límite de reportes por IP) y P-16 en `docs/aprende/preguntas-para-brayan.md`.
+- Piloto con 10 personas (RNF-06): guía en `docs/aprende/piloto.md` (ahora con el modo
+  piloto); luego correr `scripts/operacion/resultados_piloto.py` y actualizar trazabilidad y póster.
+- Revisar las decisiones P-15 (límite de reportes por IP), P-16 y **P-17** (activar la IP real
+  en Render con `/admin/diagnostico/ip`) en `docs/aprende/preguntas-para-brayan.md`.
+- Hacer el piloto con el **Modo piloto** del panel (pestaña del administrador) y descargar el CSV.
 - Antes de la sustentación: descartar en el panel los reportes de prueba sin sentido.
 - Agregar al profesor como colaborador del repositorio.
