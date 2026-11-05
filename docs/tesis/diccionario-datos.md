@@ -204,7 +204,7 @@ HU-02: bitácora de confirmaciones y ajustes de prioridad (RN-06, RN-16).
 | `decidido_en` | TIMESTAMP WITH TIME ZONE | no | — | `now()` | — |
 | `version_modelo` | VARCHAR(40) | sí | — | — | 75) |
 
-Restricciones e índices: `ck_decisiones_justificacion`: `prioridad_final = prioridad_sugerida OR (justificacion IS NOT NULL AND char_length(btrim(justificacion)) >= 10)`; `ck_decisiones_prioridad_final`: `prioridad_final IN ('critica', 'alta', 'media', 'baja')`; `ck_decisiones_prioridad_sugerida`: `prioridad_sugerida IN ('critica', 'alta', 'media', 'baja')`.
+Restricciones e índices: `ck_decisiones_justificacion`: `prioridad_final = prioridad_sugerida OR (justificacion IS NOT NULL AND char_length(btrim(justificacion)) >= 10)`; `ck_decisiones_prioridad_final`: `prioridad_final IN ('critica', 'alta', 'media', 'baja')`; `ck_decisiones_prioridad_sugerida`: `prioridad_sugerida IN ('critica', 'alta', 'media', 'baja')`; `ix_decisiones_triaje_veterinario`: índice (veterinario, decidido_en).
 
 ## `descartes`
 
@@ -219,7 +219,7 @@ D-02 (#75): bitácora de reportes descartados (uno por reporte).
 | `justificacion` | TEXT | no | — | — | — |
 | `descartado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
 
-Restricciones e índices: `ck_descartes_justificacion`: `char_length(btrim(justificacion)) >= 10`; `ck_descartes_motivo`: `motivo IN ('falso', 'duplicado')`.
+Restricciones e índices: `ck_descartes_justificacion`: `char_length(btrim(justificacion)) >= 10`; `ck_descartes_motivo`: `motivo IN ('falso', 'duplicado')`; `ix_descartes_veterinario`: índice (veterinario, descartado_en).
 
 ## `escalamientos`
 
@@ -243,7 +243,7 @@ HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a 
 | `actualizado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
 | `llegada_en` | TIMESTAMP WITH TIME ZONE | sí | — | — | — |
 
-Restricciones e índices: `ck_rescates_estado`: `estado IN ('en_camino', 'en_sitio', 'atendido', 'liberado')`; `ck_rescates_resultado`: `resultado IN ('trasladado', 'atendido_en_sitio', 'no_encontrado', 'fallecido')`; `ck_rescates_resultado_al_atender`: `(estado = 'atendido') = (resultado IS NOT NULL)`; `uq_rescates_reporte_vigente`: índice único (reporte_codigo) donde `estado <> 'liberado'`; `uq_rescates_rescatista_activo`: índice único (rescatista) donde `estado IN ('en_camino', 'en_sitio')`.
+Restricciones e índices: `ck_rescates_estado`: `estado IN ('en_camino', 'en_sitio', 'atendido', 'liberado')`; `ck_rescates_resultado`: `resultado IN ('trasladado', 'atendido_en_sitio', 'no_encontrado', 'fallecido')`; `ck_rescates_resultado_al_atender`: `(estado = 'atendido') = (resultado IS NOT NULL)`; `ix_rescates_rescatista`: índice (rescatista, aceptado_en); `uq_rescates_reporte_vigente`: índice único (reporte_codigo) donde `estado <> 'liberado'`; `uq_rescates_rescatista_activo`: índice único (rescatista) donde `estado IN ('en_camino', 'en_sitio')`.
 
 ## `usuarios`
 

@@ -9,6 +9,36 @@ la aplicación se sienta fácil. Metas del ERS:
 Se necesitan unas **10 personas** que no hayan visto el sistema (familia, vecinos, compañeros
 de otra carrera). Cada sesión dura unos 10 minutos.
 
+## Opción recomendada: el modo piloto del sistema (#258)
+
+El sistema cronometra, pasa el cuestionario y arma el CSV solo. Los reportes de prueba **no se
+guardan como reportes**: no llegan a la cola del veterinario ni a los rescatistas, y no hace
+falta borrar nada después.
+
+1. En el **celular de la prueba**, entra al panel (`/panel/`) con la cuenta de administrador y
+   abre la pestaña **Modo piloto**.
+2. Toca **Nuevo participante**. Se abre la app en modo prueba (arriba dice «Modo prueba») para
+   un participante anónimo: P01, P02… El enlace sirve **una vez** y por **24 horas**; si no se
+   abrió, cópialo desde el aviso verde.
+3. Entrega el celular y lee la tarea (paso 3 de abajo). **No toques la pantalla**: el tiempo
+   empieza con el primer toque del participante y termina cuando aparece el código.
+4. Al ver el código, el participante toca **Responder 10 preguntas cortas** y marca de 1 a 5
+   cada frase del SUS. Si deja alguna sin marcar, la app le dice cuál.
+5. Cuando diga «¡Gracias por participar!», vuelve al panel (pestaña **Modo piloto**, botón
+   **Actualizar**) y repite con la siguiente persona.
+6. Al final, el panel muestra el % que reportó en 90 s o menos y el SUS promedio, con
+   «cumple» o «no cumple». **Descargar CSV** baja `resultados_piloto.csv` con el mismo formato
+   de la plantilla; puedes comprobarlo con el script:
+
+   ```bash
+   python scripts/operacion/resultados_piloto.py resultados_piloto.csv
+   ```
+
+Lo que sigue (pasos 1, 2, 5, 6 y 9 de «La sesión») vale igual: saludar, no ayudar, observar y
+agradecer. Si prefieres hacerlo a mano, usa la opción de abajo.
+
+## Opción a mano: cronómetro y papel
+
 ## Antes de empezar (una sola vez)
 
 1. Copia `docs/piloto/plantilla.csv` a `docs/piloto/resultados.csv` (una fila por persona,

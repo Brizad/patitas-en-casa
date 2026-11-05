@@ -15,7 +15,7 @@ higiene o de mantenimiento. **Info** = revisado y sin hallazgo.
 | A-01 | Media | `POST /reportes` (público) sin tope de descripción ni dirección; ningún cuerpo JSON limitado | Corregido en #236 |
 | A-02 | Media | `POST /reportes` sin límite por IP: un robot llena la cola del veterinario | Corregido en #238 |
 | A-03 | Media | `/cola`, `/rescates/ofertas` y el escalamiento periódico leen toda la historia de reportes | Corregido en #240 |
-| A-04 | Media | La IP del cliente se puede falsificar con `X-Forwarded-For` | **Pendiente** (DT-11): necesita ver los encabezados reales de Render |
+| A-04 | Media | La IP del cliente se puede falsificar con `X-Forwarded-For` | **Listo para activar** (#278): ajuste configurable y diagnóstico; falta verificar en Render (P-17) |
 | A-05 | Baja | `GET /veterinario/historial` hace una consulta por fila (N+1) | DT-12 |
 | A-06 | Baja | Sin índices para los historiales (`decisiones_triaje.veterinario`, `descartes.veterinario`, `rescates.rescatista`) | DT-12 |
 | A-07 | Baja | `crear_app` mide 1 011 líneas (`noqa: C901`) | DT-13 |
@@ -66,6 +66,15 @@ No se encontraron hallazgos de severidad **alta**.
 - **Siguiente paso:** registrar una vez en producción (sin datos personales) qué trae
   `X-Forwarded-For` en una petición propia; con eso, tomar el último valor confiable. Anotado
   como DT-11.
+- **Actualización (#278).** La documentación oficial de Render no es concluyente: su guía de
+  FastAPI pide restringir `--forwarded-allow-ips` a las IP del balanceador (sin dar cuáles) y
+  su guía de PocketBase dice que Cloudflare escribe `CF-Connecting-IP` en cada petición a un
+  servicio web público y pisa lo que mande el cliente, y que Cloudflare **agrega** a
+  `X-Forwarded-For` (la entrada de la izquierda la controla el cliente). Por eso
+  `ip_del_cliente` (`app/api/comun.py`) acepta `PATITAS_ENCABEZADO_IP` y
+  `PATITAS_PROXIES_CONFIANZA` (N desde la derecha), **sin cambiar el comportamiento por
+  defecto**, y `GET /admin/diagnostico/ip` (solo administrador) muestra los encabezados de proxy
+  para elegir el valor con datos reales (P-17).
 
 ### A-05 · Baja · N+1 en el historial del veterinario
 - **Evidencia:** `historial_del_veterinario` llama a `repositorio.buscar(codigo)` por cada

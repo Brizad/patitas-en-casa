@@ -13,7 +13,7 @@ REPORTE = {"descripcion": TEXTO, "direccion": "Parque Santander, Cúcuta"}
 SUS = [4, 2, 5, 1, 4, 2, 5, 1, 4, 2]  # SUS = 85
 
 
-def cliente_con_admin():
+def cliente_con_admin(**opciones):
     """El cliente de test_api más una cuenta de administración."""
     from fastapi.testclient import TestClient
 
@@ -32,7 +32,7 @@ def cliente_con_admin():
     return TestClient(crear_app(RepositorioEnMemoria(),
                                 RepositorioCuposEnMemoria(Refugio("R", capacidad=5)),
                                 repositorio_usuarios=usuarios,
-                                emisor_tokens=EmisorTokens(SECRETO_PRUEBAS)))
+                                emisor_tokens=EmisorTokens(SECRETO_PRUEBAS), **opciones))
 
 
 @pytest.fixture(params=["memoria", pytest.param("postgres", marks=pytest.mark.postgres)])

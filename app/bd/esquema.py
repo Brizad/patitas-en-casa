@@ -295,6 +295,7 @@ decisiones_triaje = Table(
                     "AND char_length(btrim(justificacion)) >= 10)",
                     name="ck_decisiones_justificacion"),
     UniqueConstraint("reporte_codigo", name="uq_decisiones_reporte"),
+    Index("ix_decisiones_triaje_veterinario", "veterinario", "decidido_en"),  # DT-12 (#265)
 )
 
 # D-02 (#75): bitácora de reportes descartados (uno por reporte).
@@ -310,6 +311,7 @@ descartes = Table(
     CheckConstraint(f"motivo IN ({_valores(MotivoDescarte)})", name="ck_descartes_motivo"),
     CheckConstraint("char_length(btrim(justificacion)) >= 10",
                     name="ck_descartes_justificacion"),
+    Index("ix_descartes_veterinario", "veterinario", "descartado_en"),  # DT-12 (#265)
 )
 
 # HU-06: disponibilidad de los rescatistas (RF-15) y rescates (RN-08).
@@ -347,6 +349,8 @@ rescates = Table(
 # RN-08 en la base: un rescate vigente por reporte y un rescate activo por rescatista.
 Index("uq_rescates_reporte_vigente", rescates.c.reporte_codigo, unique=True,
       postgresql_where=text("estado <> 'liberado'"))
+# DT-12 (#265): «Mis rescates» filtra por rescatista (los índices únicos solo cubren los activos).
+Index("ix_rescates_rescatista", rescates.c.rescatista, rescates.c.aceptado_en)
 Index("uq_rescates_rescatista_activo", rescates.c.rescatista, unique=True,
       postgresql_where=text("estado IN ('en_camino', 'en_sitio')"))
 
