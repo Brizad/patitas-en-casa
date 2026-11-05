@@ -13,6 +13,28 @@ El repositorio es **privado**: no hay `--auto`; unir solo con `gh pr checks` en 
 - Historial del veterinario (#218), «Mis rescates» del rescatista (#220) y hora de llegada (#222).
 - Póster de Ingeniería de Software II terminado.
 
+## Hecho el 5 de noviembre de 2026 (noche: rediseño visual)
+
+Toda la interfaz con el sistema visual de `DESIGN.md` (crema, tinta, lavanda; EB Garamond y
+Figtree locales; bordes de 2 px y radios grandes; sin sombras). Cambió la apariencia, no los
+flujos ni las reglas RN. Guía con los valores reales: `docs/tesis/guia-estilo.md`.
+
+| Tarea | PR | Resultado |
+|---|---|---|
+| Página de inicio y fuentes locales | #294, #295 | Fuentes OFL en `app/diseno/fuentes/` (44 KB); la CSP no cambia |
+| Tokens compartidos | #297, #299 | `--pc-*` → `--ds-*` en `app/diseno/sistema.css`; gris de la referencia oscurecido a `#5c5c54` por contraste |
+| PWA | #301 | Fuentes también sin señal (service worker) |
+| Panel: estructura y cada rol | #305, #309, #311, #315, #318, #319 | Prioridad con forma ▲◆●○ y barra (no solo color, WCAG 1.4.1); tablas como tarjetas en el celular |
+| Ilustraciones SVG propias | #320, #321 | Ícono de la app, 7 íconos por rol, portada y estados vacíos; SW `v10` |
+| Correos HTML | #312 | `multipart/alternative` con el texto de siempre; sin imágenes ni rastreo; RN-14 y `html.escape` |
+| Regresión visual | #322 | 16 capturas base (`e2e/capturas/`), 1 % de tolerancia, en el job `e2e` |
+| Guía de estilo y sustentación | #323, #325 | Contrastes medidos; preguntas 61 a 70 y recorrido de 5 min con el diseño nuevo |
+| Cierre | #327 | Manual con capturas nuevas y cifras del CI en `docs/tesis/pruebas.md` |
+
+Números de la suite al cerrar (CI de `main`, commit 8094ad4, run 42021806974): **980 pytest,
+97,48 % de cobertura, 68 Vitest, 25 e2e (9 del flujo + 16 de regresión visual), axe-core 56
+revisiones sin fallas, Lighthouse 100 en las 4 pantallas públicas**.
+
 ## Hecho el 5 de noviembre de 2026 (tercera sesión autónoma: pendientes y preguntas)
 
 | Tarea | PR | Resultado |
@@ -85,6 +107,9 @@ y capturas; los scripts de diagnóstico `scripts/accesibilidad/_*.mjs` no se sub
   evitar conflictos.
 - **5-nov (tercera sesión)**: nada falló dos veces. Los issues #282 a #285 no se cerraron solos
   porque los PR decían «Cierra #N» (GitHub solo entiende *Closes/Fixes*); se cerraron a mano.
+- **5-nov (noche)**: los PR #314 y #317 estaban hechos sobre ramas viejas o apiladas y no se podía
+  reescribir su rama (sin `push --force`); se rehicieron sobre `main` como #323 y #322 y los viejos
+  se cerraron. La captura del análisis de video del manual no se retomó (necesita el nodo).
 
 ## Pendiente de código
 Nada abierto. Queda listo para activar, si Brayan lo decide: P-12, P-16, P-17 (A-04) y P-18 (A-09).

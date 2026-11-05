@@ -17,6 +17,7 @@ el CI en verde (`gh pr checks`).
 | API | Caja negra: solo HTTP, sin mirar el código | `fastapi.testclient` | Códigos 200/201/401/403/404/409/413/422/429 de cada endpoint y su contenido | `test_api*.py`, `test_video_api.py`… |
 | Interfaz (unidad) | Caja blanca de funciones puras del panel | Vitest | Mensajes, navegación por rol, clientes de la API | `panel/src/*.test.ts` |
 | Punta a punta | Caja negra en un navegador real | Playwright | Flujo completo ciudadano → veterinario → rescatista → coordinador → seguimiento, y errores | `e2e/flujo.spec.mjs` |
+| Regresión visual | Comparación con capturas base | Playwright `toHaveScreenshot` | 16 pantallas a 360 y 1440 px; falla si cambia más del 1 % | `e2e/aspecto.spec.mjs` |
 | Accesibilidad | Automática | axe-core y Lighthouse | Todas las pantallas, cada rol, modo claro y oscuro | `scripts/accesibilidad/revisar.mjs` |
 | Seguridad | Estática y dinámica | gitleaks, Ruff, OWASP ZAP | Secretos en el historial, complejidad ≤ 10, cabeceras y riesgos altos | `ci.yml`, `zap.yml` |
 | Carga | Medición | `prueba_carga.py` | RNF-01 y RNF-14 en local | `scripts/operacion/` |
@@ -63,6 +64,24 @@ mutación), resultado **success**:
 | e2e (Playwright) | **9 pasaron** (incluye el modo piloto) | +1 |
 | axe-core | **56 revisiones, 0 fallas** (incluye «Modo piloto», claro y oscuro) | +6 revisiones |
 | Ruff y gitleaks | 0 errores, 0 secretos | — |
+
+### Corrida del 5 de noviembre de 2026, noche (después del rediseño)
+
+CI de `main` en el commit `8094ad4` (run `42021806974`, después del rediseño #294 a #325),
+resultado **success**:
+
+| Suite | Resultado | Cambio desde la corrida anterior (`fabd054`) |
+|-------|-----------|------------------------|
+| pytest | **980 pasaron**, 0 fallaron, 0 omitidas (3 min 30 s) | +62 (diseño, fuentes, ilustraciones, correos HTML) |
+| Cobertura | **97,48 %** (4 794 sentencias, 121 sin cubrir) | −0,01 puntos |
+| Vitest (panel) | **68 pasaron** en 10 archivos | +7 |
+| e2e (Playwright) | **25 pasaron**: 9 del flujo y 16 de regresión visual (`aspecto.spec.mjs`) | +16 |
+| axe-core | **56 revisiones, 0 fallas** (claro, oscuro y celular) | — |
+| Lighthouse | **100** en las 4 pantallas públicas | — |
+| Ruff y gitleaks | 0 errores, 0 secretos | — |
+
+La regresión visual compara 16 pantallas (inicio, PWA y una por rol, a 360 y 1440 px) con sus
+capturas base de `e2e/capturas/`, con tolerancia del 1 % de píxeles (`docs/aprende/e2e.md`).
 
 ### Pruebas de mutación (5 de noviembre de 2026, #272)
 
