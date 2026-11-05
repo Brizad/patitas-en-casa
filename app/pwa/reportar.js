@@ -59,14 +59,17 @@
   const quitarDeLaCola = (clave) => escribirCola(leerCola().filter((p) => p.clave !== clave));
 
   // Resultado: { tipo: 'enviado', codigo } | { tipo: 'rechazado', detalle } | { tipo: 'esperar' }
-  async function enviar(pendiente) {
+  // «piloto» (#258): el reporte de prueba va a /piloto/reportes con el token; la cola sin señal
+  // siempre manda a /reportes, así un reporte real guardado nunca se va por la prueba.
+  async function enviar(pendiente, piloto) {
     let respuesta;
     try {
-      respuesta = await fetch('/reportes', {
+      respuesta = await fetch(piloto ? '/piloto/reportes' : '/reportes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json', Accept: 'application/json',
           'Idempotency-Key': pendiente.clave,
+          ...(piloto ? { 'X-Piloto': window.PatitasPiloto.token } : {}),
         },
         body: JSON.stringify(pendiente.datos),
       });
@@ -361,16 +364,21 @@
     if (!validar()) return;
     const pendiente = { clave: nuevaClave(), datos: datosDelFormulario(),
                         guardado_en: new Date().toISOString() };
-    // Primero se guarda: si la señal se cae a mitad del envío, el reporte no se pierde.
-    const guardado = escribirCola([...leerCola(), pendiente]);
+    const piloto = Boolean(window.PatitasPiloto && window.PatitasPiloto.activo);
+    // Primero se guarda: si la señal se cae a mitad del envío, el reporte no se pierde. Uno de
+    // prueba (piloto) nunca entra a la cola: no debe poder enviarse después como real.
+    const guardado = !piloto && escribirCola([...leerCola(), pendiente]);
     const elegido = video;
     botonEnviar.disabled = true;
     botonEnviar.textContent = 'Enviando…';
     try {
       const resultado = guardado
         ? (await enviarPendientes()).get(pendiente.clave) || { tipo: 'esperar' }
-        : await enviar(pendiente);
-      if (resultado.tipo === 'enviado') {
+        : await enviar(pendiente, piloto);
+      if (resultado.tipo === 'enviado' && piloto) {
+        limpiar();  // sin video: la prueba mide solo el reporte
+        window.PatitasPiloto.alRecibirCodigo(resultado.codigo);
+      } else if (resultado.tipo === 'enviado') {
         limpiar();
         window.Patitas.mostrarCodigo(resultado.codigo, elegido ? 'Subiendo el video…' : '');
         if (elegido) {
