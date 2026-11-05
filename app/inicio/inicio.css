@@ -1,45 +1,100 @@
-/* Página de inicio pública (#145, #166). Usa el sistema de diseño (/diseno/sistema.css);
-   aquí solo está lo propio de esta página. Sin fuentes externas ni JavaScript. */
-main { max-width: 960px; margin: 0 auto; padding: var(--ds-e4); display: flex; flex-direction: column; gap: var(--ds-e5); }
-.ds-cabecera { padding-inline: max(var(--ds-e4), calc((100% - 960px) / 2 + var(--ds-e4))); font-size: 1.125rem; }
-section h2 { font-size: var(--ds-t-lg); }
-p { margin: 0 0 var(--ds-e2); }
+/* Página de inicio pública (#145, rediseño #293). Sistema visual de DESIGN.md: lienzo crema,
+   tinta casi negra, acción principal lavanda con borde de 2 px, verde bosque de acento,
+   títulos en EB Garamond y texto en Figtree (locales, /diseno/fuentes.css). Sin sombras ni
+   degradados: las secciones se separan alternando crema y oscuro con radios grandes.
+   Sin JavaScript ni recursos externos (CSP de la PWA). */
+:root {
+  --crema: #ffffeb; --tinta: #1a1a1a; --lavanda: #f0d7ff; --bosque: #034f46; --piedra: #e4e4d0;
+  --suave: #66665c; /* el gris #8a8a80 de DESIGN.md da 3,4:1 sobre crema: se oscurece a 5,7:1 */
+  --lienzo: var(--crema); --texto: var(--tinta); --camara: var(--tinta); --sobre-camara: var(--crema);
+  --rol: var(--bosque); --borde: var(--tinta);
+  --serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  /* El sistema compartido toma estos colores: salto al contenido, foco y enlaces. */
+  --ds-fondo: var(--lienzo); --ds-superficie: var(--lienzo); --ds-tinta: var(--texto);
+  --ds-suave: var(--suave); --ds-marca: var(--texto);
+  --ds-fuente: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lienzo: #1a1a1a; --texto: #ffffeb; --suave: #b8b8a8; --camara: #034f46; --sobre-camara: #ffffeb;
+    --rol: #1a1a1a; --borde: #e4e4d0;
+    --ds-fondo: var(--lienzo); --ds-superficie: var(--lienzo); --ds-tinta: var(--texto);
+    --ds-suave: var(--suave); --ds-marca: var(--lavanda);
+  }
+}
 
-/* Portada: bloque oscuro de marca (igual en claro y oscuro) con la acción urgente primero. */
-.portada { padding: var(--ds-e5) var(--ds-e4); border-radius: 20px; color: #fff;
-  background: linear-gradient(135deg, #08443C 0%, #0B5D52 60%, #14786A 100%); }
-.portada h1 { font-size: clamp(1.75rem, 6vw, 2.75rem); line-height: 1.15; max-width: 22ch; margin: 0 0 var(--ds-e3); }
-.etiqueta { display: inline-block; margin: 0 0 var(--ds-e3); padding: 4px 12px; border-radius: 99px;
-  background: rgb(255 255 255 / .16); font-size: var(--ds-t-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.entrada { font-size: 1.125rem; max-width: 52ch; color: #E6F3F0; }
-.acciones { display: grid; gap: var(--ds-e3); margin-top: var(--ds-e5); }
-@media (min-width: 720px) { .acciones { grid-template-columns: 1.3fr 1fr 1fr; } }
-.portada .boton { display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 12px var(--ds-e4);
-  border-radius: 14px; font-weight: 800; font-size: 1.0625rem; text-align: center; text-decoration: none;
-  border: 2px solid #fff; background: transparent; color: #fff; }
-.portada .boton:hover { background: rgb(255 255 255 / .14); }
-.portada .boton.urgente { background: #F2A65A; border-color: #F2A65A; color: #2B1700; }
-.portada .boton.urgente:hover { background: #F7B97A; }
-.portada .boton.secundario { border-color: rgb(255 255 255 / .55); font-weight: 700; }
-.portada a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.confianza { list-style: none; margin: var(--ds-e5) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ds-e2) var(--ds-e4); font-size: var(--ds-t-sm); color: #D4EBE6; }
-.confianza li::before { content: "✓ "; font-weight: 800; color: #F2A65A; }
+html { scroll-padding-top: 96px; } /* la cabecera fija no tapa el foco (WCAG 2.4.11) */
+.ds { font-size: 1.0625rem; line-height: 1.5; }
+.ds h1, .ds h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -.02em; }
+.ds h2 { font-size: clamp(1.75rem, 1.2rem + 2.5vw, 3rem); line-height: 1.05; margin: 0 0 24px; }
+p { margin: 0 0 8px; max-width: 65ch; }
+main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-direction: column; gap: 32px; }
+@media (min-width: 720px) { main { padding: 0 24px; gap: 64px; } }
 
-/* Pasos: numerados en círculos. */
-.pasos { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: var(--ds-e4); }
-@media (min-width: 720px) { .pasos { grid-template-columns: 1fr 1fr; } }
-.pasos li { counter-increment: paso; position: relative; padding-left: 52px; min-height: 40px; }
-.pasos li::before { content: counter(paso); position: absolute; left: 0; top: 0; width: 38px; height: 38px;
-  display: grid; place-items: center; border-radius: 50%; background: var(--ds-marca); color: var(--ds-sobre-marca); font-weight: 800; }
+/* Cabecera flotante tipo píldora. */
+.cabecera { position: sticky; top: 8px; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; max-width: 1200px; margin: 8px 8px 0; padding: 6px 6px 6px 16px; border: 2px solid var(--borde);
+  border-radius: 9999px; background: var(--lienzo); }
+@media (min-width: 1216px) { .cabecera { margin-inline: auto; } }
+.marca { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700;
+  color: var(--texto); text-decoration: none; }
+.ds .pildora, .ds .boton { display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+  color: var(--tinta); font-weight: 600; transition: background-color .15s, color .15s; }
+.ds .pildora { min-height: 44px; padding: 0 20px; border: 2px solid var(--tinta); border-radius: 9999px; background: var(--lavanda); }
 
-/* Roles: tarjetas pequeñas. */
-.roles { margin: 0; display: grid; gap: var(--ds-e3); }
+/* Portada: título en serif grande, una sola acción principal. */
+.portada { padding: 48px 0 16px; }
+@media (min-width: 720px) { .portada { padding: 96px 0 32px; } }
+.portada h1 { font-size: clamp(2.25rem, 1.25rem + 4.5vw, 4.5rem); line-height: 1.02; max-width: 18ch; margin: 0 0 24px; }
+.subrayado { text-decoration: underline wavy var(--lavanda); text-decoration-thickness: 4px;
+  text-underline-offset: .14em; text-decoration-skip-ink: none; }
+.etiqueta { display: inline-block; margin: 0 0 24px; padding: 8px 16px; border-radius: 8px;
+  background: var(--texto); color: var(--lienzo); font-size: .875rem; font-weight: 500; }
+.entrada { font-size: clamp(1.125rem, 1rem + .5vw, 1.25rem); max-width: 52ch; }
+.acciones { display: grid; gap: 12px; margin-top: 32px; }
+@media (min-width: 720px) { .acciones { display: flex; flex-wrap: wrap; } }
+.boton { min-height: 56px; padding: 0 24px; border: 2px solid var(--tinta); border-radius: 12px;
+  background: var(--crema); font-size: 1.0625rem; text-align: center; }
+.ds .boton.urgente { background: var(--lavanda); }
+.ds .boton.secundario { background: transparent; border-color: transparent; color: var(--texto); text-decoration: underline; }
+.ds .boton:hover, .ds .pildora:hover { background: var(--tinta); color: var(--lavanda); }
+.ds .boton.secundario:hover { background: transparent; color: var(--texto); text-decoration-thickness: 3px; }
+.ds :focus-visible { outline: 3px solid var(--ds-marca); outline-offset: 3px; border-radius: 12px; }
+.confianza { list-style: none; margin: 32px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.confianza li { padding: 8px 16px; border-radius: 9999px; background: var(--bosque); color: var(--crema);
+  font-size: .875rem; font-weight: 500; }
+.confianza li::before { content: "✓ "; font-weight: 700; }
+
+/* Cámaras oscuras y hojas crema: radios grandes, sin sombra. */
+.camara, .hoja { padding: 32px 24px; border-radius: 40px; }
+@media (min-width: 720px) { .camara, .hoja { padding: 64px; border-radius: 64px; } }
+.camara { background: var(--camara); color: var(--sobre-camara); }
+.hoja { border: 2px solid var(--borde); border-radius: 32px; }
+.ds .camara a, .camara :focus-visible { color: var(--sobre-camara); outline-color: var(--sobre-camara); }
+
+/* Pasos numerados en círculos lavanda con borde de tinta. */
+.pasos { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: 24px; }
+@media (min-width: 720px) { .pasos { grid-template-columns: 1fr 1fr; gap: 32px 48px; } }
+.pasos li { counter-increment: paso; position: relative; padding-left: 60px; min-height: 44px; }
+.pasos li::before { content: counter(paso); position: absolute; left: 0; top: 0; width: 44px; height: 44px;
+  display: grid; place-items: center; border: 2px solid var(--borde); border-radius: 50%;
+  background: var(--lavanda); color: var(--tinta); font: 1.375rem/1 var(--serif); }
+
+/* Roles: tarjetas dentro de la cámara oscura. */
+.roles { margin: 0; display: grid; gap: 12px; }
 @media (min-width: 640px) { .roles { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 900px) { .roles { grid-template-columns: repeat(3, 1fr); } }
-.roles div { padding: var(--ds-e3) var(--ds-e4); border: 1px solid var(--ds-linea); border-left: 4px solid var(--ds-marca);
-  border-radius: var(--ds-radio); background: var(--ds-fondo); }
-.roles dt { font-weight: 800; }
-.roles dd { margin: 2px 0 0; color: var(--ds-suave); font-size: var(--ds-t-sm); }
-.tecnologia { margin: 0; padding-left: 20px; display: grid; gap: var(--ds-e1); }
-.pie { text-align: center; color: var(--ds-suave); padding: var(--ds-e2) var(--ds-e4) var(--ds-e6); font-size: var(--ds-t-sm); }
-.pie a { display: inline-block; padding: 4px 0; }
+@media (min-width: 900px) { .roles { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+.roles div { padding: 24px; border-radius: 32px; background: var(--rol); color: var(--crema); }
+.roles dt { font: 1.5rem/1.2 var(--serif); }
+.roles dd { margin: 4px 0 0; font-size: .9375rem; }
+.tecnologia { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.tecnologia li::marker { color: var(--suave); }
+
+/* Pie: banda oscura a todo el ancho. */
+.pie { margin-top: 64px; padding: 48px max(16px, calc((100% - 1200px) / 2 + 24px)) 64px; background: var(--tinta);
+  color: var(--crema); font-size: .9375rem; border-radius: 40px 40px 0 0; }
+.pie-marca { font: 1.75rem/1.2 var(--serif); margin-bottom: 16px; }
+.ds .pie a { display: inline-block; padding: 12px 0; color: var(--crema); }
+.pie :focus-visible { outline-color: var(--crema); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pie { background: #0d0d0c; border-top: 2px solid var(--borde); } }
+@media (prefers-reduced-motion: reduce) { .boton, .pildora { transition: none; } }
