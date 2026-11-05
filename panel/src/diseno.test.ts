@@ -92,3 +92,10 @@ describe("panel del veterinario (#302)", () => {
     expect(pantallas["./Descartar.tsx"]).toContain('className="ds-btn--peligro"');
   });
 });
+
+describe("panel del rescatista (#303)", () => {
+  it("ofertas y rescate en curso llevan la prioridad como clase (barra de distinto grosor)", () => {
+    expect(pantallas["./Rescatista.tsx"]).toContain("oferta--${o.prioridad}");
+    expect(pantallas["./Rescatista.tsx"]).toContain("oferta--${rescate.prioridad}");
+  });
+});

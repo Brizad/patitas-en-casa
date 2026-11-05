@@ -163,3 +163,12 @@ def test_la_prioridad_se_distingue_por_forma_ademas_del_color():
     alta = re.search(r"\.item--alta \{([^}]*)\}", panel).group(1)
     assert "border-left-width: 8px" in critica and "border-left-width: 4px" in alta
     assert "box-shadow" not in panel
+
+
+def test_rescatista_prioridad_y_comunas_sin_depender_del_color():
+    """#303: oferta crítica con barra de 8 px y alta de 4 px; la comuna elegida se invierte."""
+    panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
+    assert "border-left-width: 8px" in re.search(r"\.oferta--critica \{([^}]*)\}", panel).group(1)
+    assert "border-left-width: 4px" in re.search(r"\.oferta--alta \{([^}]*)\}", panel).group(1)
+    elegida = re.search(r"label\.comuna:has\(input:checked\) \{([^}]*)\}", panel).group(1)
+    assert "background: var(--ds-tinta)" in elegida
