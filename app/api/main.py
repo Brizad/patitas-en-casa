@@ -31,7 +31,6 @@ from fastapi import (
 )
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, create_engine
@@ -82,9 +81,11 @@ from app.ajustes import (
     cargar_ajustes_video,
 )
 from app.api.comun import Contexto, fecha_utc
+from app.api.comun import cambiar as _cambio
 from app.api.piloto import crear_rutas_piloto
+from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_indicadores import crear_rutas_indicadores
-from app.api.seguridad import crear_dependencia_usuario, exigir_rol, no_autenticado
+from app.api.seguridad import crear_dependencia_usuario, exigir_rol
 from app.api.video import crear_rutas_video
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
@@ -152,8 +153,6 @@ from app.usuarios.contrasenas import ContrasenaInvalida
 from app.usuarios.intentos import (
     LimiteIntentos,
     RepositorioIntentosEnMemoria,
-    clave_correo,
-    clave_ip,
     clave_registro,
     clave_reporte,
 )
@@ -162,8 +161,6 @@ from app.usuarios.repositorio import CorreoDuplicado, RepositorioUsuarios
 from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
 from app.usuarios.servicio import (
     PATRON_CORREO,
-    AutoSuspension,
-    CuentaNoEncontrada,
     ServicioUsuarios,
     normalizar_correo,
 )
@@ -290,39 +287,6 @@ def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
     return datos
 
 
-class CuentaEntrada(BaseModel):
-    """#67: el administrador crea cuentas del personal (la contraseña nunca se devuelve)."""
-
-    correo: str = Field(max_length=254)
-    nombre: str = Field(max_length=120)
-    rol: Rol
-    contrasena: str = Field(max_length=128)
-
-
-class ActivoEntrada(BaseModel):
-    activo: bool
-
-
-class RefugioEntrada(BaseModel):
-    nombre: str = Field(max_length=120)
-    capacidad: int = Field(gt=0, le=10_000)
-    direccion: str = Field(default="", max_length=200)  # #108 (RF-14)
-
-
-class VinculoEntrada(BaseModel):
-    refugio_id: int | None  # None desvincula
-
-
-def _refugio(refugio: Refugio) -> dict:
-    return {"id": refugio.id, "nombre": refugio.nombre, "capacidad": refugio.capacidad,
-            "ocupados": refugio.ocupados, "direccion": refugio.direccion}
-
-
-def _cuenta(usuario: Usuario) -> dict:
-    return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value,
-            "activo": usuario.activo, "refugio_id": usuario.refugio_id}
-
-
 class IngresoEntrada(BaseModel):
     reporte: str | None = None  # si viene, el ciudadano que lo reportó recibe un aviso
     nombre: str
@@ -436,13 +400,6 @@ def emisor_desde_entorno() -> EmisorTokens:
 
 # C901: mccabe suma aquí las ~70 funciones de endpoint anidadas; cada una por separado es
 # sencilla. crear_app es la «raíz de composición» que conecta adaptadores y rutas.
-def _cambio(peticion: Request, anterior: dict | None, nuevo: dict | None) -> None:
-    """RNF-12 (#149): el endpoint deja aquí cómo estaba y cómo quedó; el middleware de la
-    bitácora lo guarda junto con el actor y la ruta. Solo estados y cifras, nunca datos
-    personales ni el cuerpo de la petición."""
-    peticion.state.cambio = (anterior, nuevo)
-
-
 def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
@@ -650,101 +607,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     ctx = Contexto(**{nombre: valor for nombre, valor in locals().items()
                       if not nombre.startswith("_")})
 
-    @app.post("/auth/token")
-    def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()],
-                       peticion: Request):
-        """Inicio de sesión del personal: username = correo (DT-02).
-
-        DT-06: con demasiados fallos recientes del correo o de la IP responde 429 sin mirar
-        la contraseña, ni siquiera la correcta: así el atacante no sabe si acertó.
-        """
-        # La IP es la de la conexión; X-Forwarded-For no se usa porque el cliente la inventa.
-        ip = peticion.client.host if peticion.client else "desconocida"
-        claves = [clave_correo(normalizar_correo(formulario.username)), clave_ip(ip)]
-        espera = limite_intentos.segundos_de_bloqueo(claves)
-        if espera:
-            # Sin correo ni contraseña en el log: solo la IP y la espera.
-            logger.warning("Inicio de sesión bloqueado por intentos fallidos (IP %s, %d s).",
-                           ip, espera)
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Demasiados intentos fallidos. Intenta de nuevo en {espera} segundos.",
-                headers={"Retry-After": str(espera)})
-        usuario = usuarios.autenticar(formulario.username, formulario.password)
-        if usuario is None:
-            limite_intentos.registrar_fallo(claves)
-            # Mismo mensaje exista o no el correo: no se revela qué cuentas existen.
-            raise no_autenticado("Correo o contraseña incorrectos.")
-        limite_intentos.registrar_exito(claves[0])
-        # RF-16: historial de acceso de la cuenta (en la bitácora, también inmutable).
-        repositorio_bitacora.registrar(Evento(usuario.correo, "inicio de sesión", {}, 200))
-        return {"access_token": emisor_tokens.emitir(usuario), "token_type": "bearer",
-                "expira_en": emisor_tokens.minutos * 60}
-
-    @app.get("/auth/yo")
-    def mi_cuenta(usuario: Usuario = usuario_actual):
-        return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value}
-
-    # --- Fase 1 (#67): administración de cuentas (RF-13, RF-16) -------------------------
-
-    @app.get("/admin/usuarios")
-    def listar_cuentas(_admin: Usuario = administracion):
-        return [_cuenta(u) for u in usuarios.listar()]
-
-    @app.post("/admin/usuarios", status_code=201)
-    def crear_cuenta(datos: CuentaEntrada, _admin: Usuario = administracion):
-        try:
-            nueva = usuarios.registrar(datos.correo, datos.nombre, datos.rol, datos.contrasena)
-        except CorreoDuplicado as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
-        except (ContrasenaInvalida, ValueError) as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        return _cuenta(nueva)
-
-    @app.put("/admin/usuarios/{correo}/activo")
-    def suspender_o_reactivar(correo: str, datos: ActivoEntrada, peticion: Request,
-                              admin: Usuario = administracion):
-        """RF-16: una cuenta suspendida pierde el acceso en la siguiente petición, porque
-        la dependencia de sesión relee la cuenta (no basta con tener un token vigente)."""
-        antes = repositorio_usuarios.buscar_por_correo(normalizar_correo(correo))
-        try:
-            usuarios.cambiar_activo(admin, correo, datos.activo)
-        except AutoSuspension as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
-        except CuentaNoEncontrada as error:
-            raise HTTPException(status_code=404, detail=str(error)) from error
-        _cambio(peticion, {"activo": antes.activo}, {"activo": datos.activo})
-        return {"correo": normalizar_correo(correo), "activo": datos.activo}
-
-    @app.get("/admin/usuarios/{correo}/accesos")
-    def historial_de_acceso(correo: str, _admin: Usuario = administracion):
-        """RF-16: inicios de sesión de la cuenta, el más reciente primero."""
-        return [{"momento": fecha_utc(e.momento)} for e in repositorio_bitacora.de_actor(
-            normalizar_correo(correo), "inicio de sesión")]
-
-    @app.get("/admin/refugios")
-    def listar_refugios(_admin: Usuario = administracion):
-        return [_refugio(r) for r in repositorio_refugios.todos()]
-
-    @app.post("/admin/refugios", status_code=201)
-    def registrar_refugio(datos: RefugioEntrada, _admin: Usuario = administracion):
-        """RF-14: el refugio nace sin animales; sus cupos los usa el coordinador."""
-        if not datos.nombre.strip():
-            raise HTTPException(status_code=422, detail="El nombre del refugio es obligatorio.")
-        return _refugio(repositorio_refugios.crear(datos.nombre.strip(), datos.capacidad,
-                                                   datos.direccion.strip()))
-
-    @app.put("/admin/usuarios/{correo}/refugio")
-    def vincular_a_refugio(correo: str, datos: VinculoEntrada, peticion: Request,
-                           _admin: Usuario = administracion):
-        correo = normalizar_correo(correo)
-        antes = repositorio_usuarios.buscar_por_correo(correo)
-        if datos.refugio_id is not None and not repositorio_refugios.existe(datos.refugio_id):
-            raise HTTPException(status_code=404, detail="Ese refugio no existe.")
-        if not repositorio_usuarios.vincular_refugio(correo, datos.refugio_id):
-            raise HTTPException(status_code=404, detail="No existe una cuenta con ese correo.")
-        _cambio(peticion, {"refugio_id": antes.refugio_id}, {"refugio_id": datos.refugio_id})
-        return {"correo": correo, "refugio_id": datos.refugio_id}
+    app.include_router(crear_rutas_admin(ctx))  # DT-13 (#267)
 
     # --- Fase 3 (#85): adoptante (RF-08) ---------------------------------------------
 
