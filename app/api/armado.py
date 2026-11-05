@@ -17,7 +17,12 @@ from app.adopciones.fotos import RepositorioFotos, RepositorioFotosEnMemoria
 from app.adopciones.fotos_postgres import RepositorioFotosPostgres
 from app.adopciones.repositorio import RepositorioAdopciones, RepositorioAdopcionesEnMemoria
 from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
-from app.ajustes import cargar_ajustes_admin, cargar_ajustes_datos, cargar_ajustes_video
+from app.ajustes import (
+    cargar_ajustes_admin,
+    cargar_ajustes_datos,
+    cargar_ajustes_demo,
+    cargar_ajustes_video,
+)
 from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria
 from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
 from app.bd.esquema import vistas_trozos
@@ -25,6 +30,7 @@ from app.bitacora.repositorio import RepositorioBitacora, RepositorioBitacoraEnM
 from app.bitacora.repositorio_postgres import RepositorioBitacoraPostgres
 from app.cupos.repositorio import RepositorioCupos
 from app.cupos.repositorio_postgres import RepositorioCuposPostgres
+from app.demo import Dependencias, cargar_demo
 from app.dominio.modelos import Refugio
 from app.piloto.repositorio_postgres import RepositorioPilotoPostgres
 from app.piloto.servicio import RepositorioPiloto, RepositorioPilotoEnMemoria
@@ -151,3 +157,17 @@ def armar_video(motor: Engine | None, token_video: str | None, directorio_videos
         almacen_videos = AlmacenEnDisco(carpeta_videos)
         almacen_vistas = AlmacenEnDisco(carpeta_videos, maximo_vista, ".vista")
     return token_video, almacen_videos, almacen_vistas
+
+
+def cargar_demo_al_arrancar(motor: Engine | None, contrasena: str | None,
+                            dependencias: Dependencias) -> None:
+    """#109: datos de demostración. Con PostgreSQL se leen del entorno (Render no tiene
+    consola); las pruebas pasan la contraseña. Un error aquí no impide que la API arranque."""
+    if motor is not None:
+        contrasena = contrasena or cargar_ajustes_demo().contrasena_si_activa()
+    if not contrasena:
+        return
+    try:
+        cargar_demo(dependencias, contrasena)
+    except Exception:
+        logger.exception("No se pudieron cargar los datos de demostración.")

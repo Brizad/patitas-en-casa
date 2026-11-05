@@ -22,6 +22,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Pruebas de punta a punta (#233): `e2e/` con Playwright recorre en el navegador el flujo completo sobre una instancia real (API + PostgreSQL + panel compilado + PWA): reporte desde el teléfono (390 px), confirmación crítica, rescate, ingreso con código, historiales y seguimiento (RN-14), más los errores (descripción sin sentido, 401 y 403). Job `e2e` en el CI con capturas y trazas como artefacto si falla. Guía en `docs/aprende/e2e.md`.
 
 ### Cambiado
+- Complejidad de `crear_app`, paso 3 (#282): los avisos al ciudadano pasan a `AvisosAlCiudadano` (`app/avisos/ciudadano.py`) y la carga de la demostración a `cargar_demo_al_arrancar`. `crear_app` queda en complejidad 8 y **sin** `noqa: C901`. `DEUDA_TECNICA.md` (DT-13) y `docs/tesis/c4.md` al día.
 - Complejidad de `crear_app`, paso 2 (#282): los middlewares (tope del cuerpo, cabeceras de seguridad y bitácora) y el ciclo de vida (tareas periódicas) pasan a `app/api/middlewares.py`. Complejidad de 33 a 18; mismo contrato.
 - Complejidad de `crear_app` (#282): el armado de repositorios (memoria o PostgreSQL), la clave de datos y el almacén de videos pasan a `app/api/armado.py` (`Repositorios`, `armar_repositorios`, `armar_video`). Complejidad de 41 a 33; mismo contrato.
 - DT-13, paso 8, pagada (#267): las rutas del refugio (ingresos, animales, ficha clínica, egresos y ocupación) pasan a `app/api/rutas_refugio.py`. `main.py` queda en ~470 líneas (antes 1 487) y solo arma la app. `DEUDA_TECNICA.md` y `docs/tesis/c4.md` al día.
