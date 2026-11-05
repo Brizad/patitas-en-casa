@@ -2,6 +2,7 @@
 RF-10, RF-25 a RF-29) (DT-13, #267)."""
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import (
@@ -16,7 +17,9 @@ from fastapi import (
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
-from app.adopciones.compatibilidad import Compatibilidad, recomendar
+from app.adopciones.asignacion import asignar
+from app.adopciones.compatibilidad import Compatibilidad, calcular, recomendar
+from app.adopciones.compromiso import lineas_compromiso
 from app.adopciones.fotos import MAX_BYTES as MAX_BYTES_FOTO
 from app.adopciones.fotos import (
     FotoInvalida,
@@ -24,18 +27,28 @@ from app.adopciones.fotos import (
 )
 from app.adopciones.modelos import (
     Energia,
+    EstadoSolicitud,
     PerfilAdoptante,
     Publicacion,
+    Seguimiento,
     Tamano,
     Vivienda,
 )
 from app.adopciones.servicio import (
     AnimalNoDisponible,
     PerfilIncompleto,
+    RazonInvalida,
+    RestriccionDura,
+    SeguimientoNoValido,
+    SinCupoParaDevolucion,
+    SolicitudNoEncontrada,
     SolicitudRepetida,
+    SolicitudYaDecidida,
 )
 from app.api.comun import Contexto, fecha_utc
 from app.api.comun import cambiar as _cambio
+from app.api.seguridad import exigir_rol
+from app.documentos.pdf import generar_pdf
 from app.dominio.modelos import (
     Rol,
     Usuario,
@@ -102,9 +115,33 @@ def _compatibilidad(c: Compatibilidad) -> dict:
             "restricciones": c.restricciones}
 
 
+class NotaSolicitudEntrada(BaseModel):
+    texto: str = Field(max_length=1000)  # nota de la visita o motivo de la devolución
+
+
+class DecisionEntrada(BaseModel):
+    aprobar: bool
+    razon: str | None = Field(default=None, max_length=1000)  # obligatoria al rechazar
+
+
+class SeguimientoEntrada(BaseModel):
+    nota: str = Field(max_length=2000)
+
+
+def _seguimiento(x: Seguimiento, ahora: datetime) -> dict:
+    return {"id": x.id, "dia": x.dia, "programado_para": fecha_utc(x.programado_para),
+            "realizado_en": fecha_utc(x.realizado_en), "nota": x.nota,
+            "registrado_por": x.registrado_por,
+            # Vencido: ya pasó la fecha y nadie lo registró (aparece primero en la lista).
+            "vencido": x.realizado_en is None and x.programado_para < ahora}
+
+
 # C901: como en crear_app, mccabe suma las rutas anidadas; cada una es sencilla.
 def crear_rutas_adopciones(ctx: Contexto) -> APIRouter:  # noqa: C901
     rutas = APIRouter()
+    dependencia_usuario = ctx.dependencia_usuario
+    repositorio_refugios = ctx.repositorio_refugios
+    repositorio_usuarios = ctx.repositorio_usuarios
     adopciones = ctx.adopciones
     adoptante_actual = ctx.adoptante_actual
     coordinacion = ctx.coordinacion
@@ -242,5 +279,155 @@ def crear_rutas_adopciones(ctx: Contexto) -> APIRouter:  # noqa: C901
         return [{"id": s.id, "animal_id": s.animal_id, "estado": s.estado.value,
                  "creada_en": fecha_utc(s.creada_en)}
                 for s in repositorio_adopciones.solicitudes() if s.adoptante == adoptante.correo]
+
+    @rutas.get("/refugio/solicitudes")
+    def solicitudes_del_refugio(coordinador: Usuario = coordinacion):
+        """Las solicitudes por animales de SU refugio, con el perfil del adoptante: es lo que
+        el coordinador necesita para decidir (y nada más: ni contraseña ni otros datos)."""
+        animales = fichas_de(coordinador)
+        respuesta = []
+        for s in repositorio_adopciones.solicitudes():
+            animal = animales.animal(s.animal_id)
+            if animal is None:
+                continue
+            perfil = repositorio_adopciones.perfil(s.adoptante)
+            respuesta.append({
+                "id": s.id, "animal_id": s.animal_id, "animal": animal.nombre,
+                "adoptante": s.adoptante, "mensaje": s.mensaje, "estado": s.estado.value,
+                "razon": s.razon,
+                "creada_en": fecha_utc(s.creada_en),
+                "perfil": None if perfil is None else {
+                    k: v for k, v in vars(perfil).items()
+                    if k not in ("correo", "actualizado_en")},
+                # RF-09: ayuda a decidir; la decisión sigue siendo del coordinador (RN-16).
+                "compatibilidad": None if perfil is None else _compatibilidad(
+                    calcular(perfil, repositorio_adopciones.publicacion(s.animal_id)))})
+        return respuesta
+
+    @rutas.get("/refugio/jornada/propuesta")
+    def propuesta_de_jornada(coordinador: Usuario = coordinacion):
+        """RF-28: con los adoptantes que tienen solicitudes pendientes en su refugio y los
+        animales disponibles de su refugio, la combinación que maximiza la compatibilidad
+        total. Es una propuesta: no aprueba nada (RN-16)."""
+        animales = fichas_de(coordinador)
+        disponibles = [a for a in repositorio_adopciones.disponibles()
+                       if animales.animal(a.animal_id) is not None]
+        pendientes = [s for s in repositorio_adopciones.solicitudes()
+                      if s.estado == EstadoSolicitud.PENDIENTE
+                      and animales.animal(s.animal_id) is not None]
+        adoptantes = list(dict.fromkeys(s.adoptante for s in pendientes))
+        perfiles = [repositorio_adopciones.perfil(c) for c in adoptantes]
+        if not disponibles or not adoptantes:
+            return []
+        tabla = [[calcular(p, a) for a in disponibles] for p in perfiles]
+        pidio = {(s.adoptante, s.animal_id) for s in pendientes}
+        return [{"adoptante": adoptantes[i], "animal_id": disponibles[j].animal_id,
+                 "animal": disponibles[j].nombre, **_compatibilidad(tabla[i][j]),
+                 "solicito_este_animal": (adoptantes[i], disponibles[j].animal_id) in pidio}
+                for i, j in asignar([[c.puntaje for c in fila] for fila in tabla])]
+
+    @rutas.post("/refugio/solicitudes/{solicitud_id}/decision")
+    def decidir_solicitud(solicitud_id: int, datos: DecisionEntrada, peticion: Request,
+                          coordinador: Usuario = coordinacion):
+        """RF-27: aprobar (RN-05, RN-11; egreso por adopción y seguimientos RF-10) o
+        rechazar con razón. Solo solicitudes de animales de su refugio."""
+        solicitud = repositorio_adopciones.solicitud(solicitud_id)
+        if solicitud is None or fichas_de(coordinador).animal(solicitud.animal_id) is None:
+            raise HTTPException(status_code=404, detail="No hay esa solicitud en tu refugio.")
+        try:
+            s = adopciones.decidir(coordinador, solicitud_id, datos.aprobar, datos.razon)
+            _cambio(peticion, {"estado": solicitud.estado.value}, {"estado": s.estado.value})
+        except SolicitudNoEncontrada as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (SolicitudYaDecidida, RestriccionDura) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except RazonInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"id": s.id, "estado": s.estado.value, "razon": s.razon,
+                "seguimientos": [{"dia": x.dia, "programado_para": fecha_utc(x.programado_para)}
+                                 for x in repositorio_adopciones.seguimientos(solicitud_id)]}
+
+    def _solicitud_del_refugio(solicitud_id: int, coordinador: Usuario) -> None:
+        s = repositorio_adopciones.solicitud(solicitud_id)
+        if s is None or fichas_de(coordinador).animal(s.animal_id) is None:
+            raise HTTPException(status_code=404, detail="No hay esa solicitud en tu refugio.")
+
+    @rutas.post("/refugio/solicitudes/{solicitud_id}/visita")
+    def pedir_visita(solicitud_id: int, datos: NotaSolicitudEntrada,
+                     coordinador: Usuario = coordinacion):
+        """RF-27: pedir una visita previa antes de aprobar o rechazar."""
+        _solicitud_del_refugio(solicitud_id, coordinador)
+        try:
+            s = adopciones.pedir_visita(coordinador, solicitud_id, datos.texto)
+        except SolicitudYaDecidida as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except RazonInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"id": s.id, "estado": s.estado.value, "nota": s.razon}
+
+    @rutas.post("/refugio/solicitudes/{solicitud_id}/devolucion")
+    def registrar_devolucion(solicitud_id: int, datos: NotaSolicitudEntrada,
+                             coordinador: Usuario = coordinacion):
+        """RF-10, RN-13: devolución con su motivo; el animal reingresa y vuelve al catálogo."""
+        _solicitud_del_refugio(solicitud_id, coordinador)
+        try:
+            s = adopciones.devolver(coordinador, solicitud_id, datos.texto)
+        except (SolicitudYaDecidida, SinCupoParaDevolucion) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except RazonInvalida as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"id": s.id, "estado": s.estado.value, "motivo": s.razon}
+
+    @rutas.get("/refugio/seguimientos")
+    def seguimientos_del_refugio(coordinador: Usuario = coordinacion):
+        """RF-10: seguimientos de las adopciones de animales de su refugio, los pendientes
+        primero y por fecha."""
+        animales = fichas_de(coordinador)
+        ahora = datetime.now(UTC)
+        filas = []
+        for s in repositorio_adopciones.solicitudes():
+            animal = animales.animal(s.animal_id)
+            if s.estado != EstadoSolicitud.APROBADA or animal is None:
+                continue
+            for x in repositorio_adopciones.seguimientos(s.id):
+                filas.append({**_seguimiento(x, ahora), "solicitud_id": s.id,
+                              "animal": animal.nombre, "adoptante": s.adoptante})
+        return sorted(filas, key=lambda f: (f["realizado_en"] is not None,
+                                            f["programado_para"]))
+
+    @rutas.post("/refugio/seguimientos/{seguimiento_id}")
+    def registrar_seguimiento(seguimiento_id: int, datos: SeguimientoEntrada,
+                              coordinador: Usuario = coordinacion):
+        mios = {f["id"] for f in seguimientos_del_refugio(coordinador)}
+        if seguimiento_id not in mios:
+            raise HTTPException(status_code=404, detail="No hay ese seguimiento en tu refugio.")
+        try:
+            hecho = adopciones.registrar_seguimiento(coordinador, seguimiento_id, datos.nota)
+        except SeguimientoNoValido as error:
+            raise HTTPException(status_code=409 if "registrado" in str(error) else 422,
+                                detail=str(error)) from error
+        return _seguimiento(hecho, datetime.now(UTC))
+
+    acceso_adopcion = exigir_rol(dependencia_usuario, Rol.ADOPTANTE, Rol.COORDINADOR)
+
+    @rutas.get("/adopciones/solicitudes/{solicitud_id}/compromiso.pdf")
+    def compromiso_de_adopcion(solicitud_id: int, usuario: Usuario = acceso_adopcion):
+        """RF-29: el adoptante de la solicitud o el coordinador del refugio del animal; para
+        cualquier otro la solicitud «no existe» (404), así no se adivinan solicitudes ajenas."""
+        s = repositorio_adopciones.solicitud(solicitud_id)
+        if s is None or (s.adoptante != usuario.correo if usuario.rol == Rol.ADOPTANTE
+                         else fichas_de(usuario).animal(s.animal_id) is None):
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
+        if s.estado != EstadoSolicitud.APROBADA:
+            raise HTTPException(status_code=409,
+                                detail="El compromiso existe solo para adopciones aprobadas.")
+        adoptante = repositorio_usuarios.buscar_por_correo(s.adoptante)
+        pdf = generar_pdf(lineas_compromiso(
+            s, repositorio_adopciones.publicacion(s.animal_id),
+            adoptante.nombre if adoptante else s.adoptante,
+            repositorio_adopciones.seguimientos(s.id),
+            repositorio_refugios.de_animal(s.animal_id)))
+        return Response(pdf, media_type="application/pdf", headers={
+            "Content-Disposition": f'attachment; filename="compromiso-{s.id}.pdf"'})
 
     return rutas
