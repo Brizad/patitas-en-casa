@@ -12,6 +12,25 @@ from types import SimpleNamespace
 from fastapi import Request
 
 
+def ip_del_cliente(peticion: Request, ajustes) -> str:
+    """A-04 / DT-11 (#278): la IP para los límites por IP (DT-06, DT-09, A-02).
+
+    Primero el encabezado que escribe el proxy (si está configurado y viene); si no, la
+    entrada N desde la derecha de X-Forwarded-For (las que agregan los N proxies de confianza;
+    la de la izquierda la puede inventar el cliente); si no, la IP de la conexión.
+    """
+    if ajustes.encabezado_ip:
+        valor = peticion.headers.get(ajustes.encabezado_ip.lower(), "").strip()
+        if valor:
+            return valor
+    if ajustes.proxies_confianza:
+        lista = [x.strip() for x in peticion.headers.get("x-forwarded-for", "").split(",")
+                 if x.strip()]
+        if len(lista) >= ajustes.proxies_confianza:
+            return lista[-ajustes.proxies_confianza]
+    return peticion.client.host if peticion.client else "desconocida"
+
+
 class Contexto(SimpleNamespace):
     """Servicios, repositorios y dependencias de `crear_app`, con los mismos nombres."""
 

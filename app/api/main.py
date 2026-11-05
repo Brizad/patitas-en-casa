@@ -39,15 +39,17 @@ from app.adopciones.servicio import (
     ServicioAdopciones,
 )
 from app.ajustes import (
+    AjustesIp,
     cargar_ajustes,
     cargar_ajustes_admin,
     cargar_ajustes_correo,
     cargar_ajustes_datos,
     cargar_ajustes_demo,
+    cargar_ajustes_ip,
     cargar_ajustes_seguridad,
     cargar_ajustes_video,
 )
-from app.api.comun import Contexto
+from app.api.comun import Contexto, ip_del_cliente
 from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_adopciones import crear_rutas_adopciones
@@ -191,6 +193,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_fotos: RepositorioFotos | None = None,
               repositorio_videos: RepositorioVideos | None = None,
               repositorio_piloto: RepositorioPiloto | None = None,
+              ajustes_ip: AjustesIp | None = None,
               token_video: str | None = None,
               directorio_videos: str | None = None,
               revisar_videos_cada_s: float | None = config.REVISION_VIDEOS_SEGUNDOS) -> FastAPI:
@@ -374,6 +377,13 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def fichas_de(usuario: Usuario) -> RepositorioCupos:
         return (repositorio_cupos if usuario.refugio_id is None
                 else repositorio_cupos.para_refugio(usuario.refugio_id))
+
+    # A-04 / DT-11 (#278): de dónde sale la IP del cliente; sin ajustes, como siempre.
+    if ajustes_ip is None:
+        ajustes_ip = cargar_ajustes_ip() if motor is not None else AjustesIp()
+
+    def ip_de(peticion: Request) -> str:
+        return ip_del_cliente(peticion, ajustes_ip)
 
     # DT-13 (#267): lo armado hasta aquí, para los routers de cada módulo (app/api/rutas_*.py).
     ctx = Contexto(**{nombre: valor for nombre, valor in locals().items()

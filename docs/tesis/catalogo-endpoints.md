@@ -2,12 +2,13 @@
 
 # Catálogo de endpoints
 
-72 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+73 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
-| POST | `/auth/token` | público | 200, 401, 429 | DT-02, DT-06, RF-16 |
+| POST | `/auth/token` | público | 200, 401, 429 | A-04, DT-02, DT-06, RF-16 |
 | GET | `/auth/yo` | cualquier sesión | 200, 401 | — |
+| GET | `/admin/diagnostico/ip` | administrador | 200, 401, 403 | — |
 | GET | `/admin/usuarios` | administrador | 200, 401, 403 | — |
 | POST | `/admin/usuarios` | administrador | 201, 401, 403, 409, 422 | — |
 | PUT | `/admin/usuarios/{correo}/activo` | administrador | 200, 401, 403, 404, 409, 422 | RF-16 |

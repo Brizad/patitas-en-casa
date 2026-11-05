@@ -5,6 +5,7 @@ clave de firma de los tokens.
 """
 from __future__ import annotations
 
+import re
 from urllib.parse import quote
 
 from pydantic import SecretStr, ValidationError, field_validator
@@ -182,6 +183,42 @@ def cargar_ajustes_demo(archivo_env: str | None = ".env") -> AjustesDemo:
 
 def cargar_ajustes_datos(archivo_env: str | None = ".env") -> AjustesDatos:
     return _cargar(AjustesDatos, "PATITAS_", archivo_env)
+
+
+class AjustesIp(BaseSettings):
+    """A-04 / DT-11 (#278): de dónde sale la IP del cliente para los límites por IP.
+
+    - ``encabezado_ip``: un encabezado que escribe el proxy y pisa lo que mande el cliente
+      (en Render, ``CF-Connecting-IP`` según su guía). Vacío = no se usa.
+    - ``proxies_confianza``: cuántos proxies de confianza agregan su entrada al final de
+      ``X-Forwarded-For``; se toma la entrada N desde la derecha. 0 = la IP de la conexión
+      (lo de siempre). Ver docs/aprende/preguntas-para-brayan.md (P-17) para elegir el valor.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="PATITAS_", extra="ignore")
+
+    proxies_confianza: int = 0
+    encabezado_ip: str | None = None
+
+    @field_validator("proxies_confianza")
+    @classmethod
+    def _proxies_razonables(cls, valor: int) -> int:
+        if not 0 <= valor <= 5:
+            raise ValueError("entre 0 y 5 proxies")
+        return valor
+
+    @field_validator("encabezado_ip", mode="before")
+    @classmethod
+    def _nombre_de_encabezado(cls, valor):
+        if valor is None or (isinstance(valor, str) and not valor.strip()):
+            return None
+        if not re.fullmatch(r"[A-Za-z0-9-]{1,64}", valor.strip()):
+            raise ValueError("debe ser solo el nombre del encabezado, p. ej. CF-Connecting-IP")
+        return valor.strip()
+
+
+def cargar_ajustes_ip(archivo_env: str | None = ".env") -> AjustesIp:
+    return _cargar(AjustesIp, "PATITAS_", archivo_env)
 
 
 def cargar_ajustes_video(archivo_env: str | None = ".env") -> AjustesVideo:

@@ -36,6 +36,9 @@ from app.usuarios.servicio import (
     normalizar_correo,
 )
 
+ENCABEZADOS_DE_PROXY = ("x-forwarded-for", "x-forwarded-proto", "x-real-ip",
+                        "cf-connecting-ip", "true-client-ip", "forwarded", "cf-ray")
+
 logger = logging.getLogger("app.api.main")  # el mismo de antes: los logs no cambian
 
 
@@ -75,6 +78,7 @@ def _cuenta(usuario: Usuario) -> dict:
 # C901: como en crear_app, mccabe suma las rutas anidadas; cada una es sencilla.
 def crear_rutas_admin(ctx: Contexto) -> APIRouter:  # noqa: C901
     rutas = APIRouter()
+    ip_de = ctx.ip_de  # A-04 (#278)
     administracion = ctx.administracion
     emisor_tokens = ctx.emisor_tokens
     limite_intentos = ctx.limite_intentos
@@ -92,8 +96,8 @@ def crear_rutas_admin(ctx: Contexto) -> APIRouter:  # noqa: C901
         DT-06: con demasiados fallos recientes del correo o de la IP responde 429 sin mirar
         la contraseña, ni siquiera la correcta: así el atacante no sabe si acertó.
         """
-        # La IP es la de la conexión; X-Forwarded-For no se usa porque el cliente la inventa.
-        ip = peticion.client.host if peticion.client else "desconocida"
+        # A-04 (#278): la IP sale de ip_del_cliente (por defecto, la de la conexión).
+        ip = ip_de(peticion)
         claves = [clave_correo(normalizar_correo(formulario.username)), clave_ip(ip)]
         espera = limite_intentos.segundos_de_bloqueo(claves)
         if espera:
@@ -118,6 +122,21 @@ def crear_rutas_admin(ctx: Contexto) -> APIRouter:  # noqa: C901
     @rutas.get("/auth/yo")
     def mi_cuenta(usuario: Usuario = usuario_actual):
         return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value}
+
+    # A-04 / DT-11 (#278): para ver en producción qué encabezados de proxy llegan y elegir
+    # PATITAS_ENCABEZADO_IP o PATITAS_PROXIES_CONFIANZA. Solo estos encabezados: nunca
+    # cookies, tokens ni el resto de la petición.
+    @rutas.get("/admin/diagnostico/ip")
+    def diagnostico_de_ip(peticion: Request, _admin: Usuario = administracion):
+        encabezados = {n: peticion.headers.get(n) for n in ENCABEZADOS_DE_PROXY
+                       if peticion.headers.get(n)}
+        reenvio = [x.strip() for x in peticion.headers.get("x-forwarded-for", "").split(",")
+                   if x.strip()]
+        return {"ip_conexion": peticion.client.host if peticion.client else None,
+                "x_forwarded_for": reenvio, "encabezados": encabezados,
+                "ip_usada": ip_de(peticion),
+                "configuracion": {"proxies_confianza": ctx.ajustes_ip.proxies_confianza,
+                                  "encabezado_ip": ctx.ajustes_ip.encabezado_ip}}
 
     # --- Fase 1 (#67): administración de cuentas (RF-13, RF-16) -------------------------
 
