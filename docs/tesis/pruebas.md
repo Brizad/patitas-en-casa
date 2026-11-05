@@ -20,6 +20,7 @@ el CI en verde (`gh pr checks`).
 | Accesibilidad | Automática | axe-core y Lighthouse | Todas las pantallas, cada rol, modo claro y oscuro | `scripts/accesibilidad/revisar.mjs` |
 | Seguridad | Estática y dinámica | gitleaks, Ruff, OWASP ZAP | Secretos en el historial, complejidad ≤ 10, cabeceras y riesgos altos | `ci.yml`, `zap.yml` |
 | Carga | Medición | `prueba_carga.py` | RNF-01 y RNF-14 en local | `scripts/operacion/` |
+| Mutación | Calidad de las pruebas: ¿fallan si el código cambia? | mutmut 3 (WSL2) | Reglas de `app/triaje`, `app/cupos`, `app/rescates` y `app/adopciones/reglas.py` | `scripts/operacion/mutacion.sh` |
 | Nodo de video | Humo con videos reales de licencia libre | GitHub Actions | La tubería completa (MediaPipe + DeepLabCut) | `video-humo.yml` |
 
 ### Criterios de aceptación
@@ -48,6 +49,43 @@ Corrida del CI sobre `main` en el commit `ffde3c4` (run `41920309563`), resultad
 | e2e (Playwright) | **8 pasaron** | 17,2 s; job `e2e` |
 | axe-core | **50 revisiones, 0 fallas** | cada pantalla y rol, claro y oscuro |
 | Lighthouse | **100** en las 4 pantallas públicas | Inicio, Reportar, Consultar e Iniciar sesión |
+
+### Pruebas de mutación (5 de noviembre de 2026, #272)
+
+`mutmut` cambia el código a propósito (un `<` por `<=`, un `and` por `or`, borra una condición…)
+y corre las pruebas: si ninguna falla, el mutante **sobrevive** y hay un hueco en las pruebas.
+Puntaje = (muertos + timeouts) / (mutantes con pruebas). Corrida completa: **1 352 mutantes en
+837 s** (WSL2, 6 procesos), por eso no está en el CI (más de 10 minutos).
+
+| Módulo | Mutantes | Sin pruebas* | Muertos | Timeout | Sobreviven | Puntaje antes | Puntaje después |
+|---|---|---|---|---|---|---|---|
+| `app/triaje` | 414 | 0 | 333 | 64 | 17 | 95,2 % | **95,9 %** |
+| `app/cupos` | 358 | 259 | 84 | 11 | 4 | 84,8 % | **96,0 %** |
+| `app/rescates` | 564 | 195 | 315 | 23 | 31 | 88,1 % | **91,6 %** |
+| `app/adopciones/reglas.py` | 16 | 0 | 12 | 4 | 0 | 62,5 % | **100 %** |
+| **Total** | 1 352 | 454 | 744 | 102 | 52 | 90,5 % | **94,2 %** |
+
+\* Sobre todo los repositorios PostgreSQL: en WSL no hay base y sus pruebas se omiten; en el CI
+sí corren contra PostgreSQL (172 pruebas con el marcador `postgres`).
+
+**Huecos que encontró y que ahora cubre `tests/test_mutacion.py`** (33 de los 37 mutantes que
+sobrevivían en esas funciones mueren): ninguna prueba vigilaba la **regla del patio** de RN-05
+(quitar el `not` pasaba); el **empate de prioridad** entre texto y video (RN-07, `<` por `<=`);
+el **límite exacto** de letras de una nota clínica; que **otro rescatista** no pueda cerrar un
+rescate ajeno en camino (`and` por `or`); que se puedan elegir **las 10 comunas** (`<=` por `<`);
+y que en el escalamiento (RF-23) un caso ya tomado, aún no vencido o escalado por otro proceso
+**no frene a los demás** (`continue` por `break`).
+
+**Lo que sigue vivo, a propósito:** mutantes que solo cambian el texto de un mensaje interno y
+mutantes equivalentes (por ejemplo, pasar `None` como hora a un repositorio en memoria que no la
+guarda). Matarlos no protege ninguna regla.
+
+Cómo repetirlo (en WSL2 o Linux, con Python 3.12):
+
+```bash
+bash scripts/operacion/mutacion.sh
+cd ~/patitas-mut && mutmut browse   # recorre cada sobreviviente con su diff
+```
 
 ### Medido antes y que no se repitió hoy
 - RNF-01 y RNF-14 (carga): p95 = 2,84 s con 30 concurrentes y ≈ 58 000 reportes/hora, **en
