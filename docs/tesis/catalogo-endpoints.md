@@ -41,7 +41,7 @@
 | POST | `/reportes/{codigo}/descarte` | veterinario | 200, 401, 403, 404, 409, 422 | D-02 |
 | GET | `/reportes/{codigo}/avisos` | coordinador, veterinario | 200, 401, 403, 422 | — |
 | GET | `/reportes/{codigo}/decisiones` | coordinador, veterinario | 200, 401, 403, 422 | — |
-| GET | `/veterinario/historial` | veterinario | 200, 401, 403 | D-02 |
+| GET | `/veterinario/historial` | veterinario | 200, 401, 403 | D-02, DT-12 |
 | PUT | `/rescatistas/yo/disponibilidad` | rescatista | 200, 401, 403, 422 | — |
 | PUT | `/rescatistas/yo/zona` | rescatista | 200, 401, 403, 422 | — |
 | GET | `/rescatistas/yo` | rescatista | 200, 401, 403 | — |
@@ -52,6 +52,12 @@
 | POST | `/rescates/{codigo}/llegue` | rescatista | 200, 401, 403, 404, 409, 422 | — |
 | POST | `/rescates/{codigo}/liberar` | rescatista | 200, 401, 403, 404, 409, 422 | — |
 | POST | `/rescates/{codigo}/resultado` | rescatista | 200, 401, 403, 404, 409, 422 | — |
+| POST | `/refugio/ingresos` | coordinador | 201, 401, 403, 409, 422 | — |
+| GET | `/refugio/animales` | coordinador, veterinario | 200, 401, 403 | — |
+| GET | `/refugio/animales/{animal_id}` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |
+| POST | `/refugio/animales/{animal_id}/historial` | veterinario | 201, 401, 403, 404, 422 | — |
+| POST | `/refugio/animales/{animal_id}/egreso` | coordinador | 200, 401, 403, 404, 409, 422 | RF-26 |
+| GET | `/refugio/ocupacion` | coordinador, veterinario | 200, 401, 403 | — |
 | GET | `/indicadores` | administrador, alcaldia, coordinador | 200, 401, 403 | RF-30 |
 | GET | `/indicadores/reportes.csv` | administrador, alcaldia, coordinador | 200, 401, 403 | RF-31 |
 | GET | `/indicadores/fichas.csv` | administrador, alcaldia, coordinador | 200, 401, 403 | RF-31 |
@@ -72,9 +78,3 @@
 | GET | `/reportes/{codigo}/video` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |
 | GET | `/reportes/{codigo}/video/tira.png` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |
 | GET | `/reportes/{codigo}/video/vista.mp4` | coordinador, veterinario | 200, 401, 403, 404, 422 | RN-14 |
-| POST | `/refugio/ingresos` | coordinador | 201, 401, 403, 409, 422 | — |
-| GET | `/refugio/animales` | coordinador, veterinario | 200, 401, 403 | — |
-| GET | `/refugio/animales/{animal_id}` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |
-| POST | `/refugio/animales/{animal_id}/historial` | veterinario | 201, 401, 403, 404, 422 | — |
-| POST | `/refugio/animales/{animal_id}/egreso` | coordinador | 200, 401, 403, 404, 409, 422 | RF-26 |
-| GET | `/refugio/ocupacion` | coordinador, veterinario | 200, 401, 403 | — |

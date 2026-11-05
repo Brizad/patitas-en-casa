@@ -19,6 +19,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Pruebas de punta a punta (#233): `e2e/` con Playwright recorre en el navegador el flujo completo sobre una instancia real (API + PostgreSQL + panel compilado + PWA): reporte desde el teléfono (390 px), confirmación crítica, rescate, ingreso con código, historiales y seguimiento (RN-14), más los errores (descripción sin sentido, 401 y 403). Job `e2e` en el CI con capturas y trazas como artefacto si falla. Guía en `docs/aprende/e2e.md`.
 
 ### Cambiado
+- DT-13, paso 8, pagada (#267): las rutas del refugio (ingresos, animales, ficha clínica, egresos y ocupación) pasan a `app/api/rutas_refugio.py`. `main.py` queda en ~470 líneas (antes 1 487) y solo arma la app. `DEUDA_TECNICA.md` y `docs/tesis/c4.md` al día.
 - DT-13, paso 7 (#267): las rutas del rescatista (`/rescatistas/yo*`, `/rescates/*`) pasan a `app/api/rutas_rescates.py` con sus modelos y `_rescate`. Mismo contrato.
 - DT-13, paso 6 (#267): las rutas del triaje (`/cola`, confirmación, descarte, avisos, decisiones e historial del veterinario) pasan a `app/api/rutas_triaje.py`. Mismo contrato.
 - DT-13, paso 5 (#267): las rutas públicas del ciudadano (`POST /reportes`, `GET /reportes/{codigo}` y `/seguimiento`) pasan a `app/api/rutas_reportes.py` con `ReporteEntrada`, `ClaveIdempotencia` y `normalizar_contacto`. Mismo contrato.
