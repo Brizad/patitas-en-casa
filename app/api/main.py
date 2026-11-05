@@ -10,7 +10,6 @@ import hmac
 import logging
 import mimetypes
 import re
-import tempfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -30,25 +29,20 @@ from starlette.concurrency import run_in_threadpool
 from app import config
 from app.adopciones.fotos import (
     RepositorioFotos,
-    RepositorioFotosEnMemoria,
 )
-from app.adopciones.fotos_postgres import RepositorioFotosPostgres
-from app.adopciones.repositorio import RepositorioAdopciones, RepositorioAdopcionesEnMemoria
-from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
+from app.adopciones.repositorio import RepositorioAdopciones
 from app.adopciones.servicio import (
     ServicioAdopciones,
 )
 from app.ajustes import (
     AjustesIp,
     cargar_ajustes,
-    cargar_ajustes_admin,
     cargar_ajustes_correo,
-    cargar_ajustes_datos,
     cargar_ajustes_demo,
     cargar_ajustes_ip,
     cargar_ajustes_seguridad,
-    cargar_ajustes_video,
 )
+from app.api.armado import Repositorios, armar_repositorios, armar_video
 from app.api.comun import Contexto, ip_del_cliente
 from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
@@ -62,39 +56,30 @@ from app.api.seguridad import crear_dependencia_usuario, exigir_rol
 from app.api.video import crear_rutas_video
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.procesador import ProcesadorAvisos
-from app.avisos.repositorio import RepositorioAvisos, RepositorioAvisosEnMemoria
-from app.avisos.repositorio_postgres import RepositorioAvisosPostgres
-from app.bd.esquema import vistas_trozos
+from app.avisos.repositorio import RepositorioAvisos
 from app.bd.migraciones import verificar_migraciones
-from app.bitacora.repositorio import Evento, RepositorioBitacora, RepositorioBitacoraEnMemoria
-from app.bitacora.repositorio_postgres import RepositorioBitacoraPostgres
+from app.bitacora.repositorio import Evento, RepositorioBitacora
 from app.cupos.repositorio import RepositorioCupos
-from app.cupos.repositorio_postgres import RepositorioCuposPostgres
 from app.cupos.servicio import Notificador, ServicioCupos
 from app.demo import Dependencias, cargar_demo
 from app.dominio.modelos import (
     EstadoRescate,
     Prioridad,
-    Refugio,
     Reporte,
     Rol,
     Usuario,
 )
 from app.notificaciones.correo import crear_notificador
-from app.piloto.repositorio_postgres import RepositorioPilotoPostgres
-from app.piloto.servicio import RepositorioPiloto, RepositorioPilotoEnMemoria, ServicioPiloto
-from app.refugios.repositorio import RepositorioRefugios, RepositorioRefugiosEnMemoria
-from app.refugios.repositorio_postgres import RepositorioRefugiosPostgres
+from app.piloto.servicio import RepositorioPiloto, ServicioPiloto
+from app.refugios.repositorio import RepositorioRefugios
 from app.reportes.confirmacion import (
     ServicioConfirmacion,
 )
 from app.reportes.descarte import ServicioDescarte
 from app.reportes.repositorio import RepositorioReportes
-from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.reportes.servicio import ServicioReportes
 from app.rescates.escalamiento import repetir_cada, vigilar_escalamientos
-from app.rescates.repositorio import RepositorioRescates, RepositorioRescatesEnMemoria
-from app.rescates.repositorio_postgres import RepositorioRescatesPostgres
+from app.rescates.repositorio import RepositorioRescates
 from app.rescates.servicio import (
     ServicioRescates,
 )
@@ -102,20 +87,14 @@ from app.seguridad.cifrado import PREFIJO_AVISO, CanalConDescifrado, Cifrador
 from app.seguridad.tokens import EmisorTokens, TokenInvalido
 from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje
-from app.usuarios.admin_inicial import crear_admin_inicial
 from app.usuarios.intentos import (
     LimiteIntentos,
-    RepositorioIntentosEnMemoria,
 )
-from app.usuarios.intentos_postgres import RepositorioIntentosPostgres
 from app.usuarios.repositorio import RepositorioUsuarios
-from app.usuarios.repositorio_postgres import RepositorioUsuariosPostgres
 from app.usuarios.servicio import (
     ServicioUsuarios,
 )
-from app.video.almacen import AlmacenEnDisco, AlmacenEnPostgres
-from app.video.repositorio import RepositorioVideos, RepositorioVideosEnMemoria
-from app.video.repositorio_postgres import RepositorioVideosPostgres
+from app.video.repositorio import RepositorioVideos
 from app.video.servicio import ServicioVideo
 
 logger = logging.getLogger(__name__)
@@ -172,8 +151,8 @@ def emisor_desde_entorno() -> EmisorTokens:
     return EmisorTokens(ajustes.jwt_secreto.get_secret_value(), minutos=ajustes.jwt_minutos)
 
 
-# C901: crear_app es la «raíz de composición»: elige cada repositorio (memoria o PostgreSQL),
-# arma los servicios y los middlewares. Las rutas ya viven en app/api/rutas_*.py (DT-13, #267).
+# C901: crear_app es la «raíz de composición»: arma los servicios y los middlewares. Las rutas
+# viven en app/api/rutas_*.py (DT-13, #267) y los repositorios en app/api/armado.py (#282).
 def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
@@ -204,65 +183,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     pendientes cada «procesar_avisos_cada_s» (#63; None: solo a mano, como en las pruebas)."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
     notificador = notificador or crear_notificador(cargar_ajustes_correo())
-    motor = None
-    if repositorio is None or repositorio_cupos is None or repositorio_usuarios is None:
-        motor = motor_desde_entorno()
-        repositorio = repositorio or RepositorioPostgres(motor)
-        repositorio_cupos = repositorio_cupos or RepositorioCuposPostgres.primer_refugio(motor)
-        repositorio_usuarios = repositorio_usuarios or RepositorioUsuariosPostgres(motor)
-        # #67: en Render no hay consola; la primera cuenta de administración sale del entorno.
-        crear_admin_inicial(repositorio_usuarios, cargar_ajustes_admin())
-    # DT-06: con PostgreSQL el límite vale para todos los procesos y sobrevive a un reinicio.
-    limite_intentos = limite_intentos or LimiteIntentos(
-        RepositorioIntentosPostgres(motor) if motor is not None
-        else RepositorioIntentosEnMemoria())
-    repositorio_rescates = repositorio_rescates or (
-        RepositorioRescatesPostgres(motor) if motor is not None
-        else RepositorioRescatesEnMemoria())
-    # #63: los avisos viven en la misma base que los reportes (la confirmación los guarda).
-    repositorio_avisos = repositorio_avisos or (
-        RepositorioAvisosPostgres(motor) if motor is not None
-        else getattr(repositorio, "avisos", None) or RepositorioAvisosEnMemoria())
-    # #67 (RF-14): en memoria arranca con el refugio de los cupos (id 1), como la migración 0002.
-    if repositorio_refugios is None:
-        if motor is not None:
-            repositorio_refugios = RepositorioRefugiosPostgres(motor)
-        else:
-            demo = repositorio_cupos.refugio()
-            repositorio_refugios = RepositorioRefugiosEnMemoria(
-                [Refugio(demo.nombre, demo.capacidad, demo.ocupados, id=1)])
-    if cifrador is None and motor is not None:
-        clave_datos = cargar_ajustes_datos().clave_datos
-        cifrador = Cifrador(clave_datos.get_secret_value()) if clave_datos else None
-    if repositorio_adopciones is None and motor is not None:
-        # RNF-08 (#149): perfiles cifrados; los que estaban en claro se cifran al arrancar.
-        repositorio_adopciones = RepositorioAdopcionesPostgres(motor, cifrador)
-        cifrados = repositorio_adopciones.cifrar_perfiles_en_claro()
-        if cifrados:
-            logger.info("Perfiles de adoptante cifrados al arrancar: %d.", cifrados)
-    repositorio_adopciones = repositorio_adopciones or RepositorioAdopcionesEnMemoria(
-        repositorio_cupos)
-    repositorio_bitacora = repositorio_bitacora or (
-        RepositorioBitacoraPostgres(motor) if motor is not None
-        else RepositorioBitacoraEnMemoria())
-    repositorio_fotos = repositorio_fotos or (
-        RepositorioFotosPostgres(motor) if motor is not None else RepositorioFotosEnMemoria())
-    # #125: análisis de video con el trabajador local. Sin token, apagado (manda el texto).
-    repositorio_videos = repositorio_videos or (
-        RepositorioVideosPostgres(motor) if motor is not None else RepositorioVideosEnMemoria())
-    if motor is not None:
-        ajustes_video = cargar_ajustes_video()
-        token_video = token_video or (ajustes_video.video_token.get_secret_value()
-                                      if ajustes_video.video_token else None)
-        directorio_videos = directorio_videos or ajustes_video.video_dir
-    maximo_vista = config.VISTA_VIDEO_MAX_MB * 1024 * 1024
-    if motor is not None and not directorio_videos:
-        almacen_videos = AlmacenEnPostgres(motor)  # #188: sobrevive al reinicio de Render
-        almacen_vistas = AlmacenEnPostgres(motor, vistas_trozos, maximo_vista)  # #214
-    else:  # sin base (pruebas) o con VIDEO_DIR explícito: disco
-        carpeta_videos = directorio_videos or Path(tempfile.gettempdir()) / "patitas-videos"
-        almacen_videos = AlmacenEnDisco(carpeta_videos)
-        almacen_vistas = AlmacenEnDisco(carpeta_videos, maximo_vista, ".vista")
+    # #282: lo inyectado se usa tal cual; lo que falta sale de PostgreSQL (o de memoria).
+    dados = Repositorios(**{c: v for c, v in locals().items() if c in Repositorios._fields})
+    (repositorio, repositorio_cupos, repositorio_usuarios, limite_intentos, repositorio_rescates,
+     repositorio_avisos, repositorio_refugios, cifrador, repositorio_adopciones,
+     repositorio_bitacora, repositorio_fotos, repositorio_videos, repositorio_piloto), motor = (
+        armar_repositorios(dados, motor_desde_entorno))
+    token_video, almacen_videos, almacen_vistas = armar_video(motor, token_video,
+                                                           directorio_videos)
     videos = ServicioVideo(
         repositorio_videos, repositorio, almacen_videos, almacen_vistas=almacen_vistas,
         rescate_atendido=lambda codigo: (
@@ -466,8 +394,6 @@ def crear_app(repositorio: RepositorioReportes | None = None,  # noqa: C901
     def inicio():
         return FileResponse(CARPETA_INICIO / "index.html", media_type="text/html")
 
-    repositorio_piloto = repositorio_piloto or (
-        RepositorioPilotoPostgres(motor) if motor is not None else RepositorioPilotoEnMemoria())
     app.include_router(crear_rutas_piloto(ServicioPiloto(repositorio_piloto), administracion,
                                           ReporteEntrada))  # RNF-06 (#258)
     app.include_router(crear_rutas_video(videos, almacen_videos, token_video, personal,
