@@ -14,7 +14,9 @@ No necesita PostgreSQL: la app se arma con repositorios en memoria y solo se lee
 from __future__ import annotations
 
 import ast
+import importlib
 import inspect
+import pkgutil
 import re
 import textwrap
 from pathlib import Path
@@ -23,6 +25,7 @@ from fastapi.routing import APIRoute
 from sqlalchemy import CheckConstraint, Index, UniqueConstraint
 from sqlalchemy.dialects import postgresql
 
+import app.api as paquete_api
 from app.api import main as modulo_main
 from app.api import video as modulo_video
 from app.bd import esquema
@@ -220,7 +223,9 @@ def _rutas(rutas) -> list[APIRoute]:
 
 def generar_catalogo() -> str:
     app = _app()
-    locales = {**_funciones_locales(modulo_main), **_funciones_locales(modulo_video)}
+    locales = {}  # DT-13 (#267): las rutas viven en varios módulos de app/api
+    for modulo in pkgutil.iter_modules(paquete_api.__path__):
+        locales |= _funciones_locales(importlib.import_module(f"app.api.{modulo.name}"))
     filas = []
     for ruta in _rutas(app.routes):
         roles, sesion = _roles(ruta.dependant)
