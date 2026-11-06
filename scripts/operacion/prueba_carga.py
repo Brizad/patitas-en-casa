@@ -29,12 +29,15 @@ TEXTOS = ["Perro atropellado en la avenida, no se mueve y sangra mucho",
 
 
 def percentil(valores: list[float], p: float) -> float:
+    """Percentil p (0 < p ≤ 100) por rango más cercano: el menor valor que deja al menos
+    el p % de las mediciones por debajo o igual. p95 de 20 latencias = la 19.ª más rápida."""
     if not valores:
         raise ValueError("sin mediciones")
     if not 0 < p <= 100:
         raise ValueError("p debe estar entre 0 (excluido) y 100")
     ordenados = sorted(valores)
-    return ordenados[max(0, math.ceil(p / 100 * len(ordenados)) - 1)]
+    rango = math.ceil(p / 100 * len(ordenados))  # método del rango más cercano (1-indexado)
+    return ordenados[rango - 1]
 
 
 def main() -> None:
