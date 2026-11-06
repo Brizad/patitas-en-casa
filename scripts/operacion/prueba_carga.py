@@ -14,6 +14,7 @@ base real de reportes falsos):
 from __future__ import annotations
 
 import argparse
+import math
 import statistics
 import threading
 import time
@@ -28,8 +29,12 @@ TEXTOS = ["Perro atropellado en la avenida, no se mueve y sangra mucho",
 
 
 def percentil(valores: list[float], p: float) -> float:
+    if not valores:
+        raise ValueError("sin mediciones")
+    if not 0 < p <= 100:
+        raise ValueError("p debe estar entre 0 (excluido) y 100")
     ordenados = sorted(valores)
-    return ordenados[min(len(ordenados) - 1, int(round(p / 100 * len(ordenados))) - 1)]
+    return ordenados[max(0, math.ceil(p / 100 * len(ordenados)) - 1)]
 
 
 def main() -> None:
