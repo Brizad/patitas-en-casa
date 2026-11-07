@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import time
 from typing import Annotated
 
 from fastapi import (
@@ -21,6 +22,7 @@ from app.api.comun import Contexto, fecha_utc
 from app.dominio.modelos import (
     Ubicacion,
 )
+from app.observabilidad import evento, tracer
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido
 from app.usuarios.intentos import (
@@ -108,15 +110,25 @@ def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
                 contacto = cifrador.cifrar(normalizar_contacto(datos.contacto))
             except ValueError as error:
                 raise HTTPException(status_code=422, detail=str(error)) from error
-        try:
-            if clave is None:
-                r = reportes.registrar(datos.descripcion, ubicacion, *video)
-            else:
-                r, nuevo = reportes.registrar_una_vez(clave, datos.descripcion, ubicacion, *video)
-                if not nuevo:
-                    respuesta.status_code = status.HTTP_200_OK
-        except ReporteInvalido as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
+        with tracer.start_as_current_span("reportes.registrar") as span:
+            span.set_attribute("reporte.comuna", datos.comuna or 0)
+            span.set_attribute("reporte.con_video", datos.video_segundos is not None)
+            inicio = time.perf_counter()
+            try:
+                if clave is None:
+                    r = reportes.registrar(datos.descripcion, ubicacion, *video)
+                else:
+                    r, nuevo = reportes.registrar_una_vez(clave, datos.descripcion, ubicacion,
+                                                          *video)
+                    if not nuevo:
+                        respuesta.status_code = status.HTTP_200_OK
+            except ReporteInvalido as error:
+                span.set_attribute("reporte.resultado", "invalido")
+                evento("reporte_rechazado", motivo="validacion", comuna=datos.comuna)
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            span.set_attribute("reporte.estado", r.estado.value)
+            evento("reporte_creado", codigo=r.codigo, estado=r.estado.value, comuna=datos.comuna,
+                   duracion_ms=round((time.perf_counter() - inicio) * 1000, 1))
         if contacto and r.contacto_cifrado is None:
             r.contacto_cifrado = contacto
             repositorio.guardar(r)
