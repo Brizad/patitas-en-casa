@@ -21,6 +21,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from patitas_video import __version__
 from patitas_video.cliente import ApiNoDisponible, ClienteApi, TrabajoPerdido
 
 logger = logging.getLogger("patitas_video")
@@ -55,7 +56,12 @@ def procesar_uno(cliente: ClienteApi, analizar: Analizador) -> bool:
             return True
     if isinstance(resultado.get("tira"), bytes):
         resultado["tira_png_base64"] = base64.b64encode(resultado.pop("tira")).decode()
-    _subir_vista(cliente, id_, resultado)
+    # #231: el veterinario ve en el panel por qué no hay vista y qué versión del nodo analizó.
+    medidas = resultado.setdefault("medidas", {})
+    medidas["version_nodo"] = __version__
+    sin_vista = _subir_vista(cliente, id_, resultado)
+    if sin_vista:
+        medidas["sin_vista"] = sin_vista[:200]
     try:
         cliente.entregar(id_, resultado)
     except TrabajoPerdido as error:  # llegó tarde: el reclamo venció y lo tomó otro
@@ -63,20 +69,24 @@ def procesar_uno(cliente: ClienteApi, analizar: Analizador) -> bool:
     return True
 
 
-def _subir_vista(cliente: ClienteApi, id_: int, resultado: dict) -> None:
+def _subir_vista(cliente: ClienteApi, id_: int, resultado: dict) -> str | None:
     """La vista previa es opcional (#214): ningún error al subirla frena el resultado ni tumba
-    al nodo (#231), y el log dice siempre si se subió o por qué no."""
+    al nodo (#231), y el log dice siempre si se subió o por qué no. Devuelve ese porqué (None
+    si se subió) para que también llegue al panel."""
     vista, sin_vista = resultado.pop("vista", None), resultado.pop("sin_vista", None)
     if not isinstance(vista, bytes):
-        logger.warning("trabajo %s sin vista previa: %s", id_, sin_vista or "el análisis no "
-                       "la generó")
-        return
+        sin_vista = sin_vista or "el análisis no la generó"
+        logger.warning("trabajo %s sin vista previa: %s", id_, sin_vista)
+        return sin_vista
     try:  # antes del resultado: al entregarlo el trabajo se cierra
         cliente.subir_vista(id_, vista)
         logger.info("vista previa del trabajo %s subida (%d KB)", id_, len(vista) // 1024)
+        return None
     except Exception as error:  # 413, 415, un proxy que la bloquea, Render caído...
         logger.warning("vista previa del trabajo %s no subida: %s: %s", id_,
                        type(error).__name__, error)
+        return (f"la API no aceptó la vista ({len(vista) // 1024} KB): "
+                f"{type(error).__name__}: {error}")
 
 
 def trabajar(cliente: ClienteApi, analizar: Analizador, una_vez: bool = False,
@@ -126,7 +136,7 @@ def main() -> None:
                 print(f"Vista previa: {len(vista) // 1024} KB (usa --guardar-vista archivo.mp4 "
                       "para verla).")
             return
-        logger.info("trabajando contra %s", url)  # nunca se imprime el token
+        logger.info("nodo de video %s trabajando contra %s", __version__, url)  # sin token
         trabajar(ClienteApi(url, token), analizar, una_vez=opciones.una_vez)
     finally:
         analizar.cerrar()
