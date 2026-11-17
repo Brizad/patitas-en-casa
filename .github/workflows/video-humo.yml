@@ -1,14 +1,22 @@
 name: "Video: prueba de humo"
 
-# #125: corre el trabajador con los modelos reales (MediaPipe + DeepLabCut) sobre videos de
-# licencia libre. Se lanza a mano: instala ~3 GB y no hace falta en cada PR. No usa secretos
-# ni toca Render.
+# #125 y #231: corre el trabajador con los modelos reales (MediaPipe + DeepLabCut + ffmpeg).
+# Dos partes:
+#   1. Flujo completo contra una API local con PostgreSQL: el ciudadano sube un video, el nodo
+#      lo reclama, lo analiza, sube la vista previa y el veterinario la descarga. Usa un video
+#      de prueba generado con ffmpeg (sin animal: «no concluyente», el caso que se vio en
+#      producción) y falla si la vista no llega.
+#   2. Opcional: analiza los videos de licencia libre que se le pasen.
+# Se lanza a mano (instala ~3 GB) y los lunes. No usa secretos ni toca Render ni Neon.
 on:
   workflow_dispatch:
     inputs:
       videos:
-        description: "Enlaces de videos de licencia libre (CC0/CC-BY), separados por espacios"
-        required: true
+        description: "Opcional: enlaces de videos de licencia libre (CC0/CC-BY), separados por espacios"
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 11 * * 1"   # lunes 6:00 a. m. de Colombia
 
 permissions:
   contents: read
@@ -17,6 +25,22 @@ jobs:
   humo:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust   # base de usar y tirar, solo dentro de este job
+          POSTGRES_DB: patitas_humo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_DB: patitas_humo
+      PATITAS_DEMO_ACTIVA: "true"
     steps:
       - uses: actions/checkout@v6
 
@@ -27,12 +51,46 @@ jobs:
       - name: Instalar el trabajador
         working-directory: servicios/video
         run: |
-          # MediaPipe carga libEGL/libGLESv2 aunque corra en CPU; Ubuntu no las trae.
-          sudo apt-get update -qq && sudo apt-get install -y -qq libegl1 libgles2
+          # MediaPipe carga libEGL/libGLESv2 aunque corra en CPU; ffmpeg arma la vista previa.
+          sudo apt-get update -qq && sudo apt-get install -y -qq libegl1 libgles2 ffmpeg
           pip install torch==2.14.1 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
 
-      - name: Analizar cada video
+      # La API va en su propio entorno: sus librerías no se mezclan con las del trabajador.
+      - name: Instalar la API
+        run: |
+          python -m venv "$RUNNER_TEMP/api"
+          "$RUNNER_TEMP/api/bin/pip" install -q -r requirements.txt
+
+      # Claves aleatorias que viven solo en esta ejecución (nunca en el repositorio).
+      - name: Claves de la instancia
+        run: |
+          for nombre in POSTGRES_PASSWORD PATITAS_JWT_SECRETO PATITAS_CLAVE_DATOS \
+                        PATITAS_DEMO_CONTRASENA PATITAS_VIDEO_TOKEN; do
+            valor="$(openssl rand -hex 32)"
+            echo "::add-mask::$valor"
+            echo "$nombre=$valor" >> "$GITHUB_ENV"
+          done
+
+      - name: Migrar la base y arrancar la API
+        run: |
+          "$RUNNER_TEMP/api/bin/alembic" upgrade head
+          "$RUNNER_TEMP/api/bin/uvicorn" --factory app.api.main:crear_app --port 8010 > api.log 2>&1 &
+          curl -sf -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:8010/app/
+
+      - name: Flujo completo (subida, nodo, vista previa, veterinario)
+        run: |
+          ffmpeg -loglevel error -f lavfi -i testsrc=duration=6:size=640x360:rate=15 \
+            -pix_fmt yuv420p -c:v libx264 prueba.mp4
+          HUMO_CONTRASENA="$PATITAS_DEMO_CONTRASENA" python scripts/operacion/humo_video.py \
+            --api http://127.0.0.1:8010 --video prueba.mp4 --correo veterinaria@demo.patitas.co
+
+      - name: Log de la API si algo falló
+        if: failure()
+        run: tail -n 80 api.log
+
+      - name: Analizar cada video de licencia libre
+        if: inputs.videos != ''
         working-directory: servicios/video
         env:
           VIDEOS: ${{ inputs.videos }}
