@@ -63,6 +63,10 @@ class RepositorioAdopciones(Protocol):
 
     def seguimientos(self, solicitud_id: int) -> list[Seguimiento]: ...
 
+    def todos_los_seguimientos(self) -> list[Seguimiento]:
+        """Los de todas las solicitudes, por solicitud y por día, en una consulta."""
+        ...
+
     def pedir_visita(self, solicitud_id: int, por: str, nota: str, momento: datetime) -> bool:
         """RF-27: pendiente → visita. False si no estaba pendiente."""
         ...
@@ -160,6 +164,10 @@ class RepositorioAdopcionesEnMemoria:
 
     def seguimientos(self, solicitud_id: int) -> list[Seguimiento]:
         return [replace(x) for x in self._seguimientos if x.solicitud_id == solicitud_id]
+
+    def todos_los_seguimientos(self) -> list[Seguimiento]:
+        return sorted((replace(x) for x in self._seguimientos),
+                      key=lambda x: (x.solicitud_id, x.dia))
 
     def registrar_seguimiento(self, seguimiento_id: int, por: str, nota: str,
                               momento: datetime) -> Seguimiento | None:

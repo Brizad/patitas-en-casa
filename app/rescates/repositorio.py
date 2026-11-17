@@ -47,6 +47,10 @@ class RepositorioRescates(Protocol):
         """El rescate en curso o atendido del reporte (los liberados no cuentan)."""
         ...
 
+    def vigentes(self) -> list[Rescate]:
+        """Todos los rescates en curso o atendidos (sin los liberados), en una consulta."""
+        ...
+
     def activo_de(self, rescatista: str) -> Rescate | None: ...
 
     def historial_de(self, rescatista: str) -> list[Rescate]:
@@ -110,6 +114,9 @@ class RepositorioRescatesEnMemoria:
     def vigente(self, codigo: str) -> Rescate | None:
         rescate = self._vigentes.get(codigo)
         return replace(rescate) if rescate else None
+
+    def vigentes(self) -> list[Rescate]:
+        return [replace(r) for r in self._vigentes.values()]
 
     def _activo(self, rescatista: str) -> Rescate | None:
         return next((r for r in self._vigentes.values()

@@ -49,6 +49,11 @@ class RepositorioReportes(Protocol):
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]: ...
 
+    def ultimas_decisiones(self) -> dict[str, DecisionTriaje]:
+        """La decisión más reciente de cada reporte decidido, en una sola consulta (los
+        indicadores no deben preguntar reporte por reporte)."""
+        ...
+
     def decisiones_de(self, veterinario: str) -> list[DecisionTriaje]:
         """Confirmaciones y ajustes de un veterinario (historial del panel)."""
         ...
@@ -121,6 +126,9 @@ class RepositorioEnMemoria:
 
     def decisiones(self, codigo: str) -> list[DecisionTriaje]:
         return list(self._decisiones.get(codigo, []))
+
+    def ultimas_decisiones(self) -> dict[str, DecisionTriaje]:
+        return {codigo: lista[-1] for codigo, lista in self._decisiones.items() if lista}
 
     def decisiones_de(self, veterinario: str) -> list[DecisionTriaje]:
         return [d for lista in self._decisiones.values() for d in lista
