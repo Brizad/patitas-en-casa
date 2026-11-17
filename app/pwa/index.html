@@ -101,7 +101,8 @@
       </div>
       <button class="ds-btn ds-btn--pri ds-btn--grande" type="submit" id="enviar">Enviar reporte</button>
       <div id="mensaje-reporte" class="ds-msg" role="status" aria-live="polite" hidden></div>
-      <p class="mute pequeno centro">Sin conexión, el reporte se guarda y se envía solo al volver la señal.</p>
+      <!-- H-2: app.js lo muestra solo cuando el teléfono no tiene conexión. -->
+      <p class="mute pequeno centro" id="aviso-sin-conexion" role="status" hidden>Sin conexión: el reporte se guarda y se envía solo al volver la señal.</p>
     </form>
   </section>
 
@@ -117,6 +118,17 @@
       <div class="big" id="codigo-grande"></div>
     </div>
     <div class="ds-tarjeta"><span><b>Guárdalo:</b> con este código consultas el estado sin dar tu nombre ni tu número.</span></div>
+    <!-- H-1: qué hacer mientras llega ayuda. Texto fijo, igual para todos los reportes: no
+         revela nada de lo que decidió el triaje (RN-14). -->
+    <div class="ds-tarjeta" id="mientras-llega">
+      <h2 class="rotulo">Mientras llega ayuda</h2>
+      <ul class="consejos">
+        <li>Si puedes, quédate cerca y a una distancia segura: ayuda a encontrarlo.</li>
+        <li>No lo persigas ni lo acorrales: un animal herido o asustado puede morder.</li>
+        <li>No le des medicinas ni lo obligues a comer; déjale agua cerca si es posible.</li>
+      </ul>
+      <p class="mute pequeno">Son consejos generales, iguales para todos los reportes.</p>
+    </div>
     <div id="mensaje-codigo" class="ds-msg" role="status" aria-live="polite" hidden></div>
     <button class="ds-btn" type="button" id="copiar">Copiar código</button>
     <button class="ds-btn ds-btn--pri" type="button" id="ver-estado">Ver estado del reporte</button>
