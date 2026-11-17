@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
-  AnalisisVideo, ESPERA_ACTUALIZAR_MS, ESTADOS_VIDEO, analisisVideo, notaDeVista, sigueAnalizando,
-  urlTira, urlVista,
+  AnalisisVideo, ESPERA_ACTUALIZAR_MS, ESTADOS_VIDEO, EstadoNodo, analisisVideo, estadoNodo,
+  notaDeVista, notaDelNodo, sigueAnalizando, urlTira, urlVista,
 } from "./apiVideo";
 import { NOMBRE_PRIORIDAD, evidenciaLegible, nombreModelo, textoError } from "./mensajes";
 
@@ -16,6 +16,7 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
   const [tira, setTira] = useState("");
   const [vista, setVista] = useState("");
   const [falloVista, setFalloVista] = useState(false);
+  const [nodo, setNodo] = useState<EstadoNodo | null>(null);  // #231: ¿está encendido?
   const [vuelta, setVuelta] = useState(0);  // #231: vuelve a preguntar mientras se analiza
   const [error, setError] = useState("");
 
@@ -36,6 +37,7 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
       setAnalisis(a);
       if (a && sigueAnalizando(a.estado)) {
         reloj = setTimeout(() => setVuelta((v) => v + 1), ESPERA_ACTUALIZAR_MS);
+        estadoNodo(token).then((n) => vigente && setNodo(n));
       }
       if (a?.tiene_tira) {
         url = await urlTira(token, codigo);
@@ -77,6 +79,8 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
         <p className="ds-suave">El video no alcanzó para decidir: guíate por la descripción.</p>)}
       {analisis.estado === "pendiente" && (
         <p className="ds-suave">El análisis llega en unos minutos; puedes decidir sin esperarlo.</p>)}
+      {notaDelNodo(nodo, analisis) && (
+        <p className="ds-msg ds-msg--aviso" role="status">{notaDelNodo(nodo, analisis)}</p>)}
       {analisis.motivo && <p className="ds-suave">{analisis.motivo}</p>}
       {analisis.evidencias.length > 0 && (
         <ul className="evidencias">{analisis.evidencias.map((ev) => (
