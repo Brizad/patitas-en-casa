@@ -371,6 +371,8 @@
     const elegido = video;
     botonEnviar.disabled = true;
     botonEnviar.textContent = 'Enviando…';
+    const tardando = window.Patitas.DESPERTANDO + ' Tu reporte no se pierde.';
+    const yaRespondio = window.Patitas.avisarSiTarda(() => avisar(tardando));
     try {
       const resultado = guardado
         ? (await enviarPendientes()).get(pendiente.clave) || { tipo: 'esperar' }
@@ -397,6 +399,8 @@
           + 'Intenta de nuevo cuando vuelva la conexión.', true);
       }
     } finally {
+      yaRespondio();
+      if (mensaje.textContent === tardando) avisar('');
       botonEnviar.disabled = false;
       botonEnviar.textContent = 'Enviar reporte';
       pintarPendientes();

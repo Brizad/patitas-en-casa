@@ -32,6 +32,10 @@
 .centro { text-align: center; }
 .mute { color: var(--ds-suave); }
 .pequeno { font-size: var(--ds-t-xs); }
+/* H-1: consejos de «¡Gracias por avisar!». */
+.consejos { margin: var(--ds-e2) 0; padding-left: var(--ds-e5); display: grid; gap: var(--ds-e2); }
+#mientras-llega h2 { margin: 0; }
+#mientras-llega p { margin: 0; }
 .ds-msg.ds-msg--aviso { display: flex; flex-direction: column; gap: var(--ds-e2); align-items: flex-start; }
 .ds-btn--grande { width: 100%; }
 .pila > .ds-btn { width: 100%; }
