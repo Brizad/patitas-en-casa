@@ -2,7 +2,7 @@
 
 # Catálogo de endpoints
 
-73 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+74 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
@@ -76,6 +76,7 @@
 | POST | `/video/trabajos/{id_}/vista` | trabajador de video | 200, 401, 403, 404, 409, 410, 413, 415, 422, 503 | — |
 | POST | `/video/trabajos/{id_}/resultado` | trabajador de video | 200, 401, 403, 404, 409, 410, 422, 503 | — |
 | POST | `/video/trabajos/{id_}/fallo` | trabajador de video | 200, 401, 403, 404, 409, 410, 422, 503 | — |
+| GET | `/video/nodo` | coordinador, veterinario | 200, 401, 403 | — |
 | GET | `/reportes/{codigo}/video` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |
 | GET | `/reportes/{codigo}/video/tira.png` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |
 | GET | `/reportes/{codigo}/video/vista.mp4` | coordinador, veterinario | 200, 401, 403, 404, 422 | RN-14 |

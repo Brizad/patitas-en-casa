@@ -30,6 +30,15 @@ class VideoRechazado(Exception):
         self.estado_http = estado_http
 
 
+def version_al_dia(version: str | None) -> bool:
+    """#231: ¿el nodo corre al menos la versión que esta API espera? Sin versión, es viejo."""
+    try:
+        return (tuple(int(p) for p in (version or "").split("."))
+                >= tuple(int(p) for p in config.VERSION_MINIMA_NODO_VIDEO.split(".")))
+    except ValueError:
+        return False
+
+
 class AlmacenVideos(Protocol):
     def existe(self, ruta: str) -> bool: ...
     def borrar(self, ruta: str) -> None: ...
@@ -45,6 +54,32 @@ class ServicioVideo:
         self._vistas = almacen_vistas  # None: sin vista previa
         self._rescate_atendido = rescate_atendido or (lambda _codigo: False)
         self._reloj = reloj or (lambda: datetime.now(UTC))
+        # #231: último contacto del nodo. En memoria: el nodo consulta cada 15 s, así que tras
+        # un reinicio de la API se vuelve a saber enseguida.
+        self._contacto: datetime | None = None
+        self._version_nodo: str | None = None
+        self._ocupado_hasta: datetime | None = None
+
+    def latido(self, version: str | None, ocupado: bool | None = None) -> None:
+        """El nodo llamó. «ocupado»: reclamó un trabajo (True) o lo cerró (False)."""
+        self._contacto, self._version_nodo = self._reloj(), version
+        if ocupado is not None:
+            vence = timedelta(seconds=config.VENCIMIENTO_RECLAMO_VIDEO_S)
+            self._ocupado_hasta = self._contacto + vence if ocupado else None
+
+    def estado_nodo(self) -> dict:
+        """Mientras analiza (minutos) el nodo no llama: sigue en línea hasta que venza su
+        reclamo. Si no, en línea es haber llamado hace NODO_VIDEO_EN_LINEA_S o menos."""
+        ahora = self._reloj()
+        if self._contacto is None:
+            return {"ultimo_contacto": None, "segundos_sin_contacto": None, "version": None,
+                    "analizando": False, "en_linea": False, "al_dia": None}
+        segundos = int((ahora - self._contacto).total_seconds())
+        analizando = self._ocupado_hasta is not None and ahora < self._ocupado_hasta
+        return {"ultimo_contacto": self._contacto, "segundos_sin_contacto": segundos,
+                "version": self._version_nodo, "analizando": analizando,
+                "en_linea": analizando or segundos <= config.NODO_VIDEO_EN_LINEA_S,
+                "al_dia": version_al_dia(self._version_nodo)}
 
     def autorizar_subida(self, codigo: str, clave: str | None) -> None:
         """Antes de leer el archivo: solo quien creó el reporte, a tiempo y una sola vez."""

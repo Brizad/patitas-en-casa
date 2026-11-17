@@ -21,7 +21,8 @@ sudo apt-get install -y python3-venv python3-pip git libegl1 libgles2 ffmpeg
 
 paso "2/5 Código de Patitas en Casa en $CARPETA"
 if [ -d "$CARPETA/.git" ]; then
-  git -C "$CARPETA" pull --ff-only
+  # Si hay archivos copiados a mano, «pull» falla: arrancar_nodo.sh los guarda y actualiza.
+  git -C "$CARPETA" pull --ff-only || echo "No se pudo actualizar aquí; lo hará arrancar_nodo.sh."
 else
   git clone --depth 1 "$REPO_URL" "$CARPETA"
 fi
@@ -36,6 +37,10 @@ paso "4/5 Librerías de IA (unos 3 GB; la primera vez tarda)"
 "$ENTORNO/bin/pip" install -r "$CARPETA/servicios/video/requirements.txt"
 
 paso "5/5 Comprobación"
+# #231: con esta marca arrancar_nodo.sh sabe que esta carpeta es el nodo y la pone al día sola.
+mkdir -p "$HOME/.patitas-video"
+(cd "$CARPETA" && pwd) > "$HOME/.patitas-video/carpeta"
+command -v ffmpeg > /dev/null || { echo "Falta ffmpeg (sin él no hay vista previa)."; exit 1; }
 cd "$CARPETA/servicios/video"
 "$ENTORNO/bin/python" -c "import cv2, mediapipe, deeplabcut, patitas_video.adaptadores" \
   && echo "Listo. Para arrancar: bash $CARPETA/servicios/video/arrancar_nodo.sh"

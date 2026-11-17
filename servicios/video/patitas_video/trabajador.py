@@ -21,16 +21,46 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from patitas_video.cliente import ApiNoDisponible, ClienteApi, TrabajoPerdido
+from patitas_video import __version__
+from patitas_video.cliente import (
+    ApiNoDisponible,
+    ClienteApi,
+    PeticionRechazada,
+    TrabajoPerdido,
+)
 
 logger = logging.getLogger("patitas_video")
 ESPERA_SIN_TRABAJO_S = 15
 ESPERA_MAXIMA_S = 300
+# Render se reinicia en cada despliegue (1 a 3 min de 502): lo ya analizado no se tira por eso.
+ESPERAS_ENTREGA_S = (5, 15, 45, 120)
+
+
+def _con_reintentos(accion: Callable[[], object], que: str,
+                    dormir: Callable[[float], None]) -> object:
+    for espera in (*ESPERAS_ENTREGA_S, None):
+        try:
+            return accion()
+        except ApiNoDisponible as error:
+            if espera is None:
+                raise  # el reclamo vence y el trabajo se vuelve a ofrecer (falla segura)
+            logger.warning("%s: %s; reintento en %s s", que, error, espera)
+            dormir(espera)
+    return None
+
+
+def _fallar(cliente: ClienteApi, id_: int, motivo: str) -> None:
+    """Informar un fallo nunca tumba al nodo: si la API no lo acepta, el reclamo vence solo."""
+    try:
+        cliente.fallar(id_, motivo)
+    except (TrabajoPerdido, PeticionRechazada) as error:
+        logger.warning("no se pudo informar el fallo del trabajo %s: %s", id_, error)
 
 Analizador = Callable[[str], dict]
 
 
-def procesar_uno(cliente: ClienteApi, analizar: Analizador) -> bool:
+def procesar_uno(cliente: ClienteApi, analizar: Analizador,
+                 dormir: Callable[[float], None] = time.sleep) -> bool:
     """Un ciclo. True si había un trabajo (aunque haya fallado)."""
     trabajo = cliente.reclamar()
     if trabajo is None:
@@ -51,32 +81,47 @@ def procesar_uno(cliente: ClienteApi, analizar: Analizador) -> bool:
             raise
         except Exception as error:  # el análisis falló: se informa y la API reintenta
             logger.exception("trabajo %s falló", id_)
-            cliente.fallar(id_, f"{type(error).__name__}: {error}")
+            _fallar(cliente, id_, f"{type(error).__name__}: {error}")
             return True
     if isinstance(resultado.get("tira"), bytes):
         resultado["tira_png_base64"] = base64.b64encode(resultado.pop("tira")).decode()
-    _subir_vista(cliente, id_, resultado)
+    # #231: el veterinario ve en el panel por qué no hay vista y qué versión del nodo analizó.
+    medidas = resultado.setdefault("medidas", {})
+    medidas["version_nodo"] = __version__
+    sin_vista = _subir_vista(cliente, id_, resultado, dormir)
+    if sin_vista:
+        medidas["sin_vista"] = sin_vista[:200]
     try:
-        cliente.entregar(id_, resultado)
+        _con_reintentos(lambda: cliente.entregar(id_, resultado),
+                        f"entrega del trabajo {id_}", dormir)
     except TrabajoPerdido as error:  # llegó tarde: el reclamo venció y lo tomó otro
         logger.warning("resultado del trabajo %s no aceptado: %s", id_, error)
+    except PeticionRechazada as error:  # 422...: repetirlo igual no sirve; que la API decida
+        logger.error("resultado del trabajo %s rechazado: %s", id_, error)
+        _fallar(cliente, id_, f"resultado rechazado: {error}")
     return True
 
 
-def _subir_vista(cliente: ClienteApi, id_: int, resultado: dict) -> None:
+def _subir_vista(cliente: ClienteApi, id_: int, resultado: dict,
+                 dormir: Callable[[float], None] = time.sleep) -> str | None:
     """La vista previa es opcional (#214): ningún error al subirla frena el resultado ni tumba
-    al nodo (#231), y el log dice siempre si se subió o por qué no."""
+    al nodo (#231), y el log dice siempre si se subió o por qué no. Devuelve ese porqué (None
+    si se subió) para que también llegue al panel."""
     vista, sin_vista = resultado.pop("vista", None), resultado.pop("sin_vista", None)
     if not isinstance(vista, bytes):
-        logger.warning("trabajo %s sin vista previa: %s", id_, sin_vista or "el análisis no "
-                       "la generó")
-        return
+        sin_vista = sin_vista or "el análisis no la generó"
+        logger.warning("trabajo %s sin vista previa: %s", id_, sin_vista)
+        return sin_vista
     try:  # antes del resultado: al entregarlo el trabajo se cierra
-        cliente.subir_vista(id_, vista)
+        _con_reintentos(lambda: cliente.subir_vista(id_, vista),
+                        f"vista previa del trabajo {id_}", dormir)
         logger.info("vista previa del trabajo %s subida (%d KB)", id_, len(vista) // 1024)
+        return None
     except Exception as error:  # 413, 415, un proxy que la bloquea, Render caído...
         logger.warning("vista previa del trabajo %s no subida: %s: %s", id_,
                        type(error).__name__, error)
+        return (f"la API no aceptó la vista ({len(vista) // 1024} KB): "
+                f"{type(error).__name__}: {error}")
 
 
 def trabajar(cliente: ClienteApi, analizar: Analizador, una_vez: bool = False,
@@ -90,6 +135,11 @@ def trabajar(cliente: ClienteApi, analizar: Analizador, una_vez: bool = False,
             hubo = False
             espera = min(espera * 2, ESPERA_MAXIMA_S)  # espera creciente si Render no responde
             logger.warning("%s; reintento en %s s", error, espera)
+        except PermissionError:
+            raise  # token malo: seguir no arregla nada; main() lo dice claro
+        except Exception:  # un nodo que nadie mira no puede morirse por un caso raro
+            hubo = False
+            logger.exception("ciclo con un error inesperado; el nodo sigue")
         if una_vez:
             return
         if not hubo:
@@ -126,7 +176,7 @@ def main() -> None:
                 print(f"Vista previa: {len(vista) // 1024} KB (usa --guardar-vista archivo.mp4 "
                       "para verla).")
             return
-        logger.info("trabajando contra %s", url)  # nunca se imprime el token
+        logger.info("nodo de video %s trabajando contra %s", __version__, url)  # sin token
         trabajar(ClienteApi(url, token), analizar, una_vez=opciones.una_vez)
     finally:
         analizar.cerrar()

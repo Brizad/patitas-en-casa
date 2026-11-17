@@ -18,6 +18,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app import config
+from app.api.comun import fecha_utc
 from app.dominio.modelos import Prioridad
 from app.video.almacen import MAX_BYTES, AlmacenEnDisco, AlmacenEnPostgres, ArchivoInvalido
 from app.video.modelos import ResultadoVideo, TrabajoVideo
@@ -77,11 +78,14 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
         except VideoRechazado as error:
             raise HTTPException(error.estado_http, str(error)) from error
 
-    def trabajador(x_video_token: Annotated[str | None, Header()] = None) -> None:
+    def trabajador(x_video_token: Annotated[str | None, Header()] = None,
+                   x_video_nodo: Annotated[str | None, Header(max_length=20)] = None) -> str:
         if not token:
             raise HTTPException(503, "El análisis de video no está activado.")
         if not x_video_token or not hmac.compare_digest(x_video_token, token):
             raise HTTPException(401, "Token del trabajador de video inválido.")
+        servicio.latido(x_video_nodo)  # #231: el nodo está vivo y dice su versión
+        return x_video_nodo or ""
 
     solo_trabajador = [Depends(trabajador)]
 
@@ -104,10 +108,11 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
         return {"estado": "pendiente", "mensaje": "Video recibido, se está analizando."}
 
     @rutas.post("/video/trabajos/reclamar", dependencies=solo_trabajador)
-    def reclamar_trabajo():
+    def reclamar_trabajo(nodo: str = Depends(trabajador)):
         trabajo = servicio.reclamar()
         if trabajo is None:
             return Response(status_code=204)
+        servicio.latido(nodo or None, ocupado=True)
         return {"id": trabajo.id, "codigo": trabajo.codigo, "bytes": trabajo.bytes}
 
     @rutas.get("/video/trabajos/{id_}/archivo", dependencies=solo_trabajador)
@@ -130,13 +135,25 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
         return {"bytes": tamano}
 
     @rutas.post("/video/trabajos/{id_}/resultado", dependencies=solo_trabajador)
-    def entregar_resultado(id_: int, datos: ResultadoEntrada):
+    def entregar_resultado(id_: int, datos: ResultadoEntrada,
+                           nodo: str = Depends(trabajador)):
         trabajo = _ejecutar(servicio.terminar, id_, _resultado(datos))
+        servicio.latido(nodo or None, ocupado=False)
         return {"estado": trabajo.estado.value, "discrepancia": trabajo.discrepancia}
 
     @rutas.post("/video/trabajos/{id_}/fallo", dependencies=solo_trabajador)
-    def informar_fallo(id_: int, datos: FalloEntrada):
-        return {"estado": _ejecutar(servicio.fallar, id_, datos.motivo).estado.value}
+    def informar_fallo(id_: int, datos: FalloEntrada,
+                       nodo: str = Depends(trabajador)):
+        estado = _ejecutar(servicio.fallar, id_, datos.motivo).estado.value
+        servicio.latido(nodo or None, ocupado=False)
+        return {"estado": estado}
+
+    @rutas.get("/video/nodo", dependencies=[personal])
+    def estado_del_nodo():
+        """#231: ¿el equipo que analiza los videos está encendido y con el código al día?"""
+        estado = servicio.estado_nodo()
+        return {"activado": bool(token), "version_minima": config.VERSION_MINIMA_NODO_VIDEO,
+                **estado, "ultimo_contacto": fecha_utc(estado["ultimo_contacto"])}
 
     @rutas.get("/reportes/{codigo}/video", dependencies=[personal])
     def video_del_reporte(codigo: str):
