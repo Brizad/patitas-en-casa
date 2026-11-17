@@ -2,6 +2,10 @@
 
 Se activa con PATITAS_OBSERVABILIDAD=1. Nunca registra datos personales: ni descripción,
 ni coordenadas, ni dirección, ni contacto (Ley 1581 de 2012, RN-14).
+
+Apagada (por defecto) no carga el SDK ni el exportador: solo la API de trazas, que sin
+proveedor no hace nada. `/metrics` solo existe con PATITAS_METRICAS_TOKEN: sin token no se
+expone (falla segura), nunca queda pública.
 """
 from __future__ import annotations
 
@@ -14,14 +18,6 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from opentelemetry import metrics, trace
-from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation, View
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 CAMPOS_PROHIBIDOS = {"descripcion", "direccion", "latitud", "longitud", "contacto",
                      "correo", "clave", "contrasena", "token", "cedula"}
@@ -29,6 +25,7 @@ BORDES_MS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
 
 tracer = trace.get_tracer("patitas")
 log = logging.getLogger("patitas.eventos")
+_configurado = False  # los proveedores de OpenTelemetry son globales: una vez por proceso
 
 
 class FormatoJSON(logging.Formatter):
@@ -45,6 +42,19 @@ class FormatoJSON(logging.Formatter):
 
 
 def _configurar() -> None:
+    global _configurado
+    if _configurado:
+        return
+    _configurado = True
+    # Aquí y no arriba: apagada, la API no carga el SDK (memoria y arranque en Render gratis).
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation, View
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+    from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
+
     recurso = Resource.create({"service.name": "patitas-en-casa",
                                "deployment.environment": os.getenv("PATITAS_ENTORNO", "local")})
     muestreo = float(os.getenv("PATITAS_OTEL_MUESTREO", "0.1"))   # 10 % de las trazas
@@ -95,10 +105,16 @@ def instrumentar(app: FastAPI) -> None:
         peticiones.add(1, etiquetas)
         return respuesta
 
+    if not token_metricas:
+        log.warning("metricas_sin_token")  # sin token no hay /metrics: nunca queda pública
+        return
+
     @app.get("/metrics", include_in_schema=False)
     def exponer_metricas(request: Request):
+        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
         enviado = request.headers.get("authorization", "").removeprefix("Bearer ")
-        if token_metricas and not secrets.compare_digest(enviado, token_metricas):
+        if not secrets.compare_digest(enviado.encode(), token_metricas.encode()):
             return PlainTextResponse("No autorizado", status_code=401)
         return PlainTextResponse(generate_latest().decode(), media_type=CONTENT_TYPE_LATEST)
 

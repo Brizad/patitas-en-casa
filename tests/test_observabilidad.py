@@ -49,3 +49,44 @@ def test_metricas_protegidas_y_sin_codigos_de_reporte(monkeypatch):
 
 def test_evento_no_falla_sin_observabilidad():
     evento("prueba", codigo="X")
+
+
+def _app(monkeypatch, **entorno):
+    for nombre in ("PATITAS_OBSERVABILIDAD", "PATITAS_METRICAS_TOKEN"):
+        monkeypatch.delenv(nombre, raising=False)
+    for nombre, valor in entorno.items():
+        monkeypatch.setenv(nombre, valor)
+    cupos = RepositorioCuposEnMemoria(Refugio("Refugio demo Cúcuta", capacidad=40))
+    return crear_app(RepositorioEnMemoria(), cupos,
+                     repositorio_usuarios=RepositorioUsuariosEnMemoria(),
+                     emisor_tokens=EmisorTokens("secreto-de-pruebas-con-mas-de-32-caracteres"))
+
+
+def test_apagada_por_defecto_no_hay_metricas_y_el_contrato_no_cambia(monkeypatch):
+    apagada = _app(monkeypatch)
+    assert TestClient(apagada).get("/metrics").status_code == 404
+    encendida = _app(monkeypatch, PATITAS_OBSERVABILIDAD="1", PATITAS_METRICAS_TOKEN="t" * 32)
+    assert apagada.openapi() == encendida.openapi()  # /metrics no entra al OpenAPI
+
+
+def test_sin_token_las_metricas_no_se_exponen_aunque_este_activada(monkeypatch):
+    """Falla segura: activar la observabilidad y olvidar el token no deja /metrics pública."""
+    c = TestClient(_app(monkeypatch, PATITAS_OBSERVABILIDAD="1"))
+    assert c.get("/metrics").status_code == 404
+    assert c.get("/metrics", headers={"Authorization": "Bearer "}).status_code == 404
+
+
+def test_un_token_con_tildes_no_rompe_la_comparacion(monkeypatch):
+    c = TestClient(_app(monkeypatch, PATITAS_OBSERVABILIDAD="1", PATITAS_METRICAS_TOKEN="t" * 32))
+    raro = "Bearer ñandú".encode("latin-1")  # así llega del navegador un encabezado con tildes
+    assert c.get("/metrics", headers={"Authorization": raro}).status_code == 401
+
+
+def test_apagada_no_se_carga_el_sdk_de_opentelemetry():
+    import subprocess
+    import sys
+    codigo = ("import sys, app.observabilidad; "
+              "print(any(m.startswith(('opentelemetry.sdk', 'prometheus_client')) "
+              "for m in sys.modules))")
+    assert subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True,
+                          check=True).stdout.strip() == "False"

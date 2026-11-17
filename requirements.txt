@@ -8,7 +8,7 @@ argon2-cffi==25.1.0
 pyjwt==2.15.1
 python-multipart==0.0.32
 cryptography==50.0.0
-opentelemetry-sdk==1.37.0
-opentelemetry-exporter-prometheus==0.58b0
-opentelemetry-exporter-otlp-proto-http==1.37.0
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-prometheus==0.66b2
+opentelemetry-exporter-otlp-proto-http==1.45.2
 prometheus-client==0.26.0
