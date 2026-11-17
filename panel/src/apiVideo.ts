@@ -37,8 +37,58 @@ export function notaDeVista(analisis: AnalisisVideo, falloAlCargar: boolean): st
       "reporte; si sigue igual, avisa al administrador." : null;
   }
   if (analisis.estado === "terminado" || analisis.estado === "no_concluyente") {
+    const motivo = analisis.medidas.sin_vista;
+    if (typeof motivo === "string" && motivo) {
+      return `Este análisis no trae vista previa: ${motivo}.`;
+    }
+    // Desde la versión 1.3.0 el equipo de análisis siempre dice su versión y el motivo.
     return "Este análisis no trae vista previa del video (el equipo que analiza no la generó " +
-      "o ya se borró).";
+      "o ya se borró)." + (analisis.medidas.version_nodo ? "" :
+      " Lo analizó un equipo con una versión antigua: pídele al administrador que lo actualice.");
+  }
+  return null;
+}
+
+/** #231: el equipo (nodo) que analiza los videos: ¿está encendido y con el código al día? */
+export interface EstadoNodo {
+  activado: boolean;
+  version_minima: string;
+  ultimo_contacto: string | null;
+  segundos_sin_contacto: number | null;
+  version: string | null;
+  analizando: boolean;
+  en_linea: boolean;
+  al_dia: boolean | null;
+}
+
+/** null si no se pudo saber (una API anterior, sin red): la pantalla sigue igual. */
+export async function estadoNodo(token: string): Promise<EstadoNodo | null> {
+  try {
+    return await pedir<EstadoNodo>("/video/nodo", {}, token);
+  } catch {
+    return null;
+  }
+}
+
+export function haceCuanto(segundos: number): string {
+  if (segundos < 60) return "hace menos de 1 min";
+  if (segundos < 3600) return `hace ${Math.floor(segundos / 60)} min`;
+  return `hace ${Math.floor(segundos / 3600)} h`;
+}
+
+/** Qué decirle al veterinario mientras el video espera (null: nada que decir). */
+export function notaDelNodo(nodo: EstadoNodo | null, analisis: AnalisisVideo): string | null {
+  if (!nodo || !nodo.activado || !sigueAnalizando(analisis.estado)) return null;
+  if (!nodo.en_linea) {
+    const cuando = nodo.segundos_sin_contacto === null ? "no ha respondido desde que el " +
+      "servidor arrancó" : `respondió por última vez ${haceCuanto(nodo.segundos_sin_contacto)}`;
+    return `El equipo que analiza los videos está apagado (${cuando}). El análisis llegará ` +
+      "cuando lo enciendan; decide con la descripción.";
+  }
+  if (nodo.al_dia === false) {
+    return "El equipo que analiza los videos corre una versión antigua" +
+      (nodo.version ? ` (${nodo.version})` : "") + ": puede que el análisis llegue sin vista " +
+      "previa. Pídele al administrador que lo actualice.";
   }
   return null;
 }
