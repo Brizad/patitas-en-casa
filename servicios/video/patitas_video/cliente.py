@@ -21,6 +21,10 @@ class TrabajoPerdido(RuntimeError):
     """El trabajo ya no existe, ya se cerró o su video se perdió: se pasa al siguiente."""
 
 
+class PeticionRechazada(RuntimeError):
+    """La API entendió la petición y dijo que no (4xx): repetirla igual no sirve."""
+
+
 class ClienteApi:
     def __init__(self, url: str, token: str, http: httpx.Client | None = None,
                  espera_s: float = 90) -> None:
@@ -43,7 +47,9 @@ class ClienteApi:
             raise PermissionError("PATITAS_VIDEO_TOKEN no coincide con el de Render.")
         if respuesta.status_code in (404, 409, 410):
             raise TrabajoPerdido(respuesta.json().get("detail", str(respuesta.status_code)))
-        respuesta.raise_for_status()
+        if respuesta.status_code >= 400:
+            raise PeticionRechazada(f"la API respondió {respuesta.status_code}: "
+                                    f"{respuesta.text[:200]}")
         return respuesta
 
     def reclamar(self) -> dict | None:
