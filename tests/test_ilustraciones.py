@@ -68,10 +68,11 @@ def test_el_panel_muestra_el_icono_del_rol_en_la_cabecera():
     assert "/diseno/roles/${cuenta.rol}.svg" in app
 
 
-def test_la_portada_tiene_su_ilustracion_decorativa(c):
+def test_la_portada_tiene_su_dibujo_decorativo(c):
+    # #328: la ilustración de la portada se cambió por el rastro de huellas (dibujado en línea).
     html = c.get("/").text
-    assert '<img class="ilustracion" src="/diseno/ilustraciones/portada.svg" alt=""' in html
-    assert c.get("/diseno/ilustraciones/portada.svg").status_code == 200
+    assert re.search(r'<svg class="rastro"[^>]*aria-hidden="true"', html)
+    assert "/diseno/ilustraciones/portada.svg" not in html
 
 
 def test_los_estados_vacios_del_panel_tienen_ilustracion():

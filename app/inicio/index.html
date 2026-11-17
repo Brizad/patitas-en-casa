@@ -24,19 +24,64 @@
   <!-- #145: página de inicio pública. Sin JavaScript: la misma CSP estricta de la PWA. -->
   <section class="portada" aria-labelledby="titulo">
     <p class="etiqueta">Emergencias animales en Cúcuta</p>
-    <h1 id="titulo">Un animal herido <span class="subrayado">no debería esperar</span> a que alguien conteste un chat.</h1>
-    <p class="entrada">Patitas en Casa conecta a quien lo encuentra con el veterinario, el
-      rescatista y el refugio, en orden de gravedad. Sin crear cuenta.</p>
-    <nav class="acciones" aria-label="Acciones principales">
-      <a class="boton urgente" href="/app/#reportar">Reportar emergencia</a>
-      <a class="boton" href="/panel/#registro">Adoptar</a>
-      <a class="boton secundario" href="/panel/">Entrar como personal</a>
-    </nav>
-    <ul class="confianza" aria-label="Por qué confiar">
-      <li>Sin crear cuenta</li><li>El veterinario siempre confirma</li><li>Datos de contacto cifrados</li>
-    </ul>
-    <img class="ilustracion" src="/diseno/ilustraciones/portada.svg" alt="" width="480" height="400">
+    <h1 id="titulo"><span class="linea tenue">Un animal herido,</span> <span class="linea">no debería esperar.</span></h1>
+    <p class="entrada">Repórtalo en un minuto y sin crear cuenta: el veterinario lo revisa por
+      gravedad y el rescate se ofrece a quien está cerca.</p>
+    <a class="boton urgente" href="/app/#reportar">Reportar emergencia</a>
+    <p class="otras"><a href="/panel/#registro">Adoptar</a><span aria-hidden="true"> · </span><a href="/panel/">Entrar como personal</a></p>
   </section>
+
+  <!-- #328: un perro y un gato caminan juntos por la curva. Decorativo; posiciones de
+       scripts/diseno/rastro.py y la caminata en inicio.css (quieta con movimiento reducido). -->
+  <div class="recorrido">
+    <svg class="rastro" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <defs>
+        <g id="huella-perro"><path d="M0 2c7 0 11 6 11 10s-4 5-7 4c-2-.6-6-.6-8 0-3 1-7 0-7-4s4-10 11-10z"/>
+          <ellipse cx="-10" cy="-3" rx="3.2" ry="4.4" transform="rotate(-22 -10 -3)"/><ellipse cx="-4" cy="-9" rx="3.4" ry="4.6"/>
+          <ellipse cx="4" cy="-9" rx="3.4" ry="4.6"/><ellipse cx="10" cy="-3" rx="3.2" ry="4.4" transform="rotate(22 10 -3)"/>
+          <path d="M-13.4-8.6l.2-3.6 2.4 2.7zM-5.2-14.4l1.2-3.4 1.2 3.4zM2.8-14.4l1.2-3.4 1.2 3.4zM10.8-9.5l2.4-2.7.2 3.6z"/></g>
+        <g id="huella-gato"><path d="M0 1c6 0 9 5 9 8.5s-3 4.5-5.5 3.5c-2-.6-5-.6-7 0-2.5 1-5.5 0-5.5-3.5s3-8.5 9-8.5z"/>
+          <circle cx="-8" cy="-3" r="3.1"/><circle cx="-3" cy="-7.6" r="3.2"/><circle cx="3" cy="-7.6" r="3.2"/><circle cx="8" cy="-3" r="3.1"/></g>
+        <clipPath id="recorte-banda"><rect x="848" y="12" width="264" height="296" rx="48"/></clipPath>
+      </defs>
+      <rect class="banda-fondo" x="848" y="12" width="264" height="296" rx="48"/>
+        <path class="camino" d="M-40 270C240 10 470 330 720 170S1200 320 1480 70"/>
+        <g transform="translate(63 141) rotate(75) scale(1.5)"><use class="perro t0" href="#huella-perro"/></g>
+        <g transform="translate(198 140) rotate(80) scale(1.5)"><use class="perro t2" href="#huella-perro"/></g>
+        <g transform="translate(326 124) rotate(109) scale(1.5)"><use class="perro t3" href="#huella-perro"/></g>
+        <g transform="translate(436 177) rotate(94) scale(1.5)"><use class="perro t4" href="#huella-perro"/></g>
+        <g transform="translate(549 165) rotate(100) scale(1.5)"><use class="perro t6" href="#huella-perro"/></g>
+        <g transform="translate(882 98) rotate(81) scale(1.5)"><use class="perro t9 banda" href="#huella-perro"/></g>
+        <g transform="translate(1010 84) rotate(109) scale(1.5)"><use class="perro t11 banda" href="#huella-perro"/></g>
+        <g transform="translate(1119 135) rotate(93) scale(1.5)"><use class="perro t12" href="#huella-perro"/></g>
+        <g transform="translate(1232 120) rotate(98) scale(1.5)"><use class="perro t13" href="#huella-perro"/></g>
+        <g transform="translate(1341 129) rotate(62) scale(1.5)"><use class="perro t14" href="#huella-perro"/></g>
+        <g transform="translate(1419 53) rotate(61) scale(1.5)"><use class="perro t15" href="#huella-perro"/></g>
+        <g transform="translate(36 270) rotate(46) scale(1.25)"><use class="gato t0" href="#huella-gato"/></g>
+        <g transform="translate(105 210) rotate(78) scale(1.25)"><use class="gato t1" href="#huella-gato"/></g>
+        <g transform="translate(195 212) rotate(79) scale(1.25)"><use class="gato t2" href="#huella-gato"/></g>
+        <g transform="translate(287 198) rotate(107) scale(1.25)"><use class="gato t3" href="#huella-gato"/></g>
+        <g transform="translate(379 238) rotate(95) scale(1.25)"><use class="gato t4" href="#huella-gato"/></g>
+        <g transform="translate(483 239) rotate(107) scale(1.25)"><use class="gato t5" href="#huella-gato"/></g>
+        <g transform="translate(591 264) rotate(77) scale(1.25)"><use class="gato t6" href="#huella-gato"/></g>
+        <g transform="translate(870 150) rotate(95) scale(1.25)"><use class="gato t9 banda" href="#huella-gato"/></g>
+        <g transform="translate(961 176) rotate(91) scale(1.25)"><use class="gato t10 banda" href="#huella-gato"/></g>
+        <g transform="translate(1060 176) rotate(110) scale(1.25)"><use class="gato t11 banda" href="#huella-gato"/></g>
+        <g transform="translate(1159 215) rotate(89) scale(1.25)"><use class="gato t12" href="#huella-gato"/></g>
+        <g transform="translate(1267 198) rotate(93) scale(1.25)"><use class="gato t14" href="#huella-gato"/></g>
+        <g transform="translate(1379 191) rotate(60) scale(1.25)"><use class="gato t15" href="#huella-gato"/></g>
+      <path class="camino sobre-banda" clip-path="url(#recorte-banda)" d="M-40 270C240 10 470 330 720 170S1200 320 1480 70"/>
+      <g class="onda" transform="translate(648 144)"><rect class="pildora-onda" width="144" height="52" rx="26"/>
+        <rect x="30" y="18" width="6" height="16" rx="3"/><rect x="44" y="12" width="6" height="28" rx="3"/><rect x="58" y="16" width="6" height="20" rx="3"/>
+        <rect x="72" y="10" width="6" height="32" rx="3"/><rect x="86" y="16" width="6" height="20" rx="3"/><rect x="100" y="12" width="6" height="28" rx="3"/>
+        <rect x="114" y="18" width="6" height="16" rx="3"/></g>
+    </svg>
+    <input class="pausa" type="checkbox" id="pausar">
+    <label class="pausa-etiqueta" for="pausar">Pausar animaciones</label>
+  </div>
+  <ul class="confianza" aria-label="Por qué confiar">
+    <li>Sin crear cuenta</li><li>El veterinario siempre confirma</li><li>Datos de contacto cifrados</li>
+  </ul>
 
   <section class="camara" aria-labelledby="titulo-problema">
     <h2 id="titulo-problema">El problema</h2>
