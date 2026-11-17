@@ -204,3 +204,46 @@ def test_los_enlaces_con_forma_de_boton_no_toman_el_color_de_enlace():
     no debe ganarle al botón (antes salía en verde)."""
     css = (CARPETA_PWA.parent / "diseno" / "sistema.css").read_text(encoding="utf-8")
     assert ":where(.ds) a {" in css and not re.search(r"^\.ds a \{", css, re.M)
+
+
+# --- H-1, H-2 y arranque en frío de Render ---
+
+def _seccion(html: str, id_: str) -> str:
+    inicio = html.index(f'id="{id_}"')
+    return html[inicio:html.index("</section>", inicio)]
+
+
+def test_h1_gracias_por_avisar_dice_que_hacer_mientras_llega_ayuda(c):
+    gracias = _seccion(c.get("/app/").text, "pantalla-codigo")
+    assert "Mientras llega ayuda" in gracias and gracias.count("<li>") == 3
+    assert "iguales para todos los reportes" in gracias
+
+
+def test_h1_los_consejos_no_dependen_de_la_prioridad_rn14(c):
+    """RN-14: el ciudadano nunca ve la prioridad. Los consejos son texto fijo del HTML y
+    ningún script de la PWA lee la prioridad para elegirlos."""
+    gracias = _seccion(c.get("/app/").text, "pantalla-codigo").lower()
+    for palabra in ("prioridad", "crítica", "critica", "urgente", "grave"):
+        assert palabra not in gracias
+    for archivo in ("app.js", "reportar.js", "video.js"):
+        js = (CARPETA_PWA / archivo).read_text(encoding="utf-8")
+        assert "prioridad" not in js and "mientras-llega" not in js
+
+
+def test_h2_el_aviso_sin_conexion_arranca_oculto_y_depende_de_navigator_online(c):
+    html = c.get("/app/").text
+    assert 'id="aviso-sin-conexion" role="status" hidden' in html
+    js = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    assert "$('aviso-sin-conexion').hidden = navigator.onLine !== false" in js
+    assert "'offline', pintarConexion" in js and "'online', pintarConexion" in js
+
+
+def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
+    app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    reportar = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
+    assert "El servidor está despertando" in app and "avisarSiTarda" in app
+    assert "window.Patitas.avisarSiTarda" in reportar and "Tu reporte no se pierde" in reportar
+
+
+def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
+    assert "patitas-pwa-v11" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
