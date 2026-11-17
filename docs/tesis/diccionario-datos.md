@@ -82,7 +82,7 @@ Restricciones e índices: `ck_refugios_capacidad`: `capacidad > 0`; `ck_refugios
 | `version_modelo` | VARCHAR(40) | sí | — | — | 75) |
 | `contacto_cifrado` | TEXT | sí | — | — | 111): AES-256-GCM, nunca en claro |
 
-Restricciones e índices: `ck_reportes_comuna`: `comuna BETWEEN 1 AND 10`; `ck_reportes_confianza`: `confianza BETWEEN 0 AND 1`; `ck_reportes_estado`: `estado IN ('recibido', 'clasificado', 'requiere_revision', 'sin_clasificar', 'confirmado', 'descartado')`; `ck_reportes_prioridad`: `prioridad IN ('critica', 'alta', 'media', 'baja')`; `ck_reportes_ubicacion`: `(latitud IS NOT NULL AND longitud IS NOT NULL) OR direccion IS NOT NULL`; `ck_reportes_video`: `video_segundos >= 0`; `ix_reportes_creado_en`: índice (creado_en); `ix_reportes_estado`: índice (estado).
+Restricciones e índices: `ck_reportes_comuna`: `comuna BETWEEN 1 AND 10`; `ck_reportes_confianza`: `confianza BETWEEN 0 AND 1`; `ck_reportes_descripcion`: `char_length(btrim(descripcion, E' \t\n\r')) >= 20`; `ck_reportes_estado`: `estado IN ('recibido', 'clasificado', 'requiere_revision', 'sin_clasificar', 'confirmado', 'descartado')`; `ck_reportes_prioridad`: `prioridad IN ('critica', 'alta', 'media', 'baja')`; `ck_reportes_ubicacion`: `(latitud IS NOT NULL AND longitud IS NOT NULL) OR direccion IS NOT NULL`; `ck_reportes_video`: `video_segundos >= 0`; `ix_reportes_creado_en`: índice (creado_en); `ix_reportes_estado`: índice (estado).
 
 ## `rescatistas`
 

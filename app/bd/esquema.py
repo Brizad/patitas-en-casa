@@ -81,6 +81,10 @@ reportes = Table(
         "(latitud IS NOT NULL AND longitud IS NOT NULL) OR direccion IS NOT NULL",
         name="ck_reportes_ubicacion",
     ),
+    # RN-01 (migración 0035): 20 caracteres o más sin contar los espacios de los extremos; el
+    # mismo mínimo que ServicioReportes (MIN_CARACTERES_DESCRIPCION).
+    CheckConstraint("char_length(btrim(descripcion, E' \\t\\n\\r')) >= 20",
+                    name="ck_reportes_descripcion"),
 )
 # A-03 (#239): la cola filtra por estado y los duplicados por fecha de creación.
 Index("ix_reportes_estado", reportes.c.estado)
