@@ -10,6 +10,8 @@ from pathlib import Path
 
 import httpx
 
+from patitas_video import __version__
+
 
 class ApiNoDisponible(RuntimeError):
     """Render dormido, sin red o error 5xx: se reintenta más tarde."""
@@ -25,7 +27,8 @@ class ClienteApi:
         # 90 s: el plan gratis de Render tarda hasta un minuto en despertar.
         self._http = http or httpx.Client(timeout=espera_s)
         self._url = url.rstrip("/")
-        self._encabezados = {"X-Video-Token": token}
+        # #231: la versión viaja en cada llamada; así la API sabe si este nodo quedó viejo.
+        self._encabezados = {"X-Video-Token": token, "X-Video-Nodo": __version__}
 
     def _pedir(self, metodo: str, ruta: str, **opciones) -> httpx.Response:
         try:
