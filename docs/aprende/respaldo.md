@@ -11,6 +11,16 @@ y cuando lo lances a mano:
    falla y lo ves en rojo.
 5. Guarda el archivo cifrado como artefacto de la ejecución durante **14 días**.
 
+Además (`scripts/operacion/vigilar_respaldo.py`, con pruebas):
+
+- **Antes de copiar** pregunta la versión al servidor (`SHOW server_version_num`). Si Neon
+  corre una versión mayor que la de `pg_dump`, el flujo se detiene y dice qué línea cambiar:
+  `PG_VERSION: "18"` por la nueva (lo que pasó en #210).
+- **Alerta de respaldo viejo:** después de cada respaldo, y otra vez a las 08:17, revisa los
+  artefactos guardados. Si el respaldo más reciente tiene **más de 26 horas** (o no hay
+  ninguno) el flujo queda **en rojo** y GitHub te avisa por correo. Para revisarlo a mano sin
+  tocar Neon: *Run workflow* con la casilla «Solo revisar la edad del último respaldo».
+
 Con eso: RPO ≤ 24 h (la copia más vieja posible tiene un día) y RTO ≤ 4 h (restaurar son unos
 minutos, ver abajo).
 
