@@ -1,0 +1,71 @@
+name: Seguridad (SAST + SCA)
+
+# Guía 12: análisis estático del código (SAST) y de las dependencias (SCA) en cada PR, en
+# cada push a main y los lunes (un CVE nuevo puede aparecer en una dependencia que no cambió).
+# No usa secretos ni toca Render ni Neon.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 11 * * 1"   # lunes 6:17 a. m. de Colombia
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seguridad-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sast:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: pip install bandit==1.9.4 semgrep==1.185.0
+      - name: Bandit (falla con severidad media o alta)
+        run: bandit -r app -ll -f txt -o bandit.txt || { cat bandit.txt; exit 1; }
+      - name: Semgrep (reglas de Python y FastAPI + reglas propias del proyecto)
+        run: |
+          semgrep scan --error --metrics=off \
+            --config p/python --config p/fastapi \
+            --config .semgrep/patitas.yml \
+            --severity ERROR --severity WARNING app
+      - name: Guardar el informe
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: informe-sast
+          path: bandit.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
+  sca:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: pip install pip-audit==2.10.1
+      - name: pip-audit de producción (falla ante cualquier vulnerabilidad conocida)
+        run: pip-audit -r requirements.txt --strict --desc -f markdown -o sca-python.md || { cat sca-python.md; exit 1; }
+      - name: pip-audit de desarrollo y pruebas
+        run: pip-audit -r requirements-dev.txt --strict --desc
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: npm audit del panel (lo que llega al navegador; falla con severidad alta o crítica)
+        working-directory: panel
+        run: npm audit --omit=dev --audit-level=high
+      - name: Guardar el informe
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: informe-sca
+          path: sca-python.md
+          retention-days: 30
+          if-no-files-found: ignore

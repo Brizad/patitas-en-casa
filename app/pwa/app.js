@@ -132,8 +132,19 @@
     resultado.hidden = false;
   }
 
+  // Render gratis se duerme: la primera petición puede tardar hasta un minuto. Si pasan 4 s
+  // sin respuesta se avisa, para que no parezca que la app se quedó colgada.
+  const DESPERTANDO = 'El servidor está despertando: puede tardar hasta un minuto. '
+    + 'No cierres esta página.';
+
+  function avisarSiTarda(alTardar, milisegundos) {
+    const reloj = setTimeout(alTardar, milisegundos || 4000);
+    return () => clearTimeout(reloj);
+  }
+
   async function consultar(codigo) {
     boton.disabled = true;
+    const yaRespondio = avisarSiTarda(() => avisar(DESPERTANDO));
     try {
       const respuesta = await fetch('/reportes/' + encodeURIComponent(codigo) + '/seguimiento', {
         headers: { Accept: 'application/json' },
@@ -148,6 +159,7 @@
     } catch (error) {
       avisar('Sin conexión. Intenta cuando vuelva la señal.', true);
     } finally {
+      yaRespondio();
       boton.disabled = false;
     }
   }
@@ -165,7 +177,15 @@
   });
 
   // reportar.js muestra el código con esta función al enviar un reporte.
-  window.Patitas = { mostrarCodigo };
+  window.Patitas = { mostrarCodigo, avisarSiTarda, DESPERTANDO };
+
+  // H-2: el aviso de «sin conexión» solo se ve cuando de verdad no hay señal.
+  function pintarConexion() {
+    $('aviso-sin-conexion').hidden = navigator.onLine !== false;
+  }
+  window.addEventListener('online', pintarConexion);
+  window.addEventListener('offline', pintarConexion);
+  pintarConexion();
 
   window.addEventListener('hashchange', segunLaDireccion);
   segunLaDireccion();
