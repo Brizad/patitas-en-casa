@@ -20,6 +20,7 @@ Comprobado el 16-nov-2026 (lo que no se pudo comprobar se dice):
 | Complejidad | 7 fábricas de rutas con `# noqa: C901` (`rutas_admin`, `rutas_adopciones`, `rutas_refugio`, `rutas_reportes`, `rutas_rescates`, `rutas_triaje`, `video`) | `grep` |
 | Issues | 40 abiertos; la mayoría ya están resueltos por PR que decían «Cierra #N» (GitHub solo entiende *Closes/Fixes*) | `gh issue list` |
 | PR abiertos | #329 (portada, parte 1): en verde y sin conflictos | `gh pr checks 329` |
+| Repositorio | **Público** (`CLAUDE.md` todavía dice privado): el instalador del nodo se descarga sin credenciales | `gh repo view`, `curl` anónimo: 200 |
 | Versión | `info.version` de la API dice `1.1.0` aunque ya se publicó v1.2.0 | `/openapi.json` de producción |
 
 **Este equipo no es el del nodo de video**: aquí no hay WSL, ni PostgreSQL local, ni `.env`.
@@ -35,7 +36,7 @@ guías no está en `Documents\Proyectos\…` sino en
 | # | Riesgo | Impacto | Qué lo baja |
 |---|---|---|---|
 | R1 | La vista previa del video no se ve en producción y nadie puede decir por qué: ni el panel ni la API saben si el nodo está vivo, qué versión corre o por qué no subió la vista | Alto: es el corazón de la demo | Trabajo 1 |
-| R2 | El nodo se instala con `git clone` de un repositorio **privado** y no tiene actualizador: es fácil que corra código viejo | Alto | Trabajo 1 |
+| R2 | El nodo vive en otra carpeta (`~/patitas` en WSL) y solo se actualiza si Brayan repite la instalación **y lo reinicia**: es fácil que corra código viejo sin que nadie lo note | Alto | Trabajo 1 |
 | R3 | El nodo depende de un solo PC (el de Brayan); si se apaga a mitad, el reporte debe seguir con el texto | Medio (ya hay falla segura; falta probarla y documentarla) | Trabajo 1 |
 | R4 | Piloto con usuarios (RNF-06) sin hacer: sin datos no hay resultados de usabilidad | Alto para la sustentación; depende de Brayan | Trabajo 8 (material) |
 | R5 | El triaje con IA solo está validado con datos sintéticos; presentarlo como validado sería deshonesto | Alto ante el jurado | Trabajo 4 (documento y reentrenamiento) |
@@ -55,7 +56,7 @@ Estimación en PR (cada uno ≤ 300 líneas). «Hecho» solo con PR integrado y 
 | 1a | Video: diagnóstico en el issue #231 (hipótesis por probabilidad y cómo se descartó cada una) | — | Comentario en #231 | |
 | 1b | Video: el nodo dice a la API que está vivo, su versión y por qué no hubo vista; el panel lo muestra | 2 | Prueba que falla antes y pasa después; contrato solo aditivo | |
 | 1c | Video: robustez del nodo (reintento al subir la vista y al entregar, tiempo máximo del análisis, apagado a mitad) | 1–2 | Pruebas del trabajador con API caída, 5xx y reclamo vencido | |
-| 1d | Video: instalador/actualizador para WSL que no dependa de clonar el repositorio privado + guía «qué hago yo» | 1 | Un solo comando para actualizar; el nodo imprime su versión | |
+| 1d | Video: el nodo se actualiza solo al arrancar (`git pull` + dependencias si cambiaron) + guía «qué hago yo» | 1 | Un solo comando arranca siempre el código de `main`; el nodo imprime su versión | |
 | 1e | `video-humo.yml` ampliado: flujo completo contra una API local (subida → reclamo → vista → panel) | 1 | El flujo falla si la vista no llega a `GET …/vista.mp4` | |
 | 2a | Guía 08: 3 parches TDD del percentil + script k6 en `scripts/operacion/` | 1 | `git am -3`; pruebas en verde | |
 | 2b | Guía 12: cryptography 50.0.0, Bandit B310/B105 | 1 | `pip-audit` con 0 CVE (se pega la salida) | |
