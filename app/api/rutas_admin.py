@@ -116,7 +116,8 @@ def crear_rutas_admin(ctx: Contexto) -> APIRouter:  # noqa: C901
         limite_intentos.registrar_exito(claves[0])
         # RF-16: historial de acceso de la cuenta (en la bitácora, también inmutable).
         repositorio_bitacora.registrar(Evento(usuario.correo, "inicio de sesión", {}, 200))
-        return {"access_token": emisor_tokens.emitir(usuario), "token_type": "bearer",
+        # «bearer» es el tipo de token de OAuth2 (RFC 6750), no una contraseña: falso positivo B105.
+        return {"access_token": emisor_tokens.emitir(usuario), "token_type": "bearer",  # nosec B105
                 "expira_en": emisor_tokens.minutos * 60}
 
     @rutas.get("/auth/yo")

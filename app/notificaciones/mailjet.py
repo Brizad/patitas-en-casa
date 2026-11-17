@@ -10,6 +10,7 @@ import base64
 import json
 import logging
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from app.notificaciones.canal import EntregaFallida
@@ -33,6 +34,11 @@ class NotificadorMailjet:
             f"{api_key}:{secret_key}".encode()).decode()
         self._remitente = remitente
         self._grupos = grupos
+        destino = urllib.parse.urlsplit(url)
+        # B310: solo HTTPS (o HTTP a la propia máquina, que usan las pruebas con servidor falso).
+        if destino.scheme != "https" and not (destino.scheme == "http"
+                                               and destino.hostname in ("127.0.0.1", "localhost")):
+            raise ValueError("La URL de Mailjet debe usar https://")
         self._url = url
 
     def entregar(self, destinatario: str, mensaje: str) -> None:
@@ -53,7 +59,8 @@ class NotificadorMailjet:
             self._url, data=cuerpo, method="POST",
             headers={"Content-Type": "application/json", "Authorization": self._autorizacion})
         try:
-            with urllib.request.urlopen(peticion, timeout=TIEMPO_MAXIMO_S) as respuesta:
+            # B310: el esquema de self._url se valida en __init__ (solo https o http local).
+            with urllib.request.urlopen(peticion, timeout=TIEMPO_MAXIMO_S) as respuesta:  # nosec B310
                 datos = json.loads(respuesta.read() or b"{}")
         except urllib.error.HTTPError as error:
             permanente = 400 <= error.code < 500 and error.code not in CODIGOS_REINTENTABLES
