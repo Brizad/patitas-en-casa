@@ -25,3 +25,6 @@ e2e/resultados/
 
 # Revisión responsive (#250): capturas de cada combinación
 scripts/accesibilidad/capturas-responsive/
+
+# Guías del curso (entregables personales): no se suben.
+docs/guias/
