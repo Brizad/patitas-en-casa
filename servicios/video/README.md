@@ -27,13 +27,30 @@ Para probar con un video tuyo sin token (está en `C:\Users\<tú>\Videos\perro.m
 La salida dice también si se generó la vista previa del veterinario; añade
 `--guardar-vista ~/vista.mp4` para guardarla y abrirla.
 
-**¿El panel no muestra la vista previa?** (#231) Mira la ventana de Ubuntu tras cada análisis:
-`vista previa del trabajo N subida (494 KB)` = todo bien; `trabajo N sin vista previa: <motivo>`
-= el nodo no la generó (por ejemplo, falta ffmpeg); `vista previa del trabajo N no subida:
-<error>` = la API la rechazó. En ningún caso se pierde el resultado. Si cambiaste el código,
-**detén el nodo con Ctrl+C y arráncalo otra vez**: el proceso que ya corre sigue con el viejo.
-Para actualizar el trabajador, repite el paso 2. Para olvidar el token guardado:
-`rm ~/.patitas-video/token`.
+**¿El panel no muestra la vista previa?** (#231) Ya no hace falta adivinar: abre el reporte
+en el panel. Mientras el video espera, el panel dice si este equipo está **apagado** o con una
+**versión antigua**; cuando el análisis llega sin vista, dice el **motivo** (falta ffmpeg, la
+API la rechazó, pasó de 5 MB…). La ventana de Ubuntu dice lo mismo tras cada análisis:
+`vista previa del trabajo N subida (494 KB)` = todo bien. En ningún caso se pierde el resultado.
+
+**Actualizar.** `arrancar_nodo.sh` se pone al día solo con `main` antes de trabajar (si
+cambiaron las librerías, las instala). Para que eso funcione en un nodo instalado antes del
+16-nov-2026, **repite el paso 2 una sola vez** (deja la marca `~/.patitas-video/carpeta` e
+instala ffmpeg). Un nodo que ya corre sigue con el código viejo: **Ctrl+C y arráncalo otra
+vez**. Si copiaste archivos a mano en `~/patitas`, no se pierden: quedan en `git stash list`.
+Arrancar sin actualizar: `PATITAS_SIN_ACTUALIZAR=1 bash ~/patitas/servicios/video/arrancar_nodo.sh`.
+Para olvidar el token guardado: `rm ~/.patitas-video/token`.
+
+**¿Qué pasa si…?**
+
+| Situación | Qué hace el sistema |
+|---|---|
+| Render se reinicia (cada despliegue, 1 a 3 min) | El nodo reintenta la vista y la entrega (5, 15, 45 y 120 s) sin volver a analizar |
+| El PC se apaga a mitad de un análisis | A los 10 min la API vuelve a ofrecer el trabajo; el video espera en PostgreSQL hasta 6 h |
+| El PC está apagado más de 6 h | El video se borra y el reporte sigue con la prioridad del texto (falla segura) |
+| El equipo es lento (más de 8 min por video) | Entrega «no concluyente»: el veterinario decide con la descripción |
+| La API rechaza un resultado | Queda como fallo con el motivo; el nodo sigue con el siguiente |
+| El token está mal | El nodo se detiene y lo dice: copia otra vez `PATITAS_VIDEO_TOKEN` de Render |
 
 ## Cómo funciona
 
