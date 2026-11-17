@@ -6,6 +6,9 @@ la aplicación se sienta fácil. Metas del ERS:
 - **80 % o más** de los participantes reporta en ≤ 90 s.
 - Puntaje **SUS promedio ≥ 70**.
 
+**Material para imprimir** (consentimiento, las 4 tareas, hoja de observación y SUS):
+[`docs/piloto/`](../piloto/README.md).
+
 Se necesitan unas **10 personas** que no hayan visto el sistema (familia, vecinos, compañeros
 de otra carrera). Cada sesión dura unos 10 minutos.
 
