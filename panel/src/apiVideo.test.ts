@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  AnalisisVideo, ESTADOS_VIDEO, analisisVideo, notaDeVista, sigueAnalizando, urlVista,
+  AnalisisVideo, ESTADOS_VIDEO, EstadoNodo, analisisVideo, estadoNodo, haceCuanto, notaDeVista,
+  notaDelNodo, sigueAnalizando, urlVista,
 } from "./apiVideo";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -58,5 +59,57 @@ describe("vista previa en el panel (#231)", () => {
     expect(sigueAnalizando("enviado")).toBe(true);
     expect(sigueAnalizando("no_concluyente")).toBe(false);
     expect(sigueAnalizando("terminado")).toBe(false);
+  });
+});
+
+describe("el equipo que analiza los videos, visible en el panel (#231)", () => {
+  const NODO: EstadoNodo = {
+    activado: true, version_minima: "1.3.0", ultimo_contacto: "2026-11-16T20:00:00+00:00",
+    segundos_sin_contacto: 8, version: "1.3.0", analizando: false, en_linea: true, al_dia: true,
+  };
+  const EN_ESPERA: AnalisisVideo = { ...BASE, estado: "pendiente", tiene_vista: false };
+
+  it("un análisis sin vista dice el motivo que mandó el equipo de análisis", () => {
+    const sinFfmpeg = { ...BASE, tiene_vista: false,
+      medidas: { sin_vista: "ffmpeg no está instalado (sudo apt install ffmpeg)" } };
+    expect(notaDeVista(sinFfmpeg, false)).toMatch(/no trae vista previa: ffmpeg no está instalado/);
+  });
+
+  it("un análisis sin vista y sin versión viene de un equipo sin actualizar", () => {
+    expect(notaDeVista({ ...BASE, tiene_vista: false }, false)).toMatch(/versión antigua/);
+    expect(notaDeVista({ ...BASE, tiene_vista: false, medidas: { version_nodo: "1.3.0" } }, false))
+      .not.toMatch(/versión antigua/);
+  });
+
+  it("con el equipo encendido y al día no hay nada que avisar", () => {
+    expect(notaDelNodo(NODO, EN_ESPERA)).toBeNull();
+  });
+
+  it("si el equipo está apagado, el veterinario sabe que el análisis no va a llegar pronto", () => {
+    const apagado = { ...NODO, en_linea: false, segundos_sin_contacto: 3700 };
+    expect(notaDelNodo(apagado, EN_ESPERA)).toMatch(/apagado.*hace 1 h/);
+    expect(notaDelNodo({ ...apagado, ultimo_contacto: null, segundos_sin_contacto: null },
+      EN_ESPERA)).toMatch(/apagado/);
+  });
+
+  it("si el equipo corre una versión antigua, se pide actualizarlo", () => {
+    expect(notaDelNodo({ ...NODO, al_dia: false, version: null }, EN_ESPERA))
+      .toMatch(/versión antigua/);
+  });
+
+  it("con el análisis ya cerrado el estado del equipo no importa", () => {
+    expect(notaDelNodo({ ...NODO, en_linea: false }, BASE)).toBeNull();
+    expect(notaDelNodo(null, EN_ESPERA)).toBeNull();
+  });
+
+  it("el estado del equipo se pide con la sesión; si falla, no rompe la pantalla", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(NODO))));
+    expect((await estadoNodo("t"))?.en_linea).toBe(true);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 404 })));
+    expect(await estadoNodo("t")).toBeNull();  // una API anterior que no conoce la ruta
+  });
+
+  it("los ratos se dicen en palabras", () => {
+    expect([40, 150, 7300].map(haceCuanto)).toEqual(["hace menos de 1 min", "hace 2 min", "hace 2 h"]);
   });
 });
