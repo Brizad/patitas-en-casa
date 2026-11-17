@@ -10,9 +10,11 @@
   --lienzo: var(--ds-fondo); --texto: var(--ds-tinta); --suave: var(--ds-suave); --borde: var(--ds-linea-fuerte);
   --camara: var(--pc-tinta); --sobre-camara: var(--pc-crema); --rol: var(--pc-bosque); --serif: var(--pc-serif);
   --ds-superficie: var(--ds-fondo); --ds-marca: var(--ds-tinta); /* salto, foco y enlaces en tinta */
+  --curva: cubic-bezier(.2, .7, .2, 1); /* #328: la misma curva en todo el movimiento */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) { --camara: var(--pc-bosque); --rol: var(--pc-tinta); }
+  :root:not([data-theme="light"]) .rastro .gato:not(.banda) { fill: var(--pc-ascua); } /* el bosque no se ve sobre tinta */
 }
 
 html { scroll-padding-top: 96px; } /* la cabecera fija no tapa el foco (WCAG 2.4.11) */
@@ -20,8 +22,10 @@ html { scroll-padding-top: 96px; } /* la cabecera fija no tapa el foco (WCAG 2.4
 .ds h1, .ds h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -.02em; }
 .ds h2 { font-size: clamp(1.75rem, 1.2rem + 2.5vw, 3rem); line-height: 1.05; margin: 0 0 24px; }
 p { margin: 0 0 8px; max-width: 65ch; }
-main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-direction: column; gap: 32px; }
-@media (min-width: 720px) { main { padding: 0 24px; gap: 64px; } }
+main { display: flex; flex-direction: column; gap: 32px; }
+/* #328: el recorrido de huellas va a todo el ancho; lo demás, a 1200 px como máximo. */
+main > :not(.recorrido) { width: min(1200px, 100% - 32px); margin-inline: auto; }
+@media (min-width: 720px) { main { gap: 64px; } main > :not(.recorrido) { width: min(1200px, 100% - 48px); } }
 
 /* Cabecera flotante tipo píldora. */
 .cabecera { position: sticky; top: 8px; z-index: 10; display: flex; align-items: center; justify-content: space-between;
@@ -34,26 +38,58 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-d
   color: var(--tinta); font-weight: 600; transition: background-color .15s, color .15s; }
 .ds .pildora { min-height: 44px; padding: 0 20px; border: 2px solid var(--tinta); border-radius: 9999px; background: var(--lavanda); }
 
-/* Portada: título en serif grande, una sola acción principal. */
-.portada { padding: 48px 0 16px; }
-@media (min-width: 720px) { .portada { padding: 96px 0 32px; } }
-.portada h1 { font-size: clamp(2.25rem, 1.25rem + 4.5vw, 4.5rem); line-height: 1.02; max-width: 18ch; margin: 0 0 24px; }
-/* #308: ilustración original (decorativa). En el celular va después de las acciones, para que
-   «Reportar emergencia» siga a la vista; en pantalla ancha, a la derecha del texto. */
-.ilustracion { display: block; width: min(100%, 320px); height: auto; margin: 32px auto 0; }
-@media (min-width: 960px) {
-  .portada { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); column-gap: 48px; align-items: center; }
-  .portada > * { grid-column: 1; }
-  .portada > .etiqueta { justify-self: start; }
-  .portada > .ilustracion { grid-column: 2; grid-row: 1 / span 5; width: 100%; margin: 0; }
-}
-.subrayado { text-decoration: underline wavy var(--lavanda); text-decoration-thickness: 4px;
-  text-underline-offset: .14em; text-decoration-skip-ink: none; }
+/* Portada centrada (#328): titular enorme en dos tonos (gris → tinta), una frase y una sola
+   acción. 44 px a 360 px y 120 px a 1440 px; el gris es el del sistema (6,7:1 sobre crema). */
+.portada { padding: 48px 0 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+@media (min-width: 720px) { .portada { padding-top: 64px; } }
+.portada h1 { font-size: clamp(2.75rem, 1.166rem + 7.037vw, 7.5rem); line-height: .9; letter-spacing: -.035em;
+  margin: 0 0 32px; text-wrap: balance; }
+.linea { display: block; animation: entrar-linea .5s var(--curva) both; }
+.linea + .linea { animation-delay: .12s; }
+.tenue { color: var(--suave); }
+@keyframes entrar-linea { from { opacity: 0; transform: translateY(.3em); } }
+.portada .entrada { margin: 0 auto 32px; }
+.otras { margin: 16px 0 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; }
+.ds .otras a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--texto); }
+main > .confianza { justify-content: center; margin-top: 0; }
+
+/* Recorrido (#328): curva con huellas de perro (tinta) y gato (bosque) que aparecen en orden,
+   se quedan un momento y se desvanecen. Las ranuras .t0 … .t15 escalonan la caminata. En el
+   celular se ve solo el centro de la curva (slice), para no tapar el titular ni el botón. */
+.recorrido { position: relative; margin-top: -8px; }
+.rastro { display: block; width: 100%; height: clamp(176px, 20vw, 288px); }
+.rastro .camino { fill: none; stroke: var(--suave); stroke-width: 2; stroke-dasharray: 2 12; stroke-linecap: round; }
+.rastro .sobre-banda { stroke: var(--crema); }
+.banda-fondo { fill: var(--camara); }
+.rastro .perro { fill: var(--texto); } .rastro .gato { fill: var(--bosque); } .rastro .banda { fill: var(--crema); }
+.rastro use { transform-box: fill-box; transform-origin: center; animation: pisar 8s var(--curva) infinite backwards; }
+@keyframes pisar { 0% { opacity: 0; transform: scale(.6); } 4% { opacity: 1; transform: scale(1); }
+  38% { opacity: 1; transform: scale(1); } 50%, 100% { opacity: 0; transform: scale(1); } }
+.t1 { animation-delay: .25s; } .t2 { animation-delay: .5s; } .t3 { animation-delay: .75s; } .t4 { animation-delay: 1s; }
+.t5 { animation-delay: 1.25s; } .t6 { animation-delay: 1.5s; } .t7 { animation-delay: 1.75s; } .t8 { animation-delay: 2s; }
+.t9 { animation-delay: 2.25s; } .t10 { animation-delay: 2.5s; } .t11 { animation-delay: 2.75s; } .t12 { animation-delay: 3s; }
+.t13 { animation-delay: 3.25s; } .t14 { animation-delay: 3.5s; } .t15 { animation-delay: 3.75s; }
+/* La píldora con barritas de DESIGN.md: pulsan despacio (menos de 1 vez por segundo). */
+.onda .pildora-onda { fill: var(--crema); stroke: var(--tinta); stroke-width: 2; }
+.onda rect + rect { fill: var(--tinta); transform-box: fill-box; transform-origin: center;
+  animation: pulsar 1.4s ease-in-out infinite alternate; }
+.onda rect:nth-child(odd) { animation-delay: -.7s; } .onda rect:nth-child(3n) { animation-delay: -.35s; }
+@keyframes pulsar { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
+/* Pausar (WCAG 2.2.2): una casilla sin JavaScript detiene todo lo que se mueve solo. */
+.pausa { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ds .pausa-etiqueta { position: absolute; right: max(16px, calc((100% - 1200px) / 2)); bottom: 0; display: inline-flex;
+  align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 2px solid var(--borde); border-radius: 9999px;
+  background: var(--lienzo); font-size: .875rem; font-weight: 600; cursor: pointer; }
+.pausa-etiqueta::before { content: ""; flex: none; width: 10px; height: 12px; border-inline: 3px solid currentColor; box-sizing: border-box; }
+.pausa:checked + .pausa-etiqueta::before { border: 0; border-left: 10px solid currentColor;
+  border-block: 6px solid transparent; } /* ▶: seguir */
+.pausa:focus-visible + .pausa-etiqueta { outline: 3px solid var(--ds-marca); outline-offset: 3px; }
+body:has(.pausa:checked) * { animation-play-state: paused !important; }
+@media (max-width: 719px) { .ds .pausa-etiqueta { position: static; margin: 8px auto 0; width: max-content; display: flex; } }
+
 .etiqueta { display: inline-block; margin: 0 0 24px; padding: 8px 16px; border-radius: 8px;
   background: var(--texto); color: var(--lienzo); font-size: .875rem; font-weight: 500; }
 .entrada { font-size: clamp(1.125rem, 1rem + .5vw, 1.25rem); max-width: 52ch; }
-.acciones { display: grid; gap: 12px; margin-top: 32px; }
-@media (min-width: 720px) { .acciones { display: flex; flex-wrap: wrap; } }
 .boton { min-height: 56px; padding: 0 24px; border: 2px solid var(--tinta); border-radius: 12px;
   background: var(--crema); font-size: 1.0625rem; text-align: center; }
 .ds .boton.urgente { background: var(--lavanda); }
@@ -107,4 +143,9 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; flex-d
 .ds .pie a { display: inline-block; padding: 12px 0; color: var(--crema); }
 .pie :focus-visible { outline-color: var(--crema); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pie { background: #0d0d0c; border-top: 2px solid var(--borde); } }
-@media (prefers-reduced-motion: reduce) { .boton, .pildora { transition: none; } }
+/* Movimiento reducido (#328): todo quieto; las huellas se ven fijas sobre la curva. */
+@media (prefers-reduced-motion: reduce) {
+  .boton, .pildora { transition: none; }
+  .linea, .rastro use, .onda rect { animation: none; }
+  .pausa, .pausa-etiqueta { display: none; } /* no hay nada que pausar */
+}
