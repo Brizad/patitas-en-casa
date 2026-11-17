@@ -12,7 +12,8 @@ concluyente» y en Render manda el texto.
 """
 from __future__ import annotations
 
-from collections.abc import Iterator
+import time
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -22,6 +23,9 @@ from patitas_video.marcha import Cuadro
 
 FPS = 5
 MAX_SEGUNDOS = 60  # RN-01
+# La API da el reclamo por perdido a los 10 min (VENCIMIENTO_RECLAMO_VIDEO_S): un equipo
+# lento corta antes y entrega «no concluyente» (manda el texto) con tiempo para subirlo.
+MAX_SEGUNDOS_ANALISIS = 480
 MIN_FRACCION_CON_ANIMAL = 0.5
 ESPECIES = ("dog", "cat")  # clases COCO del detector
 
@@ -120,12 +124,14 @@ def _tres_muestras(muestras: list[tuple[Any, Cuadro]]) -> list[tuple[Any, Cuadro
 def analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
              estimador: EstimadorPuntos, clasificador: ClasificadorMarcha,
              dibujante: DibujanteTira | None = None,
-             escritor_vista: EscritorVista | None = None) -> dict:
+             escritor_vista: EscritorVista | None = None,
+             reloj: Callable[[], float] = time.monotonic) -> dict:
     """Devuelve el cuerpo que espera POST /video/trabajos/{id}/resultado. Si hay vista previa,
     va en la clave «vista» (bytes); el trabajador la sube aparte. Si no la hay, «sin_vista»
     dice por qué (#231); no viaja a la API."""
     vista = _Vista(escritor_vista)
-    resultado = _analizar(ruta, lector, detector, estimador, clasificador, dibujante, vista)
+    resultado = _analizar(ruta, lector, detector, estimador, clasificador, dibujante, vista,
+                          reloj)
     mp4 = vista.terminar()
     if mp4 is not None:
         resultado["vista"] = mp4
@@ -136,7 +142,9 @@ def analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
 
 def _analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
               estimador: EstimadorPuntos, clasificador: ClasificadorMarcha,
-              dibujante: DibujanteTira | None, vista: _Vista) -> dict:
+              dibujante: DibujanteTira | None, vista: _Vista,
+              reloj: Callable[[], float] = time.monotonic) -> dict:
+    inicio = reloj()
     cuadros: list[Cuadro] = []
     muestras: list[tuple[Any, Cuadro]] = []
     especies: dict[str, int] = {}
@@ -145,6 +153,9 @@ def _analizar(ruta: str, lector: LectorCuadros, detector: DetectorAnimal,
         total += 1
         if total > MAX_SEGUNDOS * FPS:
             break
+        if reloj() - inicio > MAX_SEGUNDOS_ANALISIS:
+            return _no_concluyente(f"el análisis tardó más de {MAX_SEGUNDOS_ANALISIS // 60} min "
+                                   "en este equipo; se atiende con la descripción")
         caja = detector.detectar(imagen)
         if caja is None or caja.especie not in ESPECIES:
             cuadros.append({})
