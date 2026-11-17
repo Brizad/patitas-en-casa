@@ -28,3 +28,7 @@ scripts/accesibilidad/capturas-responsive/
 
 # Guías del curso (entregables personales): no se suben.
 docs/guias/
+
+# Reportes reales para validar el triaje (textos de ciudadanos: nunca a git) y el candidato.
+datos_reales_*.csv
+modelo_triaje_candidato.json
