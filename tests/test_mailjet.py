@@ -145,3 +145,12 @@ def test_las_claves_de_mailjet_no_aparecen_al_imprimir_los_ajustes(entorno):
     entorno.setenv("PATITAS_MAILJET_SECRET_KEY", "secreto-falso-mj")
     texto = repr(cargar_ajustes_correo(archivo_env=None))
     assert "llave-falsa-mj" not in texto and "secreto-falso-mj" not in texto
+
+
+def test_rechaza_url_sin_https():
+    import pytest
+
+    from app.notificaciones.mailjet import NotificadorMailjet
+    for url in ["file:///etc/passwd", "http://api.mailjet.com/v3.1/send", "ftp://x"]:
+        with pytest.raises(ValueError):
+            NotificadorMailjet("k", "s", "a@b.co", {}, url=url)
