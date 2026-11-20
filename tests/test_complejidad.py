@@ -5,8 +5,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
 # Fábricas que todavía silencian la regla (deuda conocida; ver PLAN_CIERRE.md, trabajo 4c).
-PENDIENTES = {"app/api/rutas_admin.py",
-              "app/api/rutas_triaje.py", "app/api/video.py"}
+PENDIENTES = {"app/api/rutas_admin.py", "app/api/video.py"}
 
 
 def test_solo_las_fabricas_pendientes_silencian_la_complejidad():
