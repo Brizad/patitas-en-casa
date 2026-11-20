@@ -4,7 +4,23 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+## [1.3.0] - 2026-11-20
+Cierre del proyecto: rediseño visual completo, el nodo de video informa su estado y se actualiza solo,
+seguridad (ASVS nivel 1, escaneos en el CI, cambio de contraseña), rendimiento, observabilidad apagada
+por defecto, triaje con IA documentado con honestidad y cobertura mínima de 90 %. Para actualizar:
+`alembic upgrade head` (migración `0035`). La versión de la API (`info.version`) pasa a `1.3.0`.
+
 ### Agregado
+- Video (#332 a #336): la API sabe si el nodo está encendido, su versión y por qué no hubo vista previa; el panel del veterinario lo muestra; el nodo reintenta la entrega, corta un análisis eterno y se actualiza solo al arrancar; prueba de humo de punta a punta con la vista previa (#231).
+- RN-01 también en la base (#341, migración `0035`): `CHECK` de la descripción creado `NOT VALID`.
+- PWA (#343): H-1 (qué hacer mientras llega ayuda, sin mostrar la prioridad, RN-14), H-2 (aviso «sin conexión» solo con `navigator.onLine` falso) y aviso de «despertando el servidor».
+- Observabilidad (#348): OpenTelemetry, `/metrics` con token y logs JSON sin datos personales; apagada por defecto (`PATITAS_OBSERVABILIDAD`, `PATITAS_METRICAS_TOKEN`).
+- CI: escaneo de seguridad en cada PR (Bandit, Semgrep, pip-audit y npm audit, #350) y cobertura mínima de 90 % (#366).
+- Seguridad (#360): tabla OWASP ASVS 4.0.3 nivel 1 en `docs/tesis/seguridad.md`; la API no se guarda en caché ni se puede enmarcar; cada persona puede cambiar su contraseña dando la actual.
+- Triaje con IA (#354): validar y reentrenar con reportes reales y `docs/tesis/triaje-ia.md`, que no llama «validación» a métricas sintéticas.
+- Respaldo (#352): versión del servidor antes de copiar y alerta si el último respaldo tiene más de 26 h.
+- Piloto (#346): consentimiento informado, 4 tareas, hoja de observación y plantilla de tareas en `docs/piloto/`.
+- `PLAN_CIERRE.md` con el diagnóstico, los riesgos y los trabajos del cierre.
 - Página de inicio con carácter, parte 1 (#328): portada centrada con el titular en dos tonos («Un animal herido,» en el gris accesible y «no debería esperar.» en tinta; EB Garamond de 44 px a 360 px a 120 px a 1440 px, interlineado 0,9) y una sola acción lavanda. Debajo, una curva a todo el ancho por la que caminan juntos un perro (tinta) y un gato (bosque; ámbar en oscuro): huellas propias en SVG, alternando izquierda y derecha, que aparecen en orden y se desvanecen (CSS, sin JavaScript); un tramo pisa una banda oscura con huellas crema y en el centro va la píldora con barritas de `DESIGN.md`. Decorativo (`aria-hidden`), quieto con `prefers-reduced-motion` y con la casilla «Pausar animaciones» (WCAG 2.2.2, sin JavaScript). Las posiciones salen de `scripts/diseno/rastro.py`. La ilustración vieja de la portada (`portada.svg`) deja de usarse.
 - Cierre del rediseño (#326): el manual de usuario con las 20 capturas retomadas en el diseño nuevo (y el texto de la cola: prioridad por forma ▲◆●○ y barra), `ESTADO_PROYECTO.md` con la noche del 5 de noviembre y `docs/tesis/pruebas.md` con la corrida real del CI de `main` (980 pytest, 97,48 %, 68 Vitest, 25 e2e con 16 de regresión visual, axe-core 56/0).
 - Sustentación (#324): `docs/aprende/sustentacion.md` suma 10 preguntas sobre el rediseño (sistema visual compartido, fuentes locales y CSP, contraste medido, prioridad sin depender del color, SVG propios, correos HTML y regresión visual), cada una con su archivo, y el recorrido de 5 minutos muestra la portada en claro y oscuro, la prioridad con forma y la regresión visual en el CI.
@@ -33,6 +49,8 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Pruebas de punta a punta (#233): `e2e/` con Playwright recorre en el navegador el flujo completo sobre una instancia real (API + PostgreSQL + panel compilado + PWA): reporte desde el teléfono (390 px), confirmación crítica, rescate, ingreso con código, historiales y seguimiento (RN-14), más los errores (descripción sin sentido, 401 y 403). Job `e2e` en el CI con capturas y trazas como artefacto si falla. Guía en `docs/aprende/e2e.md`.
 
 ### Cambiado
+- Complejidad (#356, #358): `crear_rutas_adopciones` y `crear_rutas_reportes` sin `noqa: C901`; quedan cinco fábricas (`tests/test_complejidad.py`).
+- Rendimiento (#364): `/indicadores` trae decisiones, rescates y seguimientos en lote (ya no hace una consulta por reporte).
 - Administrador y modo piloto (#307): la tarjeta del modo piloto, que iba pegada a los bordes de la ventana, queda centrada con el ancho del panel; «Invitados» y «Terminaron» como cifras clave y «cumple / no cumple» de cada meta del ERS como insignia. axe-core sin fallas en Administración, Modo piloto e Indicadores (administrador y Alcaldía) a 360 y 1440 px, claro y oscuro.
 - Adoptante (#306): el catálogo y las recomendaciones pasan a una rejilla de tarjetas de animal (una columna en el celular): foto arriba, el **nombre como encabezado `h3`** en serif (antes `<b>`), resumen, compatibilidad y «Quiero adoptarlo» al pie. axe-core sin fallas en la pantalla del adoptante y el registro a 360, 768 y 1440 px, claro y oscuro.
 - Panel del coordinador (#304): cifras clave de Indicadores en EB Garamond grande (la primera invertida), barras en píldora, barra de ocupación con borde de 2 px (visible también a 0 %), el botón nativo «Elegir archivo» con la forma de los botones del sistema (`::file-selector-button`, también en la PWA) y las filas de título que, en el celular, bajan sus acciones a otra línea. axe-core sin fallas en Refugio, Adopciones e Indicadores a 360 y 1440 px, claro y oscuro.
@@ -57,6 +75,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - CI: las acciones de todos los flujos suben a versiones con Node 24 (`checkout`, `setup-python`, `setup-node` y `upload-artifact` a v6) y `runs-on` queda fijo en `ubuntu-24.04` en lugar de `ubuntu-latest`. Sin cambios en la aplicación.
 
 ### Corregido
+- Percentil de la prueba de carga por rango más cercano, con script k6 (#337); `cryptography` 50.0.0 y hallazgos de Bandit B310/B105 (#339).
 - Rendimiento, DT-12 pagada (#265): `GET /veterinario/historial` ya no hace una consulta por fila (`RepositorioReportes.buscar_varios`) y la migración `0034` agrega índices en `decisiones_triaje(veterinario, decidido_en)`, `descartes(veterinario, descartado_en)` y `rescates(rescatista, aceptado_en)`. La respuesta de la API no cambia. Para actualizar: `alembic upgrade head`.
 - Panel (#252): en pantallas de 600 px o menos, «Mis rescates» y el «Historial» muestran cada fila como una tarjeta con la etiqueta de cada dato (`.ds-tabla--tarjetas` y `data-etiqueta`), sin deslizar de lado; la tabla conserva sus roles para los lectores de pantalla. El análisis de video ya no dice «Este análisis no trae imágenes» cuando trae vista previa.
 - Interfaz (#250): revisión con Playwright de todas las pantallas a 360, 768 y 1440 px en claro y oscuro (`scripts/accesibilidad/responsive.mjs`, 126 combinaciones). Casillas, botones con aspecto de enlace, «Usar mi GPS» y los enlaces de salto pasan a 44 px; los errores de la PWA ya no muestran «(RN-01)» al ciudadano. El service worker sube a `patitas-pwa-v7`. axe-core sigue en 0 fallas.

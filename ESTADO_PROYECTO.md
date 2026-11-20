@@ -2,7 +2,17 @@
 
 Lee primero `CLAUDE.md`, `docs/aprende/avance.md` y `git log --oneline -20`.
 Producción: https://patitas-en-casa-pnnk.onrender.com (Render + Neon PostgreSQL 18 + Mailjet).
-El repositorio es **privado**: no hay `--auto`; unir solo con `gh pr checks` en verde y luego `gh pr merge --squash`.
+El repositorio es **público** (desde el cierre): no hay `--auto`; unir solo con `gh pr checks` en verde y luego `gh pr merge --squash`.
+
+## Cierre: v1.3.0 (20 de noviembre de 2026)
+
+Detalle de trabajos y bitácora en `PLAN_CIERRE.md`. Integrado: video con estado del nodo y
+actualización automática (#332 a #336), RN-01 en la base (#342), H-1/H-2 y «despertando» (#344),
+observabilidad (#349), escaneo de seguridad en el CI (#351), respaldo con alerta (#353), triaje con IA
+documentado y reentrenable (#355), `rutas_reportes` y `rutas_adopciones` sin `noqa` (#357, #359),
+ASVS nivel 1, caché/marcos y cambio de contraseña (#361 a #363), `/indicadores` sin N+1 (#365) y
+cobertura mínima de 90 % (#367). Última corrida del CI de `main`: 1 093 pytest, 97,6 % de cobertura.
+Pendiente: 5c (panel «despertando»), 4c (5 `noqa` restantes), 4d, 6b, 3b y, para después, 8b y 8c.
 
 ## Hecho y verificado por Brayan (nov. 2026)
 - 32/32 RF; v1.1.0 y v1.2.0 publicadas.

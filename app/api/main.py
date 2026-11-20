@@ -218,7 +218,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                   (procesador.procesar, procesar_avisos_cada_s, "envío de avisos pendientes"),
                   (videos.revisar, revisar_videos_cada_s if token_video else None,
                    "videos sin analizar a tiempo")]
-    app = FastAPI(title="Patitas en Casa", version="1.1.0",
+    app = FastAPI(title="Patitas en Casa", version="1.3.0",
                   lifespan=ciclo_de_vida(periodicas, motor))
     # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
     # en celulares con datos limitados (RNF-07).
