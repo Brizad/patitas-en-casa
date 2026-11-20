@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import time
 from typing import Annotated
 
 from fastapi import (
@@ -21,6 +22,7 @@ from app.api.comun import Contexto, fecha_utc
 from app.dominio.modelos import (
     Ubicacion,
 )
+from app.observabilidad import evento, tracer
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido
 from app.usuarios.intentos import (
@@ -58,13 +60,65 @@ def normalizar_contacto(contacto: str) -> str:
     raise ValueError("El contacto debe ser un correo o un teléfono.")
 
 
+def contacto_cifrado(datos: ReporteEntrada, cifrador) -> str | None:
+    """RF-18 (#111): contacto opcional, solo con autorización expresa y siempre cifrado."""
+    if not (datos.contacto and datos.contacto.strip()):
+        return None
+    if not datos.autoriza_contacto:
+        raise HTTPException(status_code=422, detail=(
+            "Para guardar tu contacto debes autorizar que lo usemos solo para avisarte "
+            "sobre este reporte (Ley 1581 de 2012)."))
+    if cifrador is None:
+        raise HTTPException(status_code=422, detail="Por ahora no podemos guardar "
+                            "contactos; tu reporte se puede enviar sin él.")
+    try:
+        return cifrador.cifrar(normalizar_contacto(datos.contacto))
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+def seguimiento_publico(repositorio, repositorio_rescates, codigo: str) -> dict:
+    """HU-08: solo código, pasos y fechas; nunca datos personales ni detalles (RN-14)."""
+    reporte = repositorio.buscar(codigo)
+    if reporte is None:
+        raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
+    decisiones = repositorio.decisiones(codigo)
+    descarte = repositorio.descarte(codigo)
+    pasos, ultimo_cambio = linea_de_tiempo(
+        reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo),
+        descarte.descartado_en if descarte else None)
+    return {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
+            "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
+                       "fecha": fecha_utc(p.fecha)} for p in pasos]}
+
+
+def contar_reporte_por_ip(limite_intentos, ip: str) -> None:
+    """A-02 (#237): 429 con Retry-After si esta IP ya mandó el máximo de reportes."""
+    limite = [clave_reporte(ip)]
+    espera = limite_intentos.segundos_de_bloqueo(limite)
+    if espera:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Recibimos muchos reportes desde esta conexión. Si es una emergencia, "
+                   f"intenta de nuevo en {math.ceil(espera / 60)} minutos.",
+            headers={"Retry-After": str(espera)})
+    limite_intentos.registrar_fallo(limite)
+
+
+def registrar_reporte(reportes, datos: ReporteEntrada, ubicacion: Ubicacion, video: tuple,
+                      clave: str | None):
+    """RF-01 / RF-12 (#61): sin clave siempre crea; con clave, un reenvío devuelve el mismo."""
+    if clave is None:
+        return reportes.registrar(datos.descripcion, ubicacion, *video), True
+    return reportes.registrar_una_vez(clave, datos.descripcion, ubicacion, *video)
+
+
 # RF-12 (#61): la PWA la genera al crear el reporte (32 caracteres hex) y la repite al reenviar.
 ClaveIdempotencia = Annotated[str | None, Header(alias="Idempotency-Key", min_length=16,
                                                  max_length=64, pattern=r"^[A-Za-z0-9_-]+$")]
 
 
-# C901: como en crear_app, mccabe suma las rutas anidadas; cada una es sencilla.
-def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
+def crear_rutas_reportes(ctx: Contexto) -> APIRouter:
     rutas = APIRouter()
     ip_de = ctx.ip_de  # A-04 (#278)
     cifrador = ctx.cifrador
@@ -74,16 +128,7 @@ def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
     repositorio_rescates = ctx.repositorio_rescates
 
     def contar_reporte(peticion: Request) -> None:
-        """A-02 (#237): 429 con Retry-After si esta IP ya mandó el máximo de reportes."""
-        limite = [clave_reporte(ip_de(peticion))]
-        espera = limite_intentos.segundos_de_bloqueo(limite)
-        if espera:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Recibimos muchos reportes desde esta conexión. Si es una emergencia, "
-                       f"intenta de nuevo en {math.ceil(espera / 60)} minutos.",
-                headers={"Retry-After": str(espera)})
-        limite_intentos.registrar_fallo(limite)
+        contar_reporte_por_ip(limite_intentos, ip_de(peticion))
 
     @rutas.post("/reportes", status_code=201)
     def crear_reporte(datos: ReporteEntrada, respuesta: Response, peticion: Request,
@@ -95,28 +140,22 @@ def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
             contar_reporte(peticion)
         ubicacion = Ubicacion(datos.latitud, datos.longitud, datos.direccion, datos.comuna)
         video = (datos.video_segundos, datos.video_mb)
-        contacto = None
-        if datos.contacto and datos.contacto.strip():
-            if not datos.autoriza_contacto:
-                raise HTTPException(status_code=422, detail=(
-                    "Para guardar tu contacto debes autorizar que lo usemos solo para avisarte "
-                    "sobre este reporte (Ley 1581 de 2012)."))
-            if cifrador is None:
-                raise HTTPException(status_code=422, detail="Por ahora no podemos guardar "
-                                    "contactos; tu reporte se puede enviar sin él.")
+        contacto = contacto_cifrado(datos, cifrador)
+        with tracer.start_as_current_span("reportes.registrar") as span:
+            span.set_attribute("reporte.comuna", datos.comuna or 0)
+            span.set_attribute("reporte.con_video", datos.video_segundos is not None)
+            inicio = time.perf_counter()
             try:
-                contacto = cifrador.cifrar(normalizar_contacto(datos.contacto))
-            except ValueError as error:
-                raise HTTPException(status_code=422, detail=str(error)) from error
-        try:
-            if clave is None:
-                r = reportes.registrar(datos.descripcion, ubicacion, *video)
-            else:
-                r, nuevo = reportes.registrar_una_vez(clave, datos.descripcion, ubicacion, *video)
+                r, nuevo = registrar_reporte(reportes, datos, ubicacion, video, clave)
                 if not nuevo:
                     respuesta.status_code = status.HTTP_200_OK
-        except ReporteInvalido as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
+            except ReporteInvalido as error:
+                span.set_attribute("reporte.resultado", "invalido")
+                evento("reporte_rechazado", motivo="validacion", comuna=datos.comuna)
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            span.set_attribute("reporte.estado", r.estado.value)
+            evento("reporte_creado", codigo=r.codigo, estado=r.estado.value, comuna=datos.comuna,
+                   duracion_ms=round((time.perf_counter() - inicio) * 1000, 1))
         if contacto and r.contacto_cifrado is None:
             r.contacto_cifrado = contacto
             repositorio.guardar(r)
@@ -132,17 +171,6 @@ def crear_rutas_reportes(ctx: Contexto) -> APIRouter:  # noqa: C901
     @rutas.get("/reportes/{codigo}/seguimiento")
     def seguimiento_del_reporte(codigo: str):
         """HU-08 (público): línea de tiempo sin datos personales (RN-14)."""
-        codigo = normalizar_codigo(codigo)
-        reporte = repositorio.buscar(codigo)
-        if reporte is None:
-            raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
-        decisiones = repositorio.decisiones(codigo)
-        descarte = repositorio.descarte(codigo)
-        pasos, ultimo_cambio = linea_de_tiempo(
-            reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo),
-            descarte.descartado_en if descarte else None)
-        return {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
-                "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
-                           "fecha": fecha_utc(p.fecha)} for p in pasos]}
+        return seguimiento_publico(repositorio, repositorio_rescates, normalizar_codigo(codigo))
 
     return rutas

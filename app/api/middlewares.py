@@ -85,6 +85,29 @@ def ciclo_de_vida(periodicas: list[tuple[Callable[[], object], float | None, str
     return ciclo
 
 
+def poner_cabeceras(peticion: Request, respuesta):
+    """Cabeceras de seguridad de toda respuesta (#121, ASVS 8.2.1 y 14.4)."""
+    # Prueba de punta a punta (#121, OWASP ZAP): en todas las respuestas, HTTPS por un año
+    # (HSTS), el GPS y la cámara solo desde este sitio (la PWA los usa; #212), sin micrófono, y
+    # ninguna otra ventana puede manipular esta (COOP).
+    respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
+    respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS
+    respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
+    # ASVS 14.4.6 y 14.4.7: ninguna respuesta (tampoco la API ni /docs) se puede meter en
+    # un marco de otro sitio ni le cuenta a otro sitio de qué página venía el usuario.
+    respuesta.headers.setdefault("Referrer-Policy", "no-referrer")
+    respuesta.headers.setdefault("X-Frame-Options", "DENY")
+    # ASVS 8.2.1: los datos de la API (reportes, personas, sesiones) no se guardan en el
+    # navegador ni en proxies. Lo que ya dice cómo guardarse (fotos, estáticos) no cambia.
+    if respuesta.headers.get("content-type", "").startswith("application/json"):
+        respuesta.headers.setdefault("Cache-Control", "no-store")
+    if peticion.url.path == "/" or peticion.url.path.startswith(("/app", "/panel",
+                                                              "/inicio", "/diseno")):
+        respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
+    return respuesta
+
+
 def instalar_middlewares(app: FastAPI, repositorio_bitacora: RepositorioBitacora,
                          emisor_tokens: EmisorTokens, token_video: str | None) -> None:
     """Tope del cuerpo (A-01, A-08), cabeceras de seguridad (#121) y bitácora (RF-32)."""
@@ -101,19 +124,7 @@ def instalar_middlewares(app: FastAPI, repositorio_bitacora: RepositorioBitacora
 
     @app.middleware("http")
     async def cabeceras_de_la_pwa(peticion: Request, siguiente):
-        respuesta = await siguiente(peticion)
-        # Prueba de punta a punta (#121, OWASP ZAP): en todas las respuestas, HTTPS por un año
-        # (HSTS), el GPS y la cámara solo desde este sitio (la PWA los usa; #212), sin micrófono, y
-        # ninguna otra ventana puede manipular esta (COOP).
-        respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
-        respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS
-        respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-        respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
-        if peticion.url.path == "/" or peticion.url.path.startswith(("/app", "/panel",
-                                                                  "/inicio", "/diseno")):
-            respuesta.headers["Content-Security-Policy"] = POLITICA_PWA
-            respuesta.headers["Referrer-Policy"] = "no-referrer"
-        return respuesta
+        return poner_cabeceras(peticion, await siguiente(peticion))
 
     @app.middleware("http")
     async def registrar_en_bitacora(peticion: Request, siguiente):

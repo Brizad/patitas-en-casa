@@ -67,6 +67,7 @@ from app.dominio.modelos import (
     Usuario,
 )
 from app.notificaciones.correo import crear_notificador
+from app.observabilidad import instrumentar
 from app.piloto.servicio import RepositorioPiloto, ServicioPiloto
 from app.refugios.repositorio import RepositorioRefugios
 from app.reportes.confirmacion import (
@@ -222,6 +223,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
     # en celulares con datos limitados (RNF-07).
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+    instrumentar(app)  # FPI-29: no hace nada salvo con PATITAS_OBSERVABILIDAD=1
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
     app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas

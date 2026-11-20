@@ -32,6 +32,7 @@ from app.usuarios.intentos import (
 from app.usuarios.repositorio import CorreoDuplicado
 from app.usuarios.servicio import (
     AutoSuspension,
+    ContrasenaActualIncorrecta,
     CuentaNoEncontrada,
     normalizar_correo,
 )
@@ -49,6 +50,31 @@ class CuentaEntrada(BaseModel):
     nombre: str = Field(max_length=120)
     rol: Rol
     contrasena: str = Field(max_length=128)
+
+
+class CambioContrasena(BaseModel):
+    actual: str = Field(max_length=128)
+    nueva: str = Field(max_length=128)
+
+
+def cambiar_contrasena(ctx: Contexto, datos: CambioContrasena, usuario: Usuario) -> dict:
+    """Los fallos cuentan para el mismo candado del inicio de sesión (DT-06): con el token
+    de otra persona no se puede adivinar su contraseña a fuerza de intentos."""
+    clave = clave_correo(usuario.correo)
+    espera = ctx.limite_intentos.segundos_de_bloqueo([clave])
+    if espera:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Demasiados intentos fallidos. Intenta de nuevo en {espera} segundos.",
+            headers={"Retry-After": str(espera)})
+    try:
+        ctx.usuarios.cambiar_contrasena(usuario, datos.actual, datos.nueva)
+    except ContrasenaActualIncorrecta as error:
+        ctx.limite_intentos.registrar_fallo([clave])
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ContrasenaInvalida as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    return {"cambiada": True}
 
 
 class ActivoEntrada(BaseModel):
@@ -123,6 +149,12 @@ def crear_rutas_admin(ctx: Contexto) -> APIRouter:  # noqa: C901
     @rutas.get("/auth/yo")
     def mi_cuenta(usuario: Usuario = usuario_actual):
         return {"correo": usuario.correo, "nombre": usuario.nombre, "rol": usuario.rol.value}
+
+    @rutas.post("/auth/contrasena")
+    def cambiar_mi_contrasena(datos: CambioContrasena, usuario: Usuario = usuario_actual):
+        """Cada persona cambia su propia contraseña dando la actual (ASVS 2.1.5, 2.1.6). Las
+        sesiones ya abiertas siguen hasta que su token venza (30 minutos como máximo)."""
+        return cambiar_contrasena(ctx, datos, usuario)
 
     # A-04 / DT-11 (#278): para ver en producción qué encabezados de proxy llegan y elegir
     # PATITAS_ENCABEZADO_IP o PATITAS_PROXIES_CONFIANZA. Solo estos encabezados: nunca

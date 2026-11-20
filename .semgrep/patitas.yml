@@ -1,0 +1,22 @@
+rules:
+  - id: sql-con-fstring
+    languages: [python]
+    severity: ERROR
+    message: SQL armado con f-string o concatenación (inyección SQL). Use parámetros ligados (:nombre).
+    pattern-either:
+      - pattern: sqlalchemy.text(f"...")
+      - pattern: text(f"...")
+      - pattern: $CONN.execute(f"...", ...)
+      - pattern: text("..." + $X)
+  - id: jwt-sin-algoritmos
+    languages: [python]
+    severity: ERROR
+    message: jwt.decode sin lista fija de algoritmos permite el ataque de confusión de algoritmo.
+    patterns:
+      - pattern: jwt.decode(...)
+      - pattern-not: jwt.decode(..., algorithms=[...], ...)
+  - id: cors-comodin-con-credenciales
+    languages: [python]
+    severity: ERROR
+    message: CORS con "*" y credenciales expone la API a cualquier origen.
+    pattern: CORSMiddleware(..., allow_origins=["*"], ..., allow_credentials=True, ...)
