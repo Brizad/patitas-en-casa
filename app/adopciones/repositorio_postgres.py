@@ -208,6 +208,12 @@ class RepositorioAdopcionesPostgres:
             ).mappings()
             return [_seguimiento(f) for f in filas]
 
+    def todos_los_seguimientos(self) -> list[Seguimiento]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(seguimientos).order_by(
+                seguimientos.c.solicitud_id, seguimientos.c.dia)).mappings().all()
+        return [_seguimiento(f) for f in filas]
+
     def registrar_seguimiento(self, seguimiento_id: int, por: str, nota: str,
                               momento: datetime) -> Seguimiento | None:
         with self._motor.begin() as conexion:
