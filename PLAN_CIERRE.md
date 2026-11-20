@@ -59,28 +59,28 @@ Estimación en PR (cada uno ≤ 300 líneas). «Hecho» solo con PR integrado y 
 | 1d | Video: el nodo se actualiza solo al arrancar (`git pull` + dependencias si cambiaron) + guía «qué hago yo» | 1 | Un solo comando arranca siempre el código de `main`; el nodo imprime su versión | #335 ✅ |
 | 1e | `video-humo.yml` ampliado: flujo completo contra una API local (subida → reclamo → vista → panel) | 1 | El flujo falla si la vista no llega a `GET …/vista.mp4` | #336 ✅ (humo real en verde: run 44011576681) |
 | 2a | Guía 08: 3 parches TDD del percentil + script k6 en `scripts/operacion/` | 1 | `git am -3`; pruebas en verde | #338 ✅ |
-| 2b | Guía 12: cryptography 50.0.0, Bandit B310/B105 | 1 | `pip-audit` con 0 CVE (se pega la salida) | #340 (abierto, CI en curso) |
-| 2c | Guía 13: OpenTelemetry, `/metrics` con token, logs JSON sin datos personales, apagado por defecto | 1 | Apagado: mismo comportamiento y mismo OpenAPI | listo en local; se abre al unirse #340 (ver bitácora) |
-| 2d | Guía 15: refactor de `rutas_reportes.py` | 1 | OpenAPI idéntico (comparación byte a byte del JSON) | listo en local; se abre después de 2c |
-| 2e | `ci-security.yml` (Bandit, Semgrep con `.semgrep/patitas.yml`, pip-audit, npm audit) | 1 | Flujo en verde en el PR | |
-| 2f | Umbral de cobertura de 70 a 90 % | 1 | CI en verde con `--cov-fail-under=90` | |
-| 3a | CHECK de RN-01 en `reportes` (migración `NOT VALID`, validación solo si los datos cumplen) + prueba de contrato | 1 | Migración aditiva probada en el CI; un `INSERT` corto falla | #342 (abierto) |
-| 3b | Lista de reglas que viven solo en el código (propuesta, **sin aplicar**) | 1 | Tabla en este archivo, sección 5 | |
-| 4a | Seguridad: OWASP ASVS 4.0.3 nivel 1 contra el código; `docs/tesis/seguridad.md` (control → cumple/no → evidencia) | 2–3 | Cada «no cumple» corregido con prueba o registrado como deuda | |
-| 4b | Rendimiento: N+1, índices, triaje dentro de `POST /reportes`; medir antes y después | 1–2 | Cifras medidas (no estimadas) en `docs/tesis/pruebas.md` | |
-| 4c | Quitar los 7 `# noqa: C901` de las fábricas de rutas (empieza por `crear_rutas_adopciones`) | 4–6 | OpenAPI idéntico en cada PR; Ruff sin `noqa` | |
+| 2b | Guía 12: cryptography 50.0.0, Bandit B310/B105 | 1 | `pip-audit` con 0 CVE (se pega la salida) | #340 ✅ |
+| 2c | Guía 13: OpenTelemetry, `/metrics` con token, logs JSON sin datos personales, apagado por defecto | 1 | Apagado: mismo comportamiento y mismo OpenAPI | #349 ✅ |
+| 2d | Guía 15: refactor de `rutas_reportes.py` | 1 | OpenAPI idéntico (comparación byte a byte del JSON) | #359 ✅ |
+| 2e | `ci-security.yml` (Bandit, Semgrep con `.semgrep/patitas.yml`, pip-audit, npm audit) | 1 | Flujo en verde en el PR | #351 ✅ |
+| 2f | Umbral de cobertura de 70 a 90 % | 1 | CI en verde con `--cov-fail-under=90` | #367 ✅ |
+| 3a | CHECK de RN-01 en `reportes` (migración `NOT VALID`, validación solo si los datos cumplen) + prueba de contrato | 1 | Migración aditiva probada en el CI; un `INSERT` corto falla | #342 ✅ |
+| 3b | Lista de reglas que viven solo en el código (propuesta, **sin aplicar**) | 1 | Tabla en este archivo, sección 5 | pendiente (no bloquea la entrega) |
+| 4a | Seguridad: OWASP ASVS 4.0.3 nivel 1 contra el código; `docs/tesis/seguridad.md` (control → cumple/no → evidencia) | 2–3 | Cada «no cumple» corregido con prueba o registrado como deuda | #361, #362, #363 ✅ |
+| 4b | Rendimiento: N+1, índices, triaje dentro de `POST /reportes`; medir antes y después | 1–2 | Cifras medidas (no estimadas) en `docs/tesis/pruebas.md` | #365 ✅ (N+1 de `/indicadores`) |
+| 4c | Quitar los 7 `# noqa: C901` de las fábricas de rutas (empieza por `crear_rutas_adopciones`) | 4–6 | OpenAPI idéntico en cada PR; Ruff sin `noqa` | #357 ✅ adopciones, #359 ✅ reportes; faltan 5 |
 | 4d | Pruebas: mutantes que sobreviven; E2E de video y de rescate | 2 | Pruebas nuevas en el CI | |
-| 4e | Triaje con IA: `docs/tesis/triaje-ia.md` honesto (datos sintéticos, métricas, límites) + script de reentrenamiento con reportes reales | 1–2 | El documento no llama «validación» a métricas sintéticas | |
-| 5a | H-1: qué hacer mientras llega ayuda, sin mostrar la prioridad (RN-14) | 1 | Prueba de que el texto no depende de la prioridad | #344 (abierto) |
+| 4e | Triaje con IA: `docs/tesis/triaje-ia.md` honesto (datos sintéticos, métricas, límites) + script de reentrenamiento con reportes reales | 1–2 | El documento no llama «validación» a métricas sintéticas | #355 ✅ |
+| 5a | H-1: qué hacer mientras llega ayuda, sin mostrar la prioridad (RN-14) | 1 | Prueba de que el texto no depende de la prioridad | #344 ✅ |
 | 5b | H-2: el aviso «sin conexión» solo con `navigator.onLine` falso | (con 5a) | Prueba e2e | #344 (abierto) |
 | 5c | Estado «despertando el servidor» en PWA y panel; revisión por pantalla (360 px y escritorio, claro y oscuro) | 2–3 | axe en 0; capturas de regresión actualizadas | |
 | 5d | Portada #329: unir si sigue en verde; lo pendiente de #328 si cabe | 1 | #329 integrado | #329 ✅ (parte 1; lo demás de #328 sigue pendiente) |
-| 6a | `respaldo.yml`: versión del servidor (`SHOW server_version_num`) con mensaje claro; alerta si el último respaldo exitoso tiene más de 26 h | 1 | Flujo válido; no se ejecuta contra Neon desde aquí | |
+| 6a | `respaldo.yml`: versión del servidor (`SHOW server_version_num`) con mensaje claro; alerta si el último respaldo exitoso tiene más de 26 h | 1 | Flujo válido; no se ejecuta contra Neon desde aquí | #353 ✅ |
 | 6b | `deploy.yml` con *healthcheck* y *rollback* (Guía 11): solo si no pide claves nuevas; si las pide, queda listo con los pasos | 1 | Documentado qué clave falta | |
 | 7 | Release v1.3.0: `CHANGELOG.md`, `DEUDA_TECNICA.md`, `ESTADO_PROYECTO.md`, etiqueta, verificación en producción | 1 | `/app/` 200, `/reportes/NOEXISTE` 404, humo del video | |
-| 8a | `docs/piloto/`: consentimiento, 4 tareas, hoja de observación (P01…), SUS con fórmula | 1 | Sin datos inventados; resultados en blanco | |
-| 8b | `docs/aprende/sustentacion-final.md`: arquitectura por capas, recorrido de un reporte, decisiones y 20 preguntas con evidencia | 1 | Cada respuesta apunta a un archivo que existe | |
-| 8c | `docs/aprende/guion-demo.md` actualizado (5 minutos) | (con 8b) | | |
+| 8a | `docs/piloto/`: consentimiento, 4 tareas, hoja de observación (P01…), SUS con fórmula | 1 | Sin datos inventados; resultados en blanco | #347 ✅ |
+| 8b | `docs/aprende/sustentacion-final.md`: arquitectura por capas, recorrido de un reporte, decisiones y 20 preguntas con evidencia | 1 | Cada respuesta apunta a un archivo que existe | **para después** (rama local `docs/sustentacion-final`, sin PR) |
+| 8c | `docs/aprende/guion-demo.md` actualizado (5 minutos) | (con 8b) | | **para después** |
 
 ## 4. Lo que tiene que hacer Brayan (se va completando)
 
@@ -133,3 +133,8 @@ Si diera alguna, avisa antes de confirmar o descartar esos reportes.
   corrige en 9.0.3): pendiente para 2e.
 - Para retomar: las ramas `tmp/*` son locales de este equipo; si no existen, se rehacen con
   `git am -3` sobre `main` en el orden 13 → 15 y los ajustes descritos arriba.
+- 20-nov: se integran #357 (adopciones sin `noqa`), #363 (ASVS), #365 (N+1) y #367 (cobertura 90 %).
+  #357 falló tras traer `main` porque `tests/test_complejidad.py` aún listaba `rutas_reportes.py`
+  como pendiente: se corrigió. Ramas `tmp/*` borradas (su contenido ya está en #349 y #359).
+  Quedan 5 fábricas con `noqa: C901`: admin, refugio, rescates, triaje y video.
+- 8b y 8c quedan **para después** por indicación del autor.
