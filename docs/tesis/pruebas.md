@@ -25,7 +25,7 @@ el CI en verde (`gh pr checks`).
 | Nodo de video | Humo con videos reales de licencia libre | GitHub Actions | La tubería completa (MediaPipe + DeepLabCut) | `video-humo.yml` |
 
 ### Criterios de aceptación
-- 100 % de las pruebas en verde; cobertura de líneas ≥ 70 % (RNF-10, `--cov-fail-under=70`).
+- 100 % de las pruebas en verde; cobertura de líneas ≥ 90 % (el CI falla por debajo: `--cov-fail-under=90`; RNF-10 pide 70 %).
 - Ruff sin errores y complejidad ciclomática ≤ 10 (C901).
 - axe-core con 0 fallas y Lighthouse 100 en las pantallas públicas (RNF-11).
 - e2e: el flujo completo pasa en Chrome sobre PostgreSQL.
@@ -43,7 +43,7 @@ Corrida del CI sobre `main` en el commit `ffde3c4` (run `41920309563`), resultad
 | Suite | Resultado | Detalle |
 |-------|-----------|---------|
 | pytest | **864 pasaron**, 0 fallaron, 0 omitidas | 2 min 29 s; 172 usan PostgreSQL (`-m postgres`); 400 están en archivos que prueban la API por HTTP |
-| Cobertura | **97,22 %** | 4 239 sentencias, 118 sin cubrir (mínimo exigido: 70 %) |
+| Cobertura | **97,22 %** | 4 239 sentencias, 118 sin cubrir (mínimo exigido por el CI desde el 17-nov-2026: 90 %) |
 | Ruff | 0 errores | incluye C901 ≤ 10 |
 | gitleaks | 0 secretos | sobre todo el historial, con auto-prueba |
 | Vitest (panel) | **58 pasaron** en 9 archivos | |
