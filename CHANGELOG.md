@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Verificación del despliegue (guía 11): `.github/workflows/deploy.yml` espera, tras cada CI verde en `main`, a que producción corra la versión de `pyproject.toml` y que `/app/` y `/reportes/NOEXISTE` respondan; si no, queda en rojo. La reversa a Render solo actúa con `RENDER_API_KEY` y `RENDER_SERVICE_ID` (sin probar contra Render). Guía: `docs/aprende/despliegue.md`.
+
 ### Cambiado
 - Complejidad (#374): las cinco fábricas de rutas que quedaban (`rutas_admin`, `rutas_refugio`, `rutas_rescates`, `rutas_triaje` y `video`) ya no llevan `# noqa: C901`: la lógica sale a funciones del módulo y las rutas se reparten en dos grupos. Ya no queda ningún `noqa: C901` en `app/`. El OpenAPI sale idéntico byte a byte y `tests/test_complejidad.py` lo vigila.
 
