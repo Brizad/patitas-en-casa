@@ -13,6 +13,7 @@ import RegistroAdoptante from "./RegistroAdoptante";
 import MisRescates from "./MisRescates";
 import Piloto from "./Piloto";
 import Rescatista from "./Rescatista";
+import Despertando from "./Despertando";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function App() {
     <main className="panel">
       {/* D-08: el primer Tab ofrece ir directo a la cola sin recorrer la barra. */}
       {pantalla === "cola" && <a className="ds-saltar" href="#cola">Saltar a la cola</a>}
+      <Despertando />
       <header className="ds-cabecera">
         <img src="/app/icono.svg" alt="" width="28" height="28" />
         <h1 className="ds-marca">Patitas en Casa · Panel</h1>
@@ -90,6 +92,7 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
   }
   return (
     <main>
+      <Despertando />
       <form className="ds-tarjeta inicio" onSubmit={entrar}>
         <img src="/app/icono.svg" alt="" width="56" height="56" className="logo" />
         <h1>Patitas en Casa</h1>

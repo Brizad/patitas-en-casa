@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Panel (#372): aviso «El servidor está despertando» cuando una petición pasa de 4 s (el plan gratis de Render se duerme), con `role="status"`; se quita al llegar la respuesta o fallar. Igual que el de la PWA (#343).
+
 ## [1.3.0] - 2026-11-20
 Cierre del proyecto: rediseño visual completo, el nodo de video informa su estado y se actualiza solo,
 seguridad (ASVS nivel 1, escaneos en el CI, cambio de contraseña), rendimiento, observabilidad apagada
