@@ -68,21 +68,32 @@ Estimación en PR (cada uno ≤ 300 líneas). «Hecho» solo con PR integrado y 
 | 3b | Lista de reglas que viven solo en el código (propuesta, **sin aplicar**) | 1 | Tabla en este archivo, sección 5 | pendiente (no bloquea la entrega) |
 | 4a | Seguridad: OWASP ASVS 4.0.3 nivel 1 contra el código; `docs/tesis/seguridad.md` (control → cumple/no → evidencia) | 2–3 | Cada «no cumple» corregido con prueba o registrado como deuda | #361, #362, #363 ✅ |
 | 4b | Rendimiento: N+1, índices, triaje dentro de `POST /reportes`; medir antes y después | 1–2 | Cifras medidas (no estimadas) en `docs/tesis/pruebas.md` | #365 ✅ (N+1 de `/indicadores`) |
-| 4c | Quitar los 7 `# noqa: C901` de las fábricas de rutas (empieza por `crear_rutas_adopciones`) | 4–6 | OpenAPI idéntico en cada PR; Ruff sin `noqa` | #357 ✅ adopciones, #359 ✅ reportes; faltan 5 |
-| 4d | Pruebas: mutantes que sobreviven; E2E de video y de rescate | 2 | Pruebas nuevas en el CI | |
+| 4c | Quitar los 7 `# noqa: C901` de las fábricas de rutas (empieza por `crear_rutas_adopciones`) | 4–6 | OpenAPI idéntico en cada PR; Ruff sin `noqa` | #357, #359, #375, #376, #377, #378, #379 ✅ (ya no queda ningún `noqa: C901`) |
+| 4d | Pruebas: mutantes que sobreviven; E2E de video y de rescate | 2 | Pruebas nuevas en el CI | #381 ✅ (huecos de cobertura). Los E2E de rescate y de video ya existían (`e2e/flujo.spec.mjs`, `video-humo.yml`). **Mutantes con mutmut: no se corrieron** (pide WSL2, `scripts/operacion/mutacion.sh`) |
 | 4e | Triaje con IA: `docs/tesis/triaje-ia.md` honesto (datos sintéticos, métricas, límites) + script de reentrenamiento con reportes reales | 1–2 | El documento no llama «validación» a métricas sintéticas | #355 ✅ |
 | 5a | H-1: qué hacer mientras llega ayuda, sin mostrar la prioridad (RN-14) | 1 | Prueba de que el texto no depende de la prioridad | #344 ✅ |
 | 5b | H-2: el aviso «sin conexión» solo con `navigator.onLine` falso | (con 5a) | Prueba e2e | #344 (abierto) |
-| 5c | Estado «despertando el servidor» en PWA y panel; revisión por pantalla (360 px y escritorio, claro y oscuro) | 2–3 | axe en 0; capturas de regresión actualizadas | |
+| 5c | Estado «despertando el servidor» en PWA y panel; revisión por pantalla (360 px y escritorio, claro y oscuro) | 2–3 | axe en 0; capturas de regresión actualizadas | PWA #344 ✅, panel #373 ✅ (CI con axe y capturas en verde; **no se revisó a ojo en el navegador**) |
 | 5d | Portada #329: unir si sigue en verde; lo pendiente de #328 si cabe | 1 | #329 integrado | #329 ✅ (parte 1; lo demás de #328 sigue pendiente) |
 | 6a | `respaldo.yml`: versión del servidor (`SHOW server_version_num`) con mensaje claro; alerta si el último respaldo exitoso tiene más de 26 h | 1 | Flujo válido; no se ejecuta contra Neon desde aquí | #353 ✅ |
-| 6b | `deploy.yml` con *healthcheck* y *rollback* (Guía 11): solo si no pide claves nuevas; si las pide, queda listo con los pasos | 1 | Documentado qué clave falta | |
-| 7 | Release v1.3.0: `CHANGELOG.md`, `DEUDA_TECNICA.md`, `ESTADO_PROYECTO.md`, etiqueta, verificación en producción | 1 | `/app/` 200, `/reportes/NOEXISTE` 404, humo del video | |
+| 6b | `deploy.yml` con *healthcheck* y *rollback* (Guía 11): solo si no pide claves nuevas; si las pide, queda listo con los pasos | 1 | Documentado qué clave falta | #383 ✅ (verificación sin claves; reversa pide `RENDER_API_KEY` y `RENDER_SERVICE_ID`, sin probar) |
+| 7 | Release v1.3.0: `CHANGELOG.md`, `DEUDA_TECNICA.md`, `ESTADO_PROYECTO.md`, etiqueta, verificación en producción | 1 | `/app/` 200, `/reportes/NOEXISTE` 404, humo del video | #371 ✅ y etiqueta v1.3.0 ✅; **verificación en producción: NO pasó** (ver bitácora del 20-nov) |
 | 8a | `docs/piloto/`: consentimiento, 4 tareas, hoja de observación (P01…), SUS con fórmula | 1 | Sin datos inventados; resultados en blanco | #347 ✅ |
 | 8b | `docs/aprende/sustentacion-final.md`: arquitectura por capas, recorrido de un reporte, decisiones y 20 preguntas con evidencia | 1 | Cada respuesta apunta a un archivo que existe | **para después** (rama local `docs/sustentacion-final`, sin PR) |
 | 8c | `docs/aprende/guion-demo.md` actualizado (5 minutos) | (con 8b) | | **para después** |
 
 ## 4. Lo que tiene que hacer Brayan (se va completando)
+
+**URGENTE — producción no se actualiza (20-nov):** entra a Render → el servicio → *Events* →
+el despliegue del commit `9a851c2` (o cualquiera posterior, todos fallaron) → *Logs*, y pégame
+las últimas 30 líneas. Enlace de uno de ellos:
+`https://dashboard.render.com/web/srv-dbhdgno473hc739mege0/deploys/dep-dc0cd8e0tbcc73bkm1hg`.
+Hasta que se arregle, la entrega muestra la versión 1.1.0 y no tiene nada de lo de #332 en adelante.
+
+**Reversa automática (opcional):** secretos `RENDER_API_KEY` y `RENDER_SERVICE_ID` en GitHub
+(pasos en `docs/aprende/despliegue.md`).
+
+**Mutantes (opcional):** en WSL2, `bash scripts/operacion/mutacion.sh` y mira los que sobreviven.
 
 **Nodo de video (en el PC que tiene WSL; una sola vez, unos 5 min si ya estaba instalado):**
 
@@ -138,3 +149,13 @@ Si diera alguna, avisa antes de confirmar o descartar esos reportes.
   como pendiente: se corrigió. Ramas `tmp/*` borradas (su contenido ya está en #349 y #359).
   Quedan 5 fábricas con `noqa: C901`: admin, refugio, rescates, triaje y video.
 - 8b y 8c quedan **para después** por indicación del autor.
+- 20-nov (tarde): release v1.3.0 publicado (#371, etiqueta y release en GitHub). **Producción no
+  la tiene**: los despliegues de Render fallan desde `9a851c2` (6 seguidos; los anteriores, hasta
+  el 17-nov, salieron bien) y la API sigue diciendo `1.1.0`. Se comprobó con
+  `gh api repos/Brizad/patitas-en-casa/deployments`. El registro de Render no se puede leer desde
+  aquí. Al final de la sesión `/app/` tampoco respondía en 90 s (puede estar dormido). Cambios
+  entre el último despliegue bueno y el primero malo: solo `rutas_adopciones.py` (#357), cuyo CI
+  (incluido el e2e contra la app real) pasó. Se sospecha de Render, no del código; sin el registro
+  no se afirma.
+- 20-nov (tarde): 5c panel (#373), 4c completo (#375 a #379), 4d (#381), 6b (#383, `deploy.yml`
+  que sí habría avisado de esto). 3b sigue pendiente; 8b y 8c **para después**.
