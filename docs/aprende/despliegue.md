@@ -5,13 +5,13 @@ del `Dockerfile`. Si la construcción o el arranque fallan, **Render deja viva l
 y no avisa a nadie: la página sigue respondiendo y parece que todo está bien.
 
 **Por qué existe `deploy.yml`.** El 20-nov-2026 los seis despliegues desde `9a851c2` fallaron (la causa
-estaba en el registro de Render, que no se pudo leer desde la sesión de trabajo) y producción siguió en la versión 1.1.0 sin que nadie lo notara. El flujo
+se ve en el registro de Render, que no se pudo leer desde la sesión de trabajo) y producción siguió en la versión 1.1.0 sin que nadie lo notara. El flujo
 `.github/workflows/deploy.yml` (guía 11, trabajo 6b) no despliega nada: después de cada CI en
 verde en `main` espera hasta 20 minutos a que `/openapi.json` de producción diga la versión de
 `pyproject.toml` y comprueba `/app/` (200) y `/reportes/NOEXISTE` (404). Si no llega, queda en
 rojo y GitHub te avisa por correo.
 
-**Lo que NO necesita nada nuevo:** la verificación y el aviso. Funcionan hoy.
+**Lo que NO necesita nada nuevo:** la verificación y el aviso (se activan solos con el próximo CI verde en `main`).
 
 **Lo que falta, y solo tú puedes poner (reversa automática):**
 
