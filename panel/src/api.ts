@@ -34,10 +34,40 @@ export class ErrorApi extends Error {
   }
 }
 
+/** Render gratis se duerme. Si una petición pasa de este tiempo, el panel muestra «El servidor
+ *  está despertando» (Despertando.tsx) en vez de parecer colgado. */
+export const ESPERA_LENTA_MS = 4000;
+type OyenteDeEspera = (peticionesLentas: number) => void;
+const oyentes = new Set<OyenteDeEspera>();
+let lentas = 0;
+
+/** Avisa cada vez que cambia cuántas peticiones llevan más de ESPERA_LENTA_MS. Devuelve la
+ *  función para dejar de oír. */
+export function alCambiarEspera(oyente: OyenteDeEspera): () => void {
+  oyentes.add(oyente);
+  return () => { oyentes.delete(oyente); };
+}
+
+function contarLenta(cambio: number): void {
+  lentas += cambio;
+  oyentes.forEach((oyente) => oyente(lentas));
+}
+
+export async function conAvisoDeEspera<T>(promesa: Promise<T>): Promise<T> {
+  let avisada = false;
+  const reloj = setTimeout(() => { avisada = true; contarLenta(1); }, ESPERA_LENTA_MS);
+  try {
+    return await promesa;
+  } finally {
+    clearTimeout(reloj);
+    if (avisada) contarLenta(-1);
+  }
+}
+
 export async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?: string): Promise<T> {
   const cabeceras = new Headers(opciones.headers);
   if (token) cabeceras.set("Authorization", `Bearer ${token}`);
-  const respuesta = await fetch(ruta, { ...opciones, headers: cabeceras });
+  const respuesta = await conAvisoDeEspera(fetch(ruta, { ...opciones, headers: cabeceras }));
   const cuerpo = await respuesta.json().catch(() => ({}));
   if (!respuesta.ok) {
     const detalle = typeof cuerpo.detail === "string" ? cuerpo.detail : "Datos no válidos.";
