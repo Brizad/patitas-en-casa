@@ -10,7 +10,7 @@ veterinarios y control de cupos del refugio.
 
 - Proyecto integrador de Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 - Autor: Brayan David Amado Ramírez. Repositorio: https://github.com/Brizad/patitas-en-casa
-- Versión publicada: v1.1.0 (v1.0.0: incremento 3, fases 1 a 5 y brechas del ERS, PR #108 a
+- Versión publicada: v1.3.0 (v1.0.0: incremento 3, fases 1 a 5 y brechas del ERS, PR #108 a
   #122; v1.1.0: análisis de video con trabajador local, fase 6, PR #126 a #142).
   En producción: https://patitas-en-casa-pnnk.onrender.com (Render, despliegue desde `main`).
 - Idioma: todo (código, pruebas, commits, documentación) en **español**.
@@ -158,7 +158,7 @@ en lo que toca a esperar la revisión del autor antes de integrar.
 1. Cada tarea sigue el flujo completo sin pedir confirmación: issue, rama, cambios con su
    prueba, commit, push, PR y merge (ver punto 2: primero `gh pr checks` en verde, luego `gh pr merge --squash`).
 2. Nunca unir un PR sin confirmar antes con `gh pr checks` que el CI está en verde; luego unir
-   con `gh pr merge --squash` (el repositorio es privado: no hay `--auto` ni reglas de rama).
+   con `gh pr merge --squash` (el repositorio es público, pero no hay `--auto` ni reglas de rama).
    En local, correr solo las pruebas relacionadas con el cambio y `ruff`; la suite completa
    la corre el CI.
 3. No usar agentes en paralelo ni tareas exploratorias largas.
