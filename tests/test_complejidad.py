@@ -5,7 +5,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
 # Fábricas que todavía silencian la regla (deuda conocida; ver PLAN_CIERRE.md, trabajo 4c).
-PENDIENTES = {"app/api/rutas_admin.py", "app/api/rutas_refugio.py", "app/api/rutas_reportes.py",
+PENDIENTES = {"app/api/rutas_admin.py", "app/api/rutas_refugio.py",
               "app/api/rutas_rescates.py", "app/api/rutas_triaje.py", "app/api/video.py"}
 
 
