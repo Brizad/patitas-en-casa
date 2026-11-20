@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Cambiado
+- Complejidad (#374): las cinco fábricas de rutas que quedaban (`rutas_admin`, `rutas_refugio`, `rutas_rescates`, `rutas_triaje` y `video`) ya no llevan `# noqa: C901`: la lógica sale a funciones del módulo y las rutas se reparten en dos grupos. Ya no queda ningún `noqa: C901` en `app/`. El OpenAPI sale idéntico byte a byte y `tests/test_complejidad.py` lo vigila.
+
 ### Agregado
 - Panel (#372): aviso «El servidor está despertando» cuando una petición pasa de 4 s (el plan gratis de Render se duerme), con `role="status"`; se quita al llegar la respuesta o fallar. Igual que el de la PWA (#343).
 
