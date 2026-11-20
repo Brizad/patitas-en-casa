@@ -21,15 +21,18 @@ def crear_rutas_indicadores(ctx: Contexto) -> APIRouter:
     gestion, administracion = ctx.gestion, ctx.administracion
 
     def datos_para_indicadores() -> Datos:
+        """Un número fijo de consultas, haya 10 reportes o 10 000 (antes: una por reporte,
+        una por decisión y una por solicitud). El resultado y su orden son los mismos."""
         reportes_ = repositorio.todos()
-        decisiones = {}
-        for r in reportes_:
-            lista = repositorio.decisiones(r.codigo)
-            if lista:
-                decisiones[r.codigo] = lista[-1]
-        rescates_ = [x for x in (repositorio_rescates.vigente(c) for c in decisiones) if x]
+        ultimas = repositorio.ultimas_decisiones()
+        decisiones = {r.codigo: ultimas[r.codigo] for r in reportes_ if r.codigo in ultimas}
+        vigentes = {x.codigo: x for x in repositorio_rescates.vigentes()}
+        rescates_ = [vigentes[c] for c in decisiones if c in vigentes]
         solicitudes_ = repositorio_adopciones.solicitudes()
-        seguimientos_ = [x for s in solicitudes_ for x in repositorio_adopciones.seguimientos(s.id)]
+        por_solicitud: dict[int, list] = {}
+        for x in repositorio_adopciones.todos_los_seguimientos():
+            por_solicitud.setdefault(x.solicitud_id, []).append(x)
+        seguimientos_ = [x for s in solicitudes_ for x in por_solicitud.get(s.id, [])]
         return Datos(reportes_, decisiones, rescates_, repositorio_refugios.todos(),
                      solicitudes_, seguimientos_, tuple(repositorio_adopciones.perfiles()),
                      tuple(repositorio_adopciones.disponibles()))

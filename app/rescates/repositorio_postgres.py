@@ -98,6 +98,12 @@ class RepositorioRescatesPostgres:
         return self._uno(rescates.c.reporte_codigo == codigo,
                          rescates.c.estado != EstadoRescate.LIBERADO.value)
 
+    def vigentes(self) -> list[Rescate]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(rescates).where(
+                rescates.c.estado != EstadoRescate.LIBERADO.value)).mappings().all()
+        return [_a_rescate(f) for f in filas]
+
     def activo_de(self, rescatista: str) -> Rescate | None:
         return self._uno(rescates.c.rescatista == rescatista,
                          rescates.c.estado.in_([e.value for e in ACTIVOS]))

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import Engine, RowMapping, select, update
+from sqlalchemy import Engine, RowMapping, select, true, update
 from sqlalchemy import insert as insertar
 from sqlalchemy.dialects.postgresql import insert
 
@@ -134,6 +134,10 @@ class RepositorioPostgres:
 
     def decisiones_de(self, veterinario: str) -> list[DecisionTriaje]:
         return self._decisiones(decisiones_triaje.c.veterinario == veterinario)
+
+    def ultimas_decisiones(self) -> dict[str, DecisionTriaje]:
+        # Vienen ordenadas por fecha: si un reporte tuviera varias, queda la última.
+        return {d.codigo: d for d in self._decisiones(true())}
 
     def _decisiones(self, condicion) -> list[DecisionTriaje]:
         with self._motor.connect() as conexion:
