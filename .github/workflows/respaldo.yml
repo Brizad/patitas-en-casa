@@ -3,15 +3,24 @@ name: Respaldo diario
 # RNF-15 (P-07): copia diaria de la base de Neon con pg_dump, cifrada con AES-256 y guardada
 # 14 días como artefacto. En el mismo flujo se restaura en una base temporal para comprobar
 # que la copia sirve. Sin los secretos NEON_DATABASE_URL y RESPALDO_CLAVE avisa y no falla.
+# Antes de copiar comprueba que pg_dump sirve para la versión del servidor (#210) y, después
+# (y otra vez a las 08:17), alerta en rojo si el último respaldo guardado tiene más de 26 h.
 # Guía: docs/aprende/respaldo.md
 
 on:
   schedule:
-    - cron: "17 7 * * *"   # 02:17 hora de Colombia
+    - cron: "17 7 * * *"    # 02:17 hora de Colombia: respaldo y vigilancia
+    - cron: "17 13 * * *"   # 08:17 hora de Colombia: solo vigilancia
   workflow_dispatch:
+    inputs:
+      solo_vigilar:
+        description: "Solo revisar la edad del último respaldo (no toca Neon)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  actions: read   # la vigilancia lee la lista de artefactos de este repositorio
 
 env:
   # El cliente de pg_dump debe ser de la misma versión que el servidor de Neon, o mayor.
@@ -19,9 +28,13 @@ env:
 
 jobs:
   respaldar:
+    # A las 08:17 y con «solo_vigilar» este job no corre: solo la vigilancia de abajo.
+    if: github.event.schedule != '17 13 * * *' && inputs.solo_vigilar != true
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v6
+
       - name: Revisar los secretos
         id: secretos
         env:
@@ -34,6 +47,17 @@ jobs:
           else
             echo "hay=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # #210: pg_dump solo respalda servidores de su versión o anteriores. Si Neon se
+      # actualiza, aquí se dice qué línea cambiar en vez de fallar con un error críptico.
+      - name: Versión del servidor (SHOW server_version_num)
+        if: steps.secretos.outputs.hay == 'true'
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          servidor=$(docker run --rm -e NEON_DATABASE_URL "postgres:${PG_VERSION}" \
+            sh -c 'psql "$NEON_DATABASE_URL" -Atc "SHOW server_version_num"' 2> /dev/null || true)
+          python -m scripts.operacion.vigilar_respaldo version "$servidor" "$PG_VERSION"
 
       - name: Copia de la base (pg_dump)
         if: steps.secretos.outputs.hay == 'true'
@@ -91,3 +115,19 @@ jobs:
             patitas.dump.enc.sha256
           retention-days: 14
           if-no-files-found: error
+
+  # Alerta si no hay un respaldo reciente: cubre el día en que la copia falla, los secretos
+  # que faltan (el job de arriba solo avisa en amarillo) y un flujo que dejó de correr.
+  vigilar:
+    needs: respaldar
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: ¿El último respaldo tiene 26 horas o menos?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" > artefactos.json
+          python -m scripts.operacion.vigilar_respaldo respaldos artefactos.json

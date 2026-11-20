@@ -16,6 +16,10 @@ class AutoSuspension(ValueError):
     pass
 
 
+class ContrasenaActualIncorrecta(PermissionError):
+    pass
+
+
 PATRON_CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -53,6 +57,17 @@ class ServicioUsuarios:
             self._repositorio.actualizar_hash(usuario.correo, nuevo)
             usuario.hash_contrasena = nuevo
         return usuario
+
+    def cambiar_contrasena(self, usuario: Usuario, actual: str, nueva: str) -> None:
+        """ASVS 2.1.5 y 2.1.6: cada quien cambia la suya y debe dar la actual (una sesión
+        abierta o un token robado no alcanzan). La nueva cumple la misma política."""
+        if not contrasenas.verificar(usuario.hash_contrasena, actual):
+            raise ContrasenaActualIncorrecta("La contraseña actual no es correcta.")
+        contrasenas.validar_politica(nueva)
+        if nueva == actual:
+            raise contrasenas.ContrasenaInvalida(
+                "La contraseña nueva debe ser distinta de la actual.")
+        self._repositorio.actualizar_hash(usuario.correo, contrasenas.hashear(nueva))
 
     def listar(self) -> list[Usuario]:
         return self._repositorio.todos()

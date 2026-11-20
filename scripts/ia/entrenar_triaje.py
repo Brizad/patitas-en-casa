@@ -39,10 +39,16 @@ SALIDA = RAIZ / "app" / "triaje" / "modelo_tfidf_v1.json"
 RECALL_OBJETIVO = 0.97
 
 
-def entrenar(cantidad: int = 4000, semilla: int = 42) -> dict:
+def entrenar(cantidad: int = 4000, semilla: int = 42,
+             extra: list[tuple[str, str]] | None = None, version: str = VERSION) -> dict:
+    """«extra»: reportes reales etiquetados por veterinarios (scripts/ia/validar_con_reales.py);
+    entran solo al entrenamiento, nunca a la validación. Sin «extra», el modelo publicado."""
     textos, etiquetas = zip(*generar(cantidad, semilla), strict=True)
     x_ent, x_val, y_ent, y_val = train_test_split(
         textos, etiquetas, test_size=0.2, stratify=etiquetas, random_state=semilla)
+    if extra:
+        x_ent = [*x_ent, *(texto for texto, _ in extra)]
+        y_ent = [*y_ent, *(etiqueta for _, etiqueta in extra)]
     vectorizador = TfidfVectorizer(preprocessor=normalizar, ngram_range=(1, 2), min_df=2)
     modelo = LogisticRegression(max_iter=3000, C=4.0)
     modelo.fit(vectorizador.fit_transform(x_ent), y_ent)
@@ -64,9 +70,11 @@ def entrenar(cantidad: int = 4000, semilla: int = 42) -> dict:
     vocabulario = vectorizador.vocabulary_
     terminos = sorted(vocabulario, key=vocabulario.get)
     return {
-        "version": VERSION,
+        "version": version,
         "datos": f"sintéticos: {cantidad} reportes, semilla {semilla} "
-                 "(scripts/ia/generar_datos_sinteticos.py)",
+                 "(scripts/ia/generar_datos_sinteticos.py)"
+                 + (f" + {len(extra)} reportes reales confirmados por veterinarios"
+                    if extra else ""),
         "clases": clases,
         "terminos": terminos,
         "idf": [round(float(v), 5) for v in vectorizador.idf_],
