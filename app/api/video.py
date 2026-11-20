@@ -65,19 +65,17 @@ def vista_para_personal(t: TrabajoVideo) -> dict:
             "tiene_vista": t.vista_ruta is not None}
 
 
-# C901: como en crear_app, mccabe suma las rutas anidadas; cada una por separado es sencilla.
-def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | AlmacenEnPostgres,  # noqa: C901
-                      token: str | None, personal,
-                      almacen_vistas: AlmacenEnDisco | AlmacenEnPostgres | None = None
-                      ) -> APIRouter:
-    rutas = APIRouter()
+Almacen = AlmacenEnDisco | AlmacenEnPostgres
 
-    def _ejecutar(funcion, *argumentos):
-        try:
-            return funcion(*argumentos)
-        except VideoRechazado as error:
-            raise HTTPException(error.estado_http, str(error)) from error
 
+def _ejecutar(funcion, *argumentos):
+    try:
+        return funcion(*argumentos)
+    except VideoRechazado as error:
+        raise HTTPException(error.estado_http, str(error)) from error
+
+
+def _dependencia_del_trabajador(servicio: ServicioVideo, token: str | None):
     def trabajador(x_video_token: Annotated[str | None, Header()] = None,
                    x_video_nodo: Annotated[str | None, Header(max_length=20)] = None) -> str:
         if not token:
@@ -87,25 +85,72 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
         servicio.latido(x_video_nodo)  # #231: el nodo está vivo y dice su versión
         return x_video_nodo or ""
 
+    return trabajador
+
+
+async def _guardar(almacen: Almacen, peticion: Request) -> tuple[str, int]:
+    try:
+        return await almacen.guardar(peticion.stream())
+    except ArchivoInvalido as error:
+        raise HTTPException(413 if "MB" in str(error) else 415, str(error)) from error
+
+
+async def _subir_video(servicio: ServicioVideo, almacen: Almacen, token: str | None,
+                       codigo: str, peticion: Request, clave: str | None) -> dict:
+    if not token:
+        raise HTTPException(503, "Por ahora no analizamos videos. Tu reporte ya llegó y "
+                                 "se atiende con la descripción.")
+    codigo = codigo.upper()
+    _ejecutar(servicio.autorizar_subida, codigo, clave)
+    if int(peticion.headers.get("content-length") or 0) > MAX_BYTES:
+        raise HTTPException(413, "El video pasa de 50 MB.")
+    ruta, tamano = await _guardar(almacen, peticion)
+    _ejecutar(servicio.registrar, codigo, ruta, tamano)
+    return {"estado": "pendiente", "mensaje": "Video recibido, se está analizando."}
+
+
+async def _subir_vista(servicio: ServicioVideo, almacen_vistas: Almacen, id_: int,
+                       peticion: Request) -> dict:
+    _ejecutar(servicio.autorizar_vista, id_)
+    maximo = config.VISTA_VIDEO_MAX_MB * 1024 * 1024
+    if int(peticion.headers.get("content-length") or 0) > maximo:
+        raise HTTPException(413, f"La vista pasa de {config.VISTA_VIDEO_MAX_MB} MB.")
+    ruta, tamano = await _guardar(almacen_vistas, peticion)
+    _ejecutar(servicio.registrar_vista, id_, ruta, tamano)
+    return {"bytes": tamano}
+
+
+def _vista_del_video(servicio: ServicioVideo, almacen_vistas: Almacen, codigo: str):
+    vista = servicio.vista_de(codigo.upper())
+    if vista is None or not almacen_vistas.existe(vista[0]):
+        raise HTTPException(404, "Este reporte no tiene vista previa del video.")
+    ruta, tamano = vista
+    return StreamingResponse(almacen_vistas.leer(ruta), media_type="video/mp4",
+                             headers={"Cache-Control": "private, no-store",
+                                      "Content-Length": str(tamano)})
+
+
+def crear_rutas_video(servicio: ServicioVideo, almacen: Almacen,
+                      token: str | None, personal,
+                      almacen_vistas: Almacen | None = None
+                      ) -> APIRouter:
+    rutas = APIRouter()
+    _rutas_del_ciudadano_y_del_trabajador(rutas, servicio, almacen, token, almacen_vistas)
+    _rutas_del_personal(rutas, servicio, token, personal, almacen_vistas)
+    return rutas
+
+
+def _rutas_del_ciudadano_y_del_trabajador(rutas: APIRouter, servicio: ServicioVideo,
+                                          almacen: Almacen, token: str | None,
+                                          almacen_vistas: Almacen | None) -> None:
+    trabajador = _dependencia_del_trabajador(servicio, token)
     solo_trabajador = [Depends(trabajador)]
 
     @rutas.post("/reportes/{codigo}/video", status_code=202)
     async def subir_video(codigo: str, peticion: Request,
                           clave: Annotated[str | None, Header(alias="Idempotency-Key")] = None):
         """RF-01 / RF-03: el video (≤ 50 MB) llega después del reporte, sin cuenta."""
-        if not token:
-            raise HTTPException(503, "Por ahora no analizamos videos. Tu reporte ya llegó y "
-                                     "se atiende con la descripción.")
-        codigo = codigo.upper()
-        _ejecutar(servicio.autorizar_subida, codigo, clave)
-        if int(peticion.headers.get("content-length") or 0) > MAX_BYTES:
-            raise HTTPException(413, "El video pasa de 50 MB.")
-        try:
-            ruta, tamano = await almacen.guardar(peticion.stream())
-        except ArchivoInvalido as error:
-            raise HTTPException(413 if "MB" in str(error) else 415, str(error)) from error
-        _ejecutar(servicio.registrar, codigo, ruta, tamano)
-        return {"estado": "pendiente", "mensaje": "Video recibido, se está analizando."}
+        return await _subir_video(servicio, almacen, token, codigo, peticion, clave)
 
     @rutas.post("/video/trabajos/reclamar", dependencies=solo_trabajador)
     def reclamar_trabajo(nodo: str = Depends(trabajador)):
@@ -123,16 +168,7 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
     @rutas.post("/video/trabajos/{id_}/vista", dependencies=solo_trabajador)
     async def subir_vista(id_: int, peticion: Request):
         """#214: la vista previa liviana (MP4, 5 MB o menos) que ve el veterinario."""
-        _ejecutar(servicio.autorizar_vista, id_)
-        maximo = config.VISTA_VIDEO_MAX_MB * 1024 * 1024
-        if int(peticion.headers.get("content-length") or 0) > maximo:
-            raise HTTPException(413, f"La vista pasa de {config.VISTA_VIDEO_MAX_MB} MB.")
-        try:
-            ruta, tamano = await almacen_vistas.guardar(peticion.stream())
-        except ArchivoInvalido as error:
-            raise HTTPException(413 if "MB" in str(error) else 415, str(error)) from error
-        _ejecutar(servicio.registrar_vista, id_, ruta, tamano)
-        return {"bytes": tamano}
+        return await _subir_vista(servicio, almacen_vistas, id_, peticion)
 
     @rutas.post("/video/trabajos/{id_}/resultado", dependencies=solo_trabajador)
     def entregar_resultado(id_: int, datos: ResultadoEntrada,
@@ -148,6 +184,9 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
         servicio.latido(nodo or None, ocupado=False)
         return {"estado": estado}
 
+
+def _rutas_del_personal(rutas: APIRouter, servicio: ServicioVideo, token: str | None,
+                        personal, almacen_vistas: Almacen | None) -> None:
     @rutas.get("/video/nodo", dependencies=[personal])
     def estado_del_nodo():
         """#231: ¿el equipo que analiza los videos está encendido y con el código al día?"""
@@ -173,12 +212,4 @@ def crear_rutas_video(servicio: ServicioVideo, almacen: AlmacenEnDisco | Almacen
     @rutas.get("/reportes/{codigo}/video/vista.mp4", dependencies=[personal])
     def vista_del_video(codigo: str):
         """El personal ve el video con el esqueleto dibujado; nunca el ciudadano (RN-14)."""
-        vista = servicio.vista_de(codigo.upper())
-        if vista is None or not almacen_vistas.existe(vista[0]):
-            raise HTTPException(404, "Este reporte no tiene vista previa del video.")
-        ruta, tamano = vista
-        return StreamingResponse(almacen_vistas.leer(ruta), media_type="video/mp4",
-                                 headers={"Cache-Control": "private, no-store",
-                                          "Content-Length": str(tamano)})
-
-    return rutas
+        return _vista_del_video(servicio, almacen_vistas, codigo)
