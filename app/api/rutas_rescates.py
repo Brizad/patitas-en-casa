@@ -53,11 +53,51 @@ def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
     return datos
 
 
-# C901: como en crear_app, mccabe suma las rutas anidadas; cada una es sencilla.
-def crear_rutas_rescates(ctx: Contexto) -> APIRouter:  # noqa: C901
+def _ofertas(ctx: Contexto, rescatista: Usuario) -> list[dict]:
+    escalados = ctx.rescates.escalados()
+    return [{"codigo": r.codigo, "prioridad": r.prioridad.value,
+             "descripcion": r.descripcion, "comuna": r.ubicacion.comuna,
+             "escalado": r.codigo in escalados,
+             "esperando_desde": fecha_utc(r.creado_en)}
+            for r in ctx.rescates.ofertas(rescatista)]
+
+
+def _historial(ctx: Contexto, rescatista: Usuario) -> list[dict]:
+    return [{"codigo": r.codigo, "aceptado_en": fecha_utc(r.aceptado_en),
+             "llego": r.estado in (EstadoRescate.EN_SITIO, EstadoRescate.ATENDIDO),
+             "llegada_en": fecha_utc(r.llegada_en) if r.llegada_en else None,
+             "resultado": r.resultado.value if r.resultado else None,
+             "estado": r.estado.value, "actualizado_en": fecha_utc(r.actualizado_en)}
+            for r in ctx.repositorio_rescates.historial_de(rescatista.correo)]
+
+
+def _paso(accion, *args):
+    try:
+        return accion(*args)
+    except RescateNoOfrecido as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except PasoInvalido as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+def _registrar_resultado(ctx: Contexto, codigo: str, datos: ResultadoEntrada,
+                         rescatista: Usuario) -> dict:
+    _paso(ctx.rescates.registrar_resultado, rescatista, codigo.upper(), datos.resultado)
+    if datos.resultado in (ResultadoRescate.TRASLADADO, ResultadoRescate.ATENDIDO_EN_SITIO):
+        ctx.avisar_al_ciudadano(codigo.upper(), (
+            f"un rescatista ya atendió a tu animal del reporte {codigo.upper()}. "
+            "Consulta cómo sigue con tu código en la página de seguimiento."))
+    return {"codigo": codigo.upper(), "estado": "atendido", "resultado": datos.resultado.value}
+
+
+def crear_rutas_rescates(ctx: Contexto) -> APIRouter:
     rutas = APIRouter()
-    avisar_al_ciudadano = ctx.avisar_al_ciudadano
-    repositorio_rescates = ctx.repositorio_rescates
+    _rutas_del_rescatista(rutas, ctx)
+    _rutas_de_los_pasos(rutas, ctx)
+    return rutas
+
+
+def _rutas_del_rescatista(rutas: APIRouter, ctx: Contexto) -> None:
     rescates = ctx.rescates
     rescatista_actual = ctx.rescatista_actual
 
@@ -85,12 +125,7 @@ def crear_rutas_rescates(ctx: Contexto) -> APIRouter:  # noqa: C901
     def ofertas_de_rescate(rescatista: Usuario = rescatista_actual):
         """Solo la comuna (ubicación aproximada); la dirección exacta se muestra al aceptar.
         «escalado»: nadie lo aceptó a tiempo y se ofrece en toda la ciudad (RF-23)."""
-        escalados = rescates.escalados()
-        return [{"codigo": r.codigo, "prioridad": r.prioridad.value,
-                 "descripcion": r.descripcion, "comuna": r.ubicacion.comuna,
-                 "escalado": r.codigo in escalados,
-                 "esperando_desde": fecha_utc(r.creado_en)}
-                for r in rescates.ofertas(rescatista)]
+        return _ofertas(ctx, rescatista)
 
     @rutas.get("/rescates/mio")
     def mi_rescate(rescatista: Usuario = rescatista_actual):
@@ -101,20 +136,12 @@ def crear_rutas_rescates(ctx: Contexto) -> APIRouter:  # noqa: C901
     def historial_de_rescates(rescatista: Usuario = rescatista_actual):
         """Mis rescates: los que aceptó, del más reciente al más viejo. Solo fechas y estados:
         la dirección exacta se muestra únicamente en el rescate en curso."""
-        return [{"codigo": r.codigo, "aceptado_en": fecha_utc(r.aceptado_en),
-                 "llego": r.estado in (EstadoRescate.EN_SITIO, EstadoRescate.ATENDIDO),
-                 "llegada_en": fecha_utc(r.llegada_en) if r.llegada_en else None,
-                 "resultado": r.resultado.value if r.resultado else None,
-                 "estado": r.estado.value, "actualizado_en": fecha_utc(r.actualizado_en)}
-                for r in repositorio_rescates.historial_de(rescatista.correo)]
+        return _historial(ctx, rescatista)
 
-    def _paso(accion, *args):
-        try:
-            return accion(*args)
-        except RescateNoOfrecido as error:
-            raise HTTPException(status_code=404, detail=str(error)) from error
-        except PasoInvalido as error:
-            raise HTTPException(status_code=409, detail=str(error)) from error
+
+def _rutas_de_los_pasos(rutas: APIRouter, ctx: Contexto) -> None:
+    rescates = ctx.rescates
+    rescatista_actual = ctx.rescatista_actual
 
     @rutas.post("/rescates/{codigo}/aceptar")
     def aceptar_rescate(codigo: str, rescatista: Usuario = rescatista_actual):
@@ -133,12 +160,4 @@ def crear_rutas_rescates(ctx: Contexto) -> APIRouter:  # noqa: C901
     @rutas.post("/rescates/{codigo}/resultado")
     def resultado_del_rescate(codigo: str, datos: ResultadoEntrada,
                               rescatista: Usuario = rescatista_actual):
-        _paso(rescates.registrar_resultado, rescatista, codigo.upper(), datos.resultado)
-        if datos.resultado in (ResultadoRescate.TRASLADADO, ResultadoRescate.ATENDIDO_EN_SITIO):
-            avisar_al_ciudadano(codigo.upper(), (
-                f"un rescatista ya atendió a tu animal del reporte {codigo.upper()}. "
-                "Consulta cómo sigue con tu código en la página de seguimiento."))
-        return {"codigo": codigo.upper(), "estado": "atendido",
-                "resultado": datos.resultado.value}
-
-    return rutas
+        return _registrar_resultado(ctx, codigo, datos, rescatista)
