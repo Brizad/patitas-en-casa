@@ -68,10 +68,17 @@ export async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?:
   const cabeceras = new Headers(opciones.headers);
   if (token) cabeceras.set("Authorization", `Bearer ${token}`);
   const respuesta = await conAvisoDeEspera(fetch(ruta, { ...opciones, headers: cabeceras }));
-  const cuerpo = await respuesta.json().catch(() => null);
-  if (!respuesta.ok) throw new ErrorApi(respuesta.status, mensajeDeError(respuesta.status, cuerpo));
-  return (cuerpo ?? {}) as T;
+  // Un cuerpo que no es JSON (vacío, o la página HTML de Render) no es lo mismo que un JSON
+  // null: «sin rescate activo» responde null y debe llegar tal cual.
+  const cuerpo: unknown = await respuesta.json().catch(() => SIN_JSON);
+  if (!respuesta.ok) {
+    throw new ErrorApi(respuesta.status,
+                       mensajeDeError(respuesta.status, cuerpo === SIN_JSON ? null : cuerpo));
+  }
+  return (cuerpo === SIN_JSON ? {} : cuerpo) as T;
 }
+
+const SIN_JSON = Symbol("sin JSON");
 
 /** #396: Render dormido o caído responde 502/503 con una página HTML; un fallo interno, 500.
  *  Nada de eso es culpa de lo que escribió la persona: nunca «Datos no válidos». */

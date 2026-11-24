@@ -51,6 +51,11 @@ describe("errores del servidor en el panel", () => {
     expect((await errorDe(pedir("/cola"))).message).toBe("Datos no válidos.");
   });
 
+  it("un JSON null correcto llega como null (p. ej. «sin rescate activo»)", async () => {
+    responder("null", 200);
+    expect(await pedir("/rescates/mio")).toBeNull();
+  });
+
   it("una respuesta correcta sin cuerpo sigue funcionando", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 204 })));
     expect(await pedir("/algo")).toEqual({});

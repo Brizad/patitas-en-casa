@@ -35,7 +35,8 @@ def test_log_json_descarta_campos_personales(caplog):
 
 def test_metricas_protegidas_y_sin_codigos_de_reporte(monkeypatch):
     c = _cliente(monkeypatch)
-    r = c.post("/reportes", json={"descripcion": DESCRIPCION, "latitud": 7.89,
+    # Latitud con muchos decimales: «7.89» aparecía por azar en process_cpu_seconds_total.
+    r = c.post("/reportes", json={"descripcion": DESCRIPCION, "latitud": 7.893517,
                                   "longitud": -72.5, "comuna": 3})
     assert r.status_code == 201
     codigo = r.json()["codigo"]
@@ -44,7 +45,7 @@ def test_metricas_protegidas_y_sin_codigos_de_reporte(monkeypatch):
     texto = c.get("/metrics", headers={"Authorization": "Bearer token-de-pruebas"}).text
     assert "http_server_duration" in texto and 'http_route="/reportes"' in texto
     assert 'http_route="/reportes/{codigo}/seguimiento"' in texto
-    assert codigo not in texto and "Rosa" not in texto and "7.89" not in texto
+    assert codigo not in texto and "Rosa" not in texto and "7.893517" not in texto
 
 
 def test_evento_no_falla_sin_observabilidad():
