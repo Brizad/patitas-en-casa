@@ -41,7 +41,7 @@ from app.api.armado import (
     cargar_demo_al_arrancar,
 )
 from app.api.comun import Contexto, ip_del_cliente
-from app.api.middlewares import ciclo_de_vida, instalar_middlewares
+from app.api.middlewares import ciclo_de_vida, instalar_despertador, instalar_middlewares
 from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_adopciones import crear_rutas_adopciones
@@ -83,6 +83,7 @@ from app.rescates.servicio import (
 )
 from app.seguridad.cifrado import CanalConDescifrado, Cifrador
 from app.seguridad.tokens import EmisorTokens
+from app.tareas_de_fondo import Reposo, TareaDeFondo
 from app.triaje.combinado import triaje_por_defecto
 from app.triaje.servicio import ServicioTriaje
 from app.usuarios.intentos import (
@@ -135,6 +136,34 @@ def emisor_desde_entorno() -> EmisorTokens:
 
 # crear_app es la «raíz de composición»: arma los servicios y conecta las rutas
 # (app/api/rutas_*.py, DT-13), los repositorios (armado.py) y los middlewares (#282).
+def armar_tareas(rescates: ServicioRescates, procesador: ProcesadorAvisos,
+                 videos: ServicioVideo | None, *, escalamientos_s: float | None,
+                 avisos_s: float | None, videos_s: float | None) -> list[TareaDeFondo]:
+    """#390: cada revisión dice cuándo hace falta la siguiente; sin trabajo no hay consultas.
+    Un intervalo None apaga esa tarea (las pruebas la ejecutan a mano)."""
+    tareas: list[TareaDeFondo] = []
+    avisos = None
+    if avisos_s:
+        # Con avisos enviados o reintentados quizá quedan más: vuelve pronto. Sin ninguno,
+        # reposo creciente hasta 30 min (y despierta al confirmar o crear avisos).
+        avisos = TareaDeFondo("envío de avisos pendientes",
+                              lambda: avisos_s if any(procesador.procesar().values()) else None,
+                              reposo=Reposo(avisos_s, config.REPOSO_MAXIMO_AVISOS_S))
+        tareas.append(avisos)
+    if escalamientos_s:
+        def escalar() -> float | None:
+            if rescates.escalar_vencidos() and avisos is not None:
+                avisos.despertar()  # el escalamiento guardó avisos nuevos
+            return escalamientos_s
+        tareas.append(TareaDeFondo("revisión de rescates sin aceptar", escalar,
+                                   tras_error=Reposo(escalamientos_s, 1800)))
+    if videos is not None and videos_s:
+        tareas.append(TareaDeFondo("videos sin analizar a tiempo",
+                                   lambda: (videos.revisar(), videos_s)[1],
+                                   tras_error=Reposo(videos_s, 1800)))
+    return tareas
+
+
 def _tareas_activas(pedido: bool | None) -> bool:
     """#388: el parámetro de crear_app gana; si no hay, PATITAS_TAREAS_DE_FONDO (encendidas)."""
     activas = cargar_ajustes_tareas().tareas_de_fondo if pedido is None else pedido
@@ -225,15 +254,14 @@ def crear_app(repositorio: RepositorioReportes | None = None,
 
     confirmaciones = ServicioConfirmacion(repositorio, planificar_avisos=avisos_al_confirmar)
     procesador = ProcesadorAvisos(repositorio_avisos, CanalConDescifrado(notificador, cifrador))
-    # HU-06 (RF-23), #63 y #125: las tareas que se repiten mientras la app corre.
-    periodicas = [(rescates.escalar_vencidos, revisar_escalamientos_cada_s,
-                   "revisión de rescates sin aceptar"),
-                  (procesador.procesar, procesar_avisos_cada_s, "envío de avisos pendientes"),
-                  (videos.revisar, revisar_videos_cada_s if token_video else None,
-                   "videos sin analizar a tiempo")]
+    # HU-06 (RF-23), #63 y #125: las tareas de fondo (#390: sin trabajo no consultan la base).
+    de_fondo = (armar_tareas(rescates, procesador, videos if token_video else None,
+                             escalamientos_s=revisar_escalamientos_cada_s,
+                             avisos_s=procesar_avisos_cada_s, videos_s=revisar_videos_cada_s)
+                if _tareas_activas(tareas_de_fondo) else [])
     app = FastAPI(title="Patitas en Casa", version="1.3.0",
-                  lifespan=ciclo_de_vida(periodicas if _tareas_activas(tareas_de_fondo) else [],
-                                         motor))
+                  lifespan=ciclo_de_vida(de_fondo, motor))
+    app.state.tareas_de_fondo = de_fondo
     # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
     # en celulares con datos limitados (RNF-07).
     app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -288,6 +316,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     # --- HU-08: PWA ciudadana (#59) --------------------------------------------------
 
     instalar_middlewares(app, repositorio_bitacora, emisor_tokens, token_video)
+    instalar_despertador(app, de_fondo)
 
     app.include_router(crear_rutas_indicadores(ctx))  # DT-13 (#267)
 

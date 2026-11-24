@@ -57,6 +57,8 @@ COMUNAS_CUCUTA = tuple(range(1, 11))
 # coordinador y ofrecer el caso en toda la ciudad. Crítico 15 (decisión del autor); alto 30
 # (tabla de configuración del prototipo).
 ESCALAMIENTO_MINUTOS = {"critica": 15, "alta": 30}
+# #390: ya no es la frecuencia (la tarea espera justo hasta que vence el próximo rescate): es la
+# primera espera tras un error de la base, que se duplica hasta 30 min. Lo mismo para videos.
 REVISION_ESCALAMIENTOS_SEGUNDOS = 60
 
 # #63 (outbox): avisos a rescatistas. Reintentos con espera exponencial desde la base; un
@@ -65,6 +67,8 @@ MAX_INTENTOS_AVISO = 5
 ESPERA_BASE_AVISO_S = 60
 VENCIMIENTO_RECLAMO_AVISO_S = 300
 REVISION_AVISOS_SEGUNDOS = 15
+# #390: sin avisos pendientes la espera se duplica desde REVISION_AVISOS_SEGUNDOS hasta este tope.
+REPOSO_MAXIMO_AVISOS_S = 1800
 
 # #125 (RF-03, RNF-02): video del reporte, analizado por un trabajador local.
 # El ciudadano lo adjunta justo después de crear el reporte, con la misma clave.
