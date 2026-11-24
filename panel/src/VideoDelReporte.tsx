@@ -74,7 +74,7 @@ export default function VideoDelReporte({ token, codigo }: { token: string; codi
           {analisis.version_modelo && <> (según el {nombreModelo(analisis.version_modelo)})</>}.</p>)}
       {analisis.discrepancia && (
         <p className="ds-msg ds-msg--aviso">El texto y el video sugieren prioridades distintas; gana la más
-          {" "}alta (RN-07, RF-19).</p>)}
+          {" "}alta.</p>)}
       {(analisis.estado === "no_concluyente" || analisis.estado === "fallido") && (
         <p className="ds-suave">El video no alcanzó para decidir: guíate por la descripción.</p>)}
       {analisis.estado === "pendiente" && (

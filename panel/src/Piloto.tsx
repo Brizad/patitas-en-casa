@@ -50,7 +50,7 @@ export default function Piloto({ token }: { token: string }) {
   return (
     <section className="ds-tarjeta">
       <div className="fila-titulo">
-        <h2>Modo piloto (RNF-06)</h2>
+        <h2>Modo piloto</h2>
         <button onClick={() => void recargar()}>Actualizar</button>
       </div>
       <p>Para cada participante, toca <b>Nuevo participante</b> en el celular de la prueba: se
@@ -61,6 +61,8 @@ export default function Piloto({ token }: { token: string }) {
         <button className="principal" onClick={() => void nuevoParticipante()}>Nuevo participante</button>
         <button onClick={() => void descargar()} disabled={!datos?.completos}>Descargar CSV</button>
       </div>
+      {!datos?.completos && <p className="ds-suave">«Descargar CSV» se habilita cuando al menos un
+        participante termine la prueba.</p>}
       {invitacion && (
         <p className="ds-msg ds-msg--ok" role="status">Participante <b>{invitacion.participante}</b>.
           Si no se abrió, copia este enlace en el celular (sirve una vez y por 24 horas):{" "}

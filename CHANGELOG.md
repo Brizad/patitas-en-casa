@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Panel (#404, hallazgos 2, 3, 4, 7, 8, 9 y 10 de #400): en escritorio la cabecera, las pestañas y el contenido comparten ancho (1200 px) y borde; en el celular la cola no deja la tarjeta «Elige un reporte» al final y cada tabla-tarjeta se encabeza con su primer dato; los textos visibles ya no llevan códigos internos (RF-31, RNF-06, «pantalla P-06»…); una barra en 0 no se dibuja; la zona del rescatista y el «Descargar CSV» apagado del piloto se explican.
 - Panel (#402, hallazgos 1, 5 y 6 de #400): las listas dicen «Cargando…» (con `role="status"`) mientras llegan los datos; los estados vacíos dicen qué falta y qué hacer; «Actualizar» queda siempre a la derecha del título (el título se parte en dos líneas antes que bajar el botón).
 - Panel (#396): un 500/502/503/504 o una respuesta de error sin JSON (la página de Render dormido o caído) dice «El servidor tuvo un problema, intenta de nuevo en un momento.» en vez de «Datos no válidos.». Los 4xx de la API siguen mostrando su detalle.
 

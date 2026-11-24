@@ -130,3 +130,16 @@ describe("cargas y estados vacíos (#400)", () => {
     }
   });
 });
+
+describe("textos para personas, no para el documento de requisitos (#400)", () => {
+  it("ningún texto visible lleva códigos como (RF-31), (RNF-06) o «pantalla P-06»", () => {
+    const sinComentarios = fuentes.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    expect(sinComentarios).not.toMatch(/\((?:RF|RNF|RN)-\d+|RN-\d+\)|pantalla P-\d+/);
+  });
+  it("en el celular la cola no deja la tarjeta «Elige un reporte» al final", () => {
+    expect(fuentes).toContain('" detalle--vacio"');
+  });
+  it("una barra en 0 no se dibuja (antes quedaba una rayita)", () => {
+    expect(fuentes).toContain("{v > 0 && <span");
+  });
+});

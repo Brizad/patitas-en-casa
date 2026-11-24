@@ -175,7 +175,7 @@ Producción solo debe estar viva cuando alguien la usa; el desarrollo sigue en e
 | 4 | Flujo `restaurar-a-neon-nuevo.yml` | hecho; lanzado sin el secreto: falla con «Falta el secreto NEON_DATABASE_URL_NUEVA» (ejecución 45338382347) | #395 |
 | 5 | Panel: 5xx o respuesta sin JSON → «El servidor tuvo un problema…» | hecho (el e2e encontró que un JSON null se volvía {}: corregido antes de unir) | #397 |
 | 6 | `scripts/dev/arrancar_local.ps1` y `docs/aprende/desarrollo-local.md` | hecho; probado sin `.env` (se detiene y explica) y completo contra un PostgreSQL 17 temporal | #399 |
-| 7 | Revisión visual con Playwright y 10 correcciones | 7a: capturas «antes» y hallazgos (#401); 7b: hallazgos 1, 5 y 6 (#402) | |
+| 7 | Revisión visual con Playwright y 10 correcciones | 7a: capturas «antes» y hallazgos (#401); 7b: hallazgos 1, 5 y 6 (#403); 7c: hallazgos 2, 3, 4, 7, 8, 9 y 10 (#404) | |
 
 Bitácora de la noche:
 - `git fetch` falló una vez por red y al segundo intento sí. `main` en `19c9afe`, sin PR abiertos.

@@ -29,7 +29,7 @@ export function cuerpoIngreso(ingreso: Ingreso, codigo: string): Ingreso & { rep
 /** Texto del error al registrar: 409 sin cupos (RN-04); 422 con código = el reporte no existe. */
 export function errorIngreso(e: unknown, hayCodigo: boolean): string {
   if (e instanceof ErrorApi && e.estado === 409)
-    return "El refugio no tiene cupos: el ingreso no se registró (RN-04).";
+    return "El refugio no tiene cupos: el ingreso no se registró.";
   if (e instanceof ErrorApi && e.estado === 422 && hayCodigo && /reporte/i.test(e.detalle))
     return "No existe un reporte con ese código. Revisa el código o déjalo vacío.";
   return textoError(e);

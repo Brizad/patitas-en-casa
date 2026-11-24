@@ -26,7 +26,17 @@
 /* Cola: lista a la izquierda, detalle a la derecha; en celular una columna. */
 .cola { display: grid; grid-template-columns: minmax(300px, 1fr) 2fr; gap: var(--ds-e4); padding: var(--ds-e4);
   max-width: 1280px; margin: 0 auto; align-items: start; }
-@media (max-width: 760px) { .cola { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .cola { grid-template-columns: 1fr; } .detalle--vacio { display: none; } }
+/* #400: en escritorio la cabecera, las pestañas y el contenido comparten ancho y borde izquierdo
+   (antes la cabecera y las pestañas iban de borde a borde y el contenido, centrado a 960 px). */
+@media (min-width: 761px) {
+  .panel > .ds-cabecera { width: calc(100% - 2 * var(--ds-e4)); max-width: calc(1200px - 2 * var(--ds-e4));
+    margin: var(--ds-e2) auto; }
+  .panel > .ds-pestanas { max-width: 1200px; margin: 0 auto; }
+  .pagina, .cola { max-width: 1200px; }
+  .panel > .ds-tarjeta { max-width: calc(1200px - 2 * var(--ds-e4)); }
+}
+.ayuda-zona { margin: 0 0 var(--ds-e3); font-size: var(--ds-t-sm); }
 .cola ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--ds-e2); }
 .fila-titulo { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-e3); flex-wrap: wrap; } /* #304: en el celular las acciones bajan */
 .fila-titulo h2 { margin: 0; flex: 1 1 10ch; min-width: 0; } /* #400: el título se parte en dos

@@ -156,6 +156,11 @@
     border: 0; text-align: right; }
   .ds-tabla--tarjetas td::before { content: attr(data-etiqueta); font-weight: 700; color: var(--ds-suave);
     text-align: left; }
+  /* #400: el primer dato encabeza la tarjeta (código, cuenta…) para separar una de otra. */
+  .ds-tabla--tarjetas tr { padding: var(--ds-e3) 0; }
+  .ds-tabla--tarjetas td:first-child { justify-content: flex-start; text-align: left; font-weight: 700;
+    font-size: var(--ds-t-lg); padding-bottom: var(--ds-e2); }
+  .ds-tabla--tarjetas td:first-child::before { display: none; }
 }
 
 /* Estados vacíos y mensajes (error, éxito, aviso, información). */
