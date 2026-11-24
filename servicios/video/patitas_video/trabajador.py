@@ -7,7 +7,8 @@ Uso (en la PC del equipo, ver servicios/video/README.md):
     python -m patitas_video.trabajador
 
 Cada ciclo: reclamar → descargar a una carpeta temporal → analizar → entregar → borrar. Si no
-hay trabajos espera unos segundos (y más si la API no responde). El video nunca se guarda:
+hay trabajos espera 15 s y, mientras siga sin haber, el doble cada vez hasta 5 min (#390: cada
+consulta despertaba la base de Neon). Si la API no responde, igual. El video nunca se guarda:
 se borra apenas termina, salga bien o mal (RNF-08).
 """
 from __future__ import annotations
@@ -130,20 +131,22 @@ def trabajar(cliente: ClienteApi, analizar: Analizador, una_vez: bool = False,
     while True:
         try:
             hubo = procesar_uno(cliente, analizar)
-            espera = ESPERA_SIN_TRABAJO_S
+            # #390: sin trabajo la espera crece (15 s, 30 s… hasta 5 min); con trabajo, 15 s.
+            siguiente = ESPERA_SIN_TRABAJO_S if hubo else min(espera * 2, ESPERA_MAXIMA_S)
         except ApiNoDisponible as error:
             hubo = False
-            espera = min(espera * 2, ESPERA_MAXIMA_S)  # espera creciente si Render no responde
+            espera = siguiente = min(espera * 2, ESPERA_MAXIMA_S)  # Render no responde
             logger.warning("%s; reintento en %s s", error, espera)
         except PermissionError:
             raise  # token malo: seguir no arregla nada; main() lo dice claro
         except Exception:  # un nodo que nadie mira no puede morirse por un caso raro
-            hubo = False
+            hubo, siguiente = False, espera
             logger.exception("ciclo con un error inesperado; el nodo sigue")
         if una_vez:
             return
         if not hubo:
             dormir(espera)
+        espera = siguiente
 
 
 def main() -> None:

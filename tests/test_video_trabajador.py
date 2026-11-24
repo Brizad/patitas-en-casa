@@ -139,3 +139,20 @@ def test_regresion_231_sin_vista_el_log_dice_por_que_y_no_viaja_a_la_api(caplog)
     procesar_uno(cliente(api), lambda _r: dict(resultado))
     assert "trabajo 7 sin vista previa: ffmpeg no está instalado" in caplog.text
     assert "sin_vista" not in api.entregados[0] and api.vistas == []
+
+
+def test_390_sin_trabajo_la_espera_crece_hasta_5_minutos():
+    """Cada consulta del nodo despertaba la base de Neon: sin trabajo, 15 s y luego el doble."""
+    esperas = []
+
+    class Basta(Exception):
+        pass
+
+    def dormir(segundos):
+        esperas.append(segundos)
+        if len(esperas) == 7:
+            raise Basta
+
+    with pytest.raises(Basta):
+        trabajar(cliente(ApiFalsa(trabajos=0)), lambda _r: {}, dormir=dormir)
+    assert esperas == [15, 30, 60, 120, 240, 300, 300]

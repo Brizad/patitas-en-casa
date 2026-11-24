@@ -86,7 +86,8 @@ REVISION_VIDEOS_SEGUNDOS = 60
 # Se borra a los 7 días o cuando el reporte se cierra (rescate atendido o descartado).
 VISTA_VIDEO_MAX_MB = 5
 VISTA_VIDEO_DIAS = 7
-# #231: el nodo de video consulta cada 15 s; si pasa este rato sin llamar (y no está analizando)
-# el panel lo da por apagado. La versión mínima es la de servicios/video/patitas_video.
-NODO_VIDEO_EN_LINEA_S = 90
+# #231: si el nodo pasa este rato sin llamar (y no está analizando) el panel lo da por apagado.
+# #390: sin trabajo consulta cada 15 s a 5 min (espera creciente), así que el margen es de 5,5 min.
+# La versión mínima es la de servicios/video/patitas_video.
+NODO_VIDEO_EN_LINEA_S = 330
 VERSION_MINIMA_NODO_VIDEO = "1.3.0"

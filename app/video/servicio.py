@@ -59,6 +59,12 @@ class ServicioVideo:
         self._contacto: datetime | None = None
         self._version_nodo: str | None = None
         self._ocupado_hasta: datetime | None = None
+        # #390: el nodo pregunta cada 15 s a 5 min y cada pregunta despertaba la base de Neon.
+        # Un trabajo entra a la cola por esta API (subida, fallo con reintento) o porque vence un
+        # reclamo. Tras un reclamo vacío se responde sin consultar hasta que pase algo de eso.
+        self._inicio = self._reloj()
+        self._reclamos: dict[int, datetime] = {}  # id del trabajo → cuándo vence su reclamo
+        self._sin_trabajo_hasta: datetime | None = None
 
     def latido(self, version: str | None, ocupado: bool | None = None) -> None:
         """El nodo llamó. «ocupado»: reclamó un trabajo (True) o lo cerró (False)."""
@@ -112,6 +118,7 @@ class ServicioVideo:
         if trabajo is None:  # otro envío del mismo reporte ganó la carrera
             self._almacen.borrar(ruta)
             raise VideoRechazado(409, "Este reporte ya tiene un video.")
+        self._hay_trabajo_nuevo()
         return trabajo
 
     def de_reporte(self, codigo: str) -> TrabajoVideo | None:
@@ -119,8 +126,22 @@ class ServicioVideo:
 
     def reclamar(self) -> TrabajoVideo | None:
         ahora = self._reloj()
-        vence = ahora - timedelta(seconds=config.VENCIMIENTO_RECLAMO_VIDEO_S)
-        return self._videos.reclamar(ahora, vence)
+        if self._sin_trabajo_hasta is not None and ahora < self._sin_trabajo_hasta:
+            return None  # #390: se sabe que no hay trabajos; la base sigue dormida
+        dura = timedelta(seconds=config.VENCIMIENTO_RECLAMO_VIDEO_S)
+        trabajo = self._videos.reclamar(ahora, ahora - dura)
+        if trabajo is not None:
+            self._reclamos[trabajo.id] = ahora + dura
+            return trabajo
+        self._reclamos = {i: v for i, v in self._reclamos.items() if v > ahora}
+        # Tras un reinicio no se conocen los reclamos de antes: se espera lo que dura uno.
+        vencen = [*self._reclamos.values(), *([self._inicio + dura]
+                                              if ahora < self._inicio + dura else [])]
+        self._sin_trabajo_hasta = min(vencen) if vencen else datetime.max.replace(tzinfo=UTC)
+        return None
+
+    def _hay_trabajo_nuevo(self) -> None:
+        self._sin_trabajo_hasta = None
 
     def _enviado(self, id_: int) -> TrabajoVideo:
         trabajo = self._videos.buscar(id_)
@@ -133,6 +154,7 @@ class ServicioVideo:
     def _cerrar(self, trabajo: TrabajoVideo, estado: EstadoVideo, motivo: str | None) -> None:
         trabajo.estado, trabajo.motivo, trabajo.terminado_en = estado, motivo, self._reloj()
         self._videos.guardar(trabajo)
+        self._reclamos.pop(trabajo.id, None)
         self._almacen.borrar(trabajo.ruta)  # RNF-08: el video nunca se guarda para siempre
 
     def ruta_para_descargar(self, id_: int) -> str:
@@ -214,6 +236,8 @@ class ServicioVideo:
             trabajo.estado, trabajo.reclamado_en, trabajo.motivo = (
                 EstadoVideo.PENDIENTE, None, motivo[:300])
             self._videos.guardar(trabajo)
+            self._reclamos.pop(trabajo.id, None)
+            self._hay_trabajo_nuevo()  # vuelve a la cola
         return trabajo
 
     def revisar(self) -> int:
