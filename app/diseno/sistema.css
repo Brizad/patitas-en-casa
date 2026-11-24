@@ -163,6 +163,14 @@
   border: 1px dashed var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg); }
 .ds-vacio img { display: block; margin: 0 auto var(--ds-e3); } /* #308: ilustración original */
 .ds-vacio strong { display: block; color: var(--ds-tinta); font-size: var(--ds-t-md); margin-bottom: var(--ds-e1); }
+/* #400: carga con indicador (antes la tarjeta quedaba vacía mientras llegaban los datos). */
+.ds-cargando { display: flex; align-items: center; justify-content: center; gap: var(--ds-e3);
+  padding: var(--ds-e6) var(--ds-e4); color: var(--ds-suave); margin: 0; }
+.ds-giro { width: 20px; height: 20px; flex: none; border-radius: 50%;
+  border: 3px solid var(--ds-linea); border-top-color: var(--ds-tinta);
+  animation: ds-giro 0.9s linear infinite; }
+@keyframes ds-giro { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ds-giro { animation: none; } }
 .ds-msg { padding: var(--ds-e3) var(--ds-e4); border-radius: var(--ds-radio); border: 1px solid var(--ds-linea);
   border-left-width: 4px; background: var(--ds-superficie); margin: var(--ds-e3) 0; }
 .ds-msg--error { background: var(--ds-critica-bg); color: var(--ds-critica); border-color: var(--ds-critica); font-weight: 600; }

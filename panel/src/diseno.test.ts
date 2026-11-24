@@ -114,3 +114,19 @@ describe("administrador y modo piloto (#307)", () => {
     expect(pantallas["./Piloto.tsx"]).toContain("ds-insignia--${resumen.cumpleSus");
   });
 });
+
+describe("cargas y estados vacíos (#400)", () => {
+  it("cada lista que pide datos dice que está cargando", () => {
+    for (const que of ["la cola", "el historial", "tus rescates", "la ocupación",
+      "los indicadores"]) {
+      expect(fuentes, que).toContain(`<Cargando que="${que}" />`);
+    }
+  });
+  it("los vacíos principales dicen qué falta y qué hacer", () => {
+    for (const vacio of ["No hay reportes por confirmar.", "Aún no has confirmado ni descartado",
+      "Aún no has aceptado rescates.", "No hay ofertas ahora.", "Aún no has hecho solicitudes.",
+      "No hay adopciones aprobadas.", "No hay seguimientos programados."]) {
+      expect(fuentes, vacio).toContain(`<strong>${vacio}`);
+    }
+  });
+});

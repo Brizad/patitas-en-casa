@@ -45,7 +45,8 @@ export default function Adoptante({ token }: { token: string }) {
         alGuardar={(p) => hacer(() => guardarPerfil(token, p), "Perfil guardado.")} />
       <div className="ds-tarjeta">
         <h2>{perfil ? "Recomendados para tu hogar" : "Animales en adopción"}</h2>
-        {animales.length === 0 && <p className="ds-vacio">No hay animales publicados ahora.</p>}
+        {animales.length === 0 && <p className="ds-vacio"><strong>No hay animales publicados ahora.</strong>
+          El refugio publica animales nuevos con frecuencia: vuelve pronto.</p>}
         <ul className="catalogo">
           {animales.map((a) => (
             <li key={a.animal_id} className="animal">
@@ -66,7 +67,8 @@ export default function Adoptante({ token }: { token: string }) {
       </div>
       <div className="ds-tarjeta">
         <h2>Mis solicitudes</h2>
-        {mias.length === 0 && <p className="ds-vacio">Aún no has hecho solicitudes.</p>}
+        {mias.length === 0 && <p className="ds-vacio"><strong>Aún no has hecho solicitudes.</strong>
+          Elige un animal en «Recomendados para tu hogar» y toca «Quiero adoptarlo».</p>}
         <ul className="lista-simple">
           {mias.map((s) => (
             <li key={s.id}>Solicitud {s.id} · {nombre(s.animal_id)} ·{" "}

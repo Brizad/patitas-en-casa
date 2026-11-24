@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import Cargando from "./Cargando";
 import { Ingreso, Ocupacion, cuerpoIngreso, errorIngreso, nivelOcupacion, ocupacion,
          registrarIngreso } from "./apiRefugio";
 import Fichas from "./Fichas";
@@ -32,6 +33,7 @@ export default function Refugio({ token, rol }: { token: string; rol: string }) 
           <button onClick={() => void recargar()}>Actualizar</button>
         </div>
         {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+        {!datos && !error && <Cargando que="la ocupación" />}
         {datos && (
           <>
             <p><b>{datos.ocupacion}</b> cupos ocupados ({datos.porcentaje} %)</p>
