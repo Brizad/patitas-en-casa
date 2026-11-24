@@ -68,12 +68,26 @@ export async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?:
   const cabeceras = new Headers(opciones.headers);
   if (token) cabeceras.set("Authorization", `Bearer ${token}`);
   const respuesta = await conAvisoDeEspera(fetch(ruta, { ...opciones, headers: cabeceras }));
-  const cuerpo = await respuesta.json().catch(() => ({}));
+  // Un cuerpo que no es JSON (vacío, o la página HTML de Render) no es lo mismo que un JSON
+  // null: «sin rescate activo» responde null y debe llegar tal cual.
+  const cuerpo: unknown = await respuesta.json().catch(() => SIN_JSON);
   if (!respuesta.ok) {
-    const detalle = typeof cuerpo.detail === "string" ? cuerpo.detail : "Datos no válidos.";
-    throw new ErrorApi(respuesta.status, detalle);
+    throw new ErrorApi(respuesta.status,
+                       mensajeDeError(respuesta.status, cuerpo === SIN_JSON ? null : cuerpo));
   }
-  return cuerpo as T;
+  return (cuerpo === SIN_JSON ? {} : cuerpo) as T;
+}
+
+const SIN_JSON = Symbol("sin JSON");
+
+/** #396: Render dormido o caído responde 502/503 con una página HTML; un fallo interno, 500.
+ *  Nada de eso es culpa de lo que escribió la persona: nunca «Datos no válidos». */
+export const MENSAJE_SERVIDOR = "El servidor tuvo un problema, intenta de nuevo en un momento.";
+
+export function mensajeDeError(estado: number, cuerpo: unknown): string {
+  if (estado >= 500 || cuerpo === null || typeof cuerpo !== "object") return MENSAJE_SERVIDOR;
+  const detalle = (cuerpo as { detail?: unknown }).detail;
+  return typeof detalle === "string" ? detalle : "Datos no válidos.";
 }
 
 export async function iniciarSesion(correo: string, clave: string): Promise<string> {

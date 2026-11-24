@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Corregido
+- Panel (#396): un 500/502/503/504 o una respuesta de error sin JSON (la página de Render dormido o caído) dice «El servidor tuvo un problema, intenta de nuevo en un momento.» en vez de «Datos no válidos.». Los 4xx de la API siguen mostrando su detalle.
+
 ### Agregado
 - Flujo manual `restaurar-a-neon-nuevo.yml` (#394): restaura el último respaldo diario bueno en una base nueva de Neon (`NEON_DATABASE_URL_NUEVA`), sin imprimir la cadena, negándose si la base ya tiene tablas y comprobando tablas y `alembic_version`. Guía en `docs/aprende/respaldo.md`.
 
