@@ -267,6 +267,6 @@ sistema se ve en local con un PostgreSQL temporal (puerto 5433, datos de demostr
 | 3 | Manual de usuario con capturas nuevas | hecho (20 capturas; la del video se conserva: sin nodo en local) | #409 |
 | 4 | README como portada del repositorio | hecho (`docs/arquitectura.svg`) | #411 |
 | 5 | Trabajo 3b: reglas solo en el código (§5, propuesta sin aplicar) | hecho; hallazgo posible en RN-02 con el video | #413 |
-| 6 | RN-08 sin servidor despierto (propuesta en `docs/aprende/despliegue.md`) | hecho (propuesta A + B, sin aplicar) | #414 → PR |
-| 7 | `docs/aprende/sustentacion-final.md` | pendiente | |
+| 6 | RN-08 sin servidor despierto (propuesta en `docs/aprende/despliegue.md`) | hecho (propuesta A + B, sin aplicar) | #415 |
+| 7 | `docs/aprende/sustentacion-final.md` | hecho (rutas y archivos verificados) | #416 → PR |
 | 8 | Guion del video demo (5 min) | pendiente | |
