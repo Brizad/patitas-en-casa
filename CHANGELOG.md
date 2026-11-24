@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Cambiado
+- Sondeo (#386): corre cada 6 horas y solo pide `/app/`, que no consulta la base (antes, cada 30 min y también `GET /reportes/{codigo}`: Neon nunca dormía). Queda desactivado hasta que el autor lo reactive.
+
 ### Agregado
 - Verificación del despliegue (guía 11): `.github/workflows/deploy.yml` espera, tras cada CI verde en `main`, a que producción corra la versión de `pyproject.toml` y que `/app/` y `/reportes/NOEXISTE` respondan; si no, queda en rojo. La reversa a Render solo actúa con `RENDER_API_KEY` y `RENDER_SERVICE_ID` (sin probar contra Render). Guía: `docs/aprende/despliegue.md`.
 
