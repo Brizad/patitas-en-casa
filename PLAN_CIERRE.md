@@ -190,3 +190,31 @@ Bitácora de la noche:
 - La descarga del artefacto `e2e-capturas` de #405 falló 3 veces por red (`i/o timeout` hacia el
   almacenamiento de artefactos de GitHub); con la ejecución siguiente funcionó y se copiaron las
   10 capturas base nuevas tras mirarlas.
+
+### Pendiente tras la noche del 24-nov
+
+- Hallazgos visuales 11 a 14 (`docs/revision-visual/hallazgos.md`), menores.
+- Riesgo a decidir: con UptimeRobot pausado, Render duerme y **RN-08 no escala a tiempo** (escala
+  cuando alguien vuelve a entrar). Detalle y cuentas en `docs/aprende/despliegue.md`.
+- En esta carpeta **no hay `.env`** (el script de arranque local lo pide): créalo como dice
+  `docs/aprende/desarrollo-local.md`.
+
+### Pasos de Brayan, en orden (25-nov)
+
+1. **Neon:** crea un proyecto nuevo (PostgreSQL 18, plan gratis). Copia la *Connection string*
+   **directa** (sin `-pooler`) con `?sslmode=require`. No toques el proyecto viejo: se reactiva el 30-nov.
+2. **GitHub → Settings → Secrets → Actions:** crea `NEON_DATABASE_URL_NUEVA` con esa cadena.
+3. **GitHub → Actions → «Restaurar en Neon nuevo» → Run workflow**, «confirmar» = `RESTAURAR`
+   (o `gh workflow run restaurar-a-neon-nuevo.yml -f confirmar=RESTAURAR`). Debe terminar en verde
+   con «Tablas: N de N» y la `alembic_version`. Restaura el respaldo del 20-nov.
+4. **GitHub:** reemplaza el secreto `NEON_DATABASE_URL` (respaldo diario) por la cadena nueva.
+5. **Render → Environment:** `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+   de la base nueva y `POSTGRES_SSLMODE=require`. Deja `PATITAS_TAREAS_DE_FONDO` sin poner (= 1).
+   *Save* y, si no se despliega solo, *Manual Deploy → Deploy latest commit*. Comprueba que
+   `/app/` responde y que *Actions → Verificar despliegue* queda en verde (versión 1.3.0).
+6. **UptimeRobot:** pausa el monitor hasta la demo. Para la demo (29–30 nov) actívalo **solo
+   contra `/app/`** (no toca la base): mantiene Render despierto y RN-08 a tiempo por ≈ 1,8 CU-h/día.
+7. **Nodo de video (WSL):** reinícialo con `bash ~/patitas/servicios/video/arrancar_nodo.sh` para
+   que tome la espera creciente (#393).
+8. **Sondeo:** queda desactivado; si lo quieres, `gh workflow enable "Sondeo de disponibilidad"`
+   (ya solo pide `/app/` cada 6 h).
