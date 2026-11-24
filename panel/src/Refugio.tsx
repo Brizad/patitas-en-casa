@@ -42,12 +42,12 @@ export default function Refugio({ token, rol }: { token: string; rol: string }) 
               <span style={{ width: `${Math.min(datos.porcentaje, 100)}%` }} />
             </div>
             {nivel === "alerta" && <p className="ds-msg ds-msg--error">Ocupación en nivel de alerta
-              (90 % o más, RN-04).</p>}
+              (90 % o más).</p>}
             {nivel === "lleno" && <p className="ds-msg ds-msg--error">Sin cupos: los ingresos se rechazan.</p>}
           </>)}
       </div>
       {rol === "coordinador" ? <FormularioIngreso token={token} alGuardar={recargar} /> : (
-        <p className="ds-suave">Solo coordinación registra ingresos (pantalla P-06).</p>)}
+        <p className="ds-suave">Los ingresos al refugio los registra la coordinación.</p>)}
       {/* La ocupación cambia con cada ingreso o egreso: la lista se vuelve a pedir. */}
       <Fichas version={datos?.ocupacion} token={token} rol={rol}
         alCambiarCupo={() => void recargar()} />

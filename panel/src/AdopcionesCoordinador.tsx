@@ -63,7 +63,7 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
       <div className="ds-tarjeta">
         <h2>Adopciones aprobadas ({aprobadas.length})</h2>
         <p className="ds-suave">Si la familia ya no puede cuidarlo, registra la devolución con el
-          motivo: el animal vuelve al refugio y al catálogo (RF-10, RN-13).</p>
+          motivo: el animal vuelve al refugio y al catálogo.</p>
         {aprobadas.length === 0 && <p className="ds-vacio"><strong>No hay adopciones aprobadas.</strong>
           Aparecen aquí cuando apruebas una solicitud pendiente.</p>}
         <ul className="lista-simple">
@@ -77,7 +77,7 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
       <div className="ds-tarjeta">
         <h2>Jornada de adopción</h2>
         <p className="ds-suave">Propone quién con qué animal para que la compatibilidad total sea la
-          más alta (RF-28). Es una sugerencia: cada solicitud se aprueba aparte.</p>
+          más alta. Es una sugerencia: cada solicitud se aprueba aparte.</p>
         <button onClick={() => void hacer(async () => setJornada(await propuestaJornada(token)),
           "Propuesta calculada.")}>Calcular propuesta</button>
         {jornada && (jornada.length === 0 ? <p className="ds-vacio">Sin parejas posibles.</p> : (

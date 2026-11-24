@@ -86,8 +86,9 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
             </li>))}
         </ul>
       </div>
-      <div className="detalle ds-tarjeta">
-        {!detalle ? <p className="ds-vacio">Elige un reporte de la cola.</p> : (
+      <div className={`detalle ds-tarjeta${detalle ? "" : " detalle--vacio"}`}>
+        {!detalle ? <p className="ds-vacio"><strong>Elige un reporte de la lista.</strong>
+          Verás qué pasó, dónde y cuándo, y podrás confirmar o ajustar su prioridad.</p> : (
           <>
             <div className="fila-titulo">
               <h2 tabIndex={-1} ref={tituloDetalle}>Reporte <code>{detalle.codigo}</code></h2>
@@ -109,7 +110,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
               detalle.confianza, detalle.version_modelo)}</p>
             {detalle.posibles_duplicados.length > 0 && (
               <p className="ds-msg ds-msg--ok">Posible duplicado de {detalle.posibles_duplicados.join(", ")}:
-                {" "}reportado a menos de 200 m y 2 horas (RF-17).</p>)}
+                {" "}reportado a menos de 200 m y 2 horas.</p>)}
             <h3>En qué se basa</h3>
             {detalle.evidencias.length === 0 ? <p className="ds-vacio">Sin evidencias.</p> : (
               <ul className="evidencias">{detalle.evidencias.map((ev) => (
@@ -127,7 +128,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
                   alTerminar={(texto) => terminado(detalle.codigo, texto)} />
               </>
             ) : (
-              <p className="ds-suave">Solo un veterinario puede confirmar la prioridad (RN-06).</p>)}
+              <p className="ds-suave">Solo un veterinario puede confirmar la prioridad.</p>)}
           </>)}
       </div>
     </section>

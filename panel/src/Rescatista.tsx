@@ -61,7 +61,8 @@ export default function Rescatista({ token }: { token: string }) {
                 e.target.checked ? "Ahora recibes ofertas." : "Ya no recibes ofertas.")} />
             Disponible para rescates</label>
           <fieldset>
-            <legend>Zona: {nombreComunas(estado.comunas)} (sin marcar = toda la ciudad)</legend>
+            <legend>Zona: {nombreComunas(estado.comunas)}</legend>
+            <p className="ds-suave ayuda-zona">Marca las comunas donde puedes atender; sin marcar, recibes las de toda la ciudad.</p>
             <div className="comunas">
               {COMUNAS.map((n) => (
                 <label key={n} className="comuna">

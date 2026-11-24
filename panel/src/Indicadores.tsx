@@ -39,7 +39,7 @@ function Barras({ titulo, datos }: { titulo: string; datos: Conteo }) {
     <div><h3>{titulo}</h3>
       {Object.keys(datos).length === 0 ? <p className="ds-vacio">Sin datos.</p> : (
         <dl className="barras">{Object.entries(datos).map(([k, v]) => (
-          <div key={k}><dt>{nombreIndicador(k)}</dt><dd><span style={{ width: `${(v / maximo) * 100}%` }} />
+          <div key={k}><dt>{nombreIndicador(k)}</dt><dd>{v > 0 && <span style={{ width: `${(v / maximo) * 100}%` }} />}
             {v}</dd></div>))}</dl>)}
     </div>
   );
@@ -81,7 +81,7 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
             {rol !== "alcaldia" && (
               <button onClick={() => void bajar("/indicadores/fichas.csv", "fichas.csv")}>
                 Fichas CSV</button>)}</div></div>
-        <p className="ds-suave">Anonimizados: sin nombres, direcciones, correos ni códigos (RF-31).</p>
+        <p className="ds-suave">Anonimizados: sin nombres, direcciones, correos ni códigos.</p>
         {!datos && !error && <Cargando que="los indicadores" />}
         {datos && (<>
           <dl className="kpis">
@@ -100,11 +100,11 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
           <Barras titulo="Prioridad confirmada" datos={datos.reportes.por_prioridad_confirmada} />
           <Barras titulo="Resultado de los rescates" datos={datos.rescates.por_resultado} />
           <Barras titulo="Seguimientos de adopción" datos={datos.adopciones.seguimientos} />
-          <h3>Acuerdo del veterinario con cada versión del modelo (RF-20)</h3>
+          <h3>Acuerdo del veterinario con cada versión del modelo</h3>
           <ul>{Object.entries(datos.reportes.acuerdo_por_version_modelo).map(([v, a]) => (
             <li key={v}>{nombreModelo(v)}: {Math.round(a.confirmadas_sin_cambio * 100)} % sin cambio en{" "}
               {plural(a.decisiones, "decisión", "decisiones")}</li>))}</ul>
-          <h3>Recomendación por tipo de hogar (RNF-16)</h3>
+          <h3>Recomendación por tipo de hogar</h3>
           <p className="ds-suave">Qué parte del catálogo se le recomienda, en promedio, a cada grupo.
             Una diferencia grande es una señal para revisar los pesos.</p>
           <ul>{Object.entries(datos.adopciones.tasa_recomendacion_por_segmento).map(([s, t]) => (
@@ -118,7 +118,7 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
       {rol === "administrador" && (
         <div className="ds-tarjeta">
           <h2>Bitácora (últimos 50 cambios)</h2>
-          <p className="ds-suave">Inmutable: no se puede editar ni borrar (RF-32).</p>
+          <p className="ds-suave">Inmutable: no se puede editar ni borrar.</p>
           <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de la bitácora">
           <table className="ds-tabla ds-tabla--tarjetas" role="table"><thead><tr role="row">
             <th role="columnheader">Cuándo</th><th role="columnheader">Quién</th>
