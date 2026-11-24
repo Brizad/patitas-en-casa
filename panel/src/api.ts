@@ -68,12 +68,19 @@ export async function pedir<T>(ruta: string, opciones: RequestInit = {}, token?:
   const cabeceras = new Headers(opciones.headers);
   if (token) cabeceras.set("Authorization", `Bearer ${token}`);
   const respuesta = await conAvisoDeEspera(fetch(ruta, { ...opciones, headers: cabeceras }));
-  const cuerpo = await respuesta.json().catch(() => ({}));
-  if (!respuesta.ok) {
-    const detalle = typeof cuerpo.detail === "string" ? cuerpo.detail : "Datos no válidos.";
-    throw new ErrorApi(respuesta.status, detalle);
-  }
-  return cuerpo as T;
+  const cuerpo = await respuesta.json().catch(() => null);
+  if (!respuesta.ok) throw new ErrorApi(respuesta.status, mensajeDeError(respuesta.status, cuerpo));
+  return (cuerpo ?? {}) as T;
+}
+
+/** #396: Render dormido o caído responde 502/503 con una página HTML; un fallo interno, 500.
+ *  Nada de eso es culpa de lo que escribió la persona: nunca «Datos no válidos». */
+export const MENSAJE_SERVIDOR = "El servidor tuvo un problema, intenta de nuevo en un momento.";
+
+export function mensajeDeError(estado: number, cuerpo: unknown): string {
+  if (estado >= 500 || cuerpo === null || typeof cuerpo !== "object") return MENSAJE_SERVIDOR;
+  const detalle = (cuerpo as { detail?: unknown }).detail;
+  return typeof detalle === "string" ? detalle : "Datos no válidos.";
 }
 
 export async function iniciarSesion(correo: string, clave: string): Promise<string> {
