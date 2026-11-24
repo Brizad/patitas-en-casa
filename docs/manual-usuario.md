@@ -18,9 +18,28 @@ atender. Este manual explica, con capturas, qué hace cada persona en el sistema
 | [Administrador](#administrador) | Botón «Entrar como personal» | Sí |
 | [Alcaldía](#alcaldía) | Botón «Entrar como personal» | Sí, la crea el administrador |
 
-Las capturas se tomaron el 5 de noviembre de 2026, con el diseño nuevo, y los **datos de demostración** (nombres,
-reportes y animales inventados). El ciudadano, el rescatista y el adoptante se muestran en el
-celular (390 px); los demás, en un computador.
+Las capturas se tomaron el **25 de noviembre de 2026** con los **datos de demostración**
+(nombres, reportes y animales inventados). El ciudadano, el rescatista y el adoptante se muestran
+en el celular (390 px); los demás, en un computador.
+
+**Para probarlo sin datos reales**, entra al panel con una cuenta de demostración (la contraseña
+es la misma para todas y la conoce quien instaló el sistema):
+
+| Rol | Correo |
+|---|---|
+| Veterinario | `veterinaria@demo.patitas.co` |
+| Coordinador | `coordinador@demo.patitas.co` |
+| Rescatista | `rescatista@demo.patitas.co` |
+| Adoptante | `adoptante@demo.patitas.co` |
+| Administrador | `admin@demo.patitas.co` |
+| Alcaldía | `alcaldia@demo.patitas.co` |
+
+**Mensajes que puedes ver en cualquier pantalla del panel:**
+
+- «Cargando…»: los datos vienen en camino.
+- «El servidor está despertando»: el servidor estaba dormido; espera unos segundos.
+- «El servidor tuvo un problema, intenta de nuevo en un momento»: no es culpa de lo que
+  escribiste. Espera un poco y toca **Actualizar** o repite la acción.
 
 ---
 
@@ -91,17 +110,23 @@ artificial **sugiere**, pero **el veterinario decide**.
 
 ![Cola de triaje](manual/05-veterinario-cola.jpg)
 
-Al entrar ve la **cola**: los reportes que esperan revisión, primero los más graves
+1. Entra con tu correo y contraseña en **Entrar como personal**.
+2. Se abre la pestaña **Cola de triaje**.
+
+Ahí está la **cola**: los reportes que esperan revisión, primero los más graves
 (crítica, alta, media, baja). Cada prioridad se reconoce por su nombre y su forma, no solo por
 el color: ▲ crítica, ◆ alta, ● media y ○ baja; las críticas y altas llevan además una barra
 gruesa a la izquierda. Al lado se ve hace cuánto llegó el reporte; la confianza de la sugerencia
-(de 0 a 1) aparece al abrirlo. **Actualizar** trae los reportes nuevos.
+(de 0 a 1) aparece al abrirlo. **Actualizar** trae los reportes nuevos. Si no hay ninguno, la
+pantalla dice «No hay reportes por confirmar».
 
 ### 2. Revisar un reporte
 
 ![Detalle de un reporte](manual/06-veterinario-reporte.jpg)
 
-Al tocar un reporte aparece a la derecha (en el celular, debajo):
+Toca un reporte de la lista. Su detalle aparece a la derecha (en el celular, debajo; la pantalla
+baja sola hasta él). Mientras no elijas ninguno, en el computador dice «Elige un reporte de la
+lista». El detalle muestra:
 
 - qué pasó, dónde (con enlace a Google Maps) y hace cuánto llegó;
 - la prioridad sugerida y su confianza;
@@ -129,10 +154,14 @@ Si el ciudadano envió un video, más abajo está **Análisis de video**:
 
 ![Ajustar la prioridad](manual/06b-veterinario-ajustar.jpg)
 
-- **Confirmar**: está de acuerdo con la sugerencia.
-- **Ajustar prioridad…**: elige otra; si es distinta de la sugerida, el sistema pide una
-  **justificación** (al menos 10 caracteres y 5 letras). Queda registrada con su nombre.
-- **Descartar reporte…**: si es falso o repetido, con una justificación.
+Para decidir, elige uno de los tres botones del detalle:
+
+1. **Confirmar** (por ejemplo, «Confirmar crítica»): estás de acuerdo con la sugerencia. Listo.
+2. **Ajustar prioridad…**: se abre un recuadro. Elige la **nueva prioridad** y escribe la
+   **justificación** (al menos 10 caracteres y 5 letras, por ejemplo «Convulsiona: riesgo de
+   muerte»). Toca **Confirmar**. Queda registrada con tu nombre.
+3. **Descartar reporte…**: si es falso o repetido. Elige el motivo, escribe la justificación y
+   confirma.
 
 Confirmado o descartado, el reporte sale de la cola y no se puede volver a decidir. Si queda
 crítico o alto, se avisa a los rescatistas. **Ver estado de los avisos** dice si el correo ya
@@ -165,7 +194,8 @@ Voluntario que va por el animal. Usa el panel **desde el celular**.
 ![Ofertas de rescate](manual/08-rescatista.jpg)
 
 1. En **Mi disponibilidad** marca **Disponible para rescates** cuando pueda salir.
-2. En **Zona** marca las comunas donde puede ir. Si no marca ninguna, recibe toda la ciudad.
+2. En **Zona** marca las comunas donde puede ir. Si no marca ninguna, recibe toda la ciudad (la
+   pantalla lo recuerda debajo de «Zona»).
 3. En **Ofertas de rescate** aparecen los casos críticos y altos ya confirmados por el
    veterinario, con la comuna (la dirección exacta se ve al aceptar) y la misma forma de la
    prioridad (▲ crítica, ◆ alta). Toca **Aceptar rescate**
@@ -203,11 +233,15 @@ Maneja los cupos, los animales y las adopciones de su refugio.
 
 - La barra muestra cuántos cupos están ocupados. Al llegar al **90 %** el sistema avisa a
   coordinación; sin cupo, **no deja** registrar más ingresos.
-- **Registrar ingreso**: nombre, especie, estado de salud y si está vacunado o
-  esterilizado. Si el animal llega de un rescate, escribe el **código del reporte** (lo ve el
-  rescatista en «Mis rescates»): así el ciudadano recibe el aviso de que llegó al refugio. Si
-  el código no existe, el formulario lo dice. Más abajo están los animales del refugio, su ficha y el botón para registrar
-  el **egreso** (adopción, traslado, fallecimiento…), que libera el cupo.
+- **Registrar ingreso**, paso a paso:
+  1. Escribe el **nombre** y elige la **especie**.
+  2. Escribe el **estado de salud** (por ejemplo, «Atropellado, en observación»).
+  3. Si el animal llega de un rescate, escribe el **código del reporte** (lo ve el rescatista en
+     «Mis rescates»): así el ciudadano recibe el aviso de que llegó al refugio. Si el código no
+     existe, el formulario lo dice.
+  4. Marca **Vacunado** o **Esterilizado** si aplica y toca **Registrar ingreso**.
+- Más abajo están los animales del refugio, su ficha y el botón para registrar el **egreso**
+  (adopción, traslado, fallecimiento…), que libera el cupo.
 
 ### 2. Adopciones
 
@@ -280,6 +314,16 @@ En **Indicadores**, al final, está la **bitácora**: quién hizo cada cambio, c
 y cómo estaba **antes → después** (por ejemplo, «prioridad: media → alta»). No se puede
 editar ni borrar. Tampoco guarda contraseñas ni datos personales.
 
+### 3. Modo piloto
+
+Sirve para la prueba de usabilidad con personas reales sin que sus reportes lleguen a la cola.
+
+1. En la pestaña **Modo piloto**, toca **Nuevo participante** en el celular de la prueba.
+2. Se abre la app en modo prueba: la persona reporta como lo haría un ciudadano. El tiempo se
+   mide desde su primer toque hasta que ve el código. Nada llega a la cola ni a los rescatistas.
+3. Al final responde el cuestionario corto (SUS).
+4. **Descargar CSV** se habilita cuando al menos un participante termina; trae los resultados.
+
 ---
 
 ## Alcaldía
@@ -305,24 +349,25 @@ PDF. No ve nombres, direcciones, correos ni códigos.
   que esperar unos minutos. El mensaje dice cuánto.
 - **No veo una pestaña que otra persona sí ve.** Cada rol ve solo lo suyo. Si te falta algo
   que necesitas, habla con el administrador.
+- **Dice «El servidor tuvo un problema».** El servidor falló o se estaba reiniciando; lo que
+  escribiste no tiene la culpa. Espera un momento y vuelve a intentarlo.
 - **¿La IA decide sola?** No. Sugiere una prioridad con sus razones; el veterinario la
   confirma o la cambia. Si la IA duda o falla, el caso se trata como urgente y lo revisa una
   persona.
 
 ## Para quien mantiene el sistema
 
-Las capturas se toman solas con los datos de demostración, sin tocar la base real. Para que
-salgan el video y los historiales se usa la instancia local con PostgreSQL de
-`docs/aprende/e2e.md` (base `patitas_e2e`, puerto 8010) con un reporte que tenga video
-analizado; con el servidor en memoria (`python servidor_demo.py 8765`) salen las demás.
+Las capturas se toman solas con los datos de demostración, sin tocar la base real. Las del 25 de
+noviembre salieron del sistema local (`scripts/dev/arrancar_local.ps1`, ver
+`docs/aprende/desarrollo-local.md`) sobre una base de **prueba**:
 
-```bash
-cd scripts/accesibilidad
+```powershell
+cd scripts\accesibilidad
 npm ci
-PATITAS_DEMO_CONTRASENA=<la misma de la instancia> node capturas.mjs http://127.0.0.1:8010
+$env:PATITAS_DEMO_CONTRASENA = "<la de tu .env>"; $env:A11Y_CANAL = "msedge"
+node capturas.mjs http://127.0.0.1:8000
 ```
 
-En Windows con Edge, agrega `A11Y_CANAL=msedge`. La captura del análisis de video
-(`06c-veterinario-video.jpg`) solo se retoma con el trabajador de video encendido; la del 5 de
-noviembre conserva la anterior. El script acepta un rescate y registra un
+La captura del análisis de video (`06c-veterinario-video.jpg`) solo se retoma con el trabajador
+de video encendido y un reporte con video analizado; se conserva la del 5 de noviembre. El script acepta un rescate y registra un
 resultado: úsalo solo en una base de prueba.
