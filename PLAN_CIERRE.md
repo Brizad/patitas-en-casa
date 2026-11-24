@@ -65,7 +65,7 @@ Estimación en PR (cada uno ≤ 300 líneas). «Hecho» solo con PR integrado y 
 | 2e | `ci-security.yml` (Bandit, Semgrep con `.semgrep/patitas.yml`, pip-audit, npm audit) | 1 | Flujo en verde en el PR | #351 ✅ |
 | 2f | Umbral de cobertura de 70 a 90 % | 1 | CI en verde con `--cov-fail-under=90` | #367 ✅ |
 | 3a | CHECK de RN-01 en `reportes` (migración `NOT VALID`, validación solo si los datos cumplen) + prueba de contrato | 1 | Migración aditiva probada en el CI; un `INSERT` corto falla | #342 ✅ |
-| 3b | Lista de reglas que viven solo en el código (propuesta, **sin aplicar**) | 1 | Tabla en este archivo, sección 5 | pendiente (no bloquea la entrega) |
+| 3b | Lista de reglas que viven solo en el código (propuesta, **sin aplicar**) | 1 | Tabla en este archivo, sección 5 | hecho el 25-nov (§5.1) |
 | 4a | Seguridad: OWASP ASVS 4.0.3 nivel 1 contra el código; `docs/tesis/seguridad.md` (control → cumple/no → evidencia) | 2–3 | Cada «no cumple» corregido con prueba o registrado como deuda | #361, #362, #363 ✅ |
 | 4b | Rendimiento: N+1, índices, triaje dentro de `POST /reportes`; medir antes y después | 1–2 | Cifras medidas (no estimadas) en `docs/tesis/pruebas.md` | #365 ✅ (N+1 de `/indicadores`) |
 | 4c | Quitar los 7 `# noqa: C901` de las fábricas de rutas (empieza por `crear_rutas_adopciones`) | 4–6 | OpenAPI idéntico en cada PR; Ruff sin `noqa` | #357, #359, #375, #376, #377, #378, #379 ✅ (ya no queda ningún `noqa: C901`) |
@@ -123,7 +123,41 @@ Si diera alguna, avisa antes de confirmar o descartar esos reportes.
 
 ## 5. Propuestas que esperan decisión de Brayan
 
-- (se llena en el trabajo 3b)
+### 5.1 Reglas que viven solo en el código (trabajo 3b, 25-nov) — **propuesta, sin aplicar**
+
+Revisado en `app/bd/esquema.py` y `migraciones/versions/`. «En la base» = un `CHECK`, una llave o
+índice único, o un disparador lo impide aunque otro programa escriba directo en PostgreSQL.
+«Solo en el código» = lo impide un servicio de `app/`; un `UPDATE` a mano o un error futuro lo
+saltaría.
+
+| Regla | Hoy en la base | Solo en el código | Propuesta para la base | Riesgo de aplicarla |
+|---|---|---|---|---|
+| RN-01 descripción ≥ 20 y ubicación | `ck_reportes_descripcion` (`NOT VALID`: las filas viejas no se revisaron), `ck_reportes_ubicacion` | descripción «con sentido» (letras de verdad) en `ServicioReportes` | `VALIDATE CONSTRAINT ck_reportes_descripcion` tras la consulta de solo lectura de §4 | Bajo, si esa consulta da 0 filas |
+| RN-01 video ≤ 60 s y ≤ 50 MB | `ck_reportes_video` solo exige ≥ 0 | `config.VIDEO_MAX_SEGUNDOS`, `VIDEO_MAX_MB` | `CHECK (video_segundos BETWEEN 0 AND 60)` | Bajo |
+| RN-02 confianza < 0,6 con media o baja ⇒ «requiere revisión» | nada | `ServicioTriaje` | `CHECK (NOT (estado = 'clasificado' AND confianza < 0.6 AND prioridad IN ('media','baja')))` | **Medio: ver el hallazgo de abajo** |
+| RN-03 falla segura ⇒ alta y «sin clasificar» | nada | `ServicioTriaje` | `CHECK (estado <> 'sin_clasificar' OR prioridad = 'alta')` | Bajo (el video, al subirla, cambia el estado a «clasificado») |
+| RN-04 sin cupo no hay ingreso | `ck_refugios_ocupados` (`ocupados BETWEEN 0 AND capacidad`) + `UPDATE` condicional | alerta del 90 % | — (ya está) | — |
+| RN-06 solo el veterinario confirma o descarta | nada (se guarda el correo, no el rol) | dependencia `veterinaria` (`exigir_rol`) en `rutas_triaje.py` | Disparador que compruebe en `usuarios` que el autor tiene rol veterinario | Medio: agrega una consulta por decisión |
+| RN-16 justificación ≥ 10 al ajustar | `ck_decisiones_justificacion`, `ck_descartes_justificacion` | «5 letras» de D-07 (`validar_justificacion`) | `CHECK` con `regexp_count(justificacion, '[[:alpha:]]') >= 5` (PostgreSQL 15+) | Bajo |
+| Confirmar o descartar una sola vez | `uq_decisiones_reporte`, llave de `descartes` | que no se confirme **y** se descarte el mismo reporte | Disparador en ambas tablas que rechace si el código ya está en la otra | Bajo |
+| RN-08 un rescate, un rescatista; uno activo por rescatista | `uq_rescates_reporte_vigente`, `uq_rescates_rescatista_activo` | solo se ofrecen confirmados críticos o altos | `CHECK` imposible entre tablas: disparador al aceptar | Medio |
+| RN-08 escalar una sola vez | llave de `escalamientos` | los 15/30 min (`config.ESCALAMIENTO_MINUTOS`) | — (el tiempo es lógica, no dato) | — |
+| Historial clínico solo se inserta | nada | el repositorio no tiene `UPDATE` ni `DELETE` | Disparador `BEFORE UPDATE OR DELETE` como `tr_bitacora_inmutable` (migración 0020) | Bajo |
+| Egreso libera el cupo una sola vez | `ck_animales_egreso_completo` (fecha y motivo juntos) | `UPDATE … WHERE egresado_en IS NULL` | — (el `UPDATE` condicional ya es atómico) | — |
+| RN-05 adopción: restricciones duras | `uq_solicitudes_pendiente`, `uq_solicitudes_aprobada` | `app/adopciones/reglas.py` (niños, patio, otros animales) | Dejarlo en el código: depende del perfil cifrado | — |
+| RN-14 seguimiento sin datos personales | — (es de presentación) | la respuesta de `/reportes/{codigo}/seguimiento` | — | — |
+| Contraseña ≥ 12 | — (solo se guarda el hash Argon2id) | `ServicioUsuarios` | — (la base nunca ve la contraseña) | — |
+
+**Hallazgo (por confirmar con una prueba, no se cambió nada):** `aplicar_video`
+(`app/triaje/video.py`) pone el estado en «clasificado» cada vez que el video sube la prioridad,
+sin mirar la confianza. Un reporte «baja / requiere revisión» con un video «media» de confianza
+0,55 quedaría «clasificado, media, 0,55», que es justo lo que RN-02 prohíbe. Propuesta: que
+`aplicar_video` aplique el mismo umbral (`config.UMBRAL_CONFIANZA`) que el triaje de texto, con una
+prueba en `tests/test_video.py`; recién después, el `CHECK` de RN-02 de la tabla.
+
+**Orden sugerido si se aplica:** (1) prueba y arreglo del hallazgo; (2) las de riesgo bajo, una
+migración por regla, cada una con su consulta de solo lectura previa en Neon para ver que ninguna
+fila vieja la rompe; (3) las de riesgo medio, solo si hay tiempo después de la entrega.
 
 ## 6. Bitácora de la sesión
 
@@ -231,8 +265,8 @@ sistema se ve en local con un PostgreSQL temporal (puerto 5433, datos de demostr
 | 1 | Hallazgos 11 a 14 | **no aplicado**: son de diseño; quedan para los mockups | — |
 | 2 | Capturas del estado actual (`docs/revision-visual/estado-actual/`) | hecho | #407 |
 | 3 | Manual de usuario con capturas nuevas | hecho (20 capturas; la del video se conserva: sin nodo en local) | #409 |
-| 4 | README como portada del repositorio | hecho (`docs/arquitectura.svg`) | #410 → PR |
-| 5 | Trabajo 3b: reglas solo en el código (§5, propuesta sin aplicar) | pendiente | |
+| 4 | README como portada del repositorio | hecho (`docs/arquitectura.svg`) | #411 |
+| 5 | Trabajo 3b: reglas solo en el código (§5, propuesta sin aplicar) | hecho; hallazgo posible en RN-02 con el video | #412 → PR |
 | 6 | RN-08 sin servidor despierto (propuesta en `docs/aprende/despliegue.md`) | pendiente | |
 | 7 | `docs/aprende/sustentacion-final.md` | pendiente | |
 | 8 | Guion del video demo (5 min) | pendiente | |
