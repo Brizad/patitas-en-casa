@@ -6,7 +6,7 @@ import contextlib
 import hmac
 import logging
 import re
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -16,8 +16,8 @@ from starlette.concurrency import run_in_threadpool
 
 from app import config
 from app.bitacora.repositorio import Evento, RepositorioBitacora
-from app.rescates.escalamiento import repetir_cada
 from app.seguridad.tokens import EmisorTokens, TokenInvalido
+from app.tareas_de_fondo import TareaDeFondo
 
 logger = logging.getLogger("app.api.main")  # el mismo de antes: los logs no cambian
 
@@ -67,14 +67,12 @@ class LimiteCuerpoSinLargo:
         await self.app(scope, recibir, send)
 
 
-def ciclo_de_vida(periodicas: list[tuple[Callable[[], object], float | None, str]],
-                  motor: Engine | None):
-    """Arranca cada tarea periódica con intervalo (None: no se repite, como en las pruebas) y,
-    al apagar, las detiene y cierra la base."""
+def ciclo_de_vida(de_fondo: list[TareaDeFondo], motor: Engine | None):
+    """Arranca las tareas de fondo (#390: solo consultan la base cuando hay trabajo) y, al
+    apagar, las detiene y cierra la base."""
     @asynccontextmanager
     async def ciclo(_app: FastAPI) -> AsyncIterator[None]:
-        tareas = [asyncio.create_task(repetir_cada(accion, cada_s, nombre))
-                  for accion, cada_s, nombre in periodicas if cada_s]
+        tareas = [asyncio.create_task(tarea.correr()) for tarea in de_fondo]
         yield
         for tarea in tareas:
             tarea.cancel()
@@ -83,6 +81,23 @@ def ciclo_de_vida(periodicas: list[tuple[Callable[[], object], float | None, str
         if motor is not None:
             motor.dispose()
     return ciclo
+
+
+def instalar_despertador(app: FastAPI, de_fondo: list[TareaDeFondo]) -> None:
+    """#390: toda petición que cambia datos y sale bien despierta las tareas de fondo (por
+    ejemplo, confirmar guarda avisos y ofrece un rescate). La base ya está despierta por la
+    propia petición, así que revisar en ese momento no le suma minutos a Neon."""
+    @app.middleware("http")
+    async def despertar_tareas(peticion: Request, siguiente):
+        respuesta = await siguiente(peticion)
+        if (peticion.method in ("POST", "PUT", "PATCH", "DELETE")
+                and 200 <= respuesta.status_code < 300
+                # El sondeo del nodo sin trabajos (204) no cambia nada.
+                and not (respuesta.status_code == 204
+                         and peticion.url.path == "/video/trabajos/reclamar")):
+            for tarea in de_fondo:
+                tarea.despertar()
+        return respuesta
 
 
 def poner_cabeceras(peticion: Request, respuesta):

@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Cambiado
+- Tareas de fondo (#390, parte 1): `app/tareas_de_fondo.py` revisa al arrancar y cada vez que una petición cambia datos (la base ya está despierta). Los avisos, sin pendientes, esperan de 15 s a 30 min (la espera se duplica) en vez de consultar cada 15 s. Un error de la base se reintenta con espera creciente.
+
 ### Agregado
 - Interruptor `PATITAS_TAREAS_DE_FONDO` (#388): con `0` la API no arranca las tareas de fondo (avisos, escalamientos y videos) y no consulta la base mientras nadie la usa; los avisos quedan pendientes y salen al encenderla. Encendido por defecto. Guía: `docs/aprende/despliegue.md`.
 
