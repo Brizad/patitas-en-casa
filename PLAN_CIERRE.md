@@ -268,5 +268,16 @@ sistema se ve en local con un PostgreSQL temporal (puerto 5433, datos de demostr
 | 4 | README como portada del repositorio | hecho (`docs/arquitectura.svg`) | #411 |
 | 5 | Trabajo 3b: reglas solo en el código (§5, propuesta sin aplicar) | hecho; hallazgo posible en RN-02 con el video | #413 |
 | 6 | RN-08 sin servidor despierto (propuesta en `docs/aprende/despliegue.md`) | hecho (propuesta A + B, sin aplicar) | #415 |
-| 7 | `docs/aprende/sustentacion-final.md` | hecho (rutas y archivos verificados) | #416 → PR |
-| 8 | Guion del video demo (5 min) | pendiente | |
+| 7 | `docs/aprende/sustentacion-final.md` | hecho (rutas y archivos verificados) | #417 |
+| 8 | Guion del video demo (5 min) | hecho (el de 10 min queda como anexo) | #418 → PR |
+
+Bitácora del 25-nov:
+- Sistema local con PostgreSQL temporal (puerto 5433, datos de demostración) para las capturas;
+  apagado al terminar. No se tocó Render, Neon, secretos ni `.env`.
+- Hay una rama **local** antigua `docs/sustentacion-final` (commit `fd97eaf`, 17-nov) que nunca
+  se subió: traía otra versión de la sustentación y del guion. Quedó sin tocar; la vigente es la
+  de #417 y #418. Si ya no sirve: `git branch -D docs/sustentacion-final`.
+- Pendiente para el autor: decidir el diseño con mockups (incluye los hallazgos 11 a 14); decidir
+  si se aplica la propuesta de §5.1 (y confirmar con una prueba el posible hueco de RN-02 con el
+  video); decidir A + B para RN-08 (`docs/aprende/despliegue.md`).
+
