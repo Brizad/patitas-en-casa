@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Flujo manual `restaurar-a-neon-nuevo.yml` (#394): restaura el último respaldo diario bueno en una base nueva de Neon (`NEON_DATABASE_URL_NUEVA`), sin imprimir la cadena, negándose si la base ya tiene tablas y comprobando tablas y `alembic_version`. Guía en `docs/aprende/respaldo.md`.
+
 ### Cambiado
 - Nodo de video (#390, parte 3): sin trabajo espera 15 s y luego el doble hasta 5 min; la API le responde sin consultar la base mientras sabe que no hay trabajos (solo entran por una subida, un fallo con reintento o un reclamo que vence). El panel da al nodo por apagado tras 5,5 min sin llamar (antes, 90 s). Consumo esperado de Neon en `docs/aprende/despliegue.md`.
 - Tareas de fondo (#390, parte 2): los escalamientos esperan justo hasta que vence el próximo rescate ofrecido sin escalar (15/30 min, RN-08) y, sin ninguno, no consultan la base hasta que alguien confirme o libere uno; los videos solo se revisan mientras alguno espera análisis, cuando el más antiguo cumple 6 h. Antes: cada 60 s.

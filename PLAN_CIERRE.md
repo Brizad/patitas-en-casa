@@ -171,8 +171,8 @@ Producción solo debe estar viva cuando alguien la usa; el desarrollo sigue en e
 |---|---|---|---|
 | 1 | Sondeo desactivado (`gh workflow disable`) y preparado: cada 6 h, solo `/app/` | hecho (desactivado el 24-nov) | #387 |
 | 2 | Interruptor `PATITAS_TAREAS_DE_FONDO` | hecho | #389 |
-| 3 | Tareas de fondo sin consultas en reposo | hecho en 3 partes | #391, #392 y el del nodo |
-| 4 | Flujo `restaurar-a-neon-nuevo.yml` | pendiente | |
+| 3 | Tareas de fondo sin consultas en reposo | hecho en 3 partes | #391, #392, #393 |
+| 4 | Flujo `restaurar-a-neon-nuevo.yml` | hecho; probado solo el error sin secreto | #394 → PR |
 | 5 | Panel: 5xx o respuesta sin JSON → «El servidor tuvo un problema…» | pendiente | |
 | 6 | `scripts/dev/arrancar_local.ps1` y `docs/aprende/desarrollo-local.md` | pendiente | |
 | 7 | Revisión visual con Playwright y 10 correcciones | pendiente | |
