@@ -1,142 +1,97 @@
 # Patitas en Casa
 
 [![CI](https://github.com/Brizad/patitas-en-casa/actions/workflows/ci.yml/badge.svg)](https://github.com/Brizad/patitas-en-casa/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/github/v/release/Brizad/patitas-en-casa?label=versi%C3%B3n)](https://github.com/Brizad/patitas-en-casa/releases)
 
-Plataforma web inteligente para la gestión logística de refugios animales en Cúcuta
-(Norte de Santander): triaje de emergencias de perros y gatos, control de cupos y,
-en próximos incrementos, recomendación de adopciones.
+Cuando alguien en Cúcuta encuentra un perro o un gato herido, lo reporta desde el celular **sin
+crear cuenta**. Una IA sugiere qué tan urgente es, un veterinario lo confirma y se avisa a los
+rescatistas de la zona; el refugio controla sus cupos y da en adopción a los animales recuperados.
 
-Proyecto integrador — Ingeniería de Software II (grupo CR), Universidad de Pamplona.
+**En producción:** https://patitas-en-casa-pnnk.onrender.com · PWA ciudadana en
+[`/app/`](https://patitas-en-casa-pnnk.onrender.com/app/) · panel por rol en
+[`/panel/`](https://patitas-en-casa-pnnk.onrender.com/panel/) · API en
+[`/docs`](https://patitas-en-casa-pnnk.onrender.com/docs). El plan gratis de Render se duerme sin
+visitas: la primera carga puede tardar hasta un minuto.
+
+Proyecto integrador de Ingeniería de Software II (grupo CR), Universidad de Pamplona.
 Autor: Brayan David Amado Ramírez.
 
-**Publicada en Render:** https://patitas-en-casa-pnnk.onrender.com
+## Capturas
 
-- PWA ciudadana (reportar sin cuenta y consultar el estado): https://patitas-en-casa-pnnk.onrender.com/app/
-- Panel por rol (personal, adoptante y Alcaldía): https://patitas-en-casa-pnnk.onrender.com/panel/
-- Documentación interactiva de la API: https://patitas-en-casa-pnnk.onrender.com/docs
+| Ciudadano: reportar (celular) | Veterinario: cola de triaje | Rescatista: rescate en curso |
+|---|---|---|
+| ![Reportar una emergencia](docs/manual/02-ciudadano-reportar.jpg) | ![Cola de triaje con el detalle](docs/manual/06-veterinario-reporte.jpg) | ![Rescate en curso](docs/manual/08b-rescatista-en-curso.jpg) |
 
-El plan gratis de Render «duerme» el servicio tras 15 minutos sin visitas: la primera
-petición puede tardar unos 30 a 60 segundos en responder.
+Más pantallas, rol por rol: [manual de usuario](docs/manual-usuario.md).
 
-## Estado: v1.0.0 publicada y desplegada en Render
+## Arquitectura
 
-Trazabilidad de cada requisito del ERS: `docs/tesis/trazabilidad.md`. Guion de la
-demostración: `docs/aprende/guion-demo.md`. Manual de usuario con capturas de cada rol:
-`docs/manual-usuario.md`.
+![Arquitectura: navegador, API en Render, PostgreSQL en Neon, Mailjet, nodo de video local y GitHub Actions](docs/arquitectura.svg)
 
-Además de lo de la v0.2.0 (abajo), la v1.0.0 trae:
+| Pieza | Tecnología | Dónde |
+|---|---|---|
+| PWA ciudadana | HTML, CSS y JavaScript sin dependencias | `app/pwa/` |
+| Panel por rol | React + TypeScript (Vite) | `panel/` |
+| API | FastAPI (Python), SQLAlchemy Core, Alembic | `app/` |
+| Triaje con IA | reglas + TF-IDF; si falla, prioridad alta y revisión manual | `app/triaje/` |
+| Video (opcional) | MediaPipe + DeepLabCut en un PC del equipo | `servicios/video/` |
+| Base | PostgreSQL 18 en Neon | `app/bd/esquema.py`, `migraciones/` |
 
-- **Panel por rol** en `/panel/`: veterinario (cola, descartar, fichas), coordinador (refugio,
-  ingresos, egresos, adopciones, jornada, indicadores), rescatista (ofertas y rescate),
-  administrador (cuentas, refugios, bitácora) y adoptante (perfil, recomendaciones,
-  solicitudes y compromiso en PDF).
-- **Refugio completo**: ficha clínica con historial, egresos que liberan cupo, varios
-  refugios, posibles duplicados y descartes con justificación.
-- **Adopción**: perfil, publicación, solicitud, aprobación con restricciones duras y
-  seguimientos a 30, 90 y 180 días.
-- **IA**: triaje con reglas + modelo TF-IDF (entrenado con datos sintéticos: `scripts/ia/`),
-  compatibilidad adoptante–animal y asignación global en jornadas.
-- **Cierre**: indicadores, exportar CSV/PDF anonimizados y bitácora inmutable.
-- Guía de estudio en `docs/aprende/` (empieza por `00-mapa.md`).
+Detalle en el modelo C4: [`docs/tesis/c4.md`](docs/tesis/c4.md).
 
-### Lo publicado en la v0.2.0 (incremento 2, "Fundación segura")
+## Correrlo en local (Windows)
 
-Públicos (el ciudadano no necesita cuenta):
-- `POST /reportes`: reporte de emergencia (descripción, ubicación, video opcional y `comuna`
-  opcional de Cúcuta, 1 a 10).
-  Encabezado opcional `Idempotency-Key` (16 a 64 letras, números, `-` o `_`): si se reenvía
-  con la misma clave responde 200 con el mismo código en vez de crear otro reporte (RF-12).
-- `GET /reportes/{codigo}`: estado del reporte con el código de seguimiento.
-- `GET /reportes/{codigo}/seguimiento`: línea de tiempo (recibido → revisado → rescatista en
-  camino o atención programada → atendido → cerrado) y fecha del último cambio, sin datos
-  personales (HU-08, RN-14).
-- `GET /app/`: PWA ciudadana (HTML y JavaScript sencillos con el diseño del prototipo) con las
-  pantallas "Reportar emergencia" (GPS o dirección y comuna opcional), "Código de seguimiento"
-  y "Estado del reporte". Sin señal, el reporte queda guardado en el teléfono y se envía solo
-  al volver la conexión, sin duplicarse (RF-12). `/` redirige ahí. Por ahora solo local (#47).
+Necesitas PostgreSQL 17 con una base `patitas`, Python 3.12 y Node.js 22.
 
-Personal (veterinario o coordinador), con `Authorization: Bearer <token>`:
-- `POST /auth/token`: inicio de sesión (formulario `username` = correo, `password`). Tras 5 fallos del mismo correo (o 20 de la misma IP) en 15 minutos responde 429 con `Retry-After` (DT-06).
-- `GET /auth/yo`: datos de la sesión.
-- `GET /cola`: cola priorizada de reportes pendientes de confirmar.
-- `POST /reportes/{codigo}/confirmacion` (solo veterinario): confirma la prioridad sugerida o la
-  ajusta con `{"prioridad": "...", "justificacion": "..."}` (mínimo 10 caracteres).
-- `GET /reportes/{codigo}/decisiones`: bitácora de la confirmación.
-- `POST /refugio/ingresos`: registro de ingresos, solo para el rol coordinador (403 para el veterinario).
-- `GET /refugio/ocupacion`: ocupación del refugio (veterinario y coordinador).
-
-Rescatista (HU-06), con `Authorization: Bearer <token>`:
-- `PUT /rescatistas/yo/disponibilidad` `{"disponible": true}`: solo quien está disponible ve ofertas.
-- `PUT /rescatistas/yo/zona` `{"comunas": [6, 7]}`: comunas que cubre (vacío = toda la ciudad);
-  `GET /rescatistas/yo` muestra disponibilidad y zona.
-- `GET /rescates/ofertas`: reportes confirmados críticos o altos sin rescatista de su zona, con la
-  comuna como ubicación aproximada.
-- Al confirmar un crítico o alto llega un correo a los rescatistas disponibles de la comuna. Si
-  nadie acepta en 15 min (crítico) o 30 min (alto), se avisa a los coordinadores y el caso se
-  ofrece en toda la ciudad (RF-23).
-- `POST /rescates/{codigo}/aceptar`, `/llegue`, `/liberar` y `/resultado`
-  (`trasladado`, `atendido_en_sitio`, `no_encontrado`, `fallecido`); `GET /rescates/mio`.
-  RN-08: un rescate tiene un solo rescatista y un rescatista un solo rescate activo.
-
-## Panel del personal y avisos (incremento 3, sin publicar)
-
-- `/panel/`: panel en React para el veterinario (inicio de sesión, cola, confirmar o ajustar).
-  Se compila con `cd panel && npm ci && npm run build` (queda en `app/panel_web`, que no se sube).
-- Al confirmar un crítico o alto, los avisos a los rescatistas quedan **pendientes** y el
-  procesador los envía cada 15 s con reintentos. `GET /reportes/{codigo}/avisos` muestra su estado.
-
-## Con Docker (un solo comando)
-
-```bash
-cp .env.example .env      # escribe POSTGRES_PASSWORD y PATITAS_JWT_SECRETO
-docker compose up --build # API en http://127.0.0.1:8000/docs, PWA en /app/, panel en /panel/
+```powershell
+Copy-Item .env.example .env   # escribe tu contraseña de PostgreSQL y las claves (ver la guía)
+powershell -ExecutionPolicy Bypass -File scripts\dev\arrancar_local.ps1
 ```
 
-## Cómo ejecutarlo
+El script revisa `.env`, aplica las migraciones, compila el panel, carga los datos de
+demostración y arranca la API en http://localhost:8000. Qué abrir y con qué cuentas entrar:
+[`docs/aprende/desarrollo-local.md`](docs/aprende/desarrollo-local.md).
 
-Requisitos: Python 3.11+ y PostgreSQL 17 con dos bases vacías, `patitas` (aplicación) y
-`patitas_test` (pruebas: se vacía en cada ejecución).
+En otro sistema (o con Docker: `docker compose up --build`):
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate          # en Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env               # en Windows: copy .env.example .env  (y escribe tu contraseña)
-alembic upgrade head               # crea las tablas en la base patitas
-pytest --cov=app                   # pruebas con cobertura (sin PostgreSQL, las de base se omiten)
-uvicorn --factory app.api.main:crear_app --reload  # documentación en http://127.0.0.1:8000/docs
-# PWA ciudadana en http://127.0.0.1:8000/app/
+cp .env.example .env              # y complétalo
+alembic upgrade head
+cd panel && npm ci && npm run build && cd ..
+uvicorn --factory app.api.main:crear_app --reload
 ```
 
-El archivo `.env` nunca se sube al repositorio. Además de la contraseña de PostgreSQL necesita
-`PATITAS_JWT_SECRETO`, una clave aleatoria para firmar las sesiones:
+## Cómo se prueba
 
 ```bash
-python -c "import secrets; print(secrets.token_hex(32))"
+ruff check .                      # estilo y errores comunes
+pytest --cov=app                  # unitarias y de la API; PATITAS_EXIGIR_POSTGRES=1 para no omitir las de base
+cd panel && npm test              # pruebas del panel (Vitest)
 ```
 
-Para crear una cuenta de personal (la contraseña se pide sin mostrarla, mínimo 12 caracteres):
+En cada Pull Request el CI (`.github/workflows/ci.yml`) corre además: gitleaks sobre todo el
+historial, pytest con PostgreSQL y **cobertura mínima del 90 %**, accesibilidad con axe-core y
+Lighthouse en claro y oscuro, pruebas de punta a punta con Playwright (incluida la regresión
+visual) y un escaneo de seguridad (Bandit, Semgrep, pip-audit y npm audit). Cómo correr el e2e:
+[`docs/aprende/e2e.md`](docs/aprende/e2e.md).
 
-```bash
-python -m app.usuarios.crear_usuario --correo ana@refugio.co --nombre "Ana" --rol veterinario
-```
+## Documentación
 
-En `http://127.0.0.1:8000/docs`, el botón **Authorize** inicia sesión con ese correo y contraseña.
+| Para | Archivo |
+|---|---|
+| Usar el sistema | [`docs/manual-usuario.md`](docs/manual-usuario.md) |
+| Estudiar el código por fases | [`docs/aprende/00-mapa.md`](docs/aprende/00-mapa.md) |
+| Requisitos y su trazabilidad | [`docs/tesis/trazabilidad.md`](docs/tesis/trazabilidad.md) |
+| Endpoints de la API | [`docs/tesis/catalogo-endpoints.md`](docs/tesis/catalogo-endpoints.md) |
+| Seguridad (OWASP ASVS) | [`docs/tesis/seguridad.md`](docs/tesis/seguridad.md) |
+| Despliegue, consumo de Neon y respaldo | [`docs/aprende/despliegue.md`](docs/aprende/despliegue.md), [`docs/aprende/respaldo.md`](docs/aprende/respaldo.md) |
+| Cambios y deuda técnica | [`CHANGELOG.md`](CHANGELOG.md), [`DEUDA_TECNICA.md`](DEUDA_TECNICA.md) |
 
-Cada cambio en `app/bd/esquema.py` necesita una migración nueva en `migraciones/versions/`.
+## Forma de trabajo
 
-## Flujo de trabajo
-
-GitHub Flow: ramas cortas (`feat/`, `fix/`, `refactor/`, `chore/`, `docs/`, `test/`) desde `main`,
-integración por Pull Request con CI en verde y versiones etiquetadas según SemVer.
-Ver `CHANGELOG.md` y `DEUDA_TECNICA.md`.
-
-## Seguimiento del proyecto
-
-Tablero Scrum (GitHub Projects): https://github.com/users/Brizad/projects/1
-
-Backlog con historias de usuario, bug y deuda técnica: https://github.com/Brizad/patitas-en-casa/issues
-
-Versión publicada: https://github.com/Brizad/patitas-en-casa/releases/tag/v0.2.0
-
-La rama `main` está protegida: todo cambio entra por Pull Request y solo se integra con el check `build-lint-test` en verde (gitleaks, Ruff y pytest con PostgreSQL).
+GitHub Flow: issue → rama corta desde `main` → pruebas primero → Pull Request de 300 líneas o
+menos con el CI en verde → squash. Versiones con SemVer y etiquetas en
+[Releases](https://github.com/Brizad/patitas-en-casa/releases). Tablero:
+[GitHub Projects](https://github.com/users/Brizad/projects/1).

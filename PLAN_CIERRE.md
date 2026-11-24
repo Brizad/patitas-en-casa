@@ -230,8 +230,8 @@ sistema se ve en local con un PostgreSQL temporal (puerto 5433, datos de demostr
 |---|---|---|---|
 | 1 | Hallazgos 11 a 14 | **no aplicado**: son de diseño; quedan para los mockups | — |
 | 2 | Capturas del estado actual (`docs/revision-visual/estado-actual/`) | hecho | #407 |
-| 3 | Manual de usuario con capturas nuevas | hecho (20 capturas; la del video se conserva: sin nodo en local) | #408 → PR |
-| 4 | README como portada del repositorio | pendiente | |
+| 3 | Manual de usuario con capturas nuevas | hecho (20 capturas; la del video se conserva: sin nodo en local) | #409 |
+| 4 | README como portada del repositorio | hecho (`docs/arquitectura.svg`) | #410 → PR |
 | 5 | Trabajo 3b: reglas solo en el código (§5, propuesta sin aplicar) | pendiente | |
 | 6 | RN-08 sin servidor despierto (propuesta en `docs/aprende/despliegue.md`) | pendiente | |
 | 7 | `docs/aprende/sustentacion-final.md` | pendiente | |
