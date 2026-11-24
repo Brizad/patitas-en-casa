@@ -218,3 +218,21 @@ Bitácora de la noche:
    que tome la espera creciente (#393).
 8. **Sondeo:** queda desactivado; si lo quieres, `gh workflow enable "Sondeo de disponibilidad"`
    (ya solo pide `/app/` cada 6 h).
+
+## 8. 25-nov: documentación y capturas (sin cambios de diseño)
+
+Indicación del autor: **no hacer más cambios de diseño** (los decide con mockups). Por eso el
+trabajo 1 (hallazgos 11 a 14) y la «segunda pasada» visual no se aplican: en su lugar, capturas
+del estado actual. Producción sigue caída (Neon): no se toca Render, Neon, secretos ni `.env`. El
+sistema se ve en local con un PostgreSQL temporal (puerto 5433, datos de demostración).
+
+| # | Trabajo | Estado | PR |
+|---|---|---|---|
+| 1 | Hallazgos 11 a 14 | **no aplicado**: son de diseño; quedan para los mockups | — |
+| 2 | Capturas del estado actual (`docs/revision-visual/estado-actual/`) | hecho | #406 → PR |
+| 3 | Manual de usuario con capturas nuevas | pendiente | |
+| 4 | README como portada del repositorio | pendiente | |
+| 5 | Trabajo 3b: reglas solo en el código (§5, propuesta sin aplicar) | pendiente | |
+| 6 | RN-08 sin servidor despierto (propuesta en `docs/aprende/despliegue.md`) | pendiente | |
+| 7 | `docs/aprende/sustentacion-final.md` | pendiente | |
+| 8 | Guion del video demo (5 min) | pendiente | |
