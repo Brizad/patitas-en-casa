@@ -34,8 +34,16 @@ la PWA, el inicio de sesión y la portada son claros y consistentes.
 | 13 | Indicadores · Bitácora | Las últimas 50 entradas son casi todas «inicio de sesión» | Tapa los cambios que importan | Pendiente (filtro por acción) |
 | 14 | Foto para el catálogo | El botón nativo dice «No se e… archivo» (texto cortado del navegador) | Detalle menor del control nativo | Pendiente |
 
-Se corrigen los hallazgos 1 a 10. Las capturas de después están en `despues/`, con los mismos
-nombres.
+## Qué se corrigió
+
+| Hallazgos | PR |
+|---|---|
+| 1 (cargas con indicador), 5 (estados vacíos), 6 («Actualizar» a la derecha) | #403 |
+| 2 (alineación en escritorio), 3 (cola en el celular), 4 (sin códigos internos), 7 (tarjetas con encabezado), 8 (barras en 0), 9 (zona del rescatista), 10 (CSV del piloto) | #405 |
+| 11 a 14 | pendientes |
+
+Las capturas de después están en `despues/`, con los mismos nombres (tomadas con la rama de #405).
+axe-core y Lighthouse siguen sin fallas: los revisa el job `build-lint-test` del CI en cada PR.
 
 ## Cómo repetirla
 

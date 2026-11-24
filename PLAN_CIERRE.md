@@ -175,7 +175,22 @@ Producción solo debe estar viva cuando alguien la usa; el desarrollo sigue en e
 | 4 | Flujo `restaurar-a-neon-nuevo.yml` | hecho; lanzado sin el secreto: falla con «Falta el secreto NEON_DATABASE_URL_NUEVA» (ejecución 45338382347) | #395 |
 | 5 | Panel: 5xx o respuesta sin JSON → «El servidor tuvo un problema…» | hecho (el e2e encontró que un JSON null se volvía {}: corregido antes de unir) | #397 |
 | 6 | `scripts/dev/arrancar_local.ps1` y `docs/aprende/desarrollo-local.md` | hecho; probado sin `.env` (se detiene y explica) y completo contra un PostgreSQL 17 temporal | #399 |
-| 7 | Revisión visual con Playwright y 10 correcciones | 7a: capturas «antes» y hallazgos (#401); 7b: hallazgos 1, 5 y 6 (#403); 7c: hallazgos 2, 3, 4, 7, 8, 9 y 10 (#404) | |
+| 7 | Revisión visual con Playwright y 10 correcciones | 7a: capturas «antes» y hallazgos (#401); 7a #401, 7b #403 unidos; 7c (#405) **abierto**: falta copiar sus 10 capturas base (ver bitácora) | #401, #403, #405 |
 
 Bitácora de la noche:
 - `git fetch` falló una vez por red y al segundo intento sí. `main` en `19c9afe`, sin PR abiertos.
+- Trabajo 1 a 6 integrados en orden (#387, #389, #391, #392, #393, #395, #397, #399). El e2e de
+  #397 encontró un error real (un JSON `null` se volvía `{}` y el panel del rescatista quedaba
+  en blanco): se corrigió antes de unir. También se estabilizó `test_observabilidad` (la latitud
+  «7.89» aparecía por azar en `process_cpu_seconds_total`).
+- `.venv` creado en este equipo (Python 3.12) para correr las pruebas.
+- Para probar el arranque local sin tu `.env` se usó un PostgreSQL 17 **temporal** (puerto 5433,
+  datos falsos, en la carpeta temporal de la sesión; no es tu base `patitas`).
+- Trabajo 7: 76 capturas antes y después; 10 de 14 hallazgos corregidos; axe/Lighthouse en verde.
+- **Falló 3 veces (red):** descargar el artefacto `e2e-capturas` de la ejecución 45343747394 de #405
+  (`dial tcp 20.150.88.228:443: i/o timeout` hacia el almacenamiento de artefactos de GitHub).
+  Diagnóstico: el CI está bien (fallan solo las 10 capturas base que se quitaron a propósito; las
+  otras 18 pruebas pasan). **Para terminar #405:** `gh run download 45343747394 -n e2e-capturas -D tmp`,
+  mirar cada PNG de `tmp/e2e/capturas/` (las 10 que faltan en `e2e/capturas/`), copiarlas a
+  `e2e/capturas/`, commit y push; con el CI en verde, `gh pr merge 405 --squash`.
+
