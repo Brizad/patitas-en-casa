@@ -21,7 +21,7 @@ def test_hace_los_pasos_en_orden():
              '"--factory", "app.api.main:crear_app"']
     posiciones = [texto.index(paso) for paso in pasos]
     assert posiciones == sorted(posiciones)
-    assert '"--reload"' in texto and "$Puerto = 8000" in texto
+    assert '"--reload"' in texto and "$Puerto = 8000" in _texto()
 
 
 def test_nunca_muestra_contrasenas_ni_claves():
