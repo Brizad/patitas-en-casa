@@ -1,15 +1,16 @@
 name: Sondeo de disponibilidad
 
-# RNF-04 (#119): sondeo externo del módulo de reportes. GitHub ejecuta un cron como mínimo
-# cada 5 minutos (no cada minuto como pide el ERS) y a veces se retrasa: el historial de
-# ejecuciones sirve como registro de disponibilidad aproximado. En el plan gratis de Render
-# el servicio se duerme tras 15 min sin visitas. El repositorio es privado: el sondeo corre
-# cada 30 min para ahorrar minutos de Actions, así que ya no lo mantiene despierto ni
-# garantiza el 99 %: para eso hace falta un plan pagado (ver docs/aprende/trazabilidad.md).
+# RNF-04 (#119): sondeo externo de la PWA. GitHub ejecuta un cron como mínimo cada 5 minutos y a
+# veces se retrasa: el historial de ejecuciones sirve como registro de disponibilidad aproximado.
+# #386: antes corría cada 30 min y pedía también GET /reportes/{codigo}, que consulta PostgreSQL.
+# Neon solo se suspende tras 5 min sin consultas, así que la base nunca dormía y se agotaron las
+# horas gratis del mes. Ahora corre cada 6 horas y solo pide /app/, que no toca la base (es la
+# misma ruta del healthCheckPath de render.yaml). El flujo está DESACTIVADO desde el 24-nov
+# (`gh workflow disable`); se reactiva con `gh workflow enable "Sondeo de disponibilidad"`.
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,16 +21,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: La PWA y la API de reportes responden
+      - name: La PWA responde
         env:
           URL: https://patitas-en-casa-pnnk.onrender.com
         run: |
           # Hasta 3 intentos: el primero puede despertar el servicio (30 a 60 s).
           for intento in 1 2 3; do
             pwa=$(curl -s -o /dev/null -m 90 -w "%{http_code}" "$URL/app/")
-            api=$(curl -s -o /dev/null -m 30 -w "%{http_code}" "$URL/reportes/NOEXISTE")
-            echo "intento $intento: /app/ $pwa · GET /reportes/{codigo} $api"
-            if [ "$pwa" = 200 ] && [ "$api" = 404 ]; then exit 0; fi
+            echo "intento $intento: /app/ $pwa"
+            if [ "$pwa" = 200 ]; then exit 0; fi
             sleep 20
           done
-          echo "::error::El módulo de reportes no responde"; exit 1
+          echo "::error::La PWA no responde"; exit 1

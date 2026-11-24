@@ -159,3 +159,23 @@ Si diera alguna, avisa antes de confirmar o descartar esos reportes.
   no se afirma.
 - 20-nov (tarde): 5c panel (#373), 4c completo (#375 a #379), 4d (#381), 6b (#383, `deploy.yml`
   que sí habría avisado de esto). 3b sigue pendiente; 8b y 8c **para después**.
+
+## 7. Noche del 24-nov: Neon suspendido por consumo
+
+**Causa:** la base de Neon nunca dormía (avisos cada 15 s, escalamientos y videos cada 60 s,
+UptimeRobot y el sondeo cada 30 min). Se agotaron las 100 CU-h gratis del mes (se reinician el
+30-nov) y desde `9a851c2` todo despliegue de Render falla porque `alembic upgrade head` no conecta.
+Producción solo debe estar viva cuando alguien la usa; el desarrollo sigue en el PC del autor.
+
+| # | Trabajo | Estado | PR |
+|---|---|---|---|
+| 1 | Sondeo desactivado (`gh workflow disable`) y preparado: cada 6 h, solo `/app/` | hecho (desactivado el 24-nov) | #386 → PR abajo |
+| 2 | Interruptor `PATITAS_TAREAS_DE_FONDO` | pendiente | |
+| 3 | Tareas de fondo sin consultas en reposo | pendiente | |
+| 4 | Flujo `restaurar-a-neon-nuevo.yml` | pendiente | |
+| 5 | Panel: 5xx o respuesta sin JSON → «El servidor tuvo un problema…» | pendiente | |
+| 6 | `scripts/dev/arrancar_local.ps1` y `docs/aprende/desarrollo-local.md` | pendiente | |
+| 7 | Revisión visual con Playwright y 10 correcciones | pendiente | |
+
+Bitácora de la noche:
+- `git fetch` falló una vez por red y al segundo intento sí. `main` en `19c9afe`, sin PR abiertos.
