@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import Cargando from "./Cargando";
 import { fechaLocal } from "./apiHistorial";
 import {
   FilaRescate, NOMBRE_ESTADO_RESCATE, misRescates, textoLlegada, textoResultado,
@@ -33,8 +34,10 @@ export default function MisRescates({ token }: { token: string }) {
           <button onClick={() => void recargar()} disabled={cargando}>Actualizar</button>
         </div>
         {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+        {cargando && !error && filas.length === 0 && <Cargando que="tus rescates" />}
         {!cargando && !error && filas.length === 0 && (
-          <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-rescates.svg" alt="" width="160" height="120" />Aún no has aceptado rescates.</p>)}
+          <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-rescates.svg" alt="" width="160" height="120" /><strong>Aún no has aceptado rescates.</strong>
+            Acepta uno en «Ofertas y rescate actual»: aquí queda el registro de cada rescate.</p>)}
         {filas.length > 0 && (
           <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla de mis rescates"><table className="ds-tabla ds-tabla--tarjetas" role="table">
             <thead><tr role="row"><th role="columnheader">Código</th><th role="columnheader">Aceptado</th><th role="columnheader">Llegada</th><th role="columnheader">Resultado</th>

@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Panel (#402, hallazgos 1, 5 y 6 de #400): las listas dicen «Cargando…» (con `role="status"`) mientras llegan los datos; los estados vacíos dicen qué falta y qué hacer; «Actualizar» queda siempre a la derecha del título (el título se parte en dos líneas antes que bajar el botón).
 - Panel (#396): un 500/502/503/504 o una respuesta de error sin JSON (la página de Render dormido o caído) dice «El servidor tuvo un problema, intenta de nuevo en un momento.» en vez de «Datos no válidos.». Los 4xx de la API siguen mostrando su detalle.
 
 ### Agregado

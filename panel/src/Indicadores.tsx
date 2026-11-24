@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Cargando from "./Cargando";
 import { ErrorApi, pedir } from "./api";
 import { nombreIndicador, nombreModelo, plural, textoError } from "./mensajes";
 
@@ -81,6 +82,7 @@ export default function Indicadores({ token, rol }: { token: string; rol: string
               <button onClick={() => void bajar("/indicadores/fichas.csv", "fichas.csv")}>
                 Fichas CSV</button>)}</div></div>
         <p className="ds-suave">Anonimizados: sin nombres, direcciones, correos ni códigos (RF-31).</p>
+        {!datos && !error && <Cargando que="los indicadores" />}
         {datos && (<>
           <dl className="kpis">
             {([["Reportes", datos.reportes.total],

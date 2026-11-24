@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FilaHistorial, NOMBRE_ACCION, NOMBRE_ESTADO, fechaLocal, historial } from "./apiHistorial";
+import Cargando from "./Cargando";
 import { NOMBRE_PRIORIDAD, textoError } from "./mensajes";
 
 /** Reportes que este veterinario confirmó, ajustó o descartó, del más reciente al más viejo. */
@@ -31,8 +32,10 @@ export default function Historial({ token }: { token: string }) {
           <button onClick={() => void recargar()} disabled={cargando}>Actualizar</button>
         </div>
         {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+        {cargando && !error && filas.length === 0 && <Cargando que="el historial" />}
         {!cargando && !error && filas.length === 0 && (
-          <p className="ds-vacio">Aún no has confirmado ni descartado reportes.</p>)}
+          <p className="ds-vacio"><strong>Aún no has confirmado ni descartado reportes.</strong>
+            Lo que decidas en la cola de triaje quedará aquí.</p>)}
         {filas.length > 0 && (
           <div className="ds-tabla-caja" tabIndex={0} role="region" aria-label="Tabla del historial"><table className="ds-tabla ds-tabla--tarjetas" role="table">
             <thead><tr role="row"><th role="columnheader">Código</th><th role="columnheader">Fecha</th><th role="columnheader">Acción</th><th role="columnheader">Sugerida</th>

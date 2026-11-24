@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Cuenta, ReporteEnCola, cola } from "./api";
+import Cargando from "./Cargando";
 import Confirmar, { resumenAvisos } from "./Confirmar";
 import Descartar from "./Descartar";
 import VideoDelReporte from "./VideoDelReporte";
@@ -66,8 +67,10 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
               estado: await resumenAvisos(token, aviso.codigo) })}>
               Ver estado de los avisos</button>
           </div>)}
+        {cargando && !error && reportes.length === 0 && <Cargando que="la cola" />}
         {!cargando && !error && reportes.length === 0 && (
-          <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-reportes.svg" alt="" width="160" height="120" />No hay reportes por confirmar.</p>)}
+          <p className="ds-vacio"><img src="/diseno/ilustraciones/sin-reportes.svg" alt="" width="160" height="120" /><strong>No hay reportes por confirmar.</strong>
+            Cuando un ciudadano envíe uno, aparecerá aquí ordenado por prioridad.</p>)}
         <ul>
           {reportes.map((r) => (
             <li key={r.codigo}>

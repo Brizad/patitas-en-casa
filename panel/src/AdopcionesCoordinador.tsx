@@ -64,7 +64,8 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
         <h2>Adopciones aprobadas ({aprobadas.length})</h2>
         <p className="ds-suave">Si la familia ya no puede cuidarlo, registra la devolución con el
           motivo: el animal vuelve al refugio y al catálogo (RF-10, RN-13).</p>
-        {aprobadas.length === 0 && <p className="ds-vacio">No hay adopciones aprobadas.</p>}
+        {aprobadas.length === 0 && <p className="ds-vacio"><strong>No hay adopciones aprobadas.</strong>
+          Aparecen aquí cuando apruebas una solicitud pendiente.</p>}
         <ul className="lista-simple">
           {aprobadas.map((s) => (
             <li key={s.id}><b>{s.animal}</b> · {s.adoptante}
@@ -86,7 +87,8 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
       </div>
       <div className="ds-tarjeta">
         <h2>Seguimientos (30, 90 y 180 días)</h2>
-        {seguimientos.length === 0 && <p className="ds-vacio">No hay seguimientos programados.</p>}
+        {seguimientos.length === 0 && <p className="ds-vacio"><strong>No hay seguimientos programados.</strong>
+          Los de 30, 90 y 180 días aparecen aquí después de aprobar una adopción.</p>}
         <ul className="lista-simple">
           {seguimientos.map((x) => (
             <li key={x.id}>{x.animal} · día {x.dia} · {x.programado_para.slice(0, 10)}
