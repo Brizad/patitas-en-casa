@@ -169,8 +169,8 @@ Producción solo debe estar viva cuando alguien la usa; el desarrollo sigue en e
 
 | # | Trabajo | Estado | PR |
 |---|---|---|---|
-| 1 | Sondeo desactivado (`gh workflow disable`) y preparado: cada 6 h, solo `/app/` | hecho (desactivado el 24-nov) | #386 → PR abajo |
-| 2 | Interruptor `PATITAS_TAREAS_DE_FONDO` | pendiente | |
+| 1 | Sondeo desactivado (`gh workflow disable`) y preparado: cada 6 h, solo `/app/` | hecho (desactivado el 24-nov) | #387 |
+| 2 | Interruptor `PATITAS_TAREAS_DE_FONDO` | hecho | #388 → PR |
 | 3 | Tareas de fondo sin consultas en reposo | pendiente | |
 | 4 | Flujo `restaurar-a-neon-nuevo.yml` | pendiente | |
 | 5 | Panel: 5xx o respuesta sin JSON → «El servidor tuvo un problema…» | pendiente | |
