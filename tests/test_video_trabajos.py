@@ -204,3 +204,62 @@ def test_390_con_un_video_esperando_vuelve_cuando_cumple_las_6_horas(entorno):
     assert servicio.revisar_y_proxima() == (config.VIDEO_MAX_ESPERA_HORAS - 1) * 3600
     reloj.ahora += timedelta(hours=config.VIDEO_MAX_ESPERA_HORAS)
     assert servicio.revisar_y_proxima() is None  # se cerró como fallido: ya no espera nada
+
+
+class VideosContados(RepositorioVideosEnMemoria):
+    """Cuenta los reclamos que llegan al repositorio (cada uno sería una consulta a la base)."""
+
+    def __init__(self):
+        super().__init__()
+        self.consultas = 0
+
+    def reclamar(self, ahora, vence_antes_de):
+        self.consultas += 1
+        return super().reclamar(ahora, vence_antes_de)
+
+
+@pytest.fixture
+def contado(entorno):
+    _, reportes, almacen, reloj = entorno
+    videos = VideosContados()
+    return ServicioVideo(videos, reportes, almacen, reloj), videos, almacen, reloj
+
+
+def test_390_sin_trabajos_el_nodo_pregunta_y_la_base_no_se_consulta(contado):
+    servicio, videos, _, reloj = contado
+    assert servicio.reclamar() is None
+    for _ in range(5):  # el nodo sigue preguntando
+        reloj.ahora += timedelta(minutes=1)
+        assert servicio.reclamar() is None
+    assert videos.consultas == 1
+    # Tras un reinicio se consulta otra vez cuando vencería un reclamo de antes; luego, nunca.
+    reloj.ahora += timedelta(seconds=config.VENCIMIENTO_RECLAMO_VIDEO_S)
+    assert servicio.reclamar() is None
+    reloj.ahora += timedelta(days=1)
+    assert servicio.reclamar() is None
+    assert videos.consultas == 2
+
+
+def test_390_un_video_nuevo_se_entrega_al_siguiente_reclamo(contado):
+    servicio, _, almacen, _ = contado
+    assert servicio.reclamar() is None
+    subir(servicio, almacen)
+    assert servicio.reclamar() is not None
+
+
+def test_390_un_reclamo_que_vence_vuelve_a_entregarse(contado):
+    servicio, videos, almacen, reloj = contado
+    subir(servicio, almacen)
+    primero = servicio.reclamar()
+    assert servicio.reclamar() is None  # el único trabajo lo tiene el nodo
+    reloj.ahora += timedelta(seconds=config.VENCIMIENTO_RECLAMO_VIDEO_S + 1)
+    assert servicio.reclamar().id == primero.id
+
+
+def test_390_un_fallo_con_reintento_vuelve_a_la_cola_enseguida(contado):
+    servicio, _, almacen, _ = contado
+    subir(servicio, almacen)
+    trabajo = servicio.reclamar()
+    assert servicio.reclamar() is None
+    servicio.fallar(trabajo.id, "sin memoria")
+    assert servicio.reclamar().id == trabajo.id

@@ -58,3 +58,44 @@ Qué se pierde con `0`, y cómo se recupera:
 
 Cómo cambiarla en Render: *Environment* → `PATITAS_TAREAS_DE_FONDO` = `0` o `1` → *Save
 changes* (Render reinicia el servicio). En local va en `.env`.
+
+## Consumo esperado de Neon (#390)
+
+**Cómo cobra Neon (plan gratis):** 100 CU-h al mes. Una CU-h es una unidad de cómputo durante una
+hora; la base corre con 0,25 CU, así que el mes alcanza para **unas 400 horas despierta**. La base
+solo se suspende tras **5 minutos sin consultas**, y cualquier consulta la despierta.
+
+**Qué la despertaba antes:** avisos cada 15 s, escalamientos y videos cada 60 s, el sondeo cada
+30 min y el nodo de video cada 15 s. Nunca dormía: 720 h × 0,25 = **180 CU-h al mes**, así que
+el límite se acababa hacia el día 17 (coincide con los despliegues fallidos desde el 17/20-nov).
+
+**Qué la despierta ahora:**
+
+| Quién | En reposo | Con trabajo |
+|---|---|---|
+| Avisos | revisan al arrancar y tras cada petición que cambia datos; sin pendientes, a los 15 s, 30 s, 1, 2, 4, 8, 16 y 30 min | cada 15 s mientras salgan avisos |
+| Escalamientos (RN-08) | nada | una revisión justo cuando vence el próximo rescate (15/30 min) |
+| Videos | nada | una revisión cuando el video más antiguo cumple 6 h |
+| Nodo de video | pregunta cada 15 s → 5 min, pero la API responde **sin consultar la base** si sabe que no hay trabajos | igual que antes |
+| Sondeo de GitHub | desactivado; al reactivarlo, cada 6 h y solo `/app/` (no toca la base) | — |
+| Respaldo diario | un `pg_dump` al día (≈ 6 min despierta) | — |
+
+**Cuentas para un mes de uso normal del refugio** (supuesto: 2 sesiones del personal al día de
+1 hora cada una, 5 reportes ciudadanos sueltos al día y el respaldo):
+
+| Escenario | Horas despierta al mes | CU-h |
+|---|---|---|
+| Antes de #390 (siempre despierta) | 720 | **180** |
+| Ahora, UptimeRobot **pausado** (Render se duerme 15 min después de la última visita): cada sesión deja ≈ 13 min de cola (los 5 min de Neon más las revisiones de avisos a 0,25 · 0,75 · 1,75 · 3,75 · 7,75 min) | (2 × 73 + 5 × 13 + 6) min × 30 ≈ 108 | **≈ 27** |
+| Ahora, UptimeRobot **activo** contra `/app/` (Render nunca duerme): se suma la revisión de avisos cada 30 min en reposo, ≈ 5,5 min despierta de cada 30 | ≈ 108 + 110 | **≈ 55** |
+
+Lo que hay que saber de cada escenario:
+
+- **UptimeRobot pausado** cumple el objetivo (< 30 CU-h), pero si Render está dormido **nadie
+  escala a tiempo** un rescate sin aceptar: se escala en cuanto alguien vuelva a entrar (la
+  revisión del arranque escala los vencidos). Para la demo o un piloto real, conviene activarlo.
+- **UptimeRobot activo** (solo contra `/app/`, que no toca la base) mantiene RN-08 a tiempo y
+  evita el arranque en frío, y gasta ≈ 1,8 CU-h por día. Para un mes completo no alcanza; para
+  los días de la demo, sí.
+- Con `PATITAS_TAREAS_DE_FONDO=0` no hay ninguna revisión en reposo, pero tampoco avisos ni
+  escalamientos (ver arriba).

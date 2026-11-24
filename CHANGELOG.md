@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Cambiado
+- Nodo de video (#390, parte 3): sin trabajo espera 15 s y luego el doble hasta 5 min; la API le responde sin consultar la base mientras sabe que no hay trabajos (solo entran por una subida, un fallo con reintento o un reclamo que vence). El panel da al nodo por apagado tras 5,5 min sin llamar (antes, 90 s). Consumo esperado de Neon en `docs/aprende/despliegue.md`.
 - Tareas de fondo (#390, parte 2): los escalamientos esperan justo hasta que vence el próximo rescate ofrecido sin escalar (15/30 min, RN-08) y, sin ninguno, no consultan la base hasta que alguien confirme o libere uno; los videos solo se revisan mientras alguno espera análisis, cuando el más antiguo cumple 6 h. Antes: cada 60 s.
 - Tareas de fondo (#390, parte 1): `app/tareas_de_fondo.py` revisa al arrancar y cada vez que una petición cambia datos (la base ya está despierta). Los avisos, sin pendientes, esperan de 15 s a 30 min (la espera se duplica) en vez de consultar cada 15 s. Un error de la base se reintenta con espera creciente.
 
