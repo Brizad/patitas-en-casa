@@ -99,3 +99,32 @@ Lo que hay que saber de cada escenario:
   los días de la demo, sí.
 - Con `PATITAS_TAREAS_DE_FONDO=0` no hay ninguna revisión en reposo, pero tampoco avisos ni
   escalamientos (ver arriba).
+
+## RN-08 con Render dormido: propuesta (25-nov, **sin aplicar**)
+
+**El problema.** RN-08 pide escalar al coordinador un rescate crítico sin aceptar a los 15 min
+(alto: 30 min). Quien lo hace es la tarea de fondo de la API (`ServicioRescates.revisar_escalamientos`).
+Si Render está dormido no hay proceso: el escalamiento ocurre cuando alguien vuelve a entrar
+(la revisión del arranque escala los vencidos), que puede ser horas después. Render se duerme a
+los 15 min sin visitas, justo el plazo del crítico.
+
+**Cuenta base** (de la sección de consumo): despertar Render para revisar deja Neon despierto
+≈ 13 min (arranque, los 5 min de Neon y las revisiones de avisos mientras Render sigue arriba).
+Con 0,25 CU: 0,25 × 13 / 60 ≈ **0,054 CU-h por despertar**, si no coincide con uso real.
+
+| Opción | Cómo funciona | Escala a tiempo | Costo en Neon | Complejidad |
+|---|---|---|---|---|
+| A. Escalar al leer | `GET /cola`, `GET /rescates/ofertas` y el inicio de sesión llaman a `revisar_escalamientos()` antes de responder | Solo cuando alguien entra; el correo al coordinador sale tarde | ≈ 0 (la base ya está despierta por esa petición) | Baja: 3 llamadas y sus pruebas |
+| B. Despertador con retraso (recomendada) | Al confirmar un crítico o alto, la API programa **una** llamada diferida (por ejemplo, Upstash QStash: mensaje con `delay` de 15 o 30 min) a un `POST /interno/escalamientos` protegido con token. Esa llamada despierta Render y revisa | Sí, con el retraso del arranque en frío (30 a 60 s) | ≈ 0,054 CU-h por rescate que nadie acepta a tiempo; con 5 al día y ninguno coincidiendo con uso: 5 × 30 × 0,054 ≈ **8 CU-h/mes** (techo) | Media: un servicio externo, su secreto y una ruta nueva (aditiva) |
+| C. UptimeRobot solo mientras haya ofertas | La API pausa o reanuda el monitor con la API de UptimeRobot al ofrecer y al aceptar o escalar | Sí | Render despierto mientras haya ofertas; las revisiones de avisos (hasta cada 30 min) despiertan Neon ≈ 5,5 min de cada 30 | Media-alta: depende de otra API y de no olvidar pausar |
+| D. UptimeRobot siempre contra `/app/` | Ya documentado arriba | Sí | ≈ 1,8 CU-h por día (≈ 55 CU-h/mes con uso normal) | Ninguna |
+| E. Cron de GitHub cada 10 min | Un flujo que pide `/app/` | Con hasta 10 min de atraso | Mantiene Render despierto casi siempre: parecido a D | Baja, pero gasta minutos de Actions |
+
+**Recomendación:** A + B. A no cuesta nada y cubre el caso común (el coordinador o un rescatista
+abren el panel). B garantiza los 15/30 min con un costo acotado al número de rescates sin aceptar.
+D queda para los días de la demo, porque además evita el arranque en frío.
+
+**Qué no cambia:** RN-08 (tiempos en `app/config.py`, un solo aviso por la llave de
+`escalamientos`), los contratos existentes (B agrega una ruta interna, no cambia ninguna) y el
+outbox de avisos. Antes de aplicar B hay que decidir el servicio externo y crear su secreto en
+Render (eso lo hace el autor).
