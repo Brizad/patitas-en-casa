@@ -152,14 +152,17 @@ def armar_tareas(rescates: ServicioRescates, procesador: ProcesadorAvisos,
         tareas.append(avisos)
     if escalamientos_s:
         def escalar() -> float | None:
-            if rescates.escalar_vencidos() and avisos is not None:
+            """RN-08: espera justo hasta que vence el próximo rescate ofrecido (15/30 min);
+            sin ninguno, duerme hasta que alguien confirme o libere uno."""
+            escalados, proximo = rescates.revisar_escalamientos()
+            if escalados and avisos is not None:
                 avisos.despertar()  # el escalamiento guardó avisos nuevos
-            return escalamientos_s
+            return proximo
         tareas.append(TareaDeFondo("revisión de rescates sin aceptar", escalar,
                                    tras_error=Reposo(escalamientos_s, 1800)))
     if videos is not None and videos_s:
-        tareas.append(TareaDeFondo("videos sin analizar a tiempo",
-                                   lambda: (videos.revisar(), videos_s)[1],
+        # Solo mientras haya videos esperando: vuelve cuando el más antiguo cumple 6 h.
+        tareas.append(TareaDeFondo("videos sin analizar a tiempo", videos.revisar_y_proxima,
                                    tras_error=Reposo(videos_s, 1800)))
     return tareas
 

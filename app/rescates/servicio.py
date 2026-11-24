@@ -187,17 +187,29 @@ class ServicioRescates:
         ciudad, con aviso a los rescatistas de otras zonas. Devuelve los códigos escalados.
 
         El tiempo cuenta desde la confirmación del veterinario."""
+        return self.revisar_escalamientos()[0]
+
+    def revisar_escalamientos(self) -> tuple[list[str], float | None]:
+        """Escala los vencidos (escalar_vencidos) y dice en cuántos segundos vence el próximo
+        rescate ofrecido sin escalar; None si no queda ninguno esperando (#390: entonces la
+        tarea de fondo no vuelve a consultar la base hasta que alguien confirme o libere)."""
         ahora = self._reloj()
         tomados = self._rescates.codigos_tomados()
         ya_escalados = self._rescates.escalados()
-        escalados = []
+        escalados: list[str] = []
+        proximo: float | None = None
         for reporte in self._reportes.confirmados_de_rescate():
             if (not self.se_ofrece(reporte) or reporte.codigo in tomados
                     or reporte.codigo in ya_escalados):
                 continue
             decisiones = self._reportes.decisiones(reporte.codigo)
             minutos = config.ESCALAMIENTO_MINUTOS[reporte.prioridad.value]
-            if not decisiones or ahora - decisiones[-1].decidido_en < timedelta(minutes=minutos):
+            if not decisiones:
+                continue
+            falta = timedelta(minutes=minutos) - (ahora - decisiones[-1].decidido_en)
+            if falta > timedelta(0):
+                segundos = falta.total_seconds()
+                proximo = segundos if proximo is None else min(proximo, segundos)
                 continue
             if self._avisos is not None:
                 # Primero el aviso y luego la marca: si algo falla entre los dos, el reporte
@@ -211,7 +223,7 @@ class ServicioRescates:
             if self._avisos is None:  # sin outbox (pruebas sueltas): envío directo
                 for aviso in self.avisos_de_escalamiento(reporte, minutos):
                     self._avisar(aviso.destinatario, aviso.mensaje)
-        return escalados
+        return escalados, proximo
 
     def avisos_de_escalamiento(self, reporte: Reporte, minutos: int) -> list[AvisoNuevo]:
         """Aviso al grupo de coordinadores y a los rescatistas libres de otras zonas. No envía."""
