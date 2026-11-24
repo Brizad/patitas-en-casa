@@ -228,3 +228,16 @@ class ServicioVideo:
                          "texto")
         self._limpiar_vistas()  # después de cerrar: no pisar con copias viejas
         return len(vencidos)
+
+    def revisar_y_proxima(self) -> float | None:
+        """#390: revisa y dice en cuántos segundos el video en espera más antiguo cumple
+        VIDEO_MAX_ESPERA_HORAS; None si ninguno espera (la tarea duerme hasta una subida)."""
+        self.revisar()
+        ahora = self._reloj()
+        # Creados antes de «ahora + 1 s» = todos los que esperan (pendientes o enviados).
+        esperando = self._videos.esperando_desde_antes(ahora + timedelta(seconds=1))
+        if not esperando:
+            return None
+        vence = min(t.creado_en for t in esperando) + timedelta(
+            hours=config.VIDEO_MAX_ESPERA_HORAS)
+        return max(1.0, (vence - ahora).total_seconds())

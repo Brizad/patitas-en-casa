@@ -190,3 +190,17 @@ def test_revisar_purga_los_huerfanos_y_cierra_los_vencidos(entorno):
     reloj.ahora += timedelta(hours=config.VIDEO_MAX_ESPERA_HORAS + 1)
     assert servicio.revisar() == 1
     assert almacen.archivos == set()
+
+
+def test_390_sin_videos_esperando_la_tarea_no_vuelve(entorno):
+    servicio, *_ = entorno
+    assert servicio.revisar_y_proxima() is None
+
+
+def test_390_con_un_video_esperando_vuelve_cuando_cumple_las_6_horas(entorno):
+    servicio, _, almacen, reloj = entorno
+    subir(servicio, almacen)
+    reloj.ahora += timedelta(hours=1)
+    assert servicio.revisar_y_proxima() == (config.VIDEO_MAX_ESPERA_HORAS - 1) * 3600
+    reloj.ahora += timedelta(hours=config.VIDEO_MAX_ESPERA_HORAS)
+    assert servicio.revisar_y_proxima() is None  # se cerró como fallido: ya no espera nada

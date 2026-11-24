@@ -355,3 +355,31 @@ def test_api_confirmar_un_critico_avisa_a_la_zona_y_la_oferta_muestra_la_comuna(
     ofertas = c.get("/rescates/ofertas", headers=ana).json()
     assert [(o["codigo"], o["comuna"], o["escalado"]) for o in ofertas] == [(codigo, 6, False)]
     assert c.get("/rescates/ofertas", headers=luis).json() == []
+
+
+# --- #390: la tarea de fondo sabe cuándo vence el próximo -------------------------
+
+def test_sin_rescates_ofrecidos_no_hay_proxima_revision(e):
+    assert e.servicio.revisar_escalamientos() == ([], None)
+
+
+@pytest.mark.parametrize("prioridad,minutos", [(Prioridad.CRITICA, 15), (Prioridad.ALTA, 30)])
+def test_la_proxima_revision_es_cuando_vence_rn08(e, prioridad, minutos):
+    e.confirmado("ESPERA01", prioridad)
+    e.reloj.avanzar(minutes=5)
+    assert e.servicio.revisar_escalamientos() == ([], (minutos - 5) * 60)
+
+
+def test_la_proxima_revision_es_la_del_que_vence_primero(e):
+    e.confirmado("ALTA0001", Prioridad.ALTA)
+    e.reloj.avanzar(minutes=10)
+    e.confirmado("CRIT0001", Prioridad.CRITICA)
+    assert e.servicio.revisar_escalamientos()[1] == 15 * 60  # la crítica (la alta: 20 min)
+
+
+def test_escalado_o_aceptado_ya_no_pide_revision(e):
+    e.confirmado("ESPERA01")
+    e.confirmado("TOMADO01")
+    e.servicio.aceptar(e.disponible(ANA, 6), "TOMADO01")
+    e.reloj.avanzar(minutes=16)
+    assert e.servicio.revisar_escalamientos() == (["ESPERA01"], None)

@@ -164,7 +164,9 @@ def test_en_reposo_las_tareas_no_consultan_la_base(monkeypatch):
         assert despues_del_arranque[1] >= 1  # sí revisó al arrancar
         time.sleep(0.5)
         assert (reportes.llamadas, avisos.llamadas) == despues_del_arranque
-        assert app.state.tareas_de_fondo[0].esperas == [15]  # avisos: reposo desde 15 s
+        # Avisos: reposo desde 15 s. Escalamientos: sin rescates ofrecidos, hasta que la
+        # despierten (None). Sin token de video no hay tarea de videos.
+        assert [t.esperas for t in app.state.tareas_de_fondo] == [[15], [None]]
         # Un reporte nuevo (petición que cambia datos) las despierta.
         assert c.post("/reportes", json={"descripcion": "Perro herido en la calle 10 del centro",
                                          "direccion": "Calle 10"}).status_code == 201
