@@ -1,0 +1,145 @@
+name: Restaurar en Neon nuevo
+
+# #394: restaura el último «Respaldo diario» exitoso (el artefacto cifrado más reciente que no
+# venció; duran 14 días) en una base NUEVA de Neon. Solo se lanza a mano y pide escribir
+# RESTAURAR. Se niega si la base destino ya tiene tablas: nunca pisa datos.
+# Secretos: NEON_DATABASE_URL_NUEVA (cadena de la base nueva, sin «-pooler») y RESPALDO_CLAVE.
+# La cadena nunca se imprime: solo pasa como variable de entorno al contenedor de postgres:18.
+# Guía: docs/aprende/respaldo.md («Restaurar en una base nueva de Neon»).
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmar:
+        description: "Escribe RESTAURAR para confirmar"
+        required: true
+      ejecucion:
+        description: "Opcional: id de la ejecución del «Respaldo diario» (vacío = el último bueno)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: read   # para listar y descargar los artefactos del respaldo
+
+env:
+  PG_VERSION: "18"   # igual que respaldo.yml: el cliente debe ser ≥ la versión de Neon
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Revisar la confirmación y los secretos
+        env:
+          CONFIRMAR: ${{ inputs.confirmar }}
+          NUEVA: ${{ secrets.NEON_DATABASE_URL_NUEVA }}
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          if [ "$CONFIRMAR" != "RESTAURAR" ]; then
+            echo "::error::Para restaurar escribe RESTAURAR (en mayúsculas) en «confirmar»."; exit 1
+          fi
+          if [ -z "$NUEVA" ]; then
+            echo "::error::Falta el secreto NEON_DATABASE_URL_NUEVA. Créalo en Settings → Secrets and variables → Actions con la cadena de conexión de la base NUEVA de Neon (ver docs/aprende/respaldo.md)."
+            exit 1
+          fi
+          if [ -z "$RESPALDO_CLAVE" ]; then
+            echo "::error::Falta el secreto RESPALDO_CLAVE (la misma clave con que se cifró el respaldo)."
+            exit 1
+          fi
+          echo "Confirmación y secretos presentes."
+
+      - name: Elegir el respaldo
+        id: elegir
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EJECUCION: ${{ inputs.ejecucion }}
+        run: |
+          if [ -n "$EJECUCION" ]; then
+            ejecucion="$EJECUCION"
+          else
+            # Solo un respaldo que pasó todos sus pasos (copia, cifrado y prueba de
+            # restauración) sube el artefacto: el más reciente vigente es el último bueno.
+            ejecucion=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq \
+              '[.artifacts[] | select(.name | startswith("respaldo-")) | select(.expired | not)]
+               | sort_by(.created_at) | last | .workflow_run.id // empty')
+          fi
+          if [ -z "$ejecucion" ]; then
+            echo "::error::No hay ningún respaldo vigente (los artefactos duran 14 días)."; exit 1
+          fi
+          fecha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ejecucion" --jq .created_at)
+          echo "Respaldo elegido: ejecución $ejecucion del $fecha"
+          echo "ejecucion=$ejecucion" >> "$GITHUB_OUTPUT"
+
+      - name: Descargar y comprobar el respaldo cifrado
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EJECUCION: ${{ steps.elegir.outputs.ejecucion }}
+        run: |
+          gh run download "$EJECUCION" --repo "$GITHUB_REPOSITORY" \
+            --name "respaldo-$EJECUCION" --dir respaldo
+          (cd respaldo && sha256sum -c patitas.dump.enc.sha256)
+
+      - name: Descifrar (AES-256-CBC, PBKDF2, igual que respaldo.yml)
+        env:
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+            -pass env:RESPALDO_CLAVE -in respaldo/patitas.dump.enc -out patitas.dump
+          test -s patitas.dump
+          esperadas=$(docker run --rm -v "$PWD:/r" "postgres:${PG_VERSION}" \
+            pg_restore --list /r/patitas.dump | grep -c ' TABLE public ')
+          echo "Tablas en la copia: $esperadas"
+          test "$esperadas" -gt 0
+          echo "ESPERADAS=$esperadas" >> "$GITHUB_ENV"
+
+      - name: La base nueva debe estar vacía
+        env:
+          NUEVA: ${{ secrets.NEON_DATABASE_URL_NUEVA }}
+          SQL: "select count(*) from information_schema.tables where table_schema = 'public'"
+        run: |
+          if ! tablas=$(docker run --rm -e NUEVA -e SQL "postgres:${PG_VERSION}" \
+              sh -c 'psql "$NUEVA" -Atc "$SQL"' 2> error.txt); then
+            sed -E 's/ep-[a-z0-9-]+/ep-***/g' error.txt
+            echo "::error::No se pudo conectar a la base nueva. Revisa NEON_DATABASE_URL_NUEVA (cadena directa, sin «-pooler», con sslmode=require)."
+            exit 1
+          fi
+          echo "Tablas que ya tiene la base nueva: $tablas"
+          if [ "$tablas" != "0" ]; then
+            echo "::error::La base destino ya tiene $tablas tablas: no se restaura encima. Crea una base vacía en Neon."
+            exit 1
+          fi
+
+      - name: Restaurar (pg_restore)
+        env:
+          NUEVA: ${{ secrets.NEON_DATABASE_URL_NUEVA }}
+        run: |
+          if ! docker run --rm -e NUEVA -v "$PWD:/r" "postgres:${PG_VERSION}" sh -c \
+              'pg_restore --no-owner --no-privileges --exit-on-error -d "$NUEVA" /r/patitas.dump' \
+              2> error.txt; then
+            sed -E 's/ep-[a-z0-9-]+/ep-***/g' error.txt
+            echo "::error::pg_restore falló (detalle arriba)."; exit 1
+          fi
+          rm -f patitas.dump respaldo/patitas.dump.enc
+
+      - name: Comprobar tablas y alembic_version
+        env:
+          NUEVA: ${{ secrets.NEON_DATABASE_URL_NUEVA }}
+          SQL: >-
+            select (select count(*) from information_schema.tables
+                    where table_schema = 'public' and table_type = 'BASE TABLE')
+            || ' ' || (select version_num from alembic_version)
+        run: |
+          resultado=$(docker run --rm -e NUEVA -e SQL "postgres:${PG_VERSION}" \
+            sh -c 'psql "$NUEVA" -Atc "$SQL"')
+          restauradas=${resultado%% *}
+          version=${resultado#* }
+          echo "Tablas restauradas: $restauradas de $ESPERADAS · alembic_version: $version"
+          test "$restauradas" = "$ESPERADAS"
+          test -n "$version"
+          {
+            echo "### Restauración en la base nueva de Neon"
+            echo "- Tablas: $restauradas de $ESPERADAS"
+            echo "- alembic_version: \`$version\`"
+            echo "- Siguiente paso: apuntar Render a la base nueva (docs/aprende/respaldo.md)."
+          } >> "$GITHUB_STEP_SUMMARY"

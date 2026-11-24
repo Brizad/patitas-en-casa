@@ -60,6 +60,37 @@ Para probarlo ya: *Actions* → *Respaldo diario* → *Run workflow*.
    Contra Neon: `pg_restore -d "<cadena de conexión de la base vacía>" --no-owner patitas.dump`.
 5. Apunta `POSTGRES_HOST`, `POSTGRES_DB`… en Render a la base restaurada y reinicia la API.
 
+## Restaurar en una base nueva de Neon (flujo automático, #394)
+
+Sirve cuando la base de producción no está disponible (por ejemplo, suspendida por el límite de
+horas) y hay que montar otra con el último respaldo bueno. El flujo
+`.github/workflows/restaurar-a-neon-nuevo.yml` hace los pasos de arriba en GitHub:
+
+1. Elige el artefacto `respaldo-…` más reciente que no venció (solo existe si ese respaldo pasó
+   la copia, el cifrado y la prueba de restauración) o la ejecución que le indiques.
+2. Lo descarga, comprueba el `sha256` y lo descifra con `RESPALDO_CLAVE`.
+3. **Se niega** si la base destino ya tiene tablas (nunca restaura encima de datos).
+4. Hace `pg_restore --no-owner --no-privileges --exit-on-error` con `postgres:18`.
+5. Comprueba que hay tantas tablas como en la copia y muestra `alembic_version`.
+
+La cadena de conexión nunca se imprime; si algo falla, el nombre del servidor sale tapado.
+
+**Cómo lanzarlo:**
+
+1. En Neon, crea un proyecto (o base) **nuevo y vacío**, versión 18. Copia su *Connection
+   string* **directa** (sin `-pooler` en el host) con `?sslmode=require`.
+2. GitHub → *Settings* → *Secrets and variables* → *Actions* → *New repository secret*:
+   `NEON_DATABASE_URL_NUEVA` = esa cadena.
+3. *Actions* → *Restaurar en Neon nuevo* → *Run workflow* → en «confirmar» escribe `RESTAURAR`
+   (y deja vacío el id de la ejecución para usar el último respaldo bueno).
+   Desde la terminal: `gh workflow run restaurar-a-neon-nuevo.yml -f confirmar=RESTAURAR`.
+4. Al terminar en verde, el resumen dice las tablas y la `alembic_version`. Luego apunta Render
+   a la base nueva (`POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) y
+   cambia también el secreto `NEON_DATABASE_URL` del respaldo diario por la cadena nueva.
+
+Si falta el secreto, el flujo falla en el primer paso con «Falta el secreto
+NEON_DATABASE_URL_NUEVA».
+
 ## Límites que debes saber
 
 - Los artefactos viven 14 días; para guardar uno más tiempo, descárgalo.
