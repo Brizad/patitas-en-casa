@@ -32,6 +32,7 @@ from app.ajustes import (
     cargar_ajustes_correo,
     cargar_ajustes_ip,
     cargar_ajustes_seguridad,
+    cargar_ajustes_tareas,
 )
 from app.api.armado import (
     Repositorios,
@@ -134,6 +135,15 @@ def emisor_desde_entorno() -> EmisorTokens:
 
 # crear_app es la «raíz de composición»: arma los servicios y conecta las rutas
 # (app/api/rutas_*.py, DT-13), los repositorios (armado.py) y los middlewares (#282).
+def _tareas_activas(pedido: bool | None) -> bool:
+    """#388: el parámetro de crear_app gana; si no hay, PATITAS_TAREAS_DE_FONDO (encendidas)."""
+    activas = cargar_ajustes_tareas().tareas_de_fondo if pedido is None else pedido
+    if not activas:
+        logger.warning("Tareas de fondo APAGADAS (PATITAS_TAREAS_DE_FONDO=0): los avisos quedan "
+                       "pendientes y no se revisan escalamientos ni videos.")
+    return activas
+
+
 def crear_app(repositorio: RepositorioReportes | None = None,
               repositorio_cupos: RepositorioCupos | None = None, *,
               repositorio_usuarios: RepositorioUsuarios | None = None,
@@ -156,12 +166,15 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               ajustes_ip: AjustesIp | None = None,
               token_video: str | None = None,
               directorio_videos: str | None = None,
-              revisar_videos_cada_s: float | None = config.REVISION_VIDEOS_SEGUNDOS) -> FastAPI:
+              revisar_videos_cada_s: float | None = config.REVISION_VIDEOS_SEGUNDOS,
+              tareas_de_fondo: bool | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
     cada «revisar_escalamientos_cada_s» segundos (None: no se revisan) y se envían los avisos
-    pendientes cada «procesar_avisos_cada_s» (#63; None: solo a mano, como en las pruebas)."""
+    pendientes cada «procesar_avisos_cada_s» (#63; None: solo a mano, como en las pruebas).
+    Con «tareas_de_fondo» falso (o PATITAS_TAREAS_DE_FONDO=0 si no se pasa) no arranca ninguna
+    (#388): los avisos quedan pendientes en la base y salen al encenderlas."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
     notificador = notificador or crear_notificador(cargar_ajustes_correo())
     # #282: lo inyectado se usa tal cual; lo que falta sale de PostgreSQL (o de memoria).
@@ -219,7 +232,8 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                   (videos.revisar, revisar_videos_cada_s if token_video else None,
                    "videos sin analizar a tiempo")]
     app = FastAPI(title="Patitas en Casa", version="1.3.0",
-                  lifespan=ciclo_de_vida(periodicas, motor))
+                  lifespan=ciclo_de_vida(periodicas if _tareas_activas(tareas_de_fondo) else [],
+                                         motor))
     # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
     # en celulares con datos limitados (RNF-07).
     app.add_middleware(GZipMiddleware, minimum_size=1000)

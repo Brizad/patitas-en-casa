@@ -156,6 +156,15 @@ class AjustesDemo(BaseSettings):
         return self.contrasena.get_secret_value()
 
 
+class AjustesTareas(BaseSettings):
+    """#388: con PATITAS_TAREAS_DE_FONDO=0 la API no arranca las tareas periódicas (avisos,
+    escalamientos y videos) y no consulta la base mientras nadie la usa. Encendidas por defecto."""
+
+    model_config = SettingsConfigDict(env_prefix="PATITAS_", extra="ignore")
+
+    tareas_de_fondo: bool = True
+
+
 def _cargar(clase, prefijo: str, archivo_env: str | None):
     try:
         return clase(_env_file=archivo_env)
@@ -228,3 +237,7 @@ def cargar_ajustes_ip(archivo_env: str | None = ".env") -> AjustesIp:
 
 def cargar_ajustes_video(archivo_env: str | None = ".env") -> AjustesVideo:
     return _cargar(AjustesVideo, "PATITAS_", archivo_env)
+
+
+def cargar_ajustes_tareas(archivo_env: str | None = ".env") -> AjustesTareas:
+    return _cargar(AjustesTareas, "PATITAS_", archivo_env)

@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Interruptor `PATITAS_TAREAS_DE_FONDO` (#388): con `0` la API no arranca las tareas de fondo (avisos, escalamientos y videos) y no consulta la base mientras nadie la usa; los avisos quedan pendientes y salen al encenderla. Encendido por defecto. Guía: `docs/aprende/despliegue.md`.
+
 ### Cambiado
 - Sondeo (#386): corre cada 6 horas y solo pide `/app/`, que no consulta la base (antes, cada 30 min y también `GET /reportes/{codigo}`: Neon nunca dormía). Queda desactivado hasta que el autor lo reactive.
 
