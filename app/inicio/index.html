@@ -3,36 +3,67 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffeb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFF8EE">
 <meta name="description" content="Patitas en Casa: reporte de animales en emergencia en Cúcuta, triaje con IA, rescate, refugio y adopción.">
 <title>Patitas en Casa · Cúcuta</title>
 <link rel="icon" href="/app/icono.svg" type="image/svg+xml">
-<link rel="preload" href="/diseno/fuentes/eb-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/diseno/fuentes.css">
-<link rel="stylesheet" href="/diseno/sistema.css">
+<link rel="preload" href="/diseno/fuentes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/diseno/patitas.css">
 <link rel="stylesheet" href="/inicio/inicio.css">
+<script src="/inicio/inicio.js" defer></script>
 </head>
-<body class="ds">
-<a class="ds-saltar" href="#contenido">Saltar al contenido</a>
-<header class="cabecera">
-  <a class="marca" href="/"><img src="/app/icono.svg" alt="" width="32" height="32"><span>Patitas en Casa</span></a>
-  <a class="pildora" href="/app/#reportar">Reportar</a>
+<body class="p">
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<!-- #426: portada igual al prototipo docs/prototipo/inicio-pagina-completa.dc.html. Funciona sin
+     JavaScript; inicio.js solo pone las fotos y los animales reales, las cifras y «Copiar enlace». -->
+<header class="nav envoltura">
+  <a class="marca" href="/"><svg class="marca-huella bambolea" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg><span class="h">Patitas en Casa</span></a>
+  <nav class="nav-enlaces" aria-label="Principal">
+    <a href="#como">Cómo funciona</a><a href="/panel/#registro">Adoptar</a>
+    <a href="/app/#estado">Consultar reporte</a><a href="/panel/">Entrar como personal</a>
+  </nav>
+  <a class="p-btn p-btn--rosa nav-reportar" href="/app/#reportar">Reportar</a>
 </header>
 
 <main id="contenido">
-  <!-- #145: página de inicio pública. Sin JavaScript: la misma CSP estricta de la PWA. -->
-  <section class="portada" aria-labelledby="titulo">
-    <p class="etiqueta">Emergencias animales en Cúcuta</p>
-    <h1 id="titulo"><span class="linea tenue">Un animal herido,</span> <span class="linea">no debería esperar.</span></h1>
-    <p class="entrada">Repórtalo en un minuto y sin crear cuenta: el veterinario lo revisa por
-      gravedad y el rescate se ofrece a quien está cerca.</p>
-    <a class="boton urgente" href="/app/#reportar">Reportar emergencia</a>
-    <p class="otras"><a href="/panel/#registro">Adoptar</a><span aria-hidden="true"> · </span><a href="/panel/">Entrar como personal</a></p>
+  <section class="hero envoltura" aria-labelledby="titulo">
+    <div class="hero-texto">
+      <p class="cinta">Emergencias animales en Cúcuta</p>
+      <h1 id="titulo" class="h may">Un animal herido <span class="resalto"><span>no debería</span></span> esperar</h1>
+      <p class="entrada">Repórtalo en un minuto y sin crear cuenta. Un veterinario lo revisa por gravedad y el rescate llega a quien está cerca.</p>
+      <div class="hero-botones">
+        <a class="p-btn p-btn--oscuro p-btn--grande" href="/app/#reportar"><span class="h">Reportar emergencia</span></a>
+        <a class="p-btn p-btn--grande" href="/panel/#registro"><span class="h">Quiero adoptar</span></a>
+      </div>
+      <ul class="confianza" aria-label="Por qué confiar">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>Sin crear cuenta</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>El veterinario siempre confirma</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>Datos de contacto cifrados</li>
+      </ul>
+    </div>
+    <div class="hero-arte">
+      <span class="aro gira-reves" aria-hidden="true"></span><span class="disco" aria-hidden="true"></span>
+      <span class="foto hero-principal" data-animal="Pinina" data-alt="1"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span>
+      <span class="foto hero-izq flota" data-animal="Mochi"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span>
+      <span class="foto hero-der flota2" data-animal="Lupe"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span>
+      <span class="hero-corazon late" aria-hidden="true"><svg class="" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg></span>
+      <svg class="estrella estrella-1 brilla" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>
+      <svg class="estrella estrella-2 brilla" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>
+      <svg class="garabato" viewBox="0 0 90 50" aria-hidden="true"><path d="M4 40c10-30 20 10 30-14s16 18 26-6 14 10 26-8"/></svg>
+      <p class="hero-globo flota2"><span class="hero-globo-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z"/></svg></span>
+        <span><strong class="h">Reportar toma 1 minuto</strong><span>Sin cuenta y sin dar tu nombre</span></span></p>
+    </div>
   </section>
 
-  <!-- #328: un perro y un gato caminan juntos por la curva. Decorativo; posiciones de
-       scripts/diseno/rastro.py y la caminata en inicio.css (quieta con movimiento reducido). -->
+  <nav class="cuadros envoltura" aria-label="Accesos rápidos">
+    <a class="cuadro cuadro-reportar" href="/app/#reportar"><svg class="cuadro-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6M5 21h14M12 3v2M4.2 6.2l1.4 1.4M19.8 6.2l-1.4 1.4"/></svg>
+      <span><strong class="h may">¿Viste uno herido?</strong><span>Repórtalo desde el celular, aunque haya mala señal.</span></span></a>
+    <a class="cuadro cuadro-seguir" href="/app/#estado"><svg class="cuadro-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"/></svg>
+      <span><strong class="h may">Sigue tu caso</strong><span>Con tu código de 8 letras, sin dar datos.</span></span></a>
+    <a class="cuadro cuadro-mas" href="#problema"><span class="raton" aria-hidden="true"><span class="raton-punto"></span></span>
+      <span><strong class="h may">Conoce más</strong><span>Baja y mira cómo funciona.</span></span></a>
+  </nav>
+
+  <!-- #328: un perro y un gato caminan juntos por la curva (decorativo; quieto con movimiento
+       reducido o con «Pausar animaciones»). -->
   <div class="recorrido">
     <svg class="rastro" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
       <defs>
@@ -79,65 +110,109 @@
     <input class="pausa" type="checkbox" id="pausar">
     <label class="pausa-etiqueta" for="pausar">Pausar animaciones</label>
   </div>
-  <ul class="confianza" aria-label="Por qué confiar">
-    <li>Sin crear cuenta</li><li>El veterinario siempre confirma</li><li>Datos de contacto cifrados</li>
-  </ul>
 
-  <section class="camara" aria-labelledby="titulo-problema">
-    <h2 id="titulo-problema">El problema</h2>
-    <p>Hoy un reporte llega por redes o mensajes, sin ubicación precisa, mezclado con otros y
-      sin saber qué tan grave es. El refugio no sabe si tiene cupo hasta que el animal ya está
-      en la puerta, y las adopciones dependen de la suerte.</p>
+  <section class="cifras envoltura" aria-labelledby="titulo-cifras">
+    <h2 id="titulo-cifras" class="oculto">El sistema en cifras</h2>
+    <ul class="cifras-lista">
+      <li class="cifra cifra-reportes"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6M5 21h14M12 3v2"/></svg><span class="h cifra-valor" data-cifra="reportes">—</span><span class="cifra-nombre">Reportes</span></li>
+      <li class="cifra cifra-rescatados"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg><span class="h cifra-valor" data-cifra="rescatados">—</span><span class="cifra-nombre">Rescatados</span></li>
+      <li class="cifra cifra-adoptados"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span class="h cifra-valor" data-cifra="adoptados">—</span><span class="cifra-nombre">Adoptados</span></li>
+    </ul>
+    <p class="cifras-nota">Cifras en vivo desde los indicadores anónimos del sistema. «—» = aún sin dato.</p>
   </section>
 
-  <section class="hoja" aria-labelledby="titulo-como">
-    <h2 id="titulo-como">Cómo funciona</h2>
+  <section id="problema" class="problema" aria-labelledby="titulo-problema">
+    <svg class="problema-estrella gira" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>
+    <div class="envoltura dos-columnas">
+      <div class="problema-arte"><span class="problema-disco" aria-hidden="true"></span><span class="foto problema-foto" data-animal="Winny" data-alt="1"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span>
+        <svg class="problema-rayas" viewBox="0 0 70 70" aria-hidden="true"><path d="M10 40l12-6M14 22l12 4M30 8l2 14"/></svg></div>
+      <div class="problema-texto">
+        <p class="sobretitulo">El problema</p>
+        <h2 id="titulo-problema" class="h may">Hoy un reporte se pierde entre mensajes</h2>
+        <p>Llega por redes o mensajes, sin ubicación precisa, mezclado con otros y sin saber qué tan grave es. El refugio no sabe si tiene cupo hasta que el animal ya está en la puerta, y las adopciones dependen de la suerte.</p>
+        <ul class="dolores"><li>Sin ubicación precisa</li><li>Sin saber qué tan grave es</li><li>Sin saber si hay cupo</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="como" class="como envoltura" aria-labelledby="titulo-como">
+    <p class="sobretitulo sobretitulo--vino">Cómo funciona</p>
+    <h2 id="titulo-como" class="h may">Del reporte a un hogar <span class="morado">en 6 pasos</span></h2>
     <ol class="pasos">
-      <li><strong>Reporte.</strong> Cualquier persona describe la emergencia, comparte su
-        ubicación y, si puede, un video corto. Recibe un código para seguir el caso.</li>
-      <li><strong>IA de texto y video.</strong> Sugiere una prioridad (crítica, alta, media o
-        baja) con su confianza y sus razones. Si duda, pide revisión; si falla, trata el caso
-        como alto.</li>
-      <li><strong>Veterinario.</strong> Confirma o corrige la prioridad. La IA nunca decide sola.</li>
-      <li><strong>Rescate.</strong> El caso urgente se ofrece a los rescatistas de la zona; si
-        nadie lo acepta a tiempo, se avisa al coordinador.</li>
-      <li><strong>Refugio.</strong> El animal ingresa solo si hay cupo y queda con su ficha
-        clínica. Al 90 % de ocupación se alerta a coordinación.</li>
-      <li><strong>Adopción.</strong> Se recomiendan animales según el hogar del adoptante, con
-        compromiso firmado y seguimientos a 30, 90 y 180 días.</li>
+      <li class="paso paso-1 tarjeta"><span class="h paso-n" aria-hidden="true">1</span><span class="paso-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/></svg></span><h3 class="h">Reporte</h3><p>Cualquier persona describe la emergencia, comparte su ubicación y, si puede, un video corto. Recibe un código para seguir el caso.</p></li>
+      <li class="paso paso-2 tarjeta"><span class="h paso-n" aria-hidden="true">2</span><span class="paso-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></svg></span><h3 class="h">IA de texto y video</h3><p>Sugiere una prioridad (crítica, alta, media o baja) con su confianza y sus razones. Si duda, pide revisión; si falla, trata el caso como alto.</p></li>
+      <li class="paso paso-3 tarjeta"><span class="h paso-n" aria-hidden="true">3</span><span class="paso-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg></span><h3 class="h">Veterinario</h3><p>Confirma o corrige la prioridad. La IA nunca decide sola.</p></li>
+      <li class="paso paso-4 tarjeta"><span class="h paso-n" aria-hidden="true">4</span><span class="paso-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 7a2 2 0 1 0 0 4a2 2 0 1 0 0-4z"/></svg></span><h3 class="h">Rescate</h3><p>El caso urgente se ofrece a los rescatistas de la zona; si nadie lo acepta a tiempo, se avisa al coordinador.</p></li>
+      <li class="paso paso-5 tarjeta"><span class="h paso-n" aria-hidden="true">5</span><span class="paso-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><h3 class="h">Refugio</h3><p>El animal ingresa solo si hay cupo y queda con su ficha clínica. Al 90 % de ocupación se alerta a coordinación.</p></li>
+      <li class="paso paso-6 tarjeta"><span class="h paso-n" aria-hidden="true">6</span><span class="paso-icono"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg></span><h3 class="h">Adopción</h3><p>Se recomiendan animales según el hogar del adoptante, con compromiso firmado y seguimientos a 30, 90 y 180 días.</p></li>
     </ol>
   </section>
 
-  <section class="camara" aria-labelledby="titulo-roles">
-    <h2 id="titulo-roles">Quién hace qué</h2>
-    <dl class="roles">
-      <div class="rol-ciudadano"><dt>Ciudadano</dt><dd>Reporta y consulta el estado con su código, sin cuenta.</dd></div>
-      <div class="rol-veterinario"><dt>Veterinario</dt><dd>Atiende la cola por prioridad y lleva la ficha clínica.</dd></div>
-      <div class="rol-rescatista"><dt>Rescatista</dt><dd>Acepta rescates de su comuna y cuenta cómo terminaron.</dd></div>
-      <div class="rol-coordinador"><dt>Coordinador</dt><dd>Maneja cupos, ingresos, egresos y adopciones.</dd></div>
-      <div class="rol-adoptante"><dt>Adoptante</dt><dd>Crea su perfil, recibe recomendaciones y solicita adoptar.</dd></div>
-      <div class="rol-administrador"><dt>Administrador</dt><dd>Crea cuentas y refugios; revisa la bitácora.</dd></div>
-      <div class="rol-alcaldia"><dt>Alcaldía</dt><dd>Consulta indicadores anonimizados de la ciudad.</dd></div>
-    </dl>
+  <section class="adopcion" aria-labelledby="titulo-adopcion">
+    <svg class="adopcion-estrella brilla" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>
+    <div class="envoltura">
+      <div class="adopcion-cabeza">
+        <div><p class="sobretitulo sobretitulo--vino">En adopción</p>
+          <h2 id="titulo-adopcion" class="h may">Perritos y gatitos<br>esperándote</h2></div>
+        <a class="p-btn p-btn--oscuro p-btn--grande sombra-blanca" href="/panel/#registro"><span class="h">Encontrar mi match</span></a>
+      </div>
+      <ul class="adopcion-lista" id="en-adopcion" aria-live="polite">
+        <li class="adopcion-vacia">Mira a los animales que esperan un hogar en <a href="/panel/#registro">la sección de adopción</a>.</li>
+      </ul>
+    </div>
   </section>
 
-  <section class="hoja" aria-labelledby="titulo-tecnologia">
-    <h2 id="titulo-tecnologia">Tecnología</h2>
-    <ul class="tecnologia">
-      <li>API en Python con FastAPI y base de datos PostgreSQL.</li>
-      <li>App ciudadana instalable (PWA) que funciona con mala señal.</li>
-      <li>Panel del personal en React y TypeScript.</li>
-      <li>IA de texto (reglas + TF-IDF) y de video (MediaPipe + DeepLabCut en un equipo local).</li>
-      <li>Contraseñas con Argon2id, sesiones con JWT y datos de contacto cifrados (AES-256).</li>
-    </ul>
+  <section id="roles" class="roles" aria-labelledby="titulo-roles">
+    <svg class="roles-estrella gira-reves" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>
+    <div class="envoltura">
+      <p class="sobretitulo sobretitulo--sol">Quién hace qué</p>
+      <h2 id="titulo-roles" class="h may">Un equipo para cada patita</h2>
+      <ul class="roles-lista">
+      <li class="rol rol-ciudadano tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Ciudadano</h3><p>Reporta y consulta el estado con su código, sin cuenta.</p></li>
+      <li class="rol rol-veterinario tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Veterinario</h3><p>Atiende la cola por prioridad y lleva la ficha clínica.</p></li>
+      <li class="rol rol-rescatista tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Rescatista</h3><p>Acepta rescates de su comuna y cuenta cómo terminaron.</p></li>
+      <li class="rol rol-coordinador tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Coordinador</h3><p>Maneja cupos, ingresos, egresos y adopciones.</p></li>
+      <li class="rol rol-adoptante tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Adoptante</h3><p>Crea su perfil, recibe recomendaciones y solicita adoptar.</p></li>
+      <li class="rol rol-administrador tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Administrador</h3><p>Crea cuentas y refugios; revisa la bitácora.</p></li>
+      <li class="rol rol-alcaldia tarjeta"><span class="rol-icono" aria-hidden="true"></span><h3 class="h">Alcaldía</h3><p>Consulta indicadores anonimizados de la ciudad.</p></li>
+        <li class="rol rol-equipo"><a href="/panel/"><strong class="h">¿Eres del equipo?</strong><span>Entrar como personal</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="ayuda" aria-labelledby="titulo-ayuda">
+    <div class="envoltura">
+      <p class="sobretitulo">Tú también cuentas</p>
+      <h2 id="titulo-ayuda" class="h may">Así puedes ayudar hoy</h2>
+      <ul class="ayuda-lista">
+        <li class="tarjeta ayuda-tarjeta"><span class="foto ayuda-foto ayuda-foto--lila" data-animal="Winny"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span><h3 class="h may">Reporta</h3>
+          <p>Si ves un animal herido o en peligro, avisa. Toma un minuto.</p><a class="ayuda-accion" href="/app/#reportar">Reportar</a></li>
+        <li class="tarjeta ayuda-tarjeta"><span class="foto ayuda-foto ayuda-foto--rosa" data-animal="Pecas"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span><h3 class="h may">Adopta</h3>
+          <p>Dale un hogar a uno que ya fue rescatado y está esperando.</p><a class="ayuda-accion" href="/panel/#registro">Ver animales</a></li>
+        <li class="tarjeta ayuda-tarjeta"><span class="foto ayuda-foto ayuda-foto--menta" data-animal="Max"><svg class="foto-huella" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></span><h3 class="h may">Comparte</h3>
+          <p>Pasa el enlace a tu barrio: entre más ojos, más rescates a tiempo.</p>
+          <button class="ayuda-accion" type="button" id="compartir" data-enlace="/">Copiar enlace</button>
+          <span class="compartido" id="compartido" role="status"></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="final envoltura" aria-labelledby="titulo-final">
+    <div class="final-caja">
+      <svg class="final-estrella-1 brilla" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg><svg class="final-estrella-2 brilla" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>
+      <h2 id="titulo-final" class="h may">¿Ves un animal en peligro ahora?</h2>
+      <p>No esperes. Tu reporte llega directo a la cola del refugio.</p>
+      <a class="p-btn p-btn--oscuro p-btn--grande sombra-blanca" href="/app/#reportar"><span class="h">Reportar emergencia</span></a>
+    </div>
   </section>
 </main>
 
 <footer class="pie">
-  <p class="pie-marca">Patitas en Casa · Cúcuta</p>
-  <p>Proyecto integrador de Ingeniería de Software II, Universidad de Pamplona.
-    Código abierto en <a href="https://github.com/Brizad/patitas-en-casa">GitHub</a> ·
-    <a href="/docs">Documentación de la API</a></p>
+  <div class="envoltura pie-dentro">
+    <div><p class="h pie-marca"><svg class="pie-huella" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg>Patitas en Casa · Cúcuta</p>
+      <p class="pie-texto">Proyecto integrador de Ingeniería de Software II, Universidad de Pamplona. Código abierto.</p></div>
+    <p class="pie-enlaces"><a href="https://github.com/Brizad/patitas-en-casa">GitHub</a><a href="/docs">Documentación de la API</a></p>
+  </div>
 </footer>
 </body>
 </html>
