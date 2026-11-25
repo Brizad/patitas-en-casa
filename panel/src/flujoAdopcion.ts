@@ -4,7 +4,8 @@
 import type { AnimalPublicado, MiSolicitud, Perfil, Recomendado } from "./apiAdopcion";
 import { PASTEL, PREGUNTAS, PrefEspecie, Respuestas, responder, respuestasDesdePerfil } from "./encuesta";
 
-export type PantallaAdopcion = "inicio" | "encuesta" | "combinan" | "elegir" | "listo" | "solicitudes";
+export type PantallaAdopcion = "inicio" | "encuesta" | "combinan" | "elegir" | "listo" | "solicitudes"
+  | "hogar";
 export type Filtro = "todos" | "perro" | "gato";
 
 export interface EstadoFlujo {
@@ -19,7 +20,9 @@ export interface EstadoFlujo {
 }
 
 export type Accion =
-  | { tipo: "empezar"; perfil: Perfil | null }
+  // Arreglos, parte C: «¡Empezar!» arranca todo sin marcar; «Cambiar mis respuestas» (desde
+  // «Mi hogar») precarga lo guardado.
+  | { tipo: "empezar"; perfil: Perfil | null; precargar?: boolean }
   | { tipo: "responder"; opcion: number }
   | { tipo: "guardado" }
   | { tipo: "atras" }
@@ -28,7 +31,7 @@ export type Accion =
   | { tipo: "filtrar"; filtro: Filtro }
   | { tipo: "mover"; ids: number[]; paso: 1 | -1 }
   | { tipo: "solicitado"; animal: number; recien: boolean }
-  | { tipo: "irA"; pantalla: "inicio" | "solicitudes" };
+  | { tipo: "irA"; pantalla: "inicio" | "solicitudes" | "hogar" | "combinan" };
 
 export const INICIAL: EstadoFlujo = { pantalla: "inicio", paso: 0, respuestas: {}, filtro: "todos",
   elegido: null, desde: "inicio", guardar: false, recien: false };
@@ -37,10 +40,13 @@ const filtroDe = (e?: PrefEspecie): Filtro => (e === "perro" || e === "gato" ? e
 
 export function flujo(s: EstadoFlujo, a: Accion): EstadoFlujo {
   switch (a.tipo) {
-    case "empezar": // las del perfil vienen del servidor; especie y tamaño, de esta visita
+    case "empezar": // precargadas: las del perfil (servidor) y especie y tamaño de esta visita
       return { ...s, pantalla: "encuesta", paso: 0, guardar: false,
-               respuestas: { especie: s.respuestas.especie, tamano: s.respuestas.tamano,
-                             ...respuestasDesdePerfil(a.perfil) } };
+               desde: a.precargar ? "hogar" : "inicio",  // adónde vuelve «Atrás» en la 1.ª
+               respuestas: a.precargar
+                 ? { especie: s.respuestas.especie, tamano: s.respuestas.tamano,
+                     ...respuestasDesdePerfil(a.perfil) }
+                 : {} };
     case "responder": {
       const respuestas = responder(s.respuestas, PREGUNTAS[s.paso], a.opcion);
       if (s.paso < PREGUNTAS.length - 1) return { ...s, respuestas, paso: s.paso + 1 };
@@ -52,6 +58,8 @@ export function flujo(s: EstadoFlujo, a: Accion): EstadoFlujo {
     case "atras":
       if (s.pantalla === "encuesta" && s.paso > 0) return { ...s, paso: s.paso - 1 };
       if (s.pantalla === "elegir") return { ...s, pantalla: s.desde };
+      if (s.pantalla === "encuesta" && s.desde === "hogar") return { ...s, pantalla: "hogar" };
+      if (s.pantalla === "hogar") return { ...s, pantalla: "inicio" };
       return { ...s, pantalla: "inicio" };
     case "verTodos":
       return { ...s, pantalla: "elegir", filtro: "todos", desde: desdeValido(s.pantalla) };

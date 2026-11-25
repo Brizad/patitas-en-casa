@@ -42,10 +42,28 @@ describe("navegación entre pantallas", () => {
     expect(flujo(flujo(s, { tipo: "atras" }), { tipo: "atras" }).pantalla).toBe("inicio");
   });
 
-  it("empezar con perfil precarga sus respuestas y conserva especie y tamaño de la visita", () => {
+  it("«Cambiar mis respuestas» precarga lo guardado y conserva especie y tamaño de la visita", () => {
     const antes: EstadoFlujo = { ...INICIAL, respuestas: { especie: "gato", tamano: "igual" } };
-    const s = flujo(antes, { tipo: "empezar", perfil: PERFIL });
+    const s = flujo(antes, { tipo: "empezar", perfil: PERFIL, precargar: true });
     expect(s.respuestas).toMatchObject({ ...PERFIL, especie: "gato", tamano: "igual" });
+  });
+
+  it("«¡Empezar!» arranca todo sin marcar, aunque ya haya perfil (arreglos, parte C)", () => {
+    const antes: EstadoFlujo = { ...INICIAL, respuestas: { especie: "gato" } };
+    expect(flujo(antes, { tipo: "empezar", perfil: PERFIL }).respuestas).toEqual({});
+  });
+
+  it("«Mi hogar» → cambiar respuestas → «Atrás» en la primera vuelve a «Mi hogar»", () => {
+    let s = flujo(INICIAL, { tipo: "irA", pantalla: "hogar" });
+    expect(s.pantalla).toBe("hogar");
+    s = flujo(s, { tipo: "empezar", perfil: PERFIL, precargar: true });
+    expect(flujo(s, { tipo: "atras" }).pantalla).toBe("hogar");
+    expect(flujo(flujo(INICIAL, { tipo: "empezar", perfil: null }), { tipo: "atras" }).pantalla).toBe("inicio");
+    expect(flujo({ ...INICIAL, pantalla: "hogar" }, { tipo: "atras" }).pantalla).toBe("inicio");
+  });
+
+  it("con perfil se puede ir directo a «combinan» sin repetir la encuesta", () => {
+    expect(flujo(INICIAL, { tipo: "irA", pantalla: "combinan" })).toMatchObject({ pantalla: "combinan", guardar: false });
   });
 
   it("«Ver a todos» y tocar un animal abren «Elige»; «Atrás» vuelve de donde vino", () => {
