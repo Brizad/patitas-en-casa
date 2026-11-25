@@ -10,6 +10,10 @@ export interface AnimalPublicado {
   animal_id: number; nombre: string; especie: string; descripcion: string; tamano: string;
   energia: string; edad_meses: number; apto_ninos: boolean; apto_otros_animales: boolean;
   necesita_patio: boolean; foto?: string | null; // RF-25: ruta de la foto, si tiene
+  // #422: ficha «Elige a tu compañero» (opcional: si falta, esa parte no se muestra).
+  carino?: number | null; energia_nivel?: number | null; juego?: number | null;
+  calma?: number | null; etiquetas?: string[]; peso_kg?: number | null;
+  peso_adulto_kg?: number | null;
 }
 /** RF-09: puntaje 0-100, por qué encaja, qué conversar y restricciones duras (RN-05). */
 export interface Compatibilidad {

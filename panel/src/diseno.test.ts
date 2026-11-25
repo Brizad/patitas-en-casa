@@ -114,9 +114,9 @@ describe("adoptante «Elige a tu compañero» (#306, #420)", () => {
     expect(vista).toContain("animal.alertas.join(");
     expect(vista).toContain("animal.restricciones.join(");
   });
-  it("las estadísticas no inventan datos (sin cariño ni juego)", () => {
-    expect(vista).toContain("estadisticas(animal)");
-    expect(vista.toLowerCase()).not.toMatch(/cariño|«juego»/);
+  it("las barras salen de la ficha del refugio (#422) y, sin datos, no se dibujan", () => {
+    expect(vista).toContain("estadisticas(animal).length > 0 &&");
+    expect(vista).toContain("convivencia(animal)");
   });
   it("los botones de solo ícono llevan nombre para el lector de pantalla", () => {
     for (const nombre of ['aria-label="Atrás"', 'aria-label="Anterior"', 'aria-label="Siguiente"',

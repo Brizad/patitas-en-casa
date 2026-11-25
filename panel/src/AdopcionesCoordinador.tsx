@@ -1,17 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, decidir, pedirVisita,
+  NuevaPublicacion, Pareja, SeguimientoRefugio, SolicitudRefugio, conEtiqueta, decidir, desdeCatalogo,
+  editarPublicacion, paraEnviar, pedirVisita,
   propuestaJornada, publicar, registrarDevolucion, registrarSeguimiento, subirFoto, resumenPerfil, seguimientosRefugio, solicitudesRefugio,
 } from "./apiAdopcionCoordinador";
+import { AnimalPublicado, catalogo } from "./apiAdopcion";
 import { FichaAnimal, animales } from "./apiRefugio";
 import { faltaJustificacion, textoError } from "./mensajes";
 
 const VACIA: NuevaPublicacion = { descripcion: "", tamano: "mediano", energia: "media",
-  edad_meses: 12, apto_ninos: true, apto_otros_animales: true, necesita_patio: false };
+  edad_meses: 12, apto_ninos: true, apto_otros_animales: true, necesita_patio: false,
+  carino: null, energia_nivel: null, juego: null, calma: null, etiquetas: [], peso_kg: null,
+  peso_adulto_kg: null };
+type Nivel = "carino" | "energia_nivel" | "juego" | "calma";
+const NIVELES: [Nivel, string][] = [["carino", "Cariño"], ["energia_nivel", "Energía"],
+  ["juego", "Juego"], ["calma", "Calma"]];
 
 /** Adopciones del refugio: publicar (RF-25), decidir (RF-27) y seguimientos (RF-10). */
 export default function AdopcionesCoordinador({ token }: { token: string }) {
   const [presentes, setPresentes] = useState<FichaAnimal[]>([]);
+  const [publicados, setPublicados] = useState<AnimalPublicado[]>([]);
   const [solicitudes, setSolicitudes] = useState<SolicitudRefugio[]>([]);
   const [seguimientos, setSeguimientos] = useState<SeguimientoRefugio[]>([]);
   const [mensaje, setMensaje] = useState("");
@@ -19,9 +27,10 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
 
   const recargar = useCallback(async () => {
     try {
-      const [a, s, x] = await Promise.all([animales(token), solicitudesRefugio(token),
-                                           seguimientosRefugio(token)]);
+      const [a, s, x, c] = await Promise.all([animales(token), solicitudesRefugio(token),
+                                              seguimientosRefugio(token), catalogo()]);
       setPresentes(a.filter((f) => !f.egresado_en));
+      setPublicados(c);
       setSolicitudes(s);
       setSeguimientos(x);
     } catch (e) {
@@ -47,8 +56,9 @@ export default function AdopcionesCoordinador({ token }: { token: string }) {
   return (
     <section className="pagina">
       {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
-      <Publicar presentes={presentes} alPublicar={(id, p) =>
-        hacer(() => publicar(token, id, p), "Animal publicado en el catálogo.")} />
+      <Publicar presentes={presentes} publicados={publicados} alPublicar={(id, p, editar) =>
+        hacer(() => (editar ? editarPublicacion(token, id, p) : publicar(token, id, p)),
+          editar ? "Publicación actualizada." : "Animal publicado en el catálogo.")} />
       <Foto presentes={presentes} alSubir={(id, archivo) =>
         hacer(() => subirFoto(token, id, archivo), "Foto guardada: ya se ve en el catálogo.")} />
       <div className="ds-tarjeta">
@@ -161,23 +171,37 @@ function NotaSeguimiento({ alGuardar }: { alGuardar: (nota: string) => void }) {
   );
 }
 
-function Publicar({ presentes, alPublicar }: {
-  presentes: FichaAnimal[]; alPublicar: (id: number, p: NuevaPublicacion) => void;
+function Publicar({ presentes, publicados, alPublicar }: {
+  presentes: FichaAnimal[]; publicados: AnimalPublicado[];
+  alPublicar: (id: number, p: NuevaPublicacion, editar: boolean) => void;
 }) {
   const [id, setId] = useState<number | "">("");
   const [p, setP] = useState(VACIA);
+  const ya = publicados.find((a) => a.animal_id === id);
+  const elegir = (nuevo: number | "") => {
+    setId(nuevo);
+    const publicado = publicados.find((a) => a.animal_id === nuevo);
+    setP(publicado ? desdeCatalogo(publicado) : VACIA);
+  };
   const marca = (campo: "apto_ninos" | "apto_otros_animales" | "necesita_patio", texto: string) => (
     <label className="en-linea"><input type="checkbox" checked={p[campo]}
       onChange={(e) => setP({ ...p, [campo]: e.target.checked })} /> {texto}</label>);
+  const peso = (campo: "peso_kg" | "peso_adulto_kg", texto: string) => (
+    <label>{texto}<input type="number" min={0.1} max={150} step={0.1} inputMode="decimal"
+      value={p[campo] ?? ""} onChange={(e) => setP({ ...p,
+        [campo]: e.target.value === "" ? null : Number(e.target.value) })} /></label>);
+  const conFicha = NIVELES.some(([n]) => p[n] !== null);
   return (
     <form className="ds-tarjeta ds-form" onSubmit={(e) => {
       e.preventDefault();
-      if (id !== "") alPublicar(id, { ...p, descripcion: p.descripcion.trim() });
+      if (id !== "") alPublicar(id, paraEnviar(p), !!ya);
     }}>
-      <h2>Publicar para adopción</h2>
-      <label>Animal<select required value={id} onChange={(e) => setId(Number(e.target.value))}>
+      <h2>{ya ? `Editar la publicación de ${ya.nombre}` : "Publicar para adopción"}</h2>
+      <label>Animal<select required value={id}
+        onChange={(e) => elegir(e.target.value === "" ? "" : Number(e.target.value))}>
         <option value="">Elige un animal</option>
-        {presentes.map((a) => <option key={a.id} value={a.id}>{a.nombre} ({a.especie})</option>)}
+        {presentes.map((a) => <option key={a.id} value={a.id}>{a.nombre} ({a.especie})
+          {publicados.some((x) => x.animal_id === a.id) ? " · publicado" : ""}</option>)}
       </select></label>
       <label className="ancho">Descripción (20 caracteres o más)<textarea rows={2} required minLength={20}
         value={p.descripcion} onChange={(e) => setP({ ...p, descripcion: e.target.value })} />
@@ -186,7 +210,7 @@ function Publicar({ presentes, alPublicar }: {
         onChange={(e) => setP({ ...p, tamano: e.target.value as NuevaPublicacion["tamano"] })}>
         <option value="pequeno">Pequeño</option><option value="mediano">Mediano</option>
         <option value="grande">Grande</option></select></label>
-      <label>Energía<select value={p.energia}
+      <label>Energía (para la compatibilidad)<select value={p.energia}
         onChange={(e) => setP({ ...p, energia: e.target.value as NuevaPublicacion["energia"] })}>
         <option value="baja">Baja</option><option value="media">Media</option>
         <option value="alta">Alta</option></select></label>
@@ -195,7 +219,24 @@ function Publicar({ presentes, alPublicar }: {
       {marca("apto_ninos", "Convive con niños")}
       {marca("apto_otros_animales", "Convive con otros animales")}
       {marca("necesita_patio", "Necesita patio")}
-      <p><button className="principal">Publicar</button></p>
+      <fieldset className="ancho ficha-adopcion">
+        <legend>Ficha para «Elige a tu compañero» (opcional)</legend>
+        <label className="en-linea"><input type="checkbox" checked={conFicha} onChange={(e) =>
+          setP({ ...p, ...Object.fromEntries(NIVELES.map(([n]) => [n, e.target.checked ? 50 : null])) })} />
+          Mostrar las barras de cariño, energía, juego y calma</label>
+        {conFicha && NIVELES.map(([n, texto]) => (
+          <label key={n} className="deslizador">{texto}: <output>{p[n] ?? 0}</output>
+            <input type="range" min={0} max={100} step={1} value={p[n] ?? 0}
+              onChange={(e) => setP({ ...p, [n]: Number(e.target.value) })} /></label>))}
+        {[0, 1, 2].map((i) => (
+          <label key={i}>Etiqueta {i + 1}<input maxLength={20} value={p.etiquetas[i] ?? ""}
+            placeholder={["Juguetón", "Cariñosa", "Vacunado"][i]}
+            onChange={(e) => setP({ ...p, etiquetas: conEtiqueta(p.etiquetas, i, e.target.value) })} />
+          </label>))}
+        {peso("peso_kg", "Peso hoy (kg)")}
+        {peso("peso_adulto_kg", "Peso de adulto, aproximado (kg)")}
+      </fieldset>
+      <p><button className="principal">{ya ? "Guardar cambios" : "Publicar"}</button></p>
     </form>
   );
 }

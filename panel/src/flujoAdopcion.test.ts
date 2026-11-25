@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { AnimalPublicado, Perfil, Recomendado } from "./apiAdopcion";
 import { PREGUNTAS } from "./encuesta";
 import {
-  EstadoFlujo, INICIAL, actual, contar, edadTexto, estadisticas, filtrar, flujo, hoyYAdulto, insignias,
+  EstadoFlujo, INICIAL, actual, contar, edadTexto, estadisticas, filtrar, flujo, hoyYAdulto, insignias, convivencia,
   mejores, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
 } from "./flujoAdopcion";
 
@@ -112,16 +112,26 @@ describe("filtros", () => {
 });
 
 describe("lo que se muestra de cada animal", () => {
-  it("las barras salen solo de datos reales; la compatibilidad, solo con puntaje", () => {
-    const sinPuntaje = estadisticas(animal(1, "perro", { energia: "alta", apto_ninos: false }));
-    expect(sinPuntaje.map((e) => e.etiqueta)).toEqual(
-      ["Energía", "Apto con niños", "Apto con otros animales", "Necesita patio"]);
-    expect(sinPuntaje[0]).toMatchObject({ valor: 100, texto: "Alta" });
-    expect(sinPuntaje[1]).toMatchObject({ valor: 0, texto: "No" });
+  it("las 4 barras del prototipo salen de la ficha del refugio, con sus colores", () => {
+    const toby = animal(1, "perro", { carino: 95, energia_nivel: 92, juego: 90, calma: 38 });
+    expect(estadisticas(toby)).toEqual([
+      { etiqueta: "Cariño", valor: 95, texto: "95", color: "#E8508A" },
+      { etiqueta: "Energía", valor: 92, texto: "92", color: "#F2A93B" },
+      { etiqueta: "Juego", valor: 90, texto: "90", color: "#7A5AF8" },
+      { etiqueta: "Calma", valor: 38, texto: "38", color: "#3FA66B" }]);
+  });
+
+  it("sin ficha no se inventan barras; el puntaje del servidor se mantiene", () => {
+    expect(estadisticas(animal(1, "perro"))).toEqual([]);
+    expect(estadisticas(animal(1, "perro", { carino: 0, juego: null })).map((e) => e.etiqueta))
+      .toEqual(["Cariño"]); // 0 es un dato; null no
     const conPuntaje = estadisticas(recomendado(1, "gato", 72));
-    expect(conPuntaje[conPuntaje.length - 1]).toEqual({ etiqueta: "Compatibilidad", valor: 72, texto: "72 %" });
-    const etiquetas = conPuntaje.map((e) => e.etiqueta.toLowerCase()).join(" ");
-    expect(etiquetas).not.toMatch(/cariño|juego/);
+    expect(conPuntaje).toEqual([{ etiqueta: "Compatibilidad", valor: 72, texto: "72 %", color: "#3B82C4" }]);
+  });
+
+  it("con quién convive se dice siempre", () => {
+    expect(convivencia(animal(1, "perro", { apto_otros_animales: false, necesita_patio: true })))
+      .toEqual(["Convive con niños", "Mejor sin otros animales", "Necesita patio"]);
   });
 
   it("la razón corta es la más fuerte del servidor, en mayúscula", () => {
@@ -140,7 +150,11 @@ describe("lo que se muestra de cada animal", () => {
     expect(edadTexto(12)).toBe("1 año");
     expect(edadTexto(30)).toBe("2 años");
     expect(hoyYAdulto(animal(1, "perro", { edad_meses: 4, tamano: "grande" })))
-      .toEqual({ hoy: "4 meses, aún crece", adulto: "Tamaño grande" });
+      .toEqual({ hoy: "4 meses", adulto: "Grande" });
+    expect(hoyYAdulto(animal(1, "perro", { edad_meses: 3, tamano: "grande", peso_kg: 8, peso_adulto_kg: 35 })))
+      .toEqual({ hoy: "3 meses · 8 kg", adulto: "Grande · ~35 kg" });
+    expect(hoyYAdulto(animal(1, "gato", { edad_meses: 12, peso_kg: 3.5, peso_adulto_kg: 4.5 })))
+      .toEqual({ hoy: "1 año · 3,5 kg", adulto: "Ya es adulto · ~4,5 kg" });
     expect(hoyYAdulto(animal(1, "gato", { edad_meses: 36, tamano: "pequeno" })))
       .toEqual({ hoy: "3 años", adulto: "Ya es adulto · tamaño pequeño" });
   });
@@ -168,7 +182,11 @@ describe("solicitudes", () => {
 });
 
 describe("insignias", () => {
-  it("solo dicen lo que registró el refugio", () => {
+  it("son las etiquetas del refugio (máximo 3) si las hay", () => {
+    expect(insignias(animal(1, "perro", { etiquetas: ["Juguetón", "Guardián", "Vacunado", "x"] })))
+      .toEqual(["Juguetón", "Guardián", "Vacunado"]);
+  });
+  it("sin etiquetas, solo dicen lo que registró el refugio", () => {
     expect(insignias(animal(1, "perro", { energia: "alta", apto_ninos: true, apto_otros_animales: false,
       necesita_patio: true }))).toEqual(["Energía alta", "Convive con niños", "Necesita patio"]);
     expect(insignias(animal(2, "gato", { apto_ninos: false, apto_otros_animales: true })))

@@ -137,3 +137,10 @@ button.enlace:hover:not(:disabled) { background: none; }
   background: var(--ds-fondo); }
 .tira-caja .tira { width: 100%; margin: 0; }
 .tira-caja figcaption { margin-top: var(--ds-e2); font-size: var(--ds-t-xs); color: var(--ds-suave); }
+/* #422: ficha de adopción del coordinador (barras de 0 a 100, etiquetas y pesos). */
+.ficha-adopcion { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--ds-e3);
+  border: 2px solid var(--ds-linea); border-radius: var(--ds-radio-lg); padding: var(--ds-e3) var(--ds-e4); }
+.ficha-adopcion > legend { font-weight: 700; padding: 0 var(--ds-e2); }
+.ficha-adopcion > .en-linea { grid-column: 1 / -1; }
+.deslizador input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--ds-marca); }
+.deslizador output { font-weight: 700; }
