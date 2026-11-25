@@ -7,7 +7,8 @@ const API = "http://127.0.0.1:8000";
 export default defineConfig({
   base: "/panel/",
   plugins: [react()],
-  build: { outDir: "../app/panel_web", emptyOutDir: true },
+  // #430: nada como data: (la CSP solo admite imágenes de 'self'): el pin de Leaflet pesa < 4 KB.
+  build: { outDir: "../app/panel_web", emptyOutDir: true, assetsInlineLimit: 0 },
   // En desarrollo (npm run dev) las llamadas a la API pasan por el mismo origen.
   server: { proxy: Object.fromEntries(
     ["/auth", "/cola", "/reportes", "/rescates", "/rescatistas", "/refugio", "/admin",

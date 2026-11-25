@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ErrorApi } from "./api";
 import {
-  enlaceMapa, etiquetaEstado, evidenciaLegible, explicarSugerencia, haceCuanto, nombreIndicador,
+  enlaceComoLlegar, enlaceMapa, etiquetaEstado, evidenciaLegible, explicarSugerencia, haceCuanto, nombreIndicador,
   nombreModelo, plural, faltaJustificacion, mensajeConfirmacion, sugerida, textoAvisos,
   textoError,
 } from "./mensajes";
@@ -147,5 +147,15 @@ describe("explicación de la sugerencia en lenguaje sencillo (#180)", () => {
     expect(haceCuanto("2026-11-02T09:00:00Z", ahora)).toBe("hace 3 h");
     expect(haceCuanto("2026-10-30T12:00:00Z", ahora)).toBe("hace 3 días");
     expect(haceCuanto("2026-11-02T11:59:00Z", ahora)).toBe("hace 1 min");
+  });
+});
+
+describe("cómo llegar (#430)", () => {
+  it("abre la ruta al punto del GPS o a la dirección en Cúcuta", () => {
+    expect(enlaceComoLlegar({ latitud: 7.89, longitud: -72.5, direccion: null }))
+      .toBe("https://www.google.com/maps/dir/?api=1&destination=7.89%2C-72.5");
+    expect(enlaceComoLlegar({ latitud: null, longitud: null, direccion: "Calle 10" }))
+      .toBe("https://www.google.com/maps/dir/?api=1&destination=Calle%2010%2C%20C%C3%BAcuta");
+    expect(enlaceComoLlegar({ latitud: null, longitud: null, direccion: "  " })).toBeNull();
   });
 });
