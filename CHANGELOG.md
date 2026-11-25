@@ -4,6 +4,11 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Corregido
+- RN-02 con video (#434): si el análisis de video sube un reporte a media o baja con confianza menor que 0,6, ahora va a «requiere revisión» (antes quedaba «clasificado»). La regla vive en `estado_automatico()`, compartida por el texto y el video.
+- Respaldo (#434): la restauración y la vigilancia del respaldo recorren todas las páginas de artefactos. Antes, con más de 100 artefactos, no encontraban ningún respaldo.
+- Verificar despliegue (#434): espera el commit que producción dice en `X-Version-Commit` (`RENDER_GIT_COMMIT`), no solo la versión.
+
 ### Agregado
 - Mapa (#430), con Leaflet y teselas de OpenStreetMap:
   - PWA: pin arrastrable en «¿Dónde está?», que guarda la latitud y la longitud de siempre. Si el mapa no carga, el paso sigue funcionando.
