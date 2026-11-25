@@ -306,8 +306,8 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 | 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
 | 4 | Ciudadano (PWA) | **publicada** (25-nov; recorrida en producción sin errores) | #429 |
 | 5 | Mapa (Leaflet + OSM) | **publicada** (25-nov; `mapa.js` y la CSP con OSM en producción) | #431 |
-| 6 | Pantallas del personal | en PR | #433 |
-| 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
+| 6 | Pantallas del personal | **publicada** (25-nov, bundle `index-CoH_HjKF.js`) | #433 |
+| 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | **publicada** (25-nov, commit `9cc7061` en `X-Version-Commit`) | #435 |
 
 Decisiones y pendientes para el autor (se van sumando):
 - El **sexo** del prototipo («Perra», «Macho») no tiene campo en la ficha del animal: no se guardó
@@ -347,3 +347,36 @@ Decisiones y pendientes para el autor (se van sumando):
 - Qué cambió: en «¿Dónde está?» hay un mapa con pin que se arrastra o se pone tocando, y guarda la misma latitud y longitud que el GPS. El veterinario y el rescatista ven un mini mapa con «Abrir en Google Maps» y «Cómo llegar». La CSP solo suma las teselas de OpenStreetMap, y solo como imágenes.
 - Qué ver: en `/app/#reportar`, paso 2, toca el mapa: el botón verde dirá «Marcada en el mapa». En el panel, abre un reporte con GPS.
 - Pendiente: nada. Sin conexión, el mapa se oculta y el paso funciona con GPS o dirección.
+
+**Parte 6 (publicada, #433).**
+- Qué cambió: todas las pantallas del personal tienen el estilo del prototipo. Hay menú lateral oscuro en el computador y compacto en el celular; la prioridad se ve con color y forma (la crítica late); la IA muestra su anillo de confianza; los avisos son tarjetas verdes. La lógica y los permisos no cambiaron.
+- Qué ver: entra como veterinario, coordinador, rescatista, administrador y alcaldía. Abre un reporte de la cola y mira el anillo, las formas de prioridad y el menú.
+- Pendiente: nada. El motivo al cambiar la prioridad es el de siempre (RN-16, «Ajustar prioridad…»).
+
+**Parte 7 (publicada, #435).**
+- Qué cambió:
+  - (a) RN-02 también cuando el video sube la prioridad.
+  - (b) La restauración y la vigilancia del respaldo buscan en todas las páginas de artefactos: la primera página (100 de 537) no traía ningún respaldo.
+  - (c) «Verificar despliegue» confirma el commit que corre en producción.
+- Qué ver: en GitHub Actions, la ejecución de «Verificar despliegue» dice «producción corre el commit …». El próximo respaldo diario debería volver a verde: el último bueno es del 20-nov, porque Neon estuvo caído.
+- Pendiente (tuyo, cuando quieras): probar la restauración en una base Neon nueva (flujo manual, `confirmar=RESTAURAR`). No se ejecutó contra producción.
+
+### Resumen final del rediseño (25-nov)
+Las 7 partes están publicadas en producción, cada una con su PR en verde y comprobada en vivo (bundle, archivos o commit nuevos y axe sin fallas).
+
+| Parte | PR | Qué revisar en la página |
+|---|---|---|
+| 1 Ficha de adopción | #423 | «Elige a tu compañero»: barras, etiquetas y pesos |
+| 2 22 animales | #425 | 19 nuevos con foto; Toby, Luna y Rocky sin tocar (decisión tuya) |
+| 3 Portada | #427 | `/`: cifras reales, «En adopción», Copiar enlace, Pausar |
+| 4 PWA ciudadana | #429 | `/app/`: 4 pasos, gracias con sello, consulta |
+| 5 Mapa | #431 | paso «¿Dónde está?» y mini mapa del veterinario o rescatista |
+| 6 Personal | #433 | menú lateral, formas de prioridad, anillo de la IA |
+| 7 Arreglos | #435 | Verificar despliegue con commit; respaldo diario |
+
+Pendiente para después:
+- Animaciones Lottie: los espacios están listos en `panel/src/Animalitos.tsx` y en el `.carril` de la PWA.
+- Sexo del animal: necesita un campo nuevo, decisión tuya.
+- Toby, Luna y Rocky (parte 2).
+- Probar la restauración en una base nueva.
+- Actualizar el manual de usuario con las capturas nuevas (`docs/revision-visual/rediseno/`).
