@@ -89,3 +89,11 @@ def test_el_service_worker_baja_el_icono_y_las_hojas_nuevas():
     sw = (RAIZ / "app" / "pwa" / "sw.js").read_text(encoding="utf-8")
     version = int(re.search(r"patitas-pwa-v(\d+)'", sw).group(1))
     assert version >= 10 and "'icono.svg'" in sw
+
+
+def test_las_formas_de_prioridad_se_sirven_como_svg(c):
+    """#432: crítica (triángulo con !), alta (triángulo), media (cuadrado) y baja (círculo)."""
+    for prioridad in ("critica", "alta", "media", "baja"):
+        r = c.get(f"/diseno/prioridad/{prioridad}.svg")
+        assert r.status_code == 200 and r.headers["content-type"].startswith("image/svg+xml")
+        assert "script" not in r.text and "href" not in r.text

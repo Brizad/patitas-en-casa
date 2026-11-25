@@ -12,6 +12,13 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
   - «Consultar» no muestra mapa.
 
 ### Cambiado
+- Pantallas del personal (#432), con el estilo del prototipo. Es solo visual: misma lógica y mismos permisos.
+  - Menú lateral oscuro en el computador y compacto en el celular.
+  - Prioridad con color y forma: triángulo con ! que late, triángulo, cuadrado y círculo.
+  - Sugerencia de la IA con anillo de confianza y evidencias en chips.
+  - Avisos como tarjetas verdes; fuentes Fredoka y Nunito en todo el panel.
+
+### Cambiado
 - PWA ciudadana (#428), igual al prototipo:
   - Portada de la app.
   - Reportar en 4 pasos (Qué pasa → Dónde → Video → Aviso), con barra en el celular y lista de pasos en el computador. El paso 1 trae botones rápidos y el contador del mínimo de 20 caracteres; las comunas son botones; hay un resumen antes de enviar.
