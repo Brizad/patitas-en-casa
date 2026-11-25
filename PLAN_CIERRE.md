@@ -435,3 +435,9 @@ Plan del autor: tarea 1 (página de inicio igual al prototipo nuevo `inicio-pagi
   - **Una sola portada:** se quitó la portada vieja de `/app/`. «Inicio» y el logo van a `/`, y `/app/` y la PWA instalada (`start_url`) abren en «Reportar»; el service worker pasa a v13.
   - **Fotos fijas estáticas:** las del diseño (Lupe, Cascabel, Copo, Nube, Toby y Max en el panel de Reportar) son imágenes del repo en `app/inicio/img/animales/`, recortadas y optimizadas (5 a 40 KB). Ya no dependen del catálogo.
   - **Fotos del catálogo:** las tarjetas reintentan el catálogo 6 veces (unos 90 s, mientras Render despierta) y cada foto 3 veces. La huella sale solo si el animal no tiene foto.
+- **Tarea 3, verificación en producción:**
+  - **Justo después del despliegue:** a 1440 y 390 px, 0 imágenes rotas, 0 huellas, cifras reales, y `/app/` abre en «Reportar» con «Inicio» y el logo hacia `/`.
+  - **Tras 17 min sin tráfico:** la primera carga tardó 2,7 s (1440) y 4,0 s (390), también sin rotas ni huellas. Render no llegó a dormirse (despertar tarda de 30 a 60 s).
+  - **Caso «despertando»:** se probó en local, simulando dos respuestas 503 del catálogo y la primera petición de cada foto fallida; todo se recuperó solo.
+  - **Capturas:** `docs/revision-visual/inicio-v3/` (`t1-`, `t2-`, `t3-despliegue-`, `t3-frio-`).
+- **Tarea 4, prototipo:** el archivo `adopcion-elige-tu-companero.dc.html` «nuevo» es idéntico al versionado (git no ve cambios). Las secciones «Te están esperando» y «Así funciona tu adopción» se hicieron según la descripción del autor.
