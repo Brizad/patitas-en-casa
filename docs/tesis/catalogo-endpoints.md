@@ -2,7 +2,7 @@
 
 # Catálogo de endpoints
 
-76 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+77 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
@@ -62,6 +62,7 @@
 | POST | `/refugio/animales/{animal_id}/egreso` | coordinador | 200, 401, 403, 404, 409, 422 | RF-26 |
 | GET | `/refugio/ocupacion` | coordinador, veterinario | 200, 401, 403 | — |
 | GET | `/indicadores` | administrador, alcaldia, coordinador | 200, 401, 403 | RF-30 |
+| GET | `/indicadores/publicos` | público | 200 | RF-30 (#426: tres totales para la portada) |
 | GET | `/indicadores/reportes.csv` | administrador, alcaldia, coordinador | 200, 401, 403 | RF-31 |
 | GET | `/indicadores/fichas.csv` | administrador, alcaldia, coordinador | 200, 401, 403 | RF-31 |
 | GET | `/indicadores/resumen.pdf` | administrador, alcaldia, coordinador | 200, 401, 403 | — |

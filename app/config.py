@@ -91,3 +91,6 @@ VISTA_VIDEO_DIAS = 7
 # La versión mínima es la de servicios/video/patitas_video.
 NODO_VIDEO_EN_LINEA_S = 330
 VERSION_MINIMA_NODO_VIDEO = "1.3.0"
+
+# #426: los tres totales públicos de la portada se recalculan como mucho cada 10 minutos.
+CACHE_INDICADORES_PUBLICOS_S = 600
