@@ -281,3 +281,15 @@ Bitácora del 25-nov:
   si se aplica la propuesta de §5.1 (y confirmar con una prueba el posible hueco de RN-02 con el
   video); decidir A + B para RN-08 (`docs/aprende/despliegue.md`).
 
+
+## 9. 25-nov (noche): adoptante «Elige a tu compañero» (#420, PR #421)
+
+Nuevo diseño del adoptante en el panel, siguiendo el prototipo de adopción (que no está versionado:
+vive solo en la otra copia local, `Documents\Proyectos\patitas-en-casa\docs\prototipo\`).
+**PR #421 abierto, sin unir:** primero lo prueba Brayan.
+
+- No se tocó Render, Neon, secretos ni `.env`. Sistema local con el PostgreSQL temporal (puerto
+  5433), apagado al terminar.
+- Único cambio en la API (aditivo): `GET /adopciones/solicitudes/mias` trae `nombre` y `especie`.
+- Pendiente: animaciones Lottie (el espacio está en `panel/src/Animalitos.tsx`); actualizar el
+  manual de usuario (sección del adoptante y su captura) cuando se una el PR.
