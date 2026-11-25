@@ -10,6 +10,7 @@
 <link rel="icon" href="icono.svg" type="image/svg+xml">
 <link rel="preload" href="/diseno/fuentes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/diseno/patitas.css">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="estilos.css">
 <script src="piloto.js" defer></script>
 <script src="sonido.js" defer></script>
@@ -17,6 +18,9 @@
 <script src="video.js" defer></script>
 <script src="reportar.js" defer></script>
 <script src="pasos.js" defer></script>
+<!-- #430: mapa opcional (Leaflet local + teselas de OpenStreetMap). -->
+<script src="vendor/leaflet/leaflet.js" defer></script>
+<script src="mapa.js" defer></script>
 </head>
 <!-- #428: PWA ciudadana igual al prototipo docs/prototipo/ciudadano-portada-y-reportar.dc.html.
      Los ids de siempre se conservan: reportar.js, app.js, video.js y piloto.js no cambian su
@@ -117,6 +121,12 @@
         <div class="paso" data-paso="2" role="group" aria-labelledby="titulo-paso-2" hidden>
           <h2 class="h paso-titulo" id="titulo-paso-2" tabindex="-1">¿Dónde está?</h2>
           <button class="gps hunde" type="button" id="usar-gps"><span class="gps-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10zM12 11a1 1 0 1 0 0 2a1 1 0 1 0 0-2z"/></svg></span><span class="gps-texto"><span class="h" id="gps-titulo">Usar mi GPS</span><span id="estado-gps">Lo más rápido y preciso</span></span></button>
+          <!-- #430: el mapa ayuda; si no carga, el paso funciona igual con el GPS o la dirección. -->
+          <div class="mapa-caja" id="mapa-caja" hidden>
+            <p class="ayuda" id="mapa-ayuda">O toca el mapa / arrastra el pin para marcar dónde está.</p>
+            <div class="mapa" id="mapa" role="region" aria-label="Mapa para marcar dónde está el animal" aria-describedby="mapa-ayuda"></div>
+          </div>
+          <p class="ayuda" id="mapa-aviso" role="status" hidden></p>
           <p class="separador" aria-hidden="true"><span></span>o escribe la dirección<span></span></p>
           <label class="etiqueta" for="direccion">Barrio o dirección</label>
           <input class="campo" id="direccion" name="direccion" maxlength="200" autocomplete="street-address"

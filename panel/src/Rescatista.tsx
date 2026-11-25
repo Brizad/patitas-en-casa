@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { NOMBRE_PRIORIDAD, enlaceMapa, textoError } from "./mensajes";
+import { NOMBRE_PRIORIDAD, textoError } from "./mensajes";
+import { Lugar } from "./MiniMapa";
 import {
   EstadoRescatista, MiRescate, NOMBRE_RESULTADO, Oferta, Resultado, cambiarDisponibilidad,
   cambiarZona, miEstado, miRescate, nombreComunas, ofertas, paso, registrarResultado,
@@ -111,9 +112,8 @@ function RescateActual({ token, rescate, hacer }: {
       <p><span className={`ds-insignia ds-insignia--${rescate.prioridad}`}>{NOMBRE_PRIORIDAD[rescate.prioridad]}</span>
         {" "}<span className="ds-insignia ds-insignia--info">{rescate.estado === "en_camino" ? "En camino" : "En el sitio"}</span></p>
       <p>{rescate.descripcion}</p>
-      <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}
-        {enlaceMapa(u) && <> · <a href={enlaceMapa(u) ?? undefined} target="_blank"
-          rel="noopener noreferrer">Abrir en Google Maps</a></>}</p>
+      <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}</p>
+      <Lugar u={u} />
       <div className="acciones">
         {rescate.estado === "en_camino" && (
           <button className="principal" onClick={() => void hacer(

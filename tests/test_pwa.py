@@ -73,11 +73,17 @@ def test_la_api_no_lleva_la_politica_de_la_pwa(c):
 
 
 def test_la_pwa_no_carga_recursos_externos():
-    """Solo local (#47) y abre sin señal: nada de fuentes o CDN de terceros."""
+    """Solo local (#47) y abre sin señal: nada de fuentes o CDN de terceros. La única excepción
+    (#430) son las teselas del mapa de OpenStreetMap y el enlace de su atribución."""
+    permitidas = {"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "https://www.openstreetmap.org/copyright"}
     for archivo in CARPETA_PWA.iterdir():
         if archivo.suffix in {".html", ".css", ".js", ".webmanifest"}:
             texto = archivo.read_text(encoding="utf-8")
-            assert not re.search(r"https?://", texto), archivo.name
+            urls = set(re.findall(r"https?://[^\s'\"]+", texto))
+            assert urls <= permitidas, archivo.name
+            if urls:
+                assert archivo.name == "mapa.js"
 
 
 def test_el_javascript_no_inserta_datos_como_html():
@@ -151,7 +157,8 @@ def test_video_opcional_en_el_formulario_y_blob_solo_local():
     assert 'id="video"' in respuesta.text and 'accept="video/mp4' in respuesta.text
     politica = respuesta.headers["Content-Security-Policy"]
     assert "img-src 'self' blob:" in politica and "media-src blob:" in politica
-    assert "http" not in politica
+    # #430: lo único de fuera son las teselas del mapa, solo como imágenes.
+    assert re.findall(r"https?://[^\s;]+", politica) == ["https://tile.openstreetmap.org"]
 
 
 # --- #168: sistema de diseño compartido ------------------------------------------------
@@ -321,3 +328,39 @@ def test_la_portada_de_la_app_y_la_consulta_sin_prioridad(c):
     assert 'id="pantalla-inicio"' in html and "no debería esperar." in html
     estado = _seccion(html, "pantalla-estado").lower()
     assert "prioridad" not in estado  # RN-14: el ciudadano nunca ve la prioridad
+
+
+# --- #430: mapa con Leaflet y OpenStreetMap ---
+
+def test_el_mapa_solo_abre_las_teselas_de_osm_como_imagen(c):
+    politica = c.get("/app/").headers["content-security-policy"]
+    directivas = dict(d.strip().split(" ", 1) for d in politica.split(";"))
+    assert "https://tile.openstreetmap.org" in directivas["img-src"]
+    for otra in ("script-src", "style-src", "connect-src", "default-src"):
+        assert "openstreetmap" not in directivas[otra], otra
+
+
+def test_leaflet_va_dentro_del_repositorio_con_su_licencia(c):
+    carpeta = CARPETA_PWA / "vendor" / "leaflet"
+    assert "BSD" in (carpeta / "LICENSE").read_text(encoding="utf-8")
+    html = c.get("/app/").text
+    assert 'src="vendor/leaflet/leaflet.js"' in html and 'href="vendor/leaflet/leaflet.css"' in html
+    assert c.get("/app/vendor/leaflet/leaflet.js").status_code == 200
+    mapa = (CARPETA_PWA / "mapa.js").read_text(encoding="utf-8")
+    assert "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>" in mapa
+
+
+def test_el_mapa_usa_los_mismos_campos_y_nunca_bloquea_el_envio():
+    mapa = (CARPETA_PWA / "mapa.js").read_text(encoding="utf-8")
+    assert "window.PatitasReporte.ponerUbicacion(" in mapa  # latitud y longitud de siempre
+    assert "fetch(" not in mapa and "submit" not in mapa and "innerHTML" not in mapa
+    assert "sinMapa(" in mapa and "navigator.onLine === false" in mapa  # sin red, sin mapa
+    sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+    assert "openstreetmap" not in sw  # las teselas no se guardan en el teléfono
+
+
+def test_consultar_es_publico_y_no_muestra_mapa_ni_direccion(c):
+    estado = _seccion(c.get("/app/").text, "pantalla-estado")
+    assert "mapa" not in estado.lower() and "direccion" not in estado.lower()
+    js = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    assert "leaflet" not in js.lower() and "L.map" not in js

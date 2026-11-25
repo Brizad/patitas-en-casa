@@ -69,6 +69,18 @@ export function enlaceMapa(u: { latitud: number | null; longitud: number | null;
   return direccion ? base + encodeURIComponent(`${direccion}, Cúcuta`) : null;
 }
 
+/** #430: «Cómo llegar» abre la ruta en Google Maps (URL pública, sin clave) hasta el punto o
+ *  la dirección del reporte. */
+export function enlaceComoLlegar(u: { latitud: number | null; longitud: number | null;
+  direccion: string | null }): string | null {
+  const base = "https://www.google.com/maps/dir/?api=1&destination=";
+  if (u.latitud !== null && u.longitud !== null) {
+    return base + encodeURIComponent(`${u.latitud},${u.longitud}`);
+  }
+  const direccion = u.direccion?.trim();
+  return direccion ? base + encodeURIComponent(`${direccion}, Cúcuta`) : null;
+}
+
 const NOMBRE_INDICADOR: Record<string, string> = {
   recibido: "Recibido", clasificado: "Clasificado por la IA", requiere_revision: "Requiere revisión",
   sin_clasificar: "Sin clasificar", confirmado: "Confirmado por el veterinario",

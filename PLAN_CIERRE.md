@@ -305,7 +305,7 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 | 2 | Publicar los 22 animales del prototipo por la API | **hecha en producción**: 19 publicados, 3 saltados | #425 |
 | 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
 | 4 | Ciudadano (PWA) | en curso | — |
-| 5 | Mapa (Leaflet + OSM) | pendiente | — |
+| 5 | Mapa (Leaflet + OSM) | **en rama `feat/rediseno-parte-5`, sin PR** (pruebas locales en verde) | — |
 | 6 | Pantallas del personal | pendiente | — |
 | 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
 
@@ -332,3 +332,14 @@ Decisiones y pendientes para el autor (se van sumando):
 **Notas de la parte 4 (PWA).**
 - El código de seguimiento usa la fuente monoespaciada del sistema: JetBrains Mono, la del prototipo, no está entre las fuentes locales.
 - La consulta **no** muestra «Prioridad alta» como el prototipo: RN-14 prohíbe mostrarle la prioridad al ciudadano.
+
+**Corte de la sesión (usage limit, noche del 25-nov).** Estado para retomar:
+- Parte 4: PR #429. Si el CI está en verde, unirlo. Las bases e2e `pwa-reportar-*` se borraron a propósito: hay que subir las que adjunta el CI (como en #328).
+- Parte 5: rama `feat/rediseno-parte-5` (sale de la parte 4), ya subida.
+  - PWA: mapa en el paso «¿Dónde está?», con pin que se arrastra o se pone tocando; usa `ponerUbicacion`.
+  - Panel: mini mapa más «Abrir en Google Maps» y «Cómo llegar» para el veterinario y el rescatista.
+  - CSP solo con `img-src https://tile.openstreetmap.org`.
+  - Leaflet: copia local en `app/pwa/vendor/leaflet` (BSD-2) y `npm` en el panel. Vite ya no incrusta imágenes como `data:`.
+  - Pruebas locales: pytest de la PWA y vitest en verde; axe en 0 y sin errores de consola en 390 y 1366.
+  - Falta: rebase sobre `main` cuando se una #429, abrir el PR (issue nuevo), CI y publicar.
+- Partes 6 (personal) y 7 (RN-02 con video, paginación de la restauración y verificar el bundle desplegado): **sin empezar**.
