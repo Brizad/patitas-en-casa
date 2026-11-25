@@ -431,7 +431,7 @@ Plan del autor: tarea 1 (página de inicio igual al prototipo nuevo `inicio-pagi
     - se registró y publicó a Luna gata (id 25) con los datos del prototipo y `luna.jpg`.
   - **Resultado:** el catálogo tiene 22 animales y ninguno sin foto.
   - **Pendiente de Brayan (opcional):** el refugio tiene ahora dos «Luna» (la perra retirada y la gata publicada). Si se quiere, la perra se puede renombrar más adelante con el endpoint de ficha propuesto en §11.
-- **Tarea 3 (PR #ISSUE_PR):**
+- **Tarea 3 (PR #453):**
   - **Una sola portada:** se quitó la portada vieja de `/app/`. «Inicio» y el logo van a `/`, y `/app/` y la PWA instalada (`start_url`) abren en «Reportar»; el service worker pasa a v13.
   - **Fotos fijas estáticas:** las del diseño (Lupe, Cascabel, Copo, Nube, Toby y Max en el panel de Reportar) son imágenes del repo en `app/inicio/img/animales/`, recortadas y optimizadas (5 a 40 KB). Ya no dependen del catálogo.
   - **Fotos del catálogo:** las tarjetas reintentan el catálogo 6 veces (unos 90 s, mientras Render despierta) y cada foto 3 veces. La huella sale solo si el animal no tiene foto.
