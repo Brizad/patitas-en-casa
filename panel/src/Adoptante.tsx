@@ -5,10 +5,10 @@ import {
   miPerfil, misSolicitudes, recomendaciones, solicitar,
 } from "./apiAdopcion";
 import {
-  Bienvenida, Combinan, Elegir, Encuesta, Listo, MisSolicitudes,
+  Bienvenida, Combinan, Elegir, Encuesta, Listo, MiHogar, MisSolicitudes,
 } from "./AdoptantePantallas";
 import Despertando from "./Despertando";
-import { PREGUNTAS, perfilDesdeRespuestas } from "./encuesta";
+import { PREGUNTAS, perfilDesdeRespuestas, resumenHogar } from "./encuesta";
 import {
   INICIAL, PantallaAdopcion, actual, contar, filtrar, flujo, solicitudDe,
 } from "./flujoAdopcion";
@@ -90,7 +90,11 @@ export default function Adoptante({ token, nombre, alSalir }: {
            apto_otros_animales: false, necesita_patio: false };
   };
 
+  // Arreglos, parte C: «¡Empezar!» arranca sin marcar; «Cambiar mis respuestas» precarga.
   const empezar = () => ir("siguiente", { tipo: "empezar", perfil: datos.perfil });
+  const cambiarRespuestas = () => ir("siguiente", { tipo: "empezar", perfil: datos.perfil, precargar: true });
+  const verCompaneros = () => ir("siguiente", { tipo: "irA", pantalla: "combinan" });
+  const miHogar = () => ir("pop", { tipo: "irA", pantalla: "hogar" });
 
   async function elegir(a: Animal) {
     if (!conPerfil) {
@@ -126,7 +130,7 @@ export default function Adoptante({ token, nombre, alSalir }: {
 
   const nav: [PantallaAdopcion, string, () => void][] = [
     ["inicio", "Adoptar", () => ir("pop", { tipo: "irA", pantalla: "inicio" })],
-    ["encuesta", "Mi hogar", empezar],
+    ["hogar", "Mi hogar", miHogar],
     ["solicitudes", "Mis solicitudes", () => ir("pop", { tipo: "irA", pantalla: "solicitudes" })],
   ];
   return (
@@ -174,6 +178,7 @@ export default function Adoptante({ token, nombre, alSalir }: {
             role={mensaje.error ? "alert" : "status"}>{mensaje.texto}</p>)}
         {s.pantalla === "inicio" && (
           <Bienvenida catalogo={datos.catalogo} cargando={datos.cargando} mias={datos.mias}
+            conPerfil={conPerfil} alVerCompaneros={verCompaneros}
             alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
             alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
         {s.pantalla === "encuesta" && (
@@ -189,7 +194,7 @@ export default function Adoptante({ token, nombre, alSalir }: {
           <Combinan recomendados={datos.recomendados} respuestas={s.respuestas}
             cargando={datos.cargando || s.guardar} ocultos={ocultos} total={fuente.length}
             alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
-            alVerTodos={() => ir("siguiente", { tipo: "verTodos" })} alRepetir={empezar} />)}
+            alVerTodos={() => ir("siguiente", { tipo: "verTodos" })} alRepetir={cambiarRespuestas} />)}
         {s.pantalla === "elegir" && (
           <Elegir lista={visibles} animal={animal} filtro={s.filtro} conteo={contar(fuente)}
             ocultos={ocultos} cargando={datos.cargando} conPerfil={conPerfil}
@@ -200,12 +205,15 @@ export default function Adoptante({ token, nombre, alSalir }: {
             alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
             alElegir={(a) => void elegir(a)}
             alVerSolicitud={(a) => ir("pop", { tipo: "solicitado", animal: a.animal_id, recien: false })}
-            alRevisar={empezar} alAtras={() => ir("atras", { tipo: "atras" })} />)}
+            alRevisar={cambiarRespuestas} alAtras={() => ir("atras", { tipo: "atras" })} />)}
         {s.pantalla === "listo" && s.elegido !== null && (
           <Listo animal={animalDe(s.elegido)} solicitud={solicitudDe(datos.mias, s.elegido)}
             recien={s.recien} alDescargar={(id) => void descargar(id)}
             alInicio={() => ir("atras", { tipo: "irA", pantalla: "inicio" })}
             alSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
+        {s.pantalla === "hogar" && (
+          <MiHogar resumen={resumenHogar(datos.perfil)} alCambiar={cambiarRespuestas} alEmpezar={empezar}
+            alVerCompaneros={verCompaneros} alAtras={() => ir("atras", { tipo: "atras" })} />)}
         {s.pantalla === "solicitudes" && (
           <MisSolicitudes mias={datos.mias} animalDe={animalDe}
             alVer={(x) => ir("pop", { tipo: "solicitado", animal: x.animal_id, recien: false })}
