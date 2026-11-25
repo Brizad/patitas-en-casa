@@ -303,8 +303,8 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 |---|---|---|---|
 | 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | **publicada** (25-nov, bundle `index-CJMqVlvU.js`) | #423 |
 | 2 | Publicar los 22 animales del prototipo por la API | **hecha en producción**: 19 publicados, 3 saltados | #425 |
-| 3 | Página de inicio | en curso | — |
-| 4 | Ciudadano (PWA) | pendiente | — |
+| 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
+| 4 | Ciudadano (PWA) | en curso | — |
 | 5 | Mapa (Leaflet + OSM) | pendiente | — |
 | 6 | Pantallas del personal | pendiente | — |
 | 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
@@ -323,3 +323,12 @@ Decisiones y pendientes para el autor (se van sumando):
 - Qué ver: la bienvenida del adoptante y «Elige a tu compañero», con fotos reales.
 - Pendiente (decisión tuya): **Toby y Luna** ya existían (demo: Toby perro sin ficha; Luna es *perra* en la demo y *gata* en el prototipo) y **Rocky** ya estaba en el refugio sin publicar. El script no los tocó. Si quieres los del prototipo: edita Toby y Luna desde Adopciones (ficha y foto) y publica a Rocky desde el mismo formulario.
 - El estado de salud del ingreso, que el prototipo no trae, quedó como «Sano, listo para adopción».
+
+**Parte 3 (unida, #427).**
+- Qué cambió: la portada (`/`) es la del prototipo, con fotos y animales reales del catálogo y cifras de `GET /indicadores/publicos` (tres totales anónimos; «—» si no hay dato). Ya no tiene la sección «Tecnología».
+- Qué ver: abre la raíz. Revisa las 3 burbujas de cifras, los 4 animales de «En adopción», que «Copiar enlace» copie el enlace y que «Pausar animaciones» detenga todo.
+- Pendiente: nada. Para pasar contraste AA, algunos colores del prototipo se oscurecieron un poco con texto pequeño (lila #6B4DE6, rosa #C93A72 y vino #A3245A sobre rosa).
+
+**Notas de la parte 4 (PWA).**
+- El código de seguimiento usa la fuente monoespaciada del sistema: JetBrains Mono, la del prototipo, no está entre las fuentes locales.
+- La consulta **no** muestra «Prioridad alta» como el prototipo: RN-14 prohíbe mostrarle la prioridad al ciudadano.

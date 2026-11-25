@@ -5,6 +5,15 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Cambiado
+- PWA ciudadana (#428), igual al prototipo:
+  - Portada de la app.
+  - Reportar en 4 pasos (Qué pasa → Dónde → Video → Aviso), con barra en el celular y lista de pasos en el computador. El paso 1 trae botones rápidos y el contador del mínimo de 20 caracteres; las comunas son botones; hay un resumen antes de enviar.
+  - «¡Gracias por avisar!» con el código grande, Copiar y la huella que cae como un sello.
+  - La consulta muestra la línea de tiempo con los estados del servidor.
+  - Sonidos suaves al tocar, con interruptor y sin música.
+  - Se mantienen la cola sin señal, el video, el consentimiento de la Ley 1581, el modo piloto y el SUS.
+
+### Cambiado
 - Portada (#426), igual al prototipo de inicio:
   - Secciones: hero con fotos de los animales publicados, franja de 3 cuadros, la caminata de huellas, cifras, el problema, cómo funciona, 4 animales del catálogo, quién hace qué, cómo ayudar («Copiar enlace»), CTA final y pie.
   - Se quitó la sección «Tecnología».
