@@ -146,7 +146,7 @@ def test_misma_csp_estricta_sin_scripts_ni_estilos_en_linea(c):
     html = _html()
     assert re.findall(r"<script[^>]*>", html) == ['<script src="/inicio/inicio.js" defer>']
     assert not re.search(r"<[^>]*\son\w+=", html) and "style=" not in html
-    assert not re.search(r'(?:src|href)="(?!/|#|https://github\.com/)', html)
+    assert not re.search(r'(?:src|href)="(?!/|#)', html)  # nada externo (tarea 6: ni GitHub)
     rutas = ("/inicio/inicio.css", "/inicio/inicio.js", "/diseno/patitas.css",
              "/diseno/fuentes.css")
     for ruta in rutas:
