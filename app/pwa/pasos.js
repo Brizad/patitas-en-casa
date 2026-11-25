@@ -50,6 +50,7 @@
     }
     $('paso-actual').textContent = 'Paso ' + paso + ' de ' + TOTAL;
     if (paso === TOTAL) resumen();
+    document.dispatchEvent(new CustomEvent('patitas:paso', { detail: { paso } }));
     if (enfocar) $('titulo-paso-' + paso).focus();
   }
 

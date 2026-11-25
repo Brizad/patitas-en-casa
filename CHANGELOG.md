@@ -4,6 +4,13 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Mapa (#430), con Leaflet y teselas de OpenStreetMap:
+  - PWA: pin arrastrable en «¿Dónde está?», que guarda la latitud y la longitud de siempre. Si el mapa no carga, el paso sigue funcionando.
+  - Panel: mini mapa, «Abrir en Google Maps» y «Cómo llegar» para el veterinario y el rescatista.
+  - La CSP solo admite `img-src https://tile.openstreetmap.org`.
+  - «Consultar» no muestra mapa.
+
 ### Cambiado
 - Pantallas del personal (#432), con el estilo del prototipo. Es solo visual: misma lógica y mismos permisos.
   - Menú lateral oscuro en el computador y compacto en el celular.

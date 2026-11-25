@@ -304,8 +304,8 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 | 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | **publicada** (25-nov, bundle `index-CJMqVlvU.js`) | #423 |
 | 2 | Publicar los 22 animales del prototipo por la API | **hecha en producción**: 19 publicados, 3 saltados | #425 |
 | 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
-| 4 | Ciudadano (PWA) | en curso | — |
-| 5 | Mapa (Leaflet + OSM) | pendiente | — |
+| 4 | Ciudadano (PWA) | **publicada** (25-nov; recorrida en producción sin errores) | #429 |
+| 5 | Mapa (Leaflet + OSM) | **publicada** (25-nov; `mapa.js` y la CSP con OSM en producción) | #431 |
 | 6 | Pantallas del personal | en PR | #433 |
 | 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
 
@@ -336,3 +336,14 @@ Decisiones y pendientes para el autor (se van sumando):
 **Notas de la parte 6 (personal).**
 - Cuando el veterinario cambia la prioridad sugerida, el motivo ya lo pide y lo guarda el backend (RN-16, «Ajustar prioridad…», en `decisiones_triaje`). Se conserva tal cual: no se inventó ningún campo. El prototipo lo muestra como 4 botones de prioridad más un texto; aquí se mantiene el flujo «Confirmar / Ajustar prioridad…» que ya probaba el e2e.
 - Las capturas locales de esta parte se tomaron con el servidor de demostración en memoria (`scripts/accesibilidad/servidor_demo.py`). El PostgreSQL temporal se detuvo porque el equipo se quedó sin memoria, y no se volvió a arrancar.
+- El saludo del encabezado es fijo («Buen turno», como el prototipo): con la hora, la captura e2e cambiaba.
+
+**Parte 4 (publicada, #429).**
+- Qué cambió: la app del ciudadano es la del prototipo. Tiene portada, reportar en 4 pasos con barra (celular) o lista (computador), botones rápidos, comunas como botones, resumen, «¡Gracias por avisar!» con sello y consulta con línea de tiempo. Hay sonidos suaves con interruptor.
+- Qué ver: abre `/app/`, toca «Reportar emergencia» y haz un reporte completo. Prueba el botón de sonido de la barra.
+- Pendiente: nada. En Linux el paso que entra deslizándose ensanchaba la página 4 px; se corrigió con un recorte.
+
+**Parte 5 (publicada, #431).**
+- Qué cambió: en «¿Dónde está?» hay un mapa con pin que se arrastra o se pone tocando, y guarda la misma latitud y longitud que el GPS. El veterinario y el rescatista ven un mini mapa con «Abrir en Google Maps» y «Cómo llegar». La CSP solo suma las teselas de OpenStreetMap, y solo como imágenes.
+- Qué ver: en `/app/#reportar`, paso 2, toca el mapa: el botón verde dirá «Marcada en el mapa». En el panel, abre un reporte con GPS.
+- Pendiente: nada. Sin conexión, el mapa se oculta y el paso funciona con GPS o dirección.

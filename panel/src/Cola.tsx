@@ -3,9 +3,10 @@ import { Cuenta, ReporteEnCola, cola } from "./api";
 import Cargando from "./Cargando";
 import Confirmar, { resumenAvisos } from "./Confirmar";
 import Descartar from "./Descartar";
+import { Lugar } from "./MiniMapa";
 import VideoDelReporte from "./VideoDelReporte";
 import {
-  enlaceMapa, etiquetaEstado, evidenciaLegible, explicarSugerencia, haceCuanto, nombreModelo,
+  etiquetaEstado, evidenciaLegible, explicarSugerencia, haceCuanto, nombreModelo,
   textoError,
 } from "./mensajes";
 
@@ -102,9 +103,8 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
             <h3>Dónde</h3>
             <p>{detalle.ubicacion.direccion ?? (detalle.ubicacion.latitud !== null
               ? `GPS ${detalle.ubicacion.latitud}, ${detalle.ubicacion.longitud}` : "Sin dato")}
-              {detalle.ubicacion.comuna ? ` · comuna ${detalle.ubicacion.comuna}` : ""}
-              {enlaceMapa(detalle.ubicacion) && <> · <a href={enlaceMapa(detalle.ubicacion) ?? undefined}
-                target="_blank" rel="noopener noreferrer">Abrir en Google Maps</a></>}</p>
+              {detalle.ubicacion.comuna ? ` · comuna ${detalle.ubicacion.comuna}` : ""}</p>
+            <Lugar u={detalle.ubicacion} />
             <h3>Sugerencia del sistema</h3>
             {/* #432: anillo con la confianza del modelo; la decisión sigue siendo del veterinario. */}
             <div className="sugerencia">
