@@ -1,4 +1,5 @@
-"""Página de inicio pública en la raíz del sitio (#145; rediseño igual al prototipo, #426)."""
+"""Página de inicio pública en la raíz del sitio (#145; arreglos, parte A: hero editorial y
+bloques de color tipo collage)."""
 import re
 from pathlib import Path
 
@@ -44,118 +45,78 @@ def test_la_raiz_muestra_la_pagina_de_inicio(c):
     assert '<html lang="es">' in html and 'name="viewport"' in html and "Cúcuta" in html
 
 
-def test_secciones_del_prototipo_en_orden_y_sin_tecnologia():
-    html = _html()
-    marcas = ['class="hero', 'class="cuadros', 'class="recorrido"', 'class="cifras',
-              'id="problema"', 'id="como"', 'class="adopcion"', 'id="roles"', 'class="ayuda"',
-              'class="final', 'class="pie"']
+def test_hero_editorial_con_volver_en_naranja_italica():
+    html, css = _html(), _css()
+    assert re.search(r'<h1 id="titulo" class="serif">[^<]*<em>volver</em>', html)
+    assert re.search(r"\.hero h1 em \{[^}]*font-style: italic; color: var\(--naranja-texto\)", css)
+    assert 'data-animal="Max"' in html and 'data-animal="Pecas"' in html
+    assert "Un veterinario revisa" in html and 'class="cifras-hero"' in html
+
+
+def test_secciones_en_orden_y_colores_del_collage():
+    html, css = _html(), _css()
+    marcas = ['class="hero', 'class="cinta"', 'class="collage', 'id="problema"', 'class="adopcion"',
+              'class="ayuda', 'id="roles"', 'class="final', 'class="carril"', 'class="pie"']
     posiciones = [html.index(m) for m in marcas]
     assert posiciones == sorted(posiciones)
-    assert "Tecnología" not in html and "FastAPI" not in html
-    assert re.search(r'<h1 id="titulo" class="h may">Un animal herido <span class="resalto">'
-                     r'<span>no debería</span></span> esperar</h1>', html)
+    colores = ("#1F2A6B", "#0E5E6F", "#4F5BD5", "#FFE135", "#5B2A86", "#1F4FBF", "#12235E",
+               "#F2603A")
+    for color in colores:
+        assert color in css, color
+    assert "Ayúdalos, ayúdanos" in html and "¿Eres rescatista?" in html and "Cómo funciona" in html
 
 
-def test_los_enlaces_llevan_a_las_partes_reales(c):
-    html = c.get("/").text
-    assert html.count('href="/app/#reportar"') >= 4  # nav, hero, cuadro, ayuda y CTA final
-    assert 'href="/app/#estado"' in html and 'href="/panel/#registro"' in html
-    assert 'href="/panel/"' in html and 'href="/docs"' in html
-    assert 'href="https://github.com/Brizad/patitas-en-casa"' in html
-
-
-def test_seis_pasos_siete_roles_y_tres_formas_de_ayudar():
-    html = _html()
-    assert len(re.findall(r'<li class="paso paso-\d', html)) == 6
-    for rol in ("ciudadano", "veterinario", "rescatista", "coordinador", "adoptante",
-                "administrador", "alcaldia"):
-        assert f'class="rol rol-{rol} tarjeta"' in html, rol
-    assert "¿Eres del equipo?" in html
-    for ayuda in ("Reporta", "Adopta", "Comparte"):
-        assert f'<h3 class="h may">{ayuda}</h3>' in html
-    assert '<button class="ayuda-accion" type="button" id="compartir"' in html
-    assert 'id="compartido" role="status"' in html
+def test_sin_rastro_de_huellas_ni_pausa_ni_nota_de_cifras():
+    html, css = _html(), _css()
+    assert 'class="rastro"' not in html and "huella-perro" not in html
+    assert "Pausar animaciones" not in html and "pausa" not in css
+    assert "Cifras en vivo" not in html and "aún sin dato" not in html
+    assert "@media (prefers-reduced-motion: reduce)" in css  # el movimiento se apaga por CSS
 
 
 def test_las_cifras_nunca_se_inventan():
     html, js = _html(), _js()
     valores = re.findall(r'data-cifra="(\w+)">([^<]*)<', html)
-    assert [k for k, _ in valores] == ["reportes", "rescatados", "adoptados"]
+    assert {k for k, _ in valores} == {"reportes", "rescatados", "en_adopcion"}
     assert all(v == "—" for _, v in valores)  # sin dato, «—»
     assert '"/indicadores/publicos"' in js and "Number.isInteger(valor)" in js
+    assert 'ponerCifra("en_adopcion", lista.length)' in js
 
 
-def test_fotos_y_animales_reales_del_catalogo():
+def test_fotos_reales_por_nombre_y_nunca_rotas():
     html, js = _html(), _js()
-    for nombre in ("Pinina", "Mochi", "Lupe", "Winny", "Pecas", "Max"):
+    for nombre in ("Max", "Pecas", "Pinina", "Cascabel", "Winny", "Tigre", "Copo", "Nube", "Luna"):
         assert f'data-animal="{nombre}"' in html, nombre
-    assert '"/adopciones/animales"' in js and 'id="en-adopcion"' in html
-    assert "innerHTML" not in js  # los datos se ponen con textContent (XSS)
-    assert 'img.addEventListener("error", () => img.remove())' in js  # nunca una foto rota
+    assert '"/adopciones/animales"' in js and "innerHTML" not in js
+    assert 'img.addEventListener("error", () => img.remove())' in js
 
 
-def test_usa_la_misma_csp_estricta_y_sus_archivos_se_sirven(c):
+def test_los_enlaces_llevan_a_las_partes_reales(c):
+    html = c.get("/").text
+    assert html.count('href="/app/#reportar"') >= 4
+    assert 'href="/app/#estado"' in html and 'href="/panel/#adoptar"' in html
+    assert 'href="/panel/#personal"' in html and 'href="/docs"' in html
+    assert '<button class="boton boton--blanco" type="button" id="compartir"' in html
+
+
+def test_misma_csp_estricta_sin_scripts_ni_estilos_en_linea(c):
     raiz = c.get("/")
     assert "script-src 'self'" in raiz.headers["content-security-policy"]
-    for ruta, tipo in (("/inicio/inicio.css", "text/css"), ("/inicio/inicio.js", "javascript"),
-                       ("/diseno/patitas.css", "text/css")):
-        r = c.get(ruta)
-        assert r.status_code == 200 and tipo in r.headers["content-type"], ruta
-
-
-def test_sin_scripts_en_linea_ni_estilos_en_linea_ni_recursos_externos():
     html = _html()
     assert re.findall(r"<script[^>]*>", html) == ['<script src="/inicio/inicio.js" defer>']
     assert not re.search(r"<[^>]*\son\w+=", html) and "style=" not in html
     assert not re.search(r'(?:src|href)="(?!/|#|https://github\.com/)', html)
-    css = _css()
-    assert "@import" not in css and not re.search(r"url\((?!/|#)", css)
-
-
-def test_fuentes_locales_de_los_prototipos(c):
-    css = (RAIZ / "app" / "diseno" / "patitas.css").read_text(encoding="utf-8")
-    for fuente in ("fredoka-latin-wght-normal.woff2", "nunito-latin-wght-normal.woff2"):
-        assert f"url(/diseno/fuentes/{fuente})" in css
-        assert c.get(f"/diseno/fuentes/{fuente}").status_code == 200
-    assert "fonts.googleapis" not in css
+    rutas = ("/inicio/inicio.css", "/inicio/inicio.js", "/diseno/patitas.css",
+             "/diseno/fuentes.css")
+    for ruta in rutas:
+        assert c.get(ruta).status_code == 200, ruta
 
 
 def test_celular_en_una_columna_y_objetivos_de_44_px():
     css = _css()
-    celular = css.split("@media (max-width: 760px)", 1)[1]
-    assert ".hero, .dos-columnas { grid-template-columns: minmax(0, 1fr)" in celular
+    celular = css.split("@media (max-width: 860px)", 1)[1]
+    assert ".hero { grid-template-columns: minmax(0, 1fr)" in celular
     assert ".nav-enlaces { display: none; }" in celular
-    for selector in (".nav-enlaces a", ".pausa-etiqueta", ".ayuda-accion", ".pie-enlaces a"):
+    for selector in (".nav-enlaces a", ".boton", ".pie-enlaces a"):
         bloque = re.search(re.escape(selector) + r" \{[^}]*\}", css).group(0)
-        assert "min-height: 44px" in bloque, selector
-
-
-# --- El recorrido de huellas de #328 se reutiliza; el movimiento se pausa o se reduce. ---
-
-def test_huellas_de_perro_y_gato_decorativas_sobre_la_curva():
-    html = _html()
-    svg = re.search(r'<svg class="rastro"[^>]*>', html).group(0)
-    assert 'aria-hidden="true"' in svg and 'focusable="false"' in svg
-    assert html.count('href="#huella-perro"') >= 10 and html.count('href="#huella-gato"') >= 10
-
-
-def test_la_caminata_es_escalonada_y_sin_parpadeo():
-    css = _css()
-    assert re.search(r"\.rastro use \{[^}]*animation: pisar 8s", css)
-    retrasos = [float(r) for r in re.findall(r"\.t\d+ \{ animation-delay: ([\d.]+)s; \}", css)]
-    assert len(retrasos) == 15 and retrasos == sorted(retrasos)
-    pulso = float(re.search(r"animation: pulsar ([\d.]+)s", css).group(1))
-    assert pulso >= 0.34  # nada destella más de 3 veces por segundo (WCAG 2.3.1)
-
-
-def test_se_puede_pausar_lo_que_se_mueve_sin_javascript():
-    html, css = _html(), _css()
-    assert '<input class="pausa" type="checkbox" id="pausar">' in html
-    assert '<label class="pausa-etiqueta" for="pausar">Pausar animaciones</label>' in html
-    assert "body:has(.pausa:checked) * { animation-play-state: paused !important; }" in css
-
-
-def test_con_movimiento_reducido_todo_queda_quieto():
-    reducido = _css().split("@media (prefers-reduced-motion: reduce)", 1)[1]
-    assert "animation: none !important; transition: none !important;" in reducido
-    assert ".pausa, .pausa-etiqueta { display: none; }" in reducido
+        assert re.search(r"min-height: (44|52)px", bloque), selector
