@@ -408,3 +408,18 @@ La ficha del refugio (`animales`) solo cambia por ingreso, historial clínico (s
 1. **(Recomendada)** Un endpoint aditivo `PUT /refugio/animales/{id}/ficha`, solo del coordinador. Corrige `nombre` y `especie` con una justificación de 10 caracteres o más (`validar_justificacion`) y deja el cambio en la bitácora (RF-32). No cambia reglas ni contratos existentes. Luego se sube `luna.jpg` y se ajusta la ficha con `PUT .../publicacion`. Unas 80 líneas con pruebas.
 2. **Sin código:** registrar un ingreso nuevo «Luna» (gata), publicarla con `luna.jpg` y dar egreso al perro Luna (id 3) con un motivo como «error de registro». Funciona hoy, pero deja un egreso que no ocurrió en la realidad y gasta un cupo.
 3. **Dejarla como está:** Luna perro sin foto. La portada y la encuesta ya la saltan porque no tiene foto.
+
+## 12. Inicio v3 y Luna/Canela (25-nov, tarde)
+
+Plan del autor: tarea 1 (página de inicio igual al prototipo nuevo `inicio-pagina-completa.dc.html` y a `ref-hero-petgon.png`), tarea 2 (retirar a Canela y a la Luna perra, publicar a Luna gata) y tarea 3 (una sola portada y fotos que siempre carguen). Capturas en `docs/revision-visual/inicio-v3/`.
+
+- **Tarea 1, prototipo frente al pedido:** en tres sitios, el prototipo nuevo y el texto del autor no coinciden. Se siguió el texto, que es más reciente y nombra las ilustraciones:
+  - el círculo del bloque rosa lleva `ilustracion-gato-lago.jpg` (el prototipo tiene a Pinina);
+  - el círculo de «Ayúdalos, ayúdanos» lleva `ilustracion-gato-arbol.jpg` (el prototipo tiene a Winny);
+  - el pie tiene la tarjeta de `ilustracion-perro.jpg`, que el prototipo no trae.
+- **Tarea 1, contraste AA (axe en 0):**
+  - el texto pequeño sobre el lila #7A5AF8 va en blanco (el #EDE8FF del prototipo no llega a 4,5:1);
+  - el cuadro lila claro #9B83FA lleva texto oscuro (blanco no llega);
+  - sobre el rosa #E8508A solo va texto grande (19 px, 800);
+  - las etiquetas pequeñas «En adopción» y «Quién hace qué» usan #9E1F55 y #5B3FD9.
+- **Tarea 1, íconos de los roles:** van dibujados como en el prototipo (trazo oscuro en un círculo blanco), no con los SVG de colores de `/diseno/roles/`, que siguen en la cabecera del panel.

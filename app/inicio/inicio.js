@@ -1,5 +1,5 @@
-// Portada (#426). La página funciona sin esto; aquí solo se agrega lo que viene del servidor:
-// - fotos reales de los animales publicados (Pinina, Mochi, Lupe…; si no están, otros con foto),
+// Portada (#426; inicio v3). La página funciona sin esto; aquí solo se agrega lo que viene del servidor:
+// - fotos reales de los animales publicados (Lupe, Cascabel, Copo, Nube, Toby; si no están, otros con foto),
 // - cuatro animales «En adopción» del catálogo,
 // - las tres cifras anónimas de /indicadores/publicos (si fallan, se queda «—»: nunca se inventan),
 // - «Copiar enlace» con el portapapeles real.
@@ -50,38 +50,29 @@
     }
   }
 
-  function fila(lista, nombre, valor) {
-    const dt = document.createElement("dt");
-    dt.textContent = nombre;
-    const dd = document.createElement("dd");
-    dd.textContent = valor;
-    lista.append(dt, dd);
+  function texto(clase, valor, etiqueta) {
+    const el = document.createElement(etiqueta || "span");
+    el.className = clase;
+    el.textContent = valor;
+    return el;
   }
 
+  /** Tarjeta centrada (inicio v3): foto circular, nombre, «especie · edad · tamaño», su
+   *  carácter (primera etiqueta de la ficha, si la tiene) y «Conocer». */
   function tarjeta(animal) {
     const li = document.createElement("li");
     const a = document.createElement("a");
-    a.className = "animal tarjeta";
-    a.href = "/panel/#adoptar";
+    a.className = "animal";
+    a.href = "/panel/#adoptar/animales";
     const foto = document.createElement("span");
-    foto.className = "foto";
+    foto.className = "animal-foto";
     if (animal.foto) foto.append(imagen(animal, ""));
-    const nombre = document.createElement("span");
-    nombre.className = "h animal-nombre";
-    nombre.textContent = animal.nombre;
-    const datos = document.createElement("dl");
-    fila(datos, "Especie", animal.especie === "gato" ? "Gatito" : "Perrito");
-    fila(datos, "Edad", edad(animal.edad_meses));
-    fila(datos, "Tamaño", TAMANO[animal.tamano] || animal.tamano);
-    const pie = document.createElement("span");
-    pie.className = "animal-pie";
-    const conocer = document.createElement("span");
-    conocer.className = "animal-conocer";
-    conocer.textContent = "Conocer";
-    const corazon = document.querySelector(".hero-corazon svg").cloneNode(true);
-    corazon.classList.add("late");
-    pie.append(conocer, corazon);
-    a.append(foto, nombre, datos, pie);
+    const especie = animal.especie === "gato" ? "Gatito" : "Perrito";
+    a.append(foto, texto("h animal-nombre", animal.nombre),
+      texto("animal-datos", [especie, edad(animal.edad_meses), TAMANO[animal.tamano] || animal.tamano].join(" · ")));
+    const caracter = (animal.etiquetas || [])[0];
+    if (caracter) a.append(texto("animal-caracter", caracter));
+    a.append(texto("animal-conocer", "Conocer"));
     li.append(a);
     return li;
   }
