@@ -2,11 +2,14 @@
    Guarda solo la interfaz (/app/) para que abra sin señal. Las peticiones a /reportes/ siempre
    van a la red y nunca se guardan: por privacidad y para mostrar el estado actual. El reporte
    hecho sin señal lo guarda reportar.js en localStorage, no el service worker (RF-12). */
-const VERSION = 'patitas-pwa-v11';  // H-1, H-2 y «despertando» (v10: #308, ilustraciones)
-// #298: la hoja y las fuentes del sistema visual también abren sin señal.
-const FUENTES = ['/diseno/fuentes.css', '/diseno/fuentes/eb-garamond-latin-400-normal.woff2',
-  '/diseno/fuentes/figtree-latin-wght-normal.woff2'];
-const INTERFAZ = [...FUENTES, './', '/diseno/sistema.css', 'index.html', 'estilos.css', 'app.js', 'video.js', 'reportar.js', 'piloto.js', 'icono.svg', 'manifest.webmanifest'];
+const VERSION = 'patitas-pwa-v12';  // #428: rediseño igual al prototipo (v11: H-1, H-2)
+// #428: la hoja y las fuentes de los prototipos también abren sin señal. Las fotos de la
+// portada (/adopciones/) no se guardan: sin señal, la portada se ve sin ellas.
+const FUENTES = ['/diseno/fuentes/fredoka-latin-wght-normal.woff2',
+  '/diseno/fuentes/nunito-latin-wght-normal.woff2'];
+const INTERFAZ = [...FUENTES, './', '/diseno/patitas.css', 'index.html', 'estilos.css', 'app.js',
+  'video.js', 'reportar.js', 'pasos.js', 'sonido.js', 'piloto.js', 'icono.svg',
+  'manifest.webmanifest'];
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(INTERFAZ)));
