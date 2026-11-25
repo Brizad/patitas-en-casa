@@ -2,7 +2,7 @@
 
 # Catálogo de endpoints
 
-75 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+76 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
@@ -21,6 +21,7 @@
 | GET | `/adoptantes/yo/perfil` | adoptante | 200, 401, 403, 404 | — |
 | PUT | `/adoptantes/yo/perfil` | adoptante | 200, 401, 403, 422 | — |
 | POST | `/refugio/animales/{animal_id}/publicacion` | coordinador | 201, 401, 403, 404, 409, 422 | RF-25 |
+| PUT | `/refugio/animales/{animal_id}/publicacion` | coordinador | 200, 401, 403, 404, 409, 422 | RF-25 (#422) |
 | GET | `/adopciones/animales` | público | 200 | RN-14 |
 | GET | `/adopciones/animales/{animal_id}/foto` | público | 200, 404, 422 | — |
 | POST | `/refugio/animales/{animal_id}/foto` | coordinador | 201, 401, 403, 404, 413, 415, 422 | RF-25 |

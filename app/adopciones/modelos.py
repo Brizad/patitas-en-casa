@@ -71,6 +71,22 @@ class Publicacion:
     especie: str = ""
     estado: EstadoPublicacion = EstadoPublicacion.DISPONIBLE
     publicado_en: datetime = field(default_factory=lambda: datetime.now(UTC))
+    # #422: cómo es el animal, para la ficha «Elige a tu compañero». Todo opcional y solo para
+    # mostrar: la compatibilidad (RF-09) sigue usando `energia` (baja/media/alta), no estos.
+    carino: int | None = None  # 0 a 100
+    energia_nivel: int | None = None
+    juego: int | None = None
+    calma: int | None = None
+    etiquetas: list[str] = field(default_factory=list)  # hasta 3
+    peso_kg: float | None = None  # hoy
+    peso_adulto_kg: float | None = None  # estimado de adulto
+
+
+# Lo que el coordinador puede corregir de una publicación disponible (#422). Nombre y especie
+# vienen de la ficha del animal; estado y fecha, del flujo de adopción.
+CAMPOS_EDITABLES = ("descripcion", "tamano", "energia", "edad_meses", "apto_ninos",
+                    "apto_otros_animales", "necesita_patio", "carino", "energia_nivel", "juego",
+                    "calma", "etiquetas", "peso_kg", "peso_adulto_kg")
 
 
 class EstadoSolicitud(StrEnum):

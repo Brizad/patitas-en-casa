@@ -3,6 +3,7 @@ RF-10, RF-25 a RF-29) (DT-13, #267)."""
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Annotated
 
@@ -16,7 +17,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
 from app import config
@@ -94,6 +95,11 @@ class PerfilEntrada(BaseModel):
     acepta_seguimiento: bool
 
 
+Nivel = Annotated[int | None, Field(default=None, ge=0, le=100)]
+Peso = Annotated[float | None, Field(default=None, gt=0, le=150)]
+Etiqueta = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
+
+
 class PublicacionEntrada(BaseModel):
     descripcion: str = Field(min_length=20, max_length=1000)
     tamano: Tamano
@@ -102,6 +108,14 @@ class PublicacionEntrada(BaseModel):
     apto_ninos: bool
     apto_otros_animales: bool
     necesita_patio: bool
+    # #422: ficha «Elige a tu compañero», opcional y solo para mostrar (no cambia RF-09).
+    carino: Nivel = None
+    energia_nivel: Nivel = None
+    juego: Nivel = None
+    calma: Nivel = None
+    etiquetas: list[Etiqueta] = Field(default_factory=list, max_length=3)
+    peso_kg: Peso = None
+    peso_adulto_kg: Peso = None
 
 
 def _publicacion(p: Publicacion, con_foto: set[int] = frozenset()) -> dict:
@@ -110,7 +124,10 @@ def _publicacion(p: Publicacion, con_foto: set[int] = frozenset()) -> dict:
             "descripcion": p.descripcion, "tamano": p.tamano.value, "energia": p.energia.value,
             "edad_meses": p.edad_meses, "apto_ninos": p.apto_ninos,
             "apto_otros_animales": p.apto_otros_animales, "necesita_patio": p.necesita_patio,
-            "estado": p.estado.value, "publicado_en": fecha_utc(p.publicado_en)}
+            "estado": p.estado.value, "publicado_en": fecha_utc(p.publicado_en),
+            "carino": p.carino, "energia_nivel": p.energia_nivel, "juego": p.juego,
+            "calma": p.calma, "etiquetas": list(p.etiquetas), "peso_kg": p.peso_kg,
+            "peso_adulto_kg": p.peso_adulto_kg}
 
 
 class SolicitudEntrada(BaseModel):
@@ -225,6 +242,18 @@ def _publicar_animal(ctx: Contexto, animal_id: int, datos: PublicacionEntrada,
     return _publicacion(publicacion)
 
 
+def _editar_publicacion(ctx: Contexto, animal_id: int, datos: PublicacionEntrada,
+                        coordinador: Usuario) -> dict:
+    """#422: corrige una publicación disponible de un animal de su refugio."""
+    _exigir(ctx.fichas_de(coordinador).animal(animal_id), "No hay ese animal en tu refugio.")
+    actual = _exigir(ctx.repositorio_adopciones.publicacion(animal_id),
+                     "Ese animal no está publicado.")
+    nueva = replace(actual, **datos.model_dump())
+    if not ctx.repositorio_adopciones.actualizar_publicacion(nueva):
+        raise HTTPException(status_code=409, detail=f"{actual.nombre} ya no está disponible.")
+    return _publicacion(nueva)
+
+
 async def _subir_foto(ctx: Contexto, animal_id: int, foto: UploadFile,
                       coordinador: Usuario) -> dict:
     _exigir(ctx.fichas_de(coordinador).animal(animal_id), "No hay ese animal en tu refugio.")
@@ -241,7 +270,8 @@ async def _subir_foto(ctx: Contexto, animal_id: int, foto: UploadFile,
 def _recomendaciones(ctx: Contexto, adoptante: Usuario) -> list[dict]:
     perfil = _exigir(ctx.repositorio_adopciones.perfil(adoptante.correo),
                      "Llena tu perfil para ver recomendaciones.", 422)
-    return [{**_publicacion(a), **_compatibilidad(c)}
+    con_foto = ctx.repositorio_fotos.con_foto()  # #422: antes las recomendaciones no la traían
+    return [{**_publicacion(a, con_foto), **_compatibilidad(c)}
             for a, c in recomendar(perfil, ctx.repositorio_adopciones.disponibles())]
 
 
@@ -429,6 +459,12 @@ def _rutas_del_catalogo(rutas: APIRouter, ctx: Contexto) -> None:
                         coordinador: Usuario = coordinacion):
         """RF-25: el coordinador publica un animal de su refugio que sigue allí."""
         return _publicar_animal(ctx, animal_id, datos, coordinador)
+
+    @rutas.put("/refugio/animales/{animal_id}/publicacion")
+    def editar_publicacion(animal_id: int, datos: PublicacionEntrada,
+                           coordinador: Usuario = coordinacion):
+        """#422: el coordinador corrige la publicación (y la ficha) de un animal disponible."""
+        return _editar_publicacion(ctx, animal_id, datos, coordinador)
 
     @rutas.get("/adopciones/animales")
     def catalogo_de_adopcion():

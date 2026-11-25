@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.adopciones.modelos import (
     ABIERTAS,
+    CAMPOS_EDITABLES,
     Energia,
     EstadoPublicacion,
     EstadoSolicitud,
@@ -108,12 +109,8 @@ class RepositorioAdopcionesPostgres:
         # coordinadores publiquen a la vez.
         with self._motor.begin() as conexion:
             creada = conexion.execute(insert(publicaciones).values(
-                animal_id=publicacion.animal_id, descripcion=publicacion.descripcion,
-                tamano=publicacion.tamano.value, energia=publicacion.energia.value,
-                edad_meses=publicacion.edad_meses, apto_ninos=publicacion.apto_ninos,
-                apto_otros_animales=publicacion.apto_otros_animales,
-                necesita_patio=publicacion.necesita_patio, estado=publicacion.estado.value,
-                publicado_en=publicacion.publicado_en,
+                animal_id=publicacion.animal_id, estado=publicacion.estado.value,
+                publicado_en=publicacion.publicado_en, **_editables(publicacion),
             ).on_conflict_do_nothing(index_elements=[publicaciones.c.animal_id])
                 .returning(publicaciones.c.animal_id)).first()
         return creada is not None
@@ -123,6 +120,13 @@ class RepositorioAdopcionesPostgres:
             f = conexion.execute(_CONSULTA.where(
                 publicaciones.c.animal_id == animal_id)).mappings().first()
         return None if f is None else _publicacion(f)
+
+    def actualizar_publicacion(self, publicacion: Publicacion) -> bool:
+        with self._motor.begin() as conexion:
+            return conexion.execute(update(publicaciones).where(
+                publicaciones.c.animal_id == publicacion.animal_id,
+                publicaciones.c.estado == EstadoPublicacion.DISPONIBLE.value,
+            ).values(**_editables(publicacion))).rowcount == 1
 
     def disponibles(self) -> list[Publicacion]:
         with self._motor.connect() as conexion:
@@ -275,10 +279,24 @@ def _solicitud(f) -> Solicitud:
                      decidida_en=f["decidida_en"], razon=f["razon"])
 
 
+def _editables(p: Publicacion) -> dict:
+    """Columnas de los CAMPOS_EDITABLES; las etiquetas vacías se guardan como NULL."""
+    valores = {c: getattr(p, c) for c in CAMPOS_EDITABLES}
+    valores.update(tamano=p.tamano.value, energia=p.energia.value,
+                   etiquetas=list(p.etiquetas) or None)
+    return valores
+
+
+def _kg(valor) -> float | None:
+    return None if valor is None else float(valor)  # Numeric llega como Decimal
+
+
 def _publicacion(f) -> Publicacion:
     return Publicacion(
         animal_id=f["animal_id"], descripcion=f["descripcion"], tamano=Tamano(f["tamano"]),
         energia=Energia(f["energia"]), edad_meses=f["edad_meses"], apto_ninos=f["apto_ninos"],
         apto_otros_animales=f["apto_otros_animales"], necesita_patio=f["necesita_patio"],
         nombre=f["nombre"], especie=f["especie"], estado=EstadoPublicacion(f["estado"]),
-        publicado_en=f["publicado_en"])
+        publicado_en=f["publicado_en"], carino=f["carino"], energia_nivel=f["energia_nivel"],
+        juego=f["juego"], calma=f["calma"], etiquetas=list(f["etiquetas"] or []),
+        peso_kg=_kg(f["peso_kg"]), peso_adulto_kg=_kg(f["peso_adulto_kg"]))

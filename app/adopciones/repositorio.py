@@ -7,6 +7,7 @@ from typing import Protocol
 
 from app.adopciones.modelos import (
     ABIERTAS,
+    CAMPOS_EDITABLES,
     EstadoPublicacion,
     EstadoSolicitud,
     PerfilAdoptante,
@@ -34,6 +35,11 @@ class RepositorioAdopciones(Protocol):
         ...
 
     def publicacion(self, animal_id: int) -> Publicacion | None: ...
+
+    def actualizar_publicacion(self, publicacion: Publicacion) -> bool:
+        """#422: reemplaza los CAMPOS_EDITABLES si sigue disponible. False si no existe o ya se
+        adoptó."""
+        ...
 
     def disponibles(self) -> list[Publicacion]:
         """Catálogo público: publicaciones disponibles, la más antigua primero."""
@@ -111,6 +117,14 @@ class RepositorioAdopcionesEnMemoria:
     def publicacion(self, animal_id: int) -> Publicacion | None:
         encontrada = self._publicaciones.get(animal_id)
         return None if encontrada is None else replace(encontrada)
+
+    def actualizar_publicacion(self, publicacion: Publicacion) -> bool:
+        actual = self._publicaciones.get(publicacion.animal_id)
+        if actual is None or actual.estado != EstadoPublicacion.DISPONIBLE:
+            return False
+        self._publicaciones[publicacion.animal_id] = replace(
+            actual, **{c: getattr(publicacion, c) for c in CAMPOS_EDITABLES})
+        return True
 
     def disponibles(self) -> list[Publicacion]:
         return sorted((replace(p) for p in self._publicaciones.values()
