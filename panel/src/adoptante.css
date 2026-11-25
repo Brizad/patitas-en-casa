@@ -432,3 +432,45 @@
 /* La respuesta guardada se nota solo por el borde (sin la etiqueta «Tu respuesta»). */
 .ds .adop .opcion[aria-pressed="true"] { --sc: var(--tinta); border-width: 2.5px; outline: 3px dashed var(--morado); outline-offset: 3px; }
 @media (max-width: 520px) { .hogar-fila { grid-template-columns: minmax(0, 1fr); } .hogar-fila dd { text-align: left; } }
+
+/* ---------- bienvenida en computador (tarea 4): hero compacto y más contenido abajo ---------- */
+.ini-mas { display: none; }
+@media (min-width: 1024px) {
+  .ini { align-content: start; padding-top: 6px; }
+  .ds .adop .ini-titulo { font-size: 56px; }
+  .collage { max-width: 430px; }
+  .ini-acciones { margin-top: 22px; }
+  .ini-mas { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 56px; width: 100%; max-width: 1120px;
+    margin: 28px auto 24px; }
+  .ini-esperan { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ini-etiqueta { margin: 0; font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--vino); }
+  .ds .adop .ini-h2 { margin: 6px 0 0; font-size: 40px; line-height: 1.05; }
+  .ini-tarjetas { list-style: none; width: 100%; margin: 26px 0 0; padding: 0; display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+  .ds .adop .ini-tarjeta { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 16px 10px; background: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 22px; box-shadow: 4px 4px 0 var(--tinta);
+    color: var(--tinta); font: inherit; cursor: pointer; transition: transform .15s ease; }
+  .ds .adop .ini-tarjeta:hover { transform: translateY(-4px); }
+  .ini-tarjeta-foto { width: 92px; height: 92px; border-radius: 999px; border: 2.5px solid var(--tinta); }
+  .ini-tarjeta-nombre { font-size: 19px; font-weight: 700; }
+  .ini-tarjeta-datos { font-size: 13px; font-weight: 800; color: var(--suave); }
+  .ds .adop .ini-ver-todos { margin-top: 26px; display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 24px;
+    background: #FFD23F; color: var(--tinta); border: 2.5px solid var(--tinta); border-radius: 999px; box-shadow: 4px 4px 0 var(--tinta);
+    font: 800 17px 'Nunito Variable', 'Nunito', system-ui, sans-serif; cursor: pointer; }
+  .ini-bloque { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); border: 3px solid var(--tinta); border-radius: 30px;
+    overflow: hidden; box-shadow: 7px 7px 0 var(--tinta); }
+  .ini-asi { padding: 34px 36px; background: var(--morado); color: #FFFFFF; }
+  .ini-pasos { list-style: none; margin: 20px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
+  .ini-pasos li { display: flex; gap: 12px; align-items: flex-start; }
+  .ini-pasos li > span:last-child { display: flex; flex-direction: column; gap: 2px; font-size: 14px; font-weight: 700; line-height: 1.4; }
+  .ini-pasos strong { font-size: 19px; font-weight: 700; }
+  .ini-paso-n { width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 999px;
+    background: #FFD23F; color: var(--tinta); border: 2px solid #FFFFFF; font-weight: 700; }
+  .ini-lado { display: grid; grid-template-rows: 1fr 1fr; border-left: 3px solid var(--tinta); }
+  .ini-hogar, .ini-mias { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 6px; padding: 24px 28px; }
+  .ini-hogar { background: #FFD23F; border-bottom: 3px solid var(--tinta); }
+  .ini-mias { background: var(--tinta); color: #FFFFFF; }
+  .ini-hogar h3, .ini-mias h3 { margin: 0; font-size: 24px; font-weight: 700; }
+  .ini-hogar p, .ini-mias p { margin: 0; font-size: 14px; font-weight: 700; }
+  .ds .adop .ini-enlace-claro { color: #FFFFFF; }
+}

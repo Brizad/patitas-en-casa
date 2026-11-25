@@ -179,6 +179,7 @@ export default function Adoptante({ token, nombre, alSalir }: {
         {s.pantalla === "inicio" && (
           <Bienvenida catalogo={datos.catalogo} cargando={datos.cargando} mias={datos.mias}
             conPerfil={conPerfil} alVerCompaneros={verCompaneros} alMiHogar={miHogar}
+            alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
             alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
             alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
         {s.pantalla === "encuesta" && (

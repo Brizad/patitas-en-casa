@@ -3,7 +3,7 @@ import type { AnimalPublicado, Perfil, Recomendado } from "./apiAdopcion";
 import { PREGUNTAS } from "./encuesta";
 import {
   EstadoFlujo, INICIAL, actual, contar, edadTexto, estadisticas, filtrar, flujo, hoyYAdulto, insignias, convivencia,
-  mejores, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
+  mejores, paraLaBienvenida, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
 } from "./flujoAdopcion";
 
 const animal = (id: number, especie: string, extra: Partial<AnimalPublicado> = {}): AnimalPublicado => ({
@@ -209,5 +209,15 @@ describe("insignias", () => {
       necesita_patio: true }))).toEqual(["Energía alta", "Convive con niños", "Necesita patio"]);
     expect(insignias(animal(2, "gato", { apto_ninos: false, apto_otros_animales: true })))
       .toEqual(["Energía media", "Convive con otros animales", "Sin patio está bien"]);
+  });
+});
+
+describe("bienvenida en computador (tarea 4)", () => {
+  const a = (id: number, foto: string | null) => ({ animal_id: id, nombre: `A${id}`, foto }) as unknown as AnimalPublicado;
+  it("hasta 6 animales distintos, primero los que tienen foto", () => {
+    const lista = [a(1, null), a(2, "/f2"), a(3, "/f3"), a(4, null), a(5, "/f5"), a(6, "/f6"), a(7, "/f7"), a(8, "/f8")];
+    expect(paraLaBienvenida(lista).map((x) => x.animal_id)).toEqual([2, 3, 5, 6, 7, 8]);
+    expect(paraLaBienvenida([a(1, null)])).toHaveLength(1);
+    expect(paraLaBienvenida([])).toEqual([]);
   });
 });
