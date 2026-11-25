@@ -4,6 +4,14 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Cambiado
+- Adoptante (#420): nueva vista «Elige a tu compañero», con el estilo y el flujo del prototipo de adopción.
+  - Pantallas: bienvenida con collage del catálogo y animalitos que caminan; encuesta de una pregunta por pantalla, que llena el perfil real (las mismas siete casillas, precargadas si ya hay perfil); «¡Ellos combinan contigo!», con los 3 mejores según el puntaje del servidor, su razón y sus alertas; selección tipo videojuego, con barras sacadas solo de datos reales; «¡Lo elegiste!», con los pasos según el estado real de la solicitud y el compromiso en PDF.
+  - Las preguntas de especie y tamaño solo filtran en pantalla.
+  - Sonido con Web Audio (`panel/src/sonido.ts`) con botones de música y efectos, más un interruptor de movimiento.
+  - Fuentes Fredoka y Nunito locales (@fontsource).
+  - Sin cambios en la API ni en las reglas de negocio.
+
 ### Corregido
 - Panel (#404, hallazgos 2, 3, 4, 7, 8, 9 y 10 de #400): en escritorio la cabecera, las pestañas y el contenido comparten ancho (1200 px) y borde; en el celular la cola no deja la tarjeta «Elige un reporte» al final y cada tabla-tarjeta se encabeza con su primer dato; los textos visibles ya no llevan códigos internos (RF-31, RNF-06, «pantalla P-06»…); una barra en 0 no se dibuja; la zona del rescatista y el «Descargar CSV» apagado del piloto se explican.
 - Panel (#402, hallazgos 1, 5 y 6 de #400): las listas dicen «Cargando…» (con `role="status"`) mientras llegan los datos; los estados vacíos dicen qué falta y qué hacer; «Actualizar» queda siempre a la derecha del título (el título se parte en dos líneas antes que bajar el botón).
