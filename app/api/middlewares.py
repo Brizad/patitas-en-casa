@@ -27,7 +27,9 @@ POLITICA_PERMISOS = "geolocation=(self), camera=(self), microphone=(), payment=(
 POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
                 # #125: blob: son archivos locales del navegador (la tira del video en el panel
                 # y la duración del video elegido en la PWA); nunca de otro servidor.
-                "img-src 'self' blob:; media-src blob:; "
+                # #430: el mapa (Leaflet) pide teselas de OpenStreetMap; solo imágenes, solo ese
+                # servidor. Ningún script ni estilo viene de fuera.
+                "img-src 'self' blob: https://tile.openstreetmap.org; media-src blob:; "
                 "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
                 "base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 

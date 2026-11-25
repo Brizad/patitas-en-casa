@@ -144,3 +144,8 @@ button.enlace:hover:not(:disabled) { background: none; }
 .ficha-adopcion > .en-linea { grid-column: 1 / -1; }
 .deslizador input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--ds-marca); }
 .deslizador output { font-weight: 700; }
+/* #430: mini mapa del lugar del reporte (veterinario y rescatista). */
+.lugar { display: grid; gap: var(--ds-e2); margin-bottom: var(--ds-e3); }
+.mini-mapa { height: 200px; border: 2px solid var(--ds-linea-fuerte); border-radius: var(--ds-radio-lg); overflow: hidden; z-index: 0; }
+.mini-mapa .leaflet-control-attribution a { color: var(--ds-marca); }
+.lugar-enlaces { margin: 0; }
