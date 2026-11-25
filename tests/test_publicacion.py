@@ -4,7 +4,7 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
-from app.adopciones.modelos import Energia, Publicacion, Tamano
+from app.adopciones.modelos import Energia, EstadoPublicacion, Publicacion, Tamano
 from app.adopciones.repositorio import RepositorioAdopcionesEnMemoria
 from app.adopciones.repositorio_postgres import RepositorioAdopcionesPostgres
 from app.api.main import crear_app
@@ -167,3 +167,53 @@ def test_contrato_ficha_y_edicion(repos):
             editada.descripcion, editada.nombre) == (
         None, 90, [], 35.25, "Cambió la descripción", "Toby")
     assert not adopciones.actualizar_publicacion(replace(base, animal_id=9999))
+
+
+# ---------- #450: retirar de la adopción sin borrar ----------
+
+def test_retirar_la_publicacion_la_saca_del_catalogo_sin_borrar(c):
+    h = sesion(c)
+    animal_id = ingresar(c, h)
+    c.post(f"/refugio/animales/{animal_id}/publicacion", json=DATOS, headers=h)
+    ruta = f"/refugio/animales/{animal_id}/publicacion/retiro"
+    assert c.post(ruta).status_code == 401
+    assert c.post(ruta, headers=sesion(c, "vet@patitas.co")).status_code == 403
+    r = c.post(ruta, headers=h)
+    assert r.status_code == 200 and r.json()["estado"] == "retirada"
+    assert c.get("/adopciones/animales").json() == []
+    assert c.get(f"/refugio/animales/{animal_id}", headers=h).status_code == 200  # sigue ahí
+    assert c.post(ruta, headers=h).status_code == 409  # una sola vez
+    assert c.post("/refugio/animales/999/publicacion/retiro", headers=h).status_code == 404
+    otro = ingresar(c, h, "Michi")
+    assert c.post(f"/refugio/animales/{otro}/publicacion/retiro", headers=h).status_code == 404
+
+
+def test_contrato_retirar_publicacion(repos):
+    cupos, adopciones = repos
+    nube = Animal("Nube", Especie.PERRO, "sana")
+    cupos.ocupar_cupo(nube)
+    adopciones.publicar(Publicacion(nube.id, "Perrita energética que aúlla feliz",
+                                    Tamano.GRANDE, Energia.ALTA, 24, True, True, True,
+                                    nombre="Nube", especie="perro"))
+    assert adopciones.retirar_publicacion(nube.id) is True
+    assert adopciones.disponibles() == []
+    assert adopciones.publicacion(nube.id).estado == EstadoPublicacion.RETIRADA
+    assert adopciones.retirar_publicacion(nube.id) is False
+    assert adopciones.retirar_publicacion(9999) is False
+
+
+def test_no_se_retira_con_solicitudes_abiertas():
+    from datetime import UTC, datetime
+
+    from app.adopciones.modelos import EstadoSolicitud, Solicitud
+    cupos = RepositorioCuposEnMemoria(Refugio("Demo", 40))
+    adopciones = RepositorioAdopcionesEnMemoria()
+    pecas = Animal("Pecas", Especie.GATO, "sana")
+    cupos.ocupar_cupo(pecas)
+    adopciones.publicar(Publicacion(pecas.id, "Gatita traviesa que persigue todo", Tamano.PEQUENO,
+                                    Energia.ALTA, 3, True, True, False, nombre="Pecas",
+                                    especie="gato"))
+    adopciones.crear_solicitud(Solicitud(None, pecas.id, "ana@correo.co", "",
+                                         EstadoSolicitud.PENDIENTE, datetime.now(UTC)))
+    assert adopciones.retirar_publicacion(pecas.id) is False  # primero se decide la solicitud
+    assert len(adopciones.disponibles()) == 1

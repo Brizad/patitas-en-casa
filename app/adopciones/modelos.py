@@ -50,6 +50,7 @@ class Energia(StrEnum):
 class EstadoPublicacion(StrEnum):
     DISPONIBLE = "disponible"
     ADOPTADO = "adoptado"
+    RETIRADA = "retirada"  # #450: el coordinador la saca del catálogo sin borrar nada
 
 
 @dataclass

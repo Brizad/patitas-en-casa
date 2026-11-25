@@ -31,6 +31,7 @@ from app.adopciones.fotos import (
 )
 from app.adopciones.modelos import (
     Energia,
+    EstadoPublicacion,
     EstadoSolicitud,
     PerfilAdoptante,
     Publicacion,
@@ -254,6 +255,20 @@ def _editar_publicacion(ctx: Contexto, animal_id: int, datos: PublicacionEntrada
     return _publicacion(nueva)
 
 
+def _retirar_publicacion(ctx: Contexto, animal_id: int, coordinador: Usuario) -> dict:
+    """#450: saca del catálogo a un animal de su refugio. No borra nada: el animal, su ficha,
+    su foto y la publicación quedan; solo deja de mostrarse y de recibir solicitudes."""
+    _exigir(ctx.fichas_de(coordinador).animal(animal_id), "No hay ese animal en tu refugio.")
+    actual = _exigir(ctx.repositorio_adopciones.publicacion(animal_id),
+                     "Ese animal no está publicado.")
+    if not ctx.repositorio_adopciones.retirar_publicacion(animal_id):
+        raise HTTPException(status_code=409, detail=(
+            f"{actual.nombre} no se puede retirar: ya no está disponible o tiene solicitudes "
+            "abiertas (recházalas primero)."))
+    return {"animal_id": animal_id, "nombre": actual.nombre,
+            "estado": EstadoPublicacion.RETIRADA.value}
+
+
 async def _subir_foto(ctx: Contexto, animal_id: int, foto: UploadFile,
                       coordinador: Usuario) -> dict:
     _exigir(ctx.fichas_de(coordinador).animal(animal_id), "No hay ese animal en tu refugio.")
@@ -465,6 +480,11 @@ def _rutas_del_catalogo(rutas: APIRouter, ctx: Contexto) -> None:
                            coordinador: Usuario = coordinacion):
         """#422: el coordinador corrige la publicación (y la ficha) de un animal disponible."""
         return _editar_publicacion(ctx, animal_id, datos, coordinador)
+
+    @rutas.post("/refugio/animales/{animal_id}/publicacion/retiro")
+    def retirar_publicacion(animal_id: int, coordinador: Usuario = coordinacion):
+        """#450: el coordinador retira de la adopción (sin borrar) un animal publicado."""
+        return _retirar_publicacion(ctx, animal_id, coordinador)
 
     @rutas.get("/adopciones/animales")
     def catalogo_de_adopcion():

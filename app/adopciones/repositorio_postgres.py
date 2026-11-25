@@ -135,6 +135,18 @@ class RepositorioAdopcionesPostgres:
                 .order_by(publicaciones.c.publicado_en)).mappings()
             return [_publicacion(f) for f in filas]
 
+    def retirar_publicacion(self, animal_id: int) -> bool:
+        # Una sola sentencia: sin solicitudes abiertas en el mismo instante en que se retira.
+        abiertas = select(solicitudes.c.id).where(
+            solicitudes.c.animal_id == animal_id,
+            solicitudes.c.estado.in_([e.value for e in ABIERTAS]))
+        with self._motor.begin() as conexion:
+            return conexion.execute(update(publicaciones).where(
+                publicaciones.c.animal_id == animal_id,
+                publicaciones.c.estado == EstadoPublicacion.DISPONIBLE.value,
+                ~abiertas.exists(),
+            ).values(estado=EstadoPublicacion.RETIRADA.value)).rowcount == 1
+
     def crear_solicitud(self, solicitud: Solicitud) -> bool:
         try:
             with self._motor.begin() as conexion:
