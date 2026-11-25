@@ -62,6 +62,8 @@ describe("bienvenida en computador (tarea 4)", () => {
     expect(vista).toContain("Te están esperando");
     expect(vista).toContain("Conoce a algunos de los ${catalogo.length}");
     expect(vista).toContain("onClick={() => alVer(a)}");
+    expect(vista).toContain("paraLaBienvenida(destacados)");  // solo los que «Elige» puede abrir
+    expect(pantallas["./Adoptante.tsx"]).toContain("destacados={fuente}");
     expect(vista).toContain("Así funciona tu adopción");
     for (const paso of ["Responde", "Elige", "Solicita", "¡A casa!"]) expect(vista).toContain(`["${paso}"`);
     expect(vista).toContain("onClick={alMiHogar}>Ir a Mi hogar");

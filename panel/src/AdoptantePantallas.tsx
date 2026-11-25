@@ -43,10 +43,12 @@ function NotaOcultos({ ocultos, alRevisar }: { ocultos: number; alRevisar: () =>
 // ---------- 1 · Bienvenida ----------
 
 export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alVerCompaneros, alVerTodos,
-  alVerSolicitudes, alMiHogar, alVer }: {
+  alVerSolicitudes, alMiHogar, alVer, destacados }: {
   catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
   alEmpezar: () => void; alVerCompaneros: () => void; alVerTodos: () => void; alVerSolicitudes: () => void;
   alMiHogar: () => void; alVer: (a: AnimalPublicado) => void;
+  /** Los que se pueden abrir en «Elige» (con perfil, los compatibles; RN-05). */
+  destacados: AnimalPublicado[];
 }) {
   // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage.
   const orden = [...catalogo].sort((x, y) => Number(!!y.foto) - Number(!!x.foto));
@@ -90,7 +92,7 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
           </span>)}
       </div>
       <Animalitos />
-      <MasBienvenida catalogo={catalogo} cargando={cargando} mias={mias} conPerfil={conPerfil}
+      <MasBienvenida catalogo={catalogo} destacados={destacados} cargando={cargando} mias={mias} conPerfil={conPerfil}
         alVer={alVer} alVerTodos={alVerTodos} alMiHogar={alMiHogar} alVerSolicitudes={alVerSolicitudes} />
     </div>
   );
@@ -105,11 +107,12 @@ const PASOS_ADOPCION: [string, string][] = [
 
 /** Tarea 4: solo en computador (≥1024 px), debajo del hero: «Te están esperando» con 6
  *  animales reales y el bloque «Así funciona tu adopción» + «Mi hogar» + «Mis solicitudes». */
-function MasBienvenida({ catalogo, cargando, mias, conPerfil, alVer, alVerTodos, alMiHogar, alVerSolicitudes }: {
-  catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
+function MasBienvenida({ catalogo, destacados, cargando, mias, conPerfil, alVer, alVerTodos, alMiHogar, alVerSolicitudes }: {
+  catalogo: AnimalPublicado[]; destacados: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
   alVer: (a: AnimalPublicado) => void; alVerTodos: () => void; alMiHogar: () => void; alVerSolicitudes: () => void;
 }) {
-  const seis = paraLaBienvenida(catalogo);
+  // Tocar una tarjeta abre ESE animal en «Elige»: salen solo los que «Elige» puede mostrar.
+  const seis = paraLaBienvenida(destacados);
   return (
     <div className="ini-mas">
       <section className="ini-esperan" aria-labelledby="titulo-esperan">

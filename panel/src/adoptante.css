@@ -440,13 +440,15 @@
   .ds .adop .ini-titulo { font-size: 56px; }
   .collage { max-width: 430px; }
   .ini-acciones { margin-top: 22px; }
-  .ini-mas { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 56px; width: 100%; max-width: 1120px;
+  .ini-texto { order: 0; } .collage { order: 1; } .ini > .carril { order: 2; }
+  .ini-mas { order: 3; grid-column: 1 / -1; display: flex; flex-direction: column; gap: 56px; width: 100%; max-width: 1120px;
     margin: 28px auto 24px; }
   .ini-esperan { display: flex; flex-direction: column; align-items: center; text-align: center; }
   .ini-etiqueta { margin: 0; font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--vino); }
   .ds .adop .ini-h2 { margin: 6px 0 0; font-size: 40px; line-height: 1.05; }
-  .ini-tarjetas { list-style: none; width: 100%; margin: 26px 0 0; padding: 0; display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+  .ini-tarjetas { list-style: none; width: 100%; margin: 26px 0 0; padding: 0; display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 16px; }
+  .ini-tarjetas > li { flex: 0 1 168px; }
   .ds .adop .ini-tarjeta { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px;
     padding: 16px 10px; background: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 22px; box-shadow: 4px 4px 0 var(--tinta);
     color: var(--tinta); font: inherit; cursor: pointer; transition: transform .15s ease; }
@@ -470,7 +472,8 @@
   .ini-hogar, .ini-mias { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 6px; padding: 24px 28px; }
   .ini-hogar { background: #FFD23F; border-bottom: 3px solid var(--tinta); }
   .ini-mias { background: var(--tinta); color: #FFFFFF; }
-  .ini-hogar h3, .ini-mias h3 { margin: 0; font-size: 24px; font-weight: 700; }
-  .ini-hogar p, .ini-mias p { margin: 0; font-size: 14px; font-weight: 700; }
+  .ds .adop .ini-hogar h3, .ds .adop .ini-mias h3 { margin: 0; font-size: 26px; font-weight: 700; color: inherit; }
+  .ds .adop .ini-hogar p, .ds .adop .ini-mias p { margin: 0; font-size: 15px; font-weight: 700; color: inherit; }
+  .ds .adop .ini-asi .ini-h2 { margin: 0; color: #FFFFFF; }
   .ds .adop .ini-enlace-claro { color: #FFFFFF; }
 }
