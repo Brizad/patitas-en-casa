@@ -106,14 +106,21 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
               {detalle.ubicacion.comuna ? ` · comuna ${detalle.ubicacion.comuna}` : ""}</p>
             <Lugar u={detalle.ubicacion} />
             <h3>Sugerencia del sistema</h3>
-            <p className="ds-msg ds-msg--info">{explicarSugerencia(detalle.estado, detalle.prioridad,
-              detalle.confianza, detalle.version_modelo)}</p>
+            {/* #432: anillo con la confianza del modelo; la decisión sigue siendo del veterinario. */}
+            <div className="sugerencia">
+              {detalle.confianza !== null && (
+                <span className="anillo-confianza" aria-hidden="true"
+                  style={{ "--grados": `${Math.round(detalle.confianza * 360)}deg` } as React.CSSProperties}>
+                  <span>{Math.round(detalle.confianza * 100)}%</span></span>)}
+              <p>{explicarSugerencia(detalle.estado, detalle.prioridad, detalle.confianza,
+                detalle.version_modelo)}</p>
+            </div>
             {detalle.posibles_duplicados.length > 0 && (
               <p className="ds-msg ds-msg--ok">Posible duplicado de {detalle.posibles_duplicados.join(", ")}:
                 {" "}reportado a menos de 200 m y 2 horas.</p>)}
             <h3>En qué se basa</h3>
             {detalle.evidencias.length === 0 ? <p className="ds-vacio">Sin evidencias.</p> : (
-              <ul className="evidencias">{detalle.evidencias.map((ev) => (
+              <ul className="evidencias evidencias--chips">{detalle.evidencias.map((ev) => (
                 <li key={ev}>{evidenciaLegible(ev)}</li>))}</ul>)}
             {detalle.version_modelo && (
               <p className="ds-suave">Sugerencia hecha con {nombreModelo(detalle.version_modelo)}.</p>)}

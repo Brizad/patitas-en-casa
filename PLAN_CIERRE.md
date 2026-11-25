@@ -304,9 +304,9 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 | 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | **publicada** (25-nov, bundle `index-CJMqVlvU.js`) | #423 |
 | 2 | Publicar los 22 animales del prototipo por la API | **hecha en producción**: 19 publicados, 3 saltados | #425 |
 | 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
-| 4 | Ciudadano (PWA) | **unida a main** (25-nov) | #429 |
-| 5 | Mapa (Leaflet + OSM) | en PR | #431 |
-| 6 | Pantallas del personal | pendiente | — |
+| 4 | Ciudadano (PWA) | **publicada** (25-nov; recorrida en producción sin errores) | #429 |
+| 5 | Mapa (Leaflet + OSM) | **publicada** (25-nov; `mapa.js` y la CSP con OSM en producción) | #431 |
+| 6 | Pantallas del personal | en PR | #433 |
 | 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
 
 Decisiones y pendientes para el autor (se van sumando):
@@ -333,18 +333,17 @@ Decisiones y pendientes para el autor (se van sumando):
 - El código de seguimiento usa la fuente monoespaciada del sistema: JetBrains Mono, la del prototipo, no está entre las fuentes locales.
 - La consulta **no** muestra «Prioridad alta» como el prototipo: RN-14 prohíbe mostrarle la prioridad al ciudadano.
 
-**Corte de la sesión (usage limit, noche del 25-nov).** Estado para retomar:
-- Parte 4: PR #429. Si el CI está en verde, unirlo. Las bases e2e `pwa-reportar-*` se borraron a propósito: hay que subir las que adjunta el CI (como en #328).
-- Parte 5: rama `feat/rediseno-parte-5` (sale de la parte 4), ya subida.
-  - PWA: mapa en el paso «¿Dónde está?», con pin que se arrastra o se pone tocando; usa `ponerUbicacion`.
-  - Panel: mini mapa más «Abrir en Google Maps» y «Cómo llegar» para el veterinario y el rescatista.
-  - CSP solo con `img-src https://tile.openstreetmap.org`.
-  - Leaflet: copia local en `app/pwa/vendor/leaflet` (BSD-2) y `npm` en el panel. Vite ya no incrusta imágenes como `data:`.
-  - Pruebas locales: pytest de la PWA y vitest en verde; axe en 0 y sin errores de consola en 390 y 1366.
-  - Falta: rebase sobre `main` cuando se una #429, abrir el PR (issue nuevo), CI y publicar.
-- Partes 6 (personal) y 7 (RN-02 con video, paginación de la restauración y verificar el bundle desplegado): **sin empezar**.
+**Notas de la parte 6 (personal).**
+- Cuando el veterinario cambia la prioridad sugerida, el motivo ya lo pide y lo guarda el backend (RN-16, «Ajustar prioridad…», en `decisiones_triaje`). Se conserva tal cual: no se inventó ningún campo. El prototipo lo muestra como 4 botones de prioridad más un texto; aquí se mantiene el flujo «Confirmar / Ajustar prioridad…» que ya probaba el e2e.
+- Las capturas locales de esta parte se tomaron con el servidor de demostración en memoria (`scripts/accesibilidad/servidor_demo.py`). El PostgreSQL temporal se detuvo porque el equipo se quedó sin memoria, y no se volvió a arrancar.
+- El saludo del encabezado es fijo («Buen turno», como el prototipo): con la hora, la captura e2e cambiaba.
 
-**Parte 4 (unida, #429).**
+**Parte 4 (publicada, #429).**
 - Qué cambió: la app del ciudadano es la del prototipo. Tiene portada, reportar en 4 pasos con barra (celular) o lista (computador), botones rápidos, comunas como botones, resumen, «¡Gracias por avisar!» con sello y consulta con línea de tiempo. Hay sonidos suaves con interruptor.
 - Qué ver: abre `/app/`, toca «Reportar emergencia» y haz un reporte completo. Prueba el botón de sonido de la barra.
 - Pendiente: nada. En Linux el paso que entra deslizándose ensanchaba la página 4 px; se corrigió con un recorte.
+
+**Parte 5 (publicada, #431).**
+- Qué cambió: en «¿Dónde está?» hay un mapa con pin que se arrastra o se pone tocando, y guarda la misma latitud y longitud que el GPS. El veterinario y el rescatista ven un mini mapa con «Abrir en Google Maps» y «Cómo llegar». La CSP solo suma las teselas de OpenStreetMap, y solo como imágenes.
+- Qué ver: en `/app/#reportar`, paso 2, toca el mapa: el botón verde dirá «Marcada en el mapa». En el panel, abre un reporte con GPS.
+- Pendiente: nada. Sin conexión, el mapa se oculta y el paso funciona con GPS o dirección.
