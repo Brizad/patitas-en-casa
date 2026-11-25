@@ -146,7 +146,8 @@ def test_celular_en_una_columna_y_objetivos_de_44_px():
                    " .tarjetas, .roles { grid-template-columns: minmax(0, 1fr); }")
     assert una_columna in celular
     assert ".nav-enlaces { display: none; }" in celular
-    assert ".hero-titulo { font-size: 44px" in celular and ".burbuja { width: 50px" in celular
+    assert ".hero-titulo { font-size: clamp(30px, 11vw, 44px)" in celular
+    assert ".burbuja { width: clamp(38px, 12.5vw, 50px)" in celular
     assert ".pie-perro { display: none; }" in css  # la tarjeta del perro, solo en computador
     for selector in (".nav-enlaces a", ".btn", ".pie-enlaces a"):
         bloque = re.search(re.escape(selector) + r" \{[^}]*\}", css).group(0)
