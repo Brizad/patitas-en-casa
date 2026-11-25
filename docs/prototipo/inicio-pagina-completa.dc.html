@@ -17,133 +17,242 @@ a{color:inherit}
 .lp *{box-sizing:border-box}
 .h{font-family:'Fredoka',system-ui,sans-serif}
 .up{text-transform:uppercase;letter-spacing:-.5px}
-.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 40px}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 40px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:800;border:2.5px solid #2B2340;border-radius:999px;transition:transform .12s ease, box-shadow .12s ease;cursor:pointer}
 .btn:hover{transform:translate(-2px,-2px)}
-.btn:focus-visible{outline:3px solid #7A5AF8;outline-offset:3px}
+.btn:focus-visible{outline:3px solid #2B2340;outline-offset:3px}
 .card{transition:transform .2s ease}
-.card:hover{transform:translateY(-6px) rotate(-1deg)}
-.g2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
-.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.card:hover{transform:translateY(-6px)}
+.hero-h{font-size:92px;line-height:1.02}
+.badge{width:96px;height:96px}
+.pill{height:330px}
+.blocks{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.h1{font-size:76px;line-height:.95}
-.h2{font-size:52px;line-height:1}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.help{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+.helpL{display:grid;grid-template-rows:auto auto}
+.helpB{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.foot{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:40px}
+.h2{font-size:48px;line-height:1.02}
 .navlinks{display:flex}
-.hero-art{height:520px}
-.stats{display:flex;justify-content:center;gap:28px}
-.roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 @container lp (max-width: 760px){
-  .wrap{padding:0 20px}
-  .g2,.g3,.g4{grid-template-columns:minmax(0,1fr);gap:24px}
+  .wrap{padding:0 18px}
+  .hero-h{font-size:44px}
+  .badge{width:50px;height:50px}
+  .pill{height:200px}
+  .blocks,.g2,.help,.foot,.helpB{grid-template-columns:minmax(0,1fr);gap:0}
   .tiles{grid-template-columns:minmax(0,1fr)}
-  .h1{font-size:46px}
-  .h2{font-size:36px}
+  .g4{grid-template-columns:minmax(0,1fr);gap:16px}
+  .h2{font-size:32px}
   .navlinks{display:none}
-  .hero-art{height:400px}
-  .stats{flex-direction:column;align-items:center;gap:18px}
-  .roles{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .solo-pc{display:none !important}
+  .foot{gap:24px}
 }
 .mov .bob{animation:bob 2.8s ease-in-out infinite}
 .mov .bob2{animation:bob 3.4s ease-in-out .5s infinite}
-.mov .spin{animation:spin 9s linear infinite}
-.mov .spin2{animation:spin 14s linear reverse infinite}
+.mov .spin{animation:spin 12s linear infinite}
 .mov .twinkle{animation:twinkle 2.2s ease-in-out infinite}
 .mov .wig{animation:wig 3s ease-in-out infinite}
-.mov .scrolldot{animation:scrolldot 1.6s ease-in-out infinite}
 .mov .beat{animation:beat 1.1s ease-in-out infinite}
+.mov .marquee{animation:marquee 30s linear infinite}
 .mov .walker{animation:walk 16s linear infinite}
 .mov .walker.cat{animation:walk 21s linear -9s infinite}
 .mov .leg-a{animation:leg .45s ease-in-out infinite alternate;transform-origin:50% 0}
 .mov .leg-b{animation:leg .45s ease-in-out -.45s infinite alternate;transform-origin:50% 0}
 .mov .tail{animation:wag .35s ease-in-out infinite alternate;transform-origin:0% 100%}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.mov .scrolldot{animation:scrolldot 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.3) rotate(20deg)}}
-@keyframes wig{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-@keyframes scrolldot{0%{transform:translateY(0);opacity:1}100%{transform:translateY(12px);opacity:0}}
-@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.25) rotate(18deg)}}
+@keyframes wig{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @keyframes walk{from{transform:translateX(-140px)}to{transform:translateX(100cqw)}}
 @keyframes leg{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
 @keyframes wag{from{transform:rotate(-18deg)}to{transform:rotate(20deg)}}
+@keyframes scrolldot{0%{transform:translateY(0);opacity:1}100%{transform:translateY(12px);opacity:0}}
 @media (prefers-reduced-motion: reduce){.mov *{animation:none !important}}
 </style>
 </helmet>
 <div class="lp {{movClass}}" style="width: 100%; overflow: hidden; background: #FFF8EE; color: #2B2340; font-family: 'Nunito', system-ui, sans-serif;">
 
-<!-- NAV -->
-<div class="wrap" style="display: flex; align-items: center; justify-content: space-between; height: 84px;">
+<!-- NAV amarilla -->
+<div style="background: #FFD23F; border-bottom: 3px solid #2B2340;">
+<div class="wrap" style="display: flex; align-items: center; justify-content: space-between; height: 76px;">
 <div style="display: flex; align-items: center; gap: 10px;">
 <svg class="wig" width="34" height="34" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
 <span class="h" style="font-size: 24px; font-weight: 700;">Patitas en Casa</span>
 </div>
-<div class="navlinks" style="gap: 28px; font-weight: 800; font-size: 16px;">
+<div class="navlinks" style="gap: 28px; font-weight: 800; font-size: 15px;">
 <a href="#como" style="text-decoration: none;">Cómo funciona</a>
 <a href="Main.dc.html" style="text-decoration: none;">Adoptar</a>
 <a href="CConsultar.dc.html" style="text-decoration: none;">Consultar reporte</a>
-<a href="#roles" style="text-decoration: none;">Entrar como personal</a>
+<a href="#equipo" style="text-decoration: none;">Personal</a>
 </div>
-<a class="btn" href="CReportar.dc.html" style="height: 48px; padding: 0 20px; background: #E8508A; color: #FFFFFF; box-shadow: 3px 3px 0 #2B2340; font-size: 15px;">Reportar</a>
+<a class="btn" href="CReportar.dc.html" style="height: 46px; padding: 0 20px; background: #2B2340; color: #FFFFFF; font-size: 15px; box-shadow: 3px 3px 0 #E8508A;">Reportar</a>
+</div>
 </div>
 
-<!-- HERO -->
-<div class="wrap" style="position: relative; padding-top: 20px; padding-bottom: 30px;">
-<div class="g2">
-<div style="display: flex; flex-direction: column; gap: 20px; position: relative;">
-<span style="align-self: flex-start; background: #FFE9A6; border: 2px solid #2B2340; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 14px; box-shadow: 3px 3px 0 #2B2340;">Emergencias animales en Cúcuta</span>
-<h1 class="h up h1" style="margin: 0; font-weight: 700;">Un animal herido <span style="position: relative; white-space: nowrap; color: #FFFFFF;"><span aria-hidden="true" style="position: absolute; left: -8px; right: -8px; top: 12%; bottom: 4%; background: #E8508A; border-radius: 14px; transform: rotate(-2deg); z-index: 0;"></span><span style="position: relative;">no debería</span></span> esperar</h1>
-<p style="margin: 0; font-size: 19px; font-weight: 700; color: #5B5070; line-height: 1.45; max-width: 520px;">Repórtalo en un minuto y sin crear cuenta. Un veterinario lo revisa por gravedad y el rescate llega a quien está cerca.</p>
-<div style="display: flex; gap: 14px; flex-wrap: wrap;">
-<a class="btn" href="CReportar.dc.html" style="height: 62px; padding: 0 28px; background: #2B2340; color: #FFFFFF; box-shadow: 5px 5px 0 #E8508A; font-size: 18px;"><span class="h" style="font-weight: 600; font-size: 20px;">Reportar emergencia</span></a>
-<a class="btn" href="Main.dc.html" style="height: 62px; padding: 0 26px; background: #FFFFFF; color: #2B2340; box-shadow: 5px 5px 0 #2B2340;"><span class="h" style="font-weight: 600; font-size: 20px;">Quiero adoptar</span></a>
+<!-- HERO lila estilo Petgon -->
+<div style="background: #7A5AF8; color: #FFFFFF; position: relative; overflow: hidden; border-bottom: 3px solid #2B2340;">
+<svg class="spin" width="320" height="320" viewBox="0 0 200 200" fill="none" stroke="#A48BFF" stroke-width="5" aria-hidden="true" style="position: absolute; left: -110px; top: 40px;"><path d="M100 10c20 0 22 30 40 30s40-10 45 10-25 30-20 50 30 35 15 50-35-5-50 10-15 40-30 40-15-25-30-40-45 5-50-10 20-30 15-50-35-35-20-50 30 0 45-10 20-30 40-30z"></path></svg>
+<svg class="spin" width="300" height="300" viewBox="0 0 200 200" fill="none" stroke="#A48BFF" stroke-width="5" aria-hidden="true" style="position: absolute; right: -100px; top: 120px; animation-direction: reverse;"><path d="M100 10c20 0 22 30 40 30s40-10 45 10-25 30-20 50 30 35 15 50-35-5-50 10-15 40-30 40-15-25-30-40-45 5-50-10 20-30 15-50-35-35-20-50 30 0 45-10 20-30 40-30z"></path></svg>
+<div class="wrap" style="position: relative; padding-top: 56px; padding-bottom: 50px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px;">
+<h1 class="h hero-h" style="margin: 0; font-weight: 700; letter-spacing: -1.5px;">
+<span style="display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;">Ad<span class="badge wig" style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 999px; background: #D7F0DC; color: #2B2340; border: 3px solid #2B2340; margin: 0 4px; vertical-align: middle;"><span style="font-family: Nunito, sans-serif; font-size: 12px; font-weight: 900; line-height: 1;">Adopción</span><span class="h" style="font-size: 30px; font-weight: 700; line-height: 1;">{{cifras.adopcion}}</span></span>pta am<span class="badge bob" style="display: inline-block; border-radius: 999px; overflow: hidden; border: 3px solid #2B2340; background: #FBD9E3; margin: 0 4px; vertical-align: middle;"><img src="{{f.lupe}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span>r,</span><br>
+<span style="display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;">rep<span class="badge wig" style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 999px; background: #FBD9E3; color: #2B2340; border: 3px solid #2B2340; margin: 0 4px; vertical-align: middle; animation-delay: -1.5s;"><span style="font-family: Nunito, sans-serif; font-size: 12px; font-weight: 900; line-height: 1;">Reportes</span><span class="h" style="font-size: 30px; font-weight: 700; line-height: 1;">{{cifras.reportes}}</span></span>rta <span style="color: #FFD23F;">a tiempo</span></span>
+</h1>
+<svg width="70" height="56" viewBox="0 0 70 56" fill="none" stroke="#FFD23F" stroke-width="5" stroke-linecap="round" aria-hidden="true" class="solo-pc" style="position: absolute; right: 16%; top: 30px;"><path d="M10 40l14-16M30 46l6-22M48 44l14-12"></path></svg>
+<p style="margin: 0; max-width: 560px; font-size: 18px; font-weight: 700; color: #EDE8FF; line-height: 1.5;">Reporta un animal herido en un minuto y sin crear cuenta. Un veterinario lo revisa y el refugio le busca un hogar.</p>
+<div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+<a class="btn" href="CReportar.dc.html" style="height: 58px; padding: 0 26px; background: #FFD23F; color: #2B2340; font-size: 17px; box-shadow: 4px 4px 0 #2B2340;">Reportar emergencia</a>
+<a class="btn" href="Main.dc.html" style="height: 58px; padding: 0 26px; background: #FFFFFF; color: #2B2340; font-size: 17px; box-shadow: 4px 4px 0 #2B2340;">Quiero adoptar</a>
 </div>
-<div style="display: flex; flex-wrap: wrap; gap: 8px;">
-<sc-for list="{{confianza}}" as="c" hint-placeholder-count="3">
-<span style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 2px solid #2B2340; border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 800;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3FA66B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>{{c}}</span>
+<!-- cápsula con la ilustración -->
+<div style="width: 100%; max-width: 900px; margin-top: 18px; padding: 12px; border: 4px solid #FFD23F; border-radius: 999px;">
+<div class="pill" style="border-radius: 999px; overflow: hidden; background: #FFD23F; border: 3px solid #2B2340; position: relative;">
+<img src="{{f.ilustracion}}" alt="Ilustración de gatitos mirando hacia arriba" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%;">
+</div>
+</div>
+</div>
+</div>
+
+<!-- CINTA -->
+<div style="background: #2B2340; color: #FFD23F; overflow: hidden; height: 56px; display: flex; align-items: center;">
+<div class="marquee" style="display: flex; gap: 44px; white-space: nowrap; font-weight: 800; font-size: 15px; padding-left: 20px;">
+<sc-for list="{{cinta}}" as="t" hint-placeholder-count="12">
+<span style="display: flex; align-items: center; gap: 10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>{{t}}</span>
 </sc-for>
 </div>
 </div>
 
-<div class="hero-art" style="position: relative;">
-<div class="spin2" aria-hidden="true" style="position: absolute; left: 8%; top: 4%; width: 84%; aspect-ratio: 1; border-radius: 999px; border: 3px dashed #9B83FA;"></div>
-<div aria-hidden="true" style="position: absolute; left: 14%; top: 10%; width: 72%; aspect-ratio: 1; border-radius: 999px; background: #7A5AF8; border: 3px solid #2B2340;"></div>
-<div style="position: absolute; left: 20%; top: 16%; width: 60%; aspect-ratio: 1; border-radius: 999px; overflow: hidden; border: 4px solid #2B2340;"><img src="{{f.pinina}}" alt="Pinina sonriendo" style="width: 100%; height: 100%; object-fit: cover;"></div>
-<div class="bob" style="position: absolute; left: 0; top: 52%; width: 30%; aspect-ratio: 1; border-radius: 999px; overflow: hidden; border: 4px solid #2B2340; box-shadow: 5px 5px 0 #2B2340; background: #FBD9E3;"><img src="{{f.mochi}}" alt="Mochi" style="width: 100%; height: 100%; object-fit: cover;"></div>
-<div class="bob2" style="position: absolute; right: 0; top: 4%; width: 24%; aspect-ratio: 1; border-radius: 999px; overflow: hidden; border: 4px solid #2B2340; box-shadow: 5px 5px 0 #2B2340;"><img src="{{f.lupe}}" alt="Lupe" style="width: 100%; height: 100%; object-fit: cover;"></div>
-<span class="beat" aria-hidden="true" style="position: absolute; left: 24%; top: 50%; width: 52px; height: 52px; border-radius: 999px; background: #FFFFFF; border: 2.5px solid #2B2340; display: flex; align-items: center; justify-content: center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"></path></svg></span>
-<svg class="twinkle" width="52" height="52" viewBox="0 0 24 24" fill="#FFD23F" stroke="#2B2340" stroke-width="1.2" aria-hidden="true" style="position: absolute; right: 8%; bottom: 14%;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<svg class="twinkle" width="30" height="30" viewBox="0 0 24 24" fill="#E8508A" stroke="#2B2340" stroke-width="1.2" aria-hidden="true" style="position: absolute; left: 6%; top: 12%; animation-delay: -1s;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<svg width="90" height="50" viewBox="0 0 90 50" fill="none" stroke="#2B2340" stroke-width="3" stroke-linecap="round" aria-hidden="true" style="position: absolute; right: 4%; top: 36%;"><path d="M4 40c10-30 20 10 30-14s16 18 26-6 14 10 26-8"></path></svg>
-<div class="bob2" style="position: absolute; right: 2%; bottom: 0; background: #FFFFFF; border: 2.5px solid #2B2340; border-radius: 22px; box-shadow: 5px 5px 0 #2B2340; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
-<span style="width: 42px; height: 42px; border-radius: 999px; background: #D7F0DC; border: 2px solid #2B2340; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z"></path></svg></span>
-<span style="display: flex; flex-direction: column;"><span class="h" style="font-size: 18px; font-weight: 700;">Reportar toma 1 minuto</span><span style="font-size: 13px; font-weight: 700; color: #5B5070;">Sin cuenta y sin dar tu nombre</span></span>
+<!-- BLOQUES -->
+<div class="wrap" style="padding-top: 70px;">
+<div style="border: 3px solid #2B2340; border-radius: 34px; overflow: hidden; box-shadow: 7px 7px 0 #2B2340;">
+<div class="blocks">
+<div style="background: #2B2340; color: #FFFFFF; padding: 44px 44px 40px; display: flex; flex-direction: column; gap: 16px; position: relative;">
+<h2 class="h up" style="margin: 0; font-size: 40px; line-height: 1.02; font-weight: 700;">No solo las personas necesitan un hogar</h2>
+<p style="margin: 0; font-size: 16px; font-weight: 700; color: #D9D2EA; line-height: 1.5; max-width: 440px;">Cada animal del refugio tiene su ficha clínica y un perfil de personalidad para encontrarle la familia correcta.</p>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<sc-for list="{{puntos}}" as="p" hint-placeholder-count="3">
+<span style="display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800;"><span style="width: 24px; height: 24px; border-radius: 999px; background: #FFD23F; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>{{p}}</span>
+</sc-for>
 </div>
+<div style="display: flex; align-items: center; gap: 16px; margin-top: 4px;">
+<a class="btn" href="Main.dc.html" style="height: 50px; padding: 0 22px; background: #E8508A; color: #FFFFFF; border-color: #FFFFFF; font-size: 16px;">Adoptar ahora</a>
+<span class="bob" style="width: 64px; height: 64px; border-radius: 999px; overflow: hidden; border: 3px solid #FFD23F;"><img src="{{f.cascabel}}" alt="Cascabel" style="width: 100%; height: 100%; object-fit: cover;"></span>
+<svg class="twinkle" width="28" height="28" viewBox="0 0 24 24" fill="#FFD23F" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
+</div>
+</div>
+<div style="background: #E8508A; position: relative; overflow: hidden; min-height: 340px; border-left: 3px solid #2B2340;">
+<div style="position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 999px; background: #FBD9E3; border: 3px solid #2B2340;"></div>
+<div style="position: absolute; left: 50%; top: 50%; width: 256px; height: 256px; margin: -128px 0 0 -128px; border-radius: 999px; overflow: hidden; border: 3px solid #2B2340;"><img src="{{f.pinina}}" alt="Pinina" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<svg width="70" height="30" viewBox="0 0 70 30" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" aria-hidden="true" style="position: absolute; right: 22px; top: 22px;"><path d="M4 20c8-14 14 8 22-4s12 10 20-2 10 6 20-4"></path></svg>
+</div>
+</div>
+<div class="tiles" style="border-top: 3px solid #2B2340;">
+<sc-for list="{{tiles}}" as="t" hint-placeholder-count="3">
+<a href="{{t.href}}" style="text-decoration: none; background: {{t.bg}}; color: {{t.color}}; padding: 24px 28px; display: flex; align-items: center; gap: 16px; border-right: {{t.borde}};">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #FFFFFF; border: 2.5px solid #2B2340; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icono}}"></path></svg></span>
+<span style="display: flex; flex-direction: column; gap: 2px;"><span class="h up" style="font-size: 20px; font-weight: 700;">{{t.t}}</span><span style="font-size: 14px; font-weight: 700; line-height: 1.35;">{{t.s}}</span></span>
+</a>
+</sc-for>
 </div>
 </div>
 </div>
 
-<!-- franja de 3 cuadros -->
-<div class="wrap">
-<div class="tiles" style="border: 3px solid #2B2340; border-radius: 28px; overflow: hidden; box-shadow: 6px 6px 0 #2B2340;">
-<a href="CReportar.dc.html" style="text-decoration: none; background: #9B83FA; color: #FFFFFF; padding: 22px 24px; display: flex; gap: 14px; align-items: center; border-right: 3px solid #2B2340;">
-<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0;"><path d="M7 18v-6a5 5 0 0 1 10 0v6M5 21h14M12 3v2M4.2 6.2l1.4 1.4M19.8 6.2l-1.4 1.4"></path></svg>
-<span style="display: flex; flex-direction: column;"><span class="h up" style="font-size: 22px; font-weight: 700;">¿Viste uno herido?</span><span style="font-size: 14px; font-weight: 700;">Repórtalo desde el celular, aunque haya mala señal.</span></span>
+<!-- EN ADOPCIÓN (centrado) -->
+<div style="background: #FBD9E3; margin-top: 80px; border-top: 3px solid #2B2340; border-bottom: 3px solid #2B2340;">
+<div class="wrap" style="padding-top: 70px; padding-bottom: 76px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+<span class="up" style="font-weight: 900; letter-spacing: 2px; color: #C2336D; font-size: 14px;">En adopción</span>
+<h2 class="h up h2" style="margin: 8px 0 10px; font-weight: 700;">Esperan un hogar</h2>
+<p style="margin: 0 0 34px; font-size: 16px; font-weight: 700; color: #5B5070; max-width: 520px;">Conoce a algunos de los {{cifras.adopcion}} que hoy buscan familia en el refugio.</p>
+<div class="g4" style="width: 100%;">
+<sc-for list="{{adopcion}}" as="a" hint-placeholder-count="4">
+<a class="card" href="Main.dc.html" style="text-decoration: none; background: #FFFFFF; border: 2.5px solid #2B2340; border-radius: 26px; box-shadow: 5px 5px 0 #2B2340; padding: 22px 18px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; color: #2B2340;">
+<span style="width: 110px; height: 110px; border-radius: 999px; overflow: hidden; border: 3px solid #2B2340; background: {{a.bg}}; box-shadow: 0 0 0 6px {{a.bg}};"><img src="{{a.foto}}" alt="{{a.nombre}}" style="width: 100%; height: 100%; object-fit: cover;"></span>
+<span class="h up" style="font-size: 22px; font-weight: 700; margin-top: 6px;">{{a.nombre}}</span>
+<span style="font-size: 13px; font-weight: 800; color: #5B5070;">{{a.especie}} · {{a.edad}} · {{a.tam}}</span>
+<span style="background: {{a.bg}}; border: 2px solid #2B2340; border-radius: 999px; padding: 2px 12px; font-size: 12px; font-weight: 800;">{{a.caracter}}</span>
+<span style="margin-top: 6px; background: #2B2340; color: #FFFFFF; border-radius: 999px; padding: 8px 20px; font-size: 14px; font-weight: 800;">Conocer</span>
 </a>
-<a href="CConsultar.dc.html" style="text-decoration: none; background: #FFD23F; color: #2B2340; padding: 22px 24px; display: flex; gap: 14px; align-items: center; border-right: 3px solid #2B2340;">
-<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0;"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"></path></svg>
-<span style="display: flex; flex-direction: column;"><span class="h up" style="font-size: 22px; font-weight: 700;">Sigue tu caso</span><span style="font-size: 14px; font-weight: 700;">Con tu código de 8 letras, sin dar datos.</span></span>
-</a>
-<a href="#problema" style="text-decoration: none; background: #FBD9E3; color: #2B2340; padding: 22px 24px; display: flex; gap: 14px; align-items: center;">
-<span style="width: 30px; height: 46px; border: 3px solid #2B2340; border-radius: 16px; display: flex; justify-content: center; padding-top: 6px; flex-shrink: 0;"><span class="scrolldot" style="width: 6px; height: 10px; border-radius: 4px; background: #2B2340;"></span></span>
-<span style="display: flex; flex-direction: column;"><span class="h up" style="font-size: 22px; font-weight: 700;">Conoce más</span><span style="font-size: 14px; font-weight: 700;">Baja y mira cómo funciona.</span></span>
-</a>
+</sc-for>
+</div>
+<a class="btn" href="Main.dc.html" style="margin-top: 34px; height: 54px; padding: 0 26px; background: #FFD23F; color: #2B2340; font-size: 16px; box-shadow: 4px 4px 0 #2B2340;">Ver a todos y encontrar mi match</a>
+</div>
+</div>
+
+<!-- AYÚDALOS + CÓMO FUNCIONA (todo conectado) -->
+<div id="como" class="wrap" style="padding-top: 80px;">
+<div class="help" style="border: 3px solid #2B2340; border-radius: 34px; overflow: hidden; box-shadow: 7px 7px 0 #2B2340;">
+<div class="helpL">
+<div style="background: #7A5AF8; color: #FFFFFF; padding: 40px 40px 36px; display: flex; gap: 24px; align-items: center; border-bottom: 3px solid #2B2340;">
+<div style="display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto;">
+<h2 class="h up" style="margin: 0; font-size: 38px; line-height: 1.02; font-weight: 700;">Ayúdalos, ayúdanos</h2>
+<p style="margin: 0; font-size: 15px; font-weight: 700; color: #EDE8FF; line-height: 1.5;">Reporta lo que veas, adopta a uno que ya fue rescatado o comparte el enlace con tu barrio: entre más ojos, más rescates a tiempo.</p>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+<a class="btn" href="CReportar.dc.html" style="height: 46px; padding: 0 18px; background: #FFD23F; color: #2B2340; font-size: 15px; box-shadow: 3px 3px 0 #2B2340;">Reportar</a>
+<a class="btn" href="#" style="height: 46px; padding: 0 18px; background: #FFFFFF; color: #2B2340; font-size: 15px; box-shadow: 3px 3px 0 #2B2340;">Copiar enlace</a>
+</div>
+</div>
+<span class="bob solo-pc" style="width: 150px; height: 150px; border-radius: 999px; overflow: hidden; border: 4px solid #FFFFFF; flex-shrink: 0;"><img src="{{f.winny}}" alt="Winny" style="width: 100%; height: 100%; object-fit: cover;"></span>
+</div>
+<div id="equipo" class="helpB">
+<div style="background: #FFD23F; padding: 32px 36px; display: flex; flex-direction: column; justify-content: center; gap: 10px; border-right: 3px solid #2B2340;">
+<span class="h up" style="font-size: 26px; font-weight: 700; line-height: 1.05;">¿Eres del equipo del refugio?</span>
+<span style="font-size: 14px; font-weight: 700; line-height: 1.45;">Rescatistas, veterinarios y coordinadores entran a su panel de trabajo.</span>
+<a class="btn" href="#" style="align-self: flex-start; height: 44px; padding: 0 18px; background: #2B2340; color: #FFFFFF; font-size: 14px; box-shadow: 3px 3px 0 #E8508A;">Entrar como personal</a>
+</div>
+<div style="position: relative; min-height: 220px; background: #D7F0DC;"><img src="{{f.copo}}" alt="Copo" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"></div>
+</div>
+</div>
+<div style="background: #2B2340; color: #FFFFFF; padding: 40px 36px; display: flex; flex-direction: column; gap: 14px; border-left: 3px solid #2B2340;">
+<h2 class="h up" style="margin: 0 0 4px; font-size: 32px; font-weight: 700;">Cómo funciona</h2>
+<sc-for list="{{pasos}}" as="p" hint-placeholder-count="6">
+<div style="display: flex; gap: 14px; align-items: flex-start;">
+<span class="h" style="width: 34px; height: 34px; border-radius: 999px; background: {{p.bg}}; color: #2B2340; border: 2px solid #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">{{p.n}}</span>
+<span style="display: flex; flex-direction: column; gap: 1px;"><span style="font-weight: 900; font-size: 16px;">{{p.t}}</span><span style="font-size: 13px; font-weight: 700; color: #D9D2EA; line-height: 1.4;">{{p.s}}</span></span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- ROLES -->
+<div class="wrap" style="padding-top: 80px; padding-bottom: 20px; text-align: center;">
+<span class="up" style="font-weight: 900; letter-spacing: 2px; color: #7A5AF8; font-size: 14px;">Quién hace qué</span>
+<h2 class="h up h2" style="margin: 8px 0 32px; font-weight: 700;">Un equipo para cada patita</h2>
+<div class="g4">
+<sc-for list="{{roles}}" as="r" hint-placeholder-count="7">
+<div class="card" style="background: {{r.bg}}; border: 2.5px solid #2B2340; border-radius: 22px; box-shadow: 4px 4px 0 #2B2340; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+<span style="width: 52px; height: 52px; border-radius: 999px; background: #FFFFFF; border: 2.5px solid #2B2340; display: flex; align-items: center; justify-content: center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.icono}}"></path></svg></span>
+<span class="h" style="font-size: 19px; font-weight: 700;">{{r.t}}</span>
+<span style="font-size: 13px; font-weight: 700; line-height: 1.4;">{{r.s}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- CTA -->
+<div class="wrap" style="padding-top: 60px; padding-bottom: 30px;">
+<div class="g2" style="background: #E8508A; color: #FFFFFF; border: 3px solid #2B2340; border-radius: 34px; box-shadow: 7px 7px 0 #2B2340; padding: 40px 44px; position: relative; overflow: hidden;">
+<div style="position: relative; height: 240px;">
+<div style="position: absolute; left: 4%; top: 0; width: 220px; height: 220px; border-radius: 999px; overflow: hidden; border: 4px solid #FFFFFF;"><img src="{{f.nube}}" alt="Nube" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="bob" style="position: absolute; left: calc(4% + 170px); top: 50px; width: 170px; height: 170px; border-radius: 999px; overflow: hidden; border: 4px solid #FFFFFF;"><img src="{{f.toby}}" alt="Toby" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<svg class="twinkle" width="36" height="36" viewBox="0 0 24 24" fill="#FFD23F" aria-hidden="true" style="position: absolute; left: calc(4% + 330px); top: 6px;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<h2 class="h up" style="margin: 0; font-size: 40px; line-height: 1.02; font-weight: 700;">¿Ves un animal en peligro ahora?</h2>
+<p style="margin: 0; font-size: 17px; font-weight: 700; color: #FFE6EF;">No esperes. Tu reporte llega directo a la cola del refugio.</p>
+<a class="btn" href="CReportar.dc.html" style="align-self: flex-start; height: 56px; padding: 0 26px; background: #FFD23F; color: #2B2340; font-size: 17px; box-shadow: 4px 4px 0 #2B2340;">Reportar emergencia</a>
+</div>
 </div>
 </div>
 
 <!-- caminantes -->
-<div aria-hidden="true" style="position: relative; height: 80px; margin-top: 10px;">
-<svg class="walker" width="96" height="64" viewBox="0 0 96 64" style="position: absolute; left: 0; bottom: 6px;">
+<div aria-hidden="true" style="position: relative; height: 76px;">
+<svg class="walker" width="96" height="64" viewBox="0 0 96 64" style="position: absolute; left: 0; bottom: 0;">
 <path class="tail" d="M20 26 q-10 -10 -14 -2" stroke="#C98A4B" stroke-width="5" fill="none" stroke-linecap="round" style="transform-box: fill-box;"></path>
 <rect class="leg-a" x="26" y="36" width="7" height="18" rx="3.5" fill="#B9773D" style="transform-box: fill-box;"></rect>
 <rect class="leg-b" x="36" y="36" width="7" height="18" rx="3.5" fill="#C98A4B" style="transform-box: fill-box;"></rect>
@@ -155,7 +264,7 @@ a{color:inherit}
 <circle cx="78" cy="18" r="2.2" fill="#2B2340"></circle>
 <ellipse cx="86" cy="23" rx="3" ry="2.4" fill="#2B2340"></ellipse>
 </svg>
-<svg class="walker cat" width="80" height="56" viewBox="0 0 80 56" style="position: absolute; left: 0; bottom: 6px;">
+<svg class="walker cat" width="80" height="56" viewBox="0 0 80 56" style="position: absolute; left: 0; bottom: 0;">
 <path class="tail" d="M14 24 q-12 -18 2 -20" stroke="#8C8FA3" stroke-width="5" fill="none" stroke-linecap="round" style="transform-box: fill-box;"></path>
 <rect class="leg-a" x="20" y="32" width="6" height="16" rx="3" fill="#6F7287" style="transform-box: fill-box;"></rect>
 <rect class="leg-b" x="29" y="32" width="6" height="16" rx="3" fill="#8C8FA3" style="transform-box: fill-box;"></rect>
@@ -166,209 +275,87 @@ a{color:inherit}
 <path d="M54 12 l2 -10 l6 7 z M64 9 l6 -7 l2 10 z" fill="#A4A7B8" stroke="#2B2340" stroke-width="2" stroke-linejoin="round"></path>
 <circle cx="66" cy="18" r="2" fill="#2B2340"></circle>
 </svg>
-<div style="position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; background: repeating-linear-gradient(90deg, #2B2340 0 10px, transparent 10px 18px); opacity: .25;"></div>
-</div>
-
-<!-- CIFRAS -->
-<div class="wrap" style="padding-top: 30px; padding-bottom: 60px;">
-<div class="stats">
-<sc-for list="{{cifras}}" as="c" hint-placeholder-count="3">
-<div class="wig" style="width: 190px; height: 150px; border-radius: 50%; background: {{c.bg}}; color: {{c.color}}; border: 3px solid #2B2340; box-shadow: 5px 5px 0 #2B2340; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; animation-delay: {{c.delay}}s;">
-<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{c.icono}}"></path></svg>
-<span class="h" style="font-size: 34px; font-weight: 700; line-height: 1.1;">{{c.valor}}</span>
-<span class="up" style="font-size: 13px; font-weight: 900; letter-spacing: .5px;">{{c.txt}}</span>
-</div>
-</sc-for>
-</div>
-<p style="margin: 18px 0 0; text-align: center; font-size: 13px; font-weight: 700; color: #5B5070;">Cifras en vivo desde los indicadores anónimos del sistema.</p>
-</div>
-
-<!-- EL PROBLEMA -->
-<div id="problema" style="background: #3D2A8C; color: #FFFFFF; border-top: 3px solid #2B2340; border-bottom: 3px solid #2B2340; position: relative; overflow: hidden;">
-<svg class="spin" width="120" height="120" viewBox="0 0 24 24" fill="#FFD23F" aria-hidden="true" style="position: absolute; right: -30px; top: 30px; opacity: .9;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<div class="wrap g2" style="padding-top: 80px; padding-bottom: 80px;">
-<div style="position: relative; height: 380px;">
-<div style="position: absolute; left: 6%; top: 4%; width: 78%; aspect-ratio: 1; max-height: 360px; border-radius: 999px; background: #E8508A; border: 3px solid #2B2340;"></div>
-<div style="position: absolute; left: 14%; top: 10%; width: 62%; aspect-ratio: 1; max-height: 300px; border-radius: 999px; overflow: hidden; border: 4px solid #FFFFFF;"><img src="{{f.winny}}" alt="Winny" style="width: 100%; height: 100%; object-fit: cover;"></div>
-<svg width="70" height="70" viewBox="0 0 70 70" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" aria-hidden="true" style="position: absolute; right: 6%; top: 0;"><path d="M10 40l12-6M14 22l12 4M30 8l2 14"></path></svg>
-</div>
-<div style="display: flex; flex-direction: column; gap: 18px;">
-<span class="up" style="font-weight: 900; letter-spacing: 2px; color: #FFD23F;">El problema</span>
-<h2 class="h up h2" style="margin: 0; font-weight: 700;">Hoy un reporte se pierde entre mensajes</h2>
-<p style="margin: 0; font-size: 18px; font-weight: 700; line-height: 1.5; color: #E9E3FF;">Llega por redes o mensajes, sin ubicación precisa, mezclado con otros y sin saber qué tan grave es. El refugio no sabe si tiene cupo hasta que el animal ya está en la puerta, y las adopciones dependen de la suerte.</p>
-<div style="display: flex; flex-wrap: wrap; gap: 10px;">
-<sc-for list="{{dolores}}" as="d" hint-placeholder-count="3">
-<span style="background: #FFFFFF; color: #2B2340; border: 2px solid #2B2340; border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 800; box-shadow: 3px 3px 0 #E8508A;">{{d}}</span>
-</sc-for>
-</div>
-</div>
-</div>
-</div>
-
-<!-- CÓMO FUNCIONA -->
-<div id="como" class="wrap" style="padding-top: 90px; padding-bottom: 80px; position: relative;">
-<div style="text-align: center; margin-bottom: 40px;">
-<span class="up" style="font-weight: 900; letter-spacing: 2px; color: #C2336D;">Cómo funciona</span>
-<h2 class="h up h2" style="margin: 8px 0 0; font-weight: 700;">Del reporte a un hogar <span style="color: #7A5AF8;">en 6 pasos</span></h2>
-</div>
-<div class="g3">
-<sc-for list="{{pasos}}" as="p" hint-placeholder-count="6">
-<div class="card" style="position: relative; background: {{p.bg}}; border: 3px solid #2B2340; border-radius: 28px; box-shadow: 6px 6px 0 #2B2340; padding: 26px 22px 22px; display: flex; flex-direction: column; gap: 10px;">
-<span class="h" style="position: absolute; right: 18px; top: 8px; font-size: 64px; font-weight: 700; color: #2B2340; opacity: .12;">{{p.n}}</span>
-<span style="width: 58px; height: 58px; border-radius: 18px; background: #FFFFFF; border: 2.5px solid #2B2340; display: flex; align-items: center; justify-content: center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.icono}}"></path></svg></span>
-<span class="h" style="font-size: 24px; font-weight: 700;">{{p.t}}</span>
-<span style="font-size: 15px; font-weight: 700; line-height: 1.45; color: #3F3556;">{{p.s}}</span>
-</div>
-</sc-for>
-</div>
-</div>
-
-<!-- EN ADOPCIÓN -->
-<div style="background: #FBD9E3; border-top: 3px solid #2B2340; border-bottom: 3px solid #2B2340; position: relative; overflow: hidden;">
-<svg class="twinkle" width="60" height="60" viewBox="0 0 24 24" fill="#7A5AF8" stroke="#2B2340" stroke-width="1" aria-hidden="true" style="position: absolute; left: 4%; top: 40px;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<div class="wrap" style="padding-top: 80px; padding-bottom: 80px;">
-<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 34px;">
-<div>
-<span class="up" style="font-weight: 900; letter-spacing: 2px; color: #C2336D;">En adopción</span>
-<h2 class="h up h2" style="margin: 8px 0 0; font-weight: 700;">Perritos y gatitos<br>esperándote</h2>
-</div>
-<a class="btn" href="Main.dc.html" style="height: 56px; padding: 0 24px; background: #2B2340; color: #FFFFFF; box-shadow: 4px 4px 0 #FFFFFF;"><span class="h" style="font-weight: 600; font-size: 18px;">Encontrar mi match</span></a>
-</div>
-<div class="g4">
-<sc-for list="{{adopcion}}" as="a" hint-placeholder-count="4">
-<a class="card" href="Main.dc.html" style="text-decoration: none; background: #FFFFFF; border: 3px solid #2B2340; border-radius: 28px; box-shadow: 6px 6px 0 #2B2340; padding: 18px; display: flex; flex-direction: column; gap: 10px; color: #2B2340;">
-<span style="align-self: center; width: 150px; height: 150px; border-radius: 999px; overflow: hidden; border: 3px solid #2B2340; background: {{a.bg}};"><img src="{{a.foto}}" alt="{{a.nombre}}" style="width: 100%; height: 100%; object-fit: cover;"></span>
-<span class="h up" style="text-align: center; font-size: 24px; font-weight: 700;">{{a.nombre}}</span>
-<span style="display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 3px; font-size: 13px; font-weight: 700;">
-<span style="color: #5B5070;">Especie</span><span>{{a.especie}}</span>
-<span style="color: #5B5070;">Edad</span><span>{{a.edad}}</span>
-<span style="color: #5B5070;">Tamaño</span><span>{{a.tam}}</span>
-</span>
-<span style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-<span style="background: #E8508A; color: #FFFFFF; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 800;">Conocer</span>
-<svg class="beat" width="24" height="24" viewBox="0 0 24 24" fill="#FBD9E3" stroke="#E8508A" stroke-width="2" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"></path></svg>
-</span>
-</a>
-</sc-for>
-</div>
-</div>
-</div>
-
-<!-- QUIÉN HACE QUÉ -->
-<div id="roles" style="background: #2B2340; color: #FFFFFF; position: relative; overflow: hidden;">
-<svg class="spin2" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="#9B83FA" stroke-width=".8" aria-hidden="true" style="position: absolute; left: -40px; bottom: -40px;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<div class="wrap" style="padding-top: 80px; padding-bottom: 80px;">
-<span class="up" style="font-weight: 900; letter-spacing: 2px; color: #FFD23F;">Quién hace qué</span>
-<h2 class="h up h2" style="margin: 8px 0 34px; font-weight: 700;">Un equipo para cada patita</h2>
-<div class="roles">
-<sc-for list="{{roles}}" as="r" hint-placeholder-count="7">
-<div class="card" style="background: {{r.bg}}; color: #2B2340; border: 3px solid #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
-<span style="width: 46px; height: 46px; border-radius: 999px; background: #FFFFFF; border: 2.5px solid #2B2340; display: flex; align-items: center; justify-content: center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.icono}}"></path></svg></span>
-<span class="h" style="font-size: 21px; font-weight: 700;">{{r.t}}</span>
-<span style="font-size: 14px; font-weight: 700; line-height: 1.4;">{{r.s}}</span>
-</div>
-</sc-for>
-<a class="card" href="#roles" style="text-decoration: none; background: transparent; color: #FFFFFF; border: 3px dashed #9B83FA; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; justify-content: center; gap: 6px;">
-<span class="h" style="font-size: 21px; font-weight: 700;">¿Eres del equipo?</span>
-<span style="font-size: 14px; font-weight: 800; text-decoration: underline;">Entrar como personal</span>
-</a>
-</div>
-</div>
-</div>
-
-<!-- AYUDA -->
-<div style="background: #FFD23F; border-bottom: 3px solid #2B2340;">
-<div class="wrap" style="padding-top: 80px; padding-bottom: 80px;">
-<div style="text-align: center; margin-bottom: 36px;">
-<span class="up" style="font-weight: 900; letter-spacing: 2px;">Tú también cuentas</span>
-<h2 class="h up h2" style="margin: 8px 0 0; font-weight: 700;">Así puedes ayudar hoy</h2>
-</div>
-<div class="g3">
-<sc-for list="{{ayuda}}" as="a" hint-placeholder-count="3">
-<a class="card" href="{{a.href}}" style="text-decoration: none; background: #FFFFFF; color: #2B2340; border: 3px solid #2B2340; border-radius: 28px; box-shadow: 6px 6px 0 #2B2340; padding: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
-<span style="width: 96px; height: 96px; border-radius: 999px; overflow: hidden; border: 3px solid #2B2340; background: {{a.bg}};"><img src="{{a.foto}}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></span>
-<span class="h up" style="font-size: 24px; font-weight: 700;">{{a.t}}</span>
-<span style="font-size: 15px; font-weight: 700; line-height: 1.45; color: #3F3556;">{{a.s}}</span>
-<span style="margin-top: 4px; background: #2B2340; color: #FFFFFF; border-radius: 999px; padding: 8px 18px; font-size: 14px; font-weight: 800;">{{a.cta}}</span>
-</a>
-</sc-for>
-</div>
-</div>
-</div>
-
-<!-- CTA FINAL -->
-<div class="wrap" style="padding-top: 80px; padding-bottom: 80px;">
-<div style="position: relative; background: #E8508A; color: #FFFFFF; border: 3px solid #2B2340; border-radius: 40px; box-shadow: 8px 8px 0 #2B2340; padding: 56px 40px; text-align: center; overflow: hidden;">
-<svg class="twinkle" width="44" height="44" viewBox="0 0 24 24" fill="#FFD23F" stroke="#2B2340" stroke-width="1.2" aria-hidden="true" style="position: absolute; left: 6%; top: 20%;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<svg class="twinkle" width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#2B2340" stroke-width="1.2" aria-hidden="true" style="position: absolute; right: 8%; bottom: 22%; animation-delay: -1s;"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"></path></svg>
-<h2 class="h up h2" style="margin: 0 0 12px; font-weight: 700;">¿Ves un animal en peligro ahora?</h2>
-<p style="margin: 0 auto 26px; font-size: 18px; font-weight: 700; max-width: 560px;">No esperes. Tu reporte llega directo a la cola del refugio.</p>
-<a class="btn" href="CReportar.dc.html" style="height: 64px; padding: 0 34px; background: #2B2340; color: #FFFFFF; box-shadow: 5px 5px 0 #FFFFFF;"><span class="h" style="font-weight: 600; font-size: 21px;">Reportar emergencia</span></a>
-</div>
 </div>
 
 <!-- PIE -->
-<div style="background: #1E1830; color: #FFFFFF;">
-<div class="wrap" style="padding-top: 44px; padding-bottom: 44px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; align-items: flex-end;">
-<div style="display: flex; flex-direction: column; gap: 8px; max-width: 620px;">
-<span class="h" style="font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>Patitas en Casa · Cúcuta</span>
-<span style="font-size: 14px; font-weight: 700; color: #D9D2EA;">Proyecto integrador de Ingeniería de Software II, Universidad de Pamplona. Código abierto.</span>
+<div style="background: #2B2340; color: #FFFFFF; border-top: 3px solid #2B2340;">
+<div class="wrap foot" style="padding-top: 56px; padding-bottom: 40px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<span class="h" style="font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px;"><svg width="30" height="30" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>Patitas en Casa</span>
+<span style="font-size: 14px; font-weight: 700; color: #D9D2EA; line-height: 1.5; max-width: 380px;">Plataforma web inteligente para reportar emergencias animales, coordinar rescates y encontrar hogares en Cúcuta.</span>
+<div style="display: flex; align-items: center; gap: 12px; margin-top: 8px; background: #3A3054; border-radius: 18px; padding: 12px 14px; align-self: flex-start;">
+<span class="h" style="width: 46px; height: 46px; border-radius: 999px; background: #FFD23F; color: #2B2340; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700;">BA</span>
+<span style="display: flex; flex-direction: column; font-size: 13px; font-weight: 800;"><span style="color: #D9D2EA; font-weight: 700;">Diseñado y desarrollado por</span><span class="h" style="font-size: 17px; font-weight: 700;">Brayan David Amado Ramírez</span></span>
 </div>
-<div style="display: flex; gap: 18px; font-size: 15px; font-weight: 800;">
-<a href="https://github.com/Brizad/patitas-en-casa" style="color: #FFFFFF;">GitHub</a>
-<a href="#roles" style="color: #FFFFFF;">Documentación de la API</a>
 </div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; font-weight: 800;">
+<span class="up" style="color: #FFD23F; font-size: 12px; letter-spacing: 1.5px; font-weight: 900;">Navegación</span>
+<a href="CReportar.dc.html" style="text-decoration: none;">Reportar emergencia</a>
+<a href="CConsultar.dc.html" style="text-decoration: none;">Consultar reporte</a>
+<a href="Main.dc.html" style="text-decoration: none;">Adoptar</a>
+<a href="#equipo" style="text-decoration: none;">Personal del refugio</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; font-weight: 800;">
+<span class="up" style="color: #FFD23F; font-size: 12px; letter-spacing: 1.5px; font-weight: 900;">Proyecto</span>
+<span style="font-weight: 700; color: #D9D2EA;">Ingeniería de Sistemas · Universidad de Pamplona</span>
+<span style="font-weight: 700; color: #D9D2EA;">Ingeniería de Software II · 2026</span>
+<a href="https://github.com/Brizad/patitas-en-casa" style="text-decoration: none;">Código abierto en GitHub</a>
+<a href="#" style="text-decoration: none;">Documentación de la API</a>
+</div>
+</div>
+<div class="wrap" style="border-top: 1px solid #45395F; padding-top: 18px; padding-bottom: 22px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700; color: #B9AFD2;">
+<span>© 2026 Patitas en Casa · Cúcuta, Colombia</span>
+<span style="display: flex; align-items: center; gap: 6px;">Hecho con <svg class="beat" width="14" height="14" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"></path></svg> por Brayan Amado</span>
 </div>
 </div>
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"movimiento":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":4600}}'>
+<script type="text/x-dc" data-dc-script data-props='{"movimiento":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":4700}}'>
 class Component extends DCLogic {
   renderVals() {
     var F = {
       pinina: '/_blob/414b15a1b8e03d0e6bb18801563223ef', mochi: '/_blob/7dc6f49d137ba9b348affe12f8ef0630', lupe: '/_blob/0a435a82c433fbc0b2ed886bfba29733',
       winny: '/_blob/bc4c2a72b414f9a40e3aa7889fe25a03', toby: '/_blob/143b32de0f848cc57378a674b6bcba00', luna: '/_blob/7b9123c9b0520bd3775b1f3d7177fc53',
       copo: '/_blob/da1328c1ec6083af353807ed44cc7c21', cascabel: '/_blob/39d571489b652d084b4f70cd8fc385b2', max: '/_blob/1f10a932541874c1a21638576abbd176',
-      pecas: '/_blob/6abaf280d6242a5704c01e8b78edd5ad'
+      pecas: '/_blob/6abaf280d6242a5704c01e8b78edd5ad', nube: '/_blob/1eb4e076d4b697264c96fad2ea8cad2e', bombon: '/_blob/eeda7ceee455b80736c632fd61ff61cb',
+      ilustracion: '/_blob/de4e0d62d7fe8a69f2d4d2bf13dd817f'
     };
+    var items = ['Sin crear cuenta', 'Funciona con mala señal', 'Un veterinario confirma cada caso', 'Datos de contacto cifrados', 'Rescate por comunas de Cúcuta', 'Seguimiento a 30, 90 y 180 días'];
     return {
       movClass: (this.props.movimiento ?? true) ? 'mov' : '',
       f: F,
-      confianza: ['Sin crear cuenta', 'El veterinario siempre confirma', 'Datos de contacto cifrados'],
-      cifras: [
-        { valor: '[#]', txt: 'Reportes', bg: '#9B83FA', color: '#FFFFFF', delay: 0, icono: 'M7 18v-6a5 5 0 0 1 10 0v6M5 21h14M12 3v2' },
-        { valor: '[#]', txt: 'Rescatados', bg: '#FFD23F', color: '#2B2340', delay: -1, icono: 'M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z' },
-        { valor: '[#]', txt: 'Adoptados', bg: '#D7F0DC', color: '#2B2340', delay: -2, icono: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' }
-      ],
-      dolores: ['Sin ubicación precisa', 'Sin saber qué tan grave es', 'Sin saber si hay cupo'],
-      pasos: [
-        { n: '1', t: 'Reporte', bg: '#FFE9A6', icono: 'M4 4h16v12H8l-4 4z', s: 'Cualquier persona describe la emergencia, comparte su ubicación y, si puede, un video corto. Recibe un código para seguir el caso.' },
-        { n: '2', t: 'IA de texto y video', bg: '#E4DDFB', icono: 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l1 2 2 1-2 1-1 2-1-2-2-1 2-1z', s: 'Sugiere una prioridad (crítica, alta, media o baja) con su confianza y sus razones. Si duda, pide revisión; si falla, trata el caso como alto.' },
-        { n: '3', t: 'Veterinario', bg: '#D7F0DC', icono: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', s: 'Confirma o corrige la prioridad. La IA nunca decide sola.' },
-        { n: '4', t: 'Rescate', bg: '#D6ECFB', icono: 'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 7a2 2 0 1 0 0 4a2 2 0 1 0 0-4z', s: 'El caso urgente se ofrece a los rescatistas de la zona; si nadie lo acepta a tiempo, se avisa al coordinador.' },
-        { n: '5', t: 'Refugio', bg: '#FBD9E3', icono: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z', s: 'El animal ingresa solo si hay cupo y queda con su ficha clínica. Al 90 % de ocupación se alerta a coordinación.' },
-        { n: '6', t: 'Adopción', bg: '#FFDCC2', icono: 'M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z', s: 'Se recomiendan animales según el hogar del adoptante, con compromiso firmado y seguimientos a 30, 90 y 180 días.' }
+      cifras: { reportes: '18', adopcion: '23' },
+      cinta: items.concat(items),
+      puntos: ['Ficha clínica y vacunas al día', 'Perfil de cariño, energía, juego y calma', 'Compromiso firmado y seguimiento'],
+      tiles: [
+        { t: '¿Viste uno herido?', s: 'Repórtalo desde el celular, aunque haya mala señal.', href: 'CReportar.dc.html', bg: '#9B83FA', color: '#FFFFFF', borde: '3px solid #2B2340', icono: 'M7 18v-6a5 5 0 0 1 10 0v6M5 21h14M12 3v2M4.2 6.2l1.4 1.4M19.8 6.2l-1.4 1.4' },
+        { t: 'Sigue tu caso', s: 'Con tu código de 8 letras, sin dar datos.', href: 'CConsultar.dc.html', bg: '#FFD23F', color: '#2B2340', borde: '3px solid #2B2340', icono: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4' },
+        { t: 'Conoce más', s: 'Baja y mira cómo funciona.', href: '#como', bg: '#D7F0DC', color: '#2B2340', borde: 'none', icono: 'M12 5v14M6 13l6 6 6-6' }
       ],
       adopcion: [
-        { nombre: 'Lupe', especie: 'Perrita', edad: 'Adulta', tam: 'Pequeña', foto: F.lupe, bg: '#FFE9A6' },
-        { nombre: 'Cascabel', especie: 'Gatita', edad: '2 meses', tam: 'Pequeña', foto: F.cascabel, bg: '#E4DDFB' },
-        { nombre: 'Toby', especie: 'Perrito', edad: '3 meses', tam: 'Grande', foto: F.toby, bg: '#D7F0DC' },
-        { nombre: 'Luna', especie: 'Gatita', edad: '1 año', tam: 'Pequeña', foto: F.luna, bg: '#D6ECFB' }
+        { nombre: 'Cascabel', especie: 'Gatita', edad: '2 meses', tam: 'Pequeña', caracter: 'Curiosa', foto: F.cascabel, bg: '#E4DDFB' },
+        { nombre: 'Bombón', especie: 'Perrito', edad: '2 años', tam: 'Pequeño', caracter: 'Payaso', foto: F.bombon, bg: '#FFE9A6' },
+        { nombre: 'Mochi', especie: 'Gatito', edad: '3 meses', tam: 'Pequeño', caracter: 'Peluche', foto: F.mochi, bg: '#D7F0DC' },
+        { nombre: 'Copo', especie: 'Perrita', edad: '2 años', tam: 'Mediana', caracter: 'Aventurera', foto: F.copo, bg: '#D6ECFB' }
+      ],
+      pasos: [
+        { n: '1', t: 'Reportas', bg: '#FFD23F', s: 'Describes qué pasa y dónde, sin cuenta. Recibes un código.' },
+        { n: '2', t: 'La IA sugiere', bg: '#9B83FA', s: 'Una prioridad con su confianza y sus razones.' },
+        { n: '3', t: 'El veterinario decide', bg: '#D7F0DC', s: 'Confirma o corrige: la IA nunca decide sola.' },
+        { n: '4', t: 'Rescate', bg: '#D6ECFB', s: 'Se avisa a los rescatistas de la zona.' },
+        { n: '5', t: 'Refugio', bg: '#FBD9E3', s: 'Ingresa si hay cupo, con su ficha clínica.' },
+        { n: '6', t: 'Adopción', bg: '#E8508A', s: 'Recomendaciones según tu hogar y seguimiento.' }
       ],
       roles: [
-        { t: 'Ciudadano', bg: '#FFE9A6', icono: 'M12 8v5M12 16h.01M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z', s: 'Reporta y consulta el estado con su código, sin cuenta.' },
-        { t: 'Veterinario', bg: '#D7F0DC', icono: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', s: 'Atiende la cola por prioridad y lleva la ficha clínica.' },
-        { t: 'Rescatista', bg: '#D6ECFB', icono: 'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 7a2 2 0 1 0 0 4a2 2 0 1 0 0-4z', s: 'Acepta rescates de su comuna y cuenta cómo terminaron.' },
-        { t: 'Coordinador', bg: '#FFDCC2', icono: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z', s: 'Maneja cupos, ingresos, egresos y adopciones.' },
-        { t: 'Adoptante', bg: '#FBD9E3', icono: 'M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z', s: 'Crea su perfil, recibe recomendaciones y solicita adoptar.' },
-        { t: 'Administrador', bg: '#E4DDFB', icono: 'M8 15a4 4 0 1 0 0-8a4 4 0 1 0 0 8zM12 11h9M18 11v3M21 11v3', s: 'Crea cuentas y refugios; revisa la bitácora.' },
-        { t: 'Alcaldía', bg: '#FFFFFF', icono: 'M4 20V10M10 20V4M16 20v-7M22 20H2', s: 'Consulta indicadores anonimizados de la ciudad.' }
-      ],
-      ayuda: [
-        { t: 'Reporta', s: 'Si ves un animal herido o en peligro, avisa. Toma un minuto.', cta: 'Reportar', href: 'CReportar.dc.html', foto: F.winny, bg: '#E4DDFB' },
-        { t: 'Adopta', s: 'Dale un hogar a uno que ya fue rescatado y está esperando.', cta: 'Ver animales', href: 'Main.dc.html', foto: F.pecas, bg: '#FBD9E3' },
-        { t: 'Comparte', s: 'Pasa el enlace a tu barrio: entre más ojos, más rescates a tiempo.', cta: 'Copiar enlace', href: '#roles', foto: F.max, bg: '#D7F0DC' }
+        { t: 'Ciudadano', bg: '#FFE9A6', icono: 'M12 8v5M12 16h.01M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z', s: 'Reporta y consulta con su código, sin cuenta.' },
+        { t: 'Veterinario', bg: '#D7F0DC', icono: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', s: 'Atiende la cola por prioridad y la ficha clínica.' },
+        { t: 'Rescatista', bg: '#D6ECFB', icono: 'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 7a2 2 0 1 0 0 4a2 2 0 1 0 0-4z', s: 'Acepta rescates de su comuna.' },
+        { t: 'Coordinador', bg: '#FFDCC2', icono: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z', s: 'Cupos, ingresos, egresos y adopciones.' },
+        { t: 'Adoptante', bg: '#FBD9E3', icono: 'M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z', s: 'Perfil, recomendaciones y solicitud.' },
+        { t: 'Administrador', bg: '#E4DDFB', icono: 'M8 15a4 4 0 1 0 0-8a4 4 0 1 0 0 8zM12 11h9M18 11v3M21 11v3', s: 'Cuentas, refugios y bitácora.' },
+        { t: 'Alcaldía', bg: '#FFFFFF', icono: 'M4 20V10M10 20V4M16 20v-7M22 20H2', s: 'Indicadores anónimos de la ciudad.' },
+        { t: '¿Eres del equipo?', bg: '#9B83FA', icono: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3', s: 'Entra a tu panel de trabajo.' }
       ]
     };
   }
