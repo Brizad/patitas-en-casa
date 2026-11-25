@@ -24,6 +24,9 @@ export default function App() {
       setToken(t); setCuenta(c); setPantalla(pantallasDelRol(c.rol)[0] ?? null);
     }} />;
   }
+  const salir = () => { setToken(null); setCuenta(null); };
+  // #420: el adoptante tiene su propia vista («Elige a tu compañero»), sin la barra del personal.
+  if (cuenta.rol === "adoptante") return <Adoptante token={token} nombre={cuenta.nombre} alSalir={salir} />;
   const pantallas = pantallasDelRol(cuenta.rol);
   return (
     <main className="panel">
@@ -36,7 +39,7 @@ export default function App() {
         <div className="ds-derecha">
           <span className="quien">{cuenta.nombre} · <img className="icono-rol" src={`/diseno/roles/${cuenta.rol}.svg`}
             alt="" width="24" height="24" /><span className="rol">{cuenta.rol}</span></span>
-          <button onClick={() => { setToken(null); setCuenta(null); }}>Salir</button>
+          <button onClick={salir}>Salir</button>
         </div>
       </header>
       {pantallas.length > 1 && (
@@ -50,7 +53,6 @@ export default function App() {
       {pantalla === "rescates" && <Rescatista token={token} />}
       {pantalla === "mis_rescates" && <MisRescates token={token} />}
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
-      {pantalla === "adopcion" && <Adoptante token={token} />}
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}
       {pantalla === "indicadores" && <Indicadores token={token} rol={cuenta.rol} />}
       {pantalla === "piloto" && <Piloto token={token} />}

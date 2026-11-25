@@ -1,115 +1,277 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import "@fontsource-variable/fredoka";
+import "@fontsource-variable/nunito";
+import "./adoptante.css";
 import {
-  AnimalPublicado, MiSolicitud, PERFIL_VACIO, Perfil, Recomendado, catalogo,
-  descargarCompromiso, guardarPerfil, miPerfil, misSolicitudes, recomendaciones, resumenAnimal,
-  solicitar,
+  AnimalPublicado, MiSolicitud, Perfil, Recomendado, catalogo, descargarCompromiso, guardarPerfil,
+  miPerfil, misSolicitudes, recomendaciones, solicitar,
 } from "./apiAdopcion";
-import { nombreIndicador, textoError } from "./mensajes";
+import {
+  Bienvenida, Combinan, Elegir, Encuesta, Listo, MisSolicitudes,
+} from "./AdoptantePantallas";
+import Despertando from "./Despertando";
+import { PREGUNTAS, perfilDesdeRespuestas } from "./encuesta";
+import {
+  INICIAL, PantallaAdopcion, actual, contar, filtrar, flujo, solicitudDe,
+} from "./flujoAdopcion";
+import { Huella, Icono } from "./Ilustraciones";
+import { textoError } from "./mensajes";
+import {
+  Efecto, Preferencias, Sonido, guardarPreferencias, leerPreferencias, sonidoDeEspecie,
+} from "./sonido";
 
-/** Pantalla del adoptante: perfil (RF-08), catálogo y solicitudes (RF-27), compromiso (RF-29). */
-export default function Adoptante({ token }: { token: string }) {
-  const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [animales, setAnimales] = useState<(AnimalPublicado | Recomendado)[]>([]);
-  const [mias, setMias] = useState<MiSolicitud[]>([]);
-  const [mensaje, setMensaje] = useState("");
+type Animal = AnimalPublicado | Recomendado;
+interface Datos {
+  perfil: Perfil | null; catalogo: AnimalPublicado[]; recomendados: Recomendado[] | null;
+  mias: MiSolicitud[]; cargando: boolean;
+}
 
-  const recargar = useCallback(async () => {
-    try {
-      const [p, s] = await Promise.all([miPerfil(token), misSolicitudes(token)]);
-      setPerfil(p);
-      // Con perfil, el catálogo llega ordenado por compatibilidad (RF-09).
-      setAnimales(p ? await recomendaciones(token) : await catalogo());
-      setMias(s);
-    } catch (e) {
-      setMensaje(textoError(e));
-    }
+/** Adoptante (#420): «Elige a tu compañero». Perfil por encuesta (RF-08), recomendaciones con el
+ *  puntaje del servidor (RF-09), solicitud (RF-27) y compromiso en PDF (RF-29). */
+export default function Adoptante({ token, nombre, alSalir }: {
+  token: string; nombre: string; alSalir: () => void;
+}) {
+  const [s, despachar] = useReducer(flujo, INICIAL);
+  const [datos, setDatos] = useState<Datos>({ perfil: null, catalogo: [], recomendados: null,
+    mias: [], cargando: true });
+  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const { prefs, sonando, toque, cambiar } = useSonido();
+
+  const cargar = useCallback(async () => {
+    const [perfil, mias, cat] = await Promise.all([miPerfil(token), misSolicitudes(token), catalogo()]);
+    // Con perfil, el servidor ordena por compatibilidad y deja fuera las restricciones duras.
+    const recomendados = perfil ? await recomendaciones(token) : null;
+    setDatos({ perfil, mias, catalogo: cat, recomendados, cargando: false });
   }, [token]);
 
-  useEffect(() => { void recargar(); }, [recargar]);
+  const fallo = (e: unknown) => setMensaje({ texto: textoError(e), error: true });
+  useEffect(() => {
+    cargar().catch((e) => { fallo(e); setDatos((d) => ({ ...d, cargando: false })); });
+  }, [cargar]);
 
-  async function hacer(accion: () => Promise<unknown>, exito: string) {
+  // Al terminar la encuesta se guarda el perfil real y se piden las recomendaciones de nuevo.
+  useEffect(() => {
+    if (!s.guardar) return;
+    const perfil = perfilDesdeRespuestas(s.respuestas);
+    if (!perfil) { despachar({ tipo: "guardado" }); return; }
+    setDatos((d) => ({ ...d, cargando: true }));
+    guardarPerfil(token, perfil).then(cargar)
+      .then(() => setMensaje({ texto: "Guardamos tus respuestas en tu perfil.", error: false }))
+      .catch((e) => { fallo(e); setDatos((d) => ({ ...d, cargando: false })); })
+      .finally(() => despachar({ tipo: "guardado" }));
+  }, [s.guardar, s.respuestas, token, cargar]);
+
+  // Al cambiar de pantalla: arriba del todo y el foco en el título (teclado y lector de pantalla).
+  const primera = useRef(true);
+  useEffect(() => {
+    if (primera.current) { primera.current = false; return; }
+    window.scrollTo?.(0, 0);
+    document.querySelector<HTMLElement>(".adop [data-titulo]")?.focus();
+  }, [s.pantalla, s.paso]);
+
+  const ir = (efecto: Efecto, accion: Parameters<typeof despachar>[0]) => {
+    toque(efecto);
+    setMensaje(null);
+    despachar(accion);
+  };
+
+  // Lo que se ve en «Elige»: con perfil, los recomendados; sin perfil, todo el catálogo.
+  const conPerfil = datos.perfil !== null;
+  const fuente: Animal[] = datos.recomendados ?? datos.catalogo;
+  const ocultos = conPerfil && datos.recomendados ? Math.max(0, datos.catalogo.length - datos.recomendados.length) : 0;
+  const visibles = filtrar(fuente, s.filtro);
+  const idActual = actual(visibles.map((a) => a.animal_id), s.elegido);
+  const animal = visibles.find((a) => a.animal_id === idActual) ?? null;
+  // Un animal ya adoptado sale del catálogo: su nombre y especie vienen con la solicitud.
+  const animalDe = (id: number): AnimalPublicado => {
+    const s = datos.mias.find((x) => x.animal_id === id);
+    return fuente.find((a) => a.animal_id === id) ?? datos.catalogo.find((a) => a.animal_id === id)
+      ?? { animal_id: id, nombre: s?.nombre ?? `Animal ${id}`, especie: s?.especie ?? "",
+           descripcion: "", tamano: "", energia: "", edad_meses: 0, apto_ninos: false,
+           apto_otros_animales: false, necesita_patio: false };
+  };
+
+  const empezar = () => ir("siguiente", { tipo: "empezar", perfil: datos.perfil });
+
+  async function elegir(a: Animal) {
+    if (!conPerfil) {
+      ir("siguiente", { tipo: "empezar", perfil: null });
+      setMensaje({ texto: "Antes de solicitar, cuéntanos de tu hogar.", error: false });
+      return;
+    }
+    toque("elegir");
+    setEnviando(true);
+    setMensaje(null);
     try {
-      await accion();
-      setMensaje(exito);
-      await recargar();
+      await solicitar(token, a.animal_id, "");
+      const mias = await misSolicitudes(token);
+      setDatos((d) => ({ ...d, mias }));
+      toque("fanfarria");
+      despachar({ tipo: "solicitado", animal: a.animal_id, recien: true });
     } catch (e) {
-      setMensaje(textoError(e));
+      fallo(e);
+    } finally {
+      setEnviando(false);
     }
   }
 
-  const nombre = (id: number) => animales.find((a) => a.animal_id === id)?.nombre ?? `#${id}`;
+  async function descargar(id: number) {
+    toque("pop");
+    try {
+      await descargarCompromiso(token, id);
+      setMensaje({ texto: "Compromiso descargado: imprímelo y fírmalo en el refugio.", error: false });
+    } catch (e) {
+      fallo(e);
+    }
+  }
+
+  const nav: [PantallaAdopcion, string, () => void][] = [
+    ["inicio", "Adoptar", () => ir("pop", { tipo: "irA", pantalla: "inicio" })],
+    ["encuesta", "Mi hogar", empezar],
+    ["solicitudes", "Mis solicitudes", () => ir("pop", { tipo: "irA", pantalla: "solicitudes" })],
+  ];
   return (
-    <section className="pagina">
-      {mensaje && <p className="ds-msg ds-msg--ok" role="status">{mensaje}</p>}
-      <FormularioPerfil inicial={perfil ?? PERFIL_VACIO} nuevo={perfil === null}
-        alGuardar={(p) => hacer(() => guardarPerfil(token, p), "Perfil guardado.")} />
-      <div className="ds-tarjeta">
-        <h2>{perfil ? "Recomendados para tu hogar" : "Animales en adopción"}</h2>
-        {animales.length === 0 && <p className="ds-vacio"><strong>No hay animales publicados ahora.</strong>
-          El refugio publica animales nuevos con frecuencia: vuelve pronto.</p>}
-        <ul className="catalogo">
-          {animales.map((a) => (
-            <li key={a.animal_id} className="animal">
-              {a.foto && <img className="foto" src={a.foto} alt={`Foto de ${a.nombre}`}
-                loading="lazy" />}
-              <h3>{a.nombre}</h3>
-              <p className="ds-suave">{resumenAnimal(a)}</p><p>{a.descripcion}</p>
-              {"puntaje" in a && (
-                <p className="ds-suave"><span className="ds-insignia ds-insignia--baja">{a.puntaje}/100</span>
-                  {" "}Compatibilidad: {a.razones.join("; ")}.
-                  {a.alertas.length > 0 && <> Para conversar: {a.alertas.join("; ")}.</>}</p>)}
-              <button className="principal" onClick={() => void hacer(
-                () => solicitar(token, a.animal_id, ""),
-                `Solicitud enviada por ${a.nombre}. El refugio la revisará.`)}>
-                Quiero adoptarlo</button>
-            </li>))}
-        </ul>
-      </div>
-      <div className="ds-tarjeta">
-        <h2>Mis solicitudes</h2>
-        {mias.length === 0 && <p className="ds-vacio"><strong>Aún no has hecho solicitudes.</strong>
-          Elige un animal en «Recomendados para tu hogar» y toca «Quiero adoptarlo».</p>}
-        <ul className="lista-simple">
-          {mias.map((s) => (
-            <li key={s.id}>Solicitud {s.id} · {nombre(s.animal_id)} ·{" "}
-              <span className={`ds-insignia ds-insignia--${s.estado === "aprobada" ? "baja" : s.estado === "rechazada" ? "critica" : "info"}`}>
-                {nombreIndicador(s.estado)}</span>
-              {s.estado === "aprobada" && (
-                <> {" "}<button onClick={() => void hacer(() => descargarCompromiso(token, s.id),
-                  "Compromiso descargado: imprímelo y fírmalo en el refugio.")}>
-                  Descargar compromiso (PDF)</button></>)}
-            </li>))}
-        </ul>
-      </div>
-    </section>
+    <div className={`adop${prefs.movimiento ? " adop--mov" : " adop--quieto"}`}>
+      <Fondo />
+      <header className="adop-barra">
+        <span className="adop-marca">
+          <Huella tam={28} color="#E8508A" className="bambolea" />
+          <span className="h adop-marca-texto">Patitas en Casa</span>
+        </span>
+        <nav className="adop-nav solo-pc" aria-label="Adopción">
+          {nav.map(([p, texto, accion]) => (
+            <button key={p} className="adop-nav-boton" onClick={accion}
+              aria-current={s.pantalla === p ? "page" : undefined}>{texto}</button>))}
+        </nav>
+        <div className="adop-controles">
+          <button className="adop-control" aria-label="Música" aria-pressed={prefs.musica && sonando}
+            title={prefs.musica && sonando ? "Apagar la música" : "Prender la música"}
+            onClick={() => cambiar("musica")}>
+            <Icono d="M9 18V5l12-2v13M6 15a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM18 13a3 3 0 1 0 0 6a3 3 0 1 0 0-6z" tam={18} grosor={2.2} />
+            {prefs.musica && sonando
+              ? <span className="ecualizador" aria-hidden="true"><i /><i /><i /></span>
+              : <span className="solo-pc adop-control-texto">Música</span>}
+          </button>
+          <button className="adop-control" aria-label="Sonidos al tocar" aria-pressed={prefs.efectos}
+            title="Sonidos al tocar" onClick={() => cambiar("efectos")}>
+            <Icono d={prefs.efectos ? "M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"
+              : "M11 5L6 9H2v6h4l5 4zM16 9l6 6M22 9l-6 6"} tam={18} grosor={2.2} />
+          </button>
+          <button className="adop-control" aria-label="Movimiento" aria-pressed={prefs.movimiento}
+            title="Animaciones" onClick={() => cambiar("movimiento")}>
+            <Icono d={prefs.movimiento ? "M3 9c2-3 4-3 6 0s4 3 6 0 4-3 6 0M3 15c2-3 4-3 6 0s4 3 6 0 4-3 6 0"
+              : "M3 9h18M3 15h18"} tam={18} grosor={2.2} />
+          </button>
+          <button className="adop-control adop-salir" onClick={alSalir} title={`Salir (${nombre})`}>
+            <Icono d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" tam={18} grosor={2.2} />
+            <span className="adop-salir-texto">Salir</span>
+          </button>
+        </div>
+      </header>
+      <Despertando />
+      <main className={`adop-contenido adop-contenido--${s.pantalla}`}>
+        {mensaje && (
+          <p className={`adop-mensaje${mensaje.error ? " adop-mensaje--error" : ""}`}
+            role={mensaje.error ? "alert" : "status"}>{mensaje.texto}</p>)}
+        {s.pantalla === "inicio" && (
+          <Bienvenida catalogo={datos.catalogo} cargando={datos.cargando} mias={datos.mias}
+            alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
+            alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
+        {s.pantalla === "encuesta" && (
+          <Encuesta paso={s.paso} respuestas={s.respuestas} catalogo={datos.catalogo}
+            alAtras={() => ir("atras", { tipo: "atras" })}
+            alResponder={(i) => {
+              const valor = PREGUNTAS[s.paso].opciones[i].valor;
+              const efecto: Efecto = valor === "perro" ? "guau" : valor === "gato" ? "miau"
+                : s.paso < PREGUNTAS.length - 1 ? "siguiente" : "elegir";
+              ir(efecto, { tipo: "responder", opcion: i });
+            }} />)}
+        {s.pantalla === "combinan" && (
+          <Combinan recomendados={datos.recomendados} respuestas={s.respuestas}
+            cargando={datos.cargando || s.guardar} ocultos={ocultos} total={fuente.length}
+            alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
+            alVerTodos={() => ir("siguiente", { tipo: "verTodos" })} alRepetir={empezar} />)}
+        {s.pantalla === "elegir" && (
+          <Elegir lista={visibles} animal={animal} filtro={s.filtro} conteo={contar(fuente)}
+            ocultos={ocultos} cargando={datos.cargando} conPerfil={conPerfil}
+            aceptaSeguimiento={datos.perfil?.acepta_seguimiento ?? false} mias={datos.mias}
+            enviando={enviando}
+            alFiltrar={(f) => ir("pop", { tipo: "filtrar", filtro: f })}
+            alMover={(paso) => ir("pasar", { tipo: "mover", ids: visibles.map((a) => a.animal_id), paso })}
+            alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
+            alElegir={(a) => void elegir(a)}
+            alVerSolicitud={(a) => ir("pop", { tipo: "solicitado", animal: a.animal_id, recien: false })}
+            alRevisar={empezar} alAtras={() => ir("atras", { tipo: "atras" })} />)}
+        {s.pantalla === "listo" && s.elegido !== null && (
+          <Listo animal={animalDe(s.elegido)} solicitud={solicitudDe(datos.mias, s.elegido)}
+            recien={s.recien} alDescargar={(id) => void descargar(id)}
+            alInicio={() => ir("atras", { tipo: "irA", pantalla: "inicio" })}
+            alSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
+        {s.pantalla === "solicitudes" && (
+          <MisSolicitudes mias={datos.mias} animalDe={animalDe}
+            alVer={(x) => ir("pop", { tipo: "solicitado", animal: x.animal_id, recien: false })}
+            alDescargar={(id) => void descargar(id)} alAtras={() => ir("atras", { tipo: "atras" })}
+            alVerTodos={() => ir("siguiente", { tipo: "verTodos" })} />)}
+      </main>
+    </div>
   );
 }
 
-function FormularioPerfil({ inicial, nuevo, alGuardar }: {
-  inicial: Perfil; nuevo: boolean; alGuardar: (p: Perfil) => void;
-}) {
-  const [p, setP] = useState(inicial);
-  useEffect(() => setP(inicial), [inicial]);
-  const marca = (campo: keyof Perfil, texto: string) => (
-    <label className="en-linea"><input type="checkbox" checked={p[campo] as boolean}
-      onChange={(e) => setP({ ...p, [campo]: e.target.checked })} /> {texto}</label>);
+/** Manchas pastel y huellas que flotan detrás de todo (decorativo). */
+function Fondo() {
   return (
-    <form className="ds-tarjeta" onSubmit={(e) => { e.preventDefault(); alGuardar(p); }}>
-      <h2>Mi perfil {nuevo && <small>(llénalo para poder solicitar)</small>}</h2>
-      <label>Vivienda<select value={p.vivienda}
-        onChange={(e) => setP({ ...p, vivienda: e.target.value as Perfil["vivienda"] })}>
-        <option value="casa">Casa</option><option value="apartamento">Apartamento</option>
-        <option value="finca">Finca</option></select></label>
-      <label>Horas que pasaría solo al día<input type="number" min={0} max={24}
-        value={p.horas_solo_al_dia}
-        onChange={(e) => setP({ ...p, horas_solo_al_dia: Number(e.target.value) })} /></label>
-      {marca("tiene_patio", "Tengo patio")}
-      {marca("hay_ninos", "En casa hay niños")}
-      {marca("otros_animales", "Tengo otros animales")}
-      {marca("experiencia", "Ya he cuidado perros o gatos")}
-      <p>{marca("acepta_seguimiento",
-        "Acepto los seguimientos del refugio a los 30, 90 y 180 días (obligatorio)")}</p>
-      <button className="principal">Guardar perfil</button>
-    </form>
+    <div className="adop-fondo" aria-hidden="true">
+      <span className="mancha mancha--rosa" /><span className="mancha mancha--lila" />
+      <span className="mancha mancha--menta" /><span className="mancha mancha--amarillo" />
+      <Huella tam={26} color="#F2B8CB" className="huella-flota huella-1" />
+      <Huella tam={20} color="#C9BDF5" className="huella-flota huella-2" />
+      <Huella tam={22} color="#F7D77A" className="huella-flota huella-3" />
+      <Huella tam={18} color="#A9DDB6" className="huella-flota huella-4" />
+    </div>
   );
+}
+
+/** Sonido y preferencias: la música espera el primer toque y se detiene al salir de la vista
+ *  o al ocultar la pestaña; las preferencias se recuerdan en este navegador. */
+function useSonido() {
+  const [prefs, setPrefs] = useState<Preferencias>(() => leerPreferencias());
+  const sonido = useRef<Sonido | null>(null);
+  if (!sonido.current) sonido.current = new Sonido(prefs);
+  const [sonando, setSonando] = useState(false);
+
+  useEffect(() => {
+    const so = sonido.current!;
+    const alCambiarVisibilidad = () => {
+      if (document.hidden) so.detenerMusica(); else so.reanudar();
+      setSonando(so.sonando);
+    };
+    document.addEventListener("visibilitychange", alCambiarVisibilidad);
+    return () => {
+      document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      so.cerrar(); // salir de la vista (por ejemplo, «Salir»): se calla y suelta el audio
+    };
+  }, []);
+
+  const toque = useCallback((efecto?: Efecto) => {
+    const so = sonido.current!;
+    so.despertar();
+    if (efecto) so.efecto(efecto);
+    setSonando(so.sonando);
+  }, []);
+
+  const cambiar = (clave: keyof Preferencias) => {
+    const so = sonido.current!;
+    let nuevas = { ...prefs, [clave]: !prefs[clave] };
+    // Con la música elegida pero aún callada (no ha habido un toque), el botón la prende.
+    if (clave === "musica" && prefs.musica && !so.sonando) nuevas = { ...prefs };
+    if (clave === "musica") so.cambiarMusica(nuevas.musica);
+    if (clave === "efectos") so.efectos = nuevas.efectos;
+    if (clave === "efectos" && nuevas.efectos) so.efecto("pop"); else so.despertar();
+    setPrefs(nuevas);
+    guardarPreferencias(nuevas);
+    setSonando(so.sonando);
+  };
+
+  return { prefs, sonando, toque, cambiar };
 }
