@@ -1,0 +1,163 @@
+import { describe, expect, it } from "vitest";
+import type { AnimalPublicado, Perfil, Recomendado } from "./apiAdopcion";
+import { PREGUNTAS } from "./encuesta";
+import {
+  EstadoFlujo, INICIAL, actual, contar, edadTexto, estadisticas, filtrar, flujo, hoyYAdulto,
+  mejores, pasosSolicitud, razonCorta, solicitudDe,
+} from "./flujoAdopcion";
+
+const animal = (id: number, especie: string, extra: Partial<AnimalPublicado> = {}): AnimalPublicado => ({
+  animal_id: id, nombre: `A${id}`, especie, descripcion: "x", tamano: "mediano", energia: "media",
+  edad_meses: 24, apto_ninos: true, apto_otros_animales: false, necesita_patio: false, ...extra });
+const recomendado = (id: number, especie: string, puntaje: number,
+                     extra: Partial<AnimalPublicado> = {}): Recomendado => ({
+  ...animal(id, especie, extra), puntaje, razones: ["no exige experiencia previa", "b", "c"],
+  alertas: [], restricciones: [] });
+
+const PERFIL: Perfil = { vivienda: "casa", tiene_patio: true, hay_ninos: false,
+  otros_animales: false, horas_solo_al_dia: 4, experiencia: true, acepta_seguimiento: true };
+
+describe("navegación entre pantallas", () => {
+  it("bienvenida → encuesta → «combinan contigo», y al final pide guardar el perfil", () => {
+    let s = flujo(INICIAL, { tipo: "empezar", perfil: null });
+    expect(s.pantalla).toBe("encuesta");
+    expect(s.paso).toBe(0);
+    for (let i = 0; i < PREGUNTAS.length - 1; i++) {
+      s = flujo(s, { tipo: "responder", opcion: 0 });
+      expect(s.pantalla).toBe("encuesta");
+      expect(s.paso).toBe(i + 1);
+      expect(s.guardar).toBe(false);
+    }
+    s = flujo(s, { tipo: "responder", opcion: 0 });
+    expect(s.pantalla).toBe("combinan");
+    expect(s.guardar).toBe(true);
+    expect(s.filtro).toBe("perro"); // respondió «Perrito»
+    expect(flujo(s, { tipo: "guardado" }).guardar).toBe(false);
+  });
+
+  it("«Atrás» en la encuesta vuelve a la pregunta anterior y en la primera, a la bienvenida", () => {
+    let s = flujo(INICIAL, { tipo: "empezar", perfil: null });
+    s = flujo(s, { tipo: "responder", opcion: 1 });
+    expect(flujo(s, { tipo: "atras" }).paso).toBe(0);
+    expect(flujo(flujo(s, { tipo: "atras" }), { tipo: "atras" }).pantalla).toBe("inicio");
+  });
+
+  it("empezar con perfil precarga sus respuestas y conserva especie y tamaño de la visita", () => {
+    const antes: EstadoFlujo = { ...INICIAL, respuestas: { especie: "gato", tamano: "igual" } };
+    const s = flujo(antes, { tipo: "empezar", perfil: PERFIL });
+    expect(s.respuestas).toMatchObject({ ...PERFIL, especie: "gato", tamano: "igual" });
+  });
+
+  it("«Ver a todos» y tocar un animal abren «Elige»; «Atrás» vuelve de donde vino", () => {
+    const desdeInicio = flujo(INICIAL, { tipo: "verTodos" });
+    expect(desdeInicio).toMatchObject({ pantalla: "elegir", filtro: "todos" });
+    expect(flujo(desdeInicio, { tipo: "atras" }).pantalla).toBe("inicio");
+    const combinan: EstadoFlujo = { ...INICIAL, pantalla: "combinan", filtro: "gato" };
+    const viendo = flujo(combinan, { tipo: "ver", animal: 7 });
+    expect(viendo).toMatchObject({ pantalla: "elegir", elegido: 7, filtro: "todos" });
+    expect(flujo(viendo, { tipo: "atras" }).pantalla).toBe("combinan");
+  });
+
+  it("anterior y siguiente dan la vuelta a la lista visible", () => {
+    const s: EstadoFlujo = { ...INICIAL, pantalla: "elegir", elegido: 3 };
+    const ids = [1, 3, 5];
+    expect(flujo(s, { tipo: "mover", ids, paso: 1 }).elegido).toBe(5);
+    expect(flujo(s, { tipo: "mover", ids, paso: -1 }).elegido).toBe(1);
+    expect(flujo({ ...s, elegido: 5 }, { tipo: "mover", ids, paso: 1 }).elegido).toBe(1);
+    expect(flujo({ ...s, elegido: 99 }, { tipo: "mover", ids, paso: 1 }).elegido).toBe(3);
+    expect(flujo(s, { tipo: "mover", ids: [], paso: 1 })).toBe(s);
+  });
+
+  it("al solicitar se va a «¡Lo elegiste!» y de ahí a la bienvenida o a mis solicitudes", () => {
+    const listo = flujo({ ...INICIAL, pantalla: "elegir" }, { tipo: "solicitado", animal: 3, recien: true });
+    expect(listo).toMatchObject({ pantalla: "listo", elegido: 3, recien: true });
+    expect(flujo(listo, { tipo: "irA", pantalla: "solicitudes" })).toMatchObject(
+      { pantalla: "solicitudes", recien: false });
+    expect(flujo(listo, { tipo: "irA", pantalla: "inicio" }).pantalla).toBe("inicio");
+  });
+
+  it("el animal visible es el elegido si sigue en la lista filtrada; si no, el primero", () => {
+    expect(actual([1, 2], 2)).toBe(2);
+    expect(actual([1, 2], 9)).toBe(1);
+    expect(actual([], 9)).toBeNull();
+  });
+});
+
+describe("filtros", () => {
+  const todos = [animal(1, "perro"), animal(2, "gato"), animal(3, "perro")];
+  it("Todos, Perritos y Gatitos, con su conteo", () => {
+    expect(filtrar(todos, "todos")).toHaveLength(3);
+    expect(filtrar(todos, "perro").map((a) => a.animal_id)).toEqual([1, 3]);
+    expect(filtrar(todos, "gato").map((a) => a.animal_id)).toEqual([2]);
+    expect(contar(todos)).toEqual({ todos: 3, perro: 2, gato: 1 });
+  });
+
+  it("los 3 que más combinan respetan el orden del servidor y las preferencias", () => {
+    const lista = [recomendado(1, "perro", 90, { tamano: "grande" }), recomendado(2, "gato", 85),
+      recomendado(3, "perro", 80), recomendado(4, "perro", 70), recomendado(5, "perro", 60)];
+    expect(mejores(lista, {}).lista.map((a) => a.animal_id)).toEqual([1, 2, 3]);
+    expect(mejores(lista, { especie: "perro" }).lista.map((a) => a.animal_id)).toEqual([1, 3, 4]);
+    expect(mejores(lista, { especie: "perro", tamano: "mediano" })).toEqual(
+      { lista: [lista[2], lista[3], lista[4]], ajustado: false });
+  });
+
+  it("si el filtro deja la lista vacía, se afloja y lo dice", () => {
+    const lista = [recomendado(1, "perro", 90), recomendado(2, "perro", 80)];
+    const soloEspecie = mejores(lista, { especie: "perro", tamano: "pequeno" });
+    expect(soloEspecie).toMatchObject({ ajustado: true });
+    expect(soloEspecie.lista).toHaveLength(2);
+    expect(mejores(lista, { especie: "gato" })).toMatchObject({ ajustado: true });
+    expect(mejores([], { especie: "gato" })).toEqual({ lista: [], ajustado: false });
+  });
+});
+
+describe("lo que se muestra de cada animal", () => {
+  it("las barras salen solo de datos reales; la compatibilidad, solo con puntaje", () => {
+    const sinPuntaje = estadisticas(animal(1, "perro", { energia: "alta", apto_ninos: false }));
+    expect(sinPuntaje.map((e) => e.etiqueta)).toEqual(
+      ["Energía", "Apto con niños", "Apto con otros animales", "Necesita patio"]);
+    expect(sinPuntaje[0]).toMatchObject({ valor: 100, texto: "Alta" });
+    expect(sinPuntaje[1]).toMatchObject({ valor: 0, texto: "No" });
+    const conPuntaje = estadisticas(recomendado(1, "gato", 72));
+    expect(conPuntaje.at(-1)).toEqual({ etiqueta: "Compatibilidad", valor: 72, texto: "72 %" });
+    const etiquetas = conPuntaje.map((e) => e.etiqueta.toLowerCase()).join(" ");
+    expect(etiquetas).not.toMatch(/cariño|juego/);
+  });
+
+  it("la razón corta es la más fuerte del servidor, en mayúscula", () => {
+    expect(razonCorta(recomendado(1, "gato", 80))).toBe("No exige experiencia previa.");
+    expect(razonCorta({ ...recomendado(1, "gato", 80), razones: [] })).toBe("");
+  });
+
+  it("edad y franja «Hoy → De adulto»", () => {
+    expect(edadTexto(1)).toBe("1 mes");
+    expect(edadTexto(8)).toBe("8 meses");
+    expect(edadTexto(12)).toBe("1 año");
+    expect(edadTexto(30)).toBe("2 años");
+    expect(hoyYAdulto(animal(1, "perro", { edad_meses: 4, tamano: "grande" })))
+      .toEqual({ hoy: "4 meses, aún crece", adulto: "Tamaño grande" });
+    expect(hoyYAdulto(animal(1, "gato", { edad_meses: 36, tamano: "pequeno" })))
+      .toEqual({ hoy: "3 años", adulto: "Ya es adulto · tamaño pequeño" });
+  });
+});
+
+describe("solicitudes", () => {
+  it("los pasos siguen el estado real de la solicitud", () => {
+    expect(pasosSolicitud("pendiente").map((p) => p.estado)).toEqual(["hecho", "ahora", "luego"]);
+    expect(pasosSolicitud("visita")[1].titulo).toMatch(/Visita/);
+    expect(pasosSolicitud("aprobada").map((p) => p.estado)).toEqual(["hecho", "hecho", "ahora"]);
+    expect(pasosSolicitud("rechazada").map((p) => p.estado)).toEqual(["hecho", "no"]);
+    expect(pasosSolicitud("devuelta")[1].titulo).toBe("Devuelta");
+  });
+
+  it("la solicitud de un animal es la abierta o, si no hay, la más reciente", () => {
+    const mias = [
+      { id: 1, animal_id: 5, estado: "rechazada", creada_en: "2026-11-01T00:00:00Z" },
+      { id: 2, animal_id: 5, estado: "pendiente", creada_en: "2026-11-02T00:00:00Z" },
+      { id: 3, animal_id: 6, estado: "rechazada", creada_en: "2026-11-01T00:00:00Z" },
+      { id: 4, animal_id: 6, estado: "aprobada", creada_en: "2026-11-03T00:00:00Z" }];
+    expect(solicitudDe(mias, 5)?.id).toBe(2);
+    expect(solicitudDe(mias, 6)?.id).toBe(4);
+    expect(solicitudDe(mias, 7)).toBeUndefined();
+  });
+});
