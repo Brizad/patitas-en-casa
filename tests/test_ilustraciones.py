@@ -56,11 +56,12 @@ def test_los_iconos_de_rol_se_sirven_como_svg(c):
 
 
 def test_la_pagina_de_inicio_muestra_un_icono_por_rol(c):
+    # Inicio v3: tarjeta de color por rol con su ícono de trazo oscuro dentro de un círculo blanco
+    # (como el prototipo); los SVG de /diseno/roles/ siguen en la cabecera del panel.
     html = c.get("/").text
-    css = (RAIZ / "app" / "inicio" / "inicio.css").read_text(encoding="utf-8")
     for rol in ROLES:
-        assert f'class="rol rol-{rol}"' in html, rol  # tarjeta blanca del rol con su icono
-        assert f"url(/diseno/roles/{rol}.svg)" in css, rol
+        tarjeta = re.search(rf'<li class="rol rol-{rol}">(.*?)</li>', html).group(1)
+        assert '<span class="rol-icono"><svg class="icono"' in tarjeta, rol
 
 
 def test_el_panel_muestra_el_icono_del_rol_en_la_cabecera():
