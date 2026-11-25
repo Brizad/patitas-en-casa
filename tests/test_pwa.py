@@ -340,6 +340,15 @@ def test_el_mapa_solo_abre_las_teselas_de_osm_como_imagen(c):
         assert "openstreetmap" not in directivas[otra], otra
 
 
+def test_las_teselas_envian_el_origen_y_la_pagina_sigue_sin_referer(c):
+    # OSM bloquea (403, «Access blocked») las teselas que llegan sin Referer (arreglos, parte D).
+    assert c.get("/app/").headers["referrer-policy"] == "no-referrer"
+    politica = "referrerPolicy: 'strict-origin-when-cross-origin'"
+    assert politica in (CARPETA_PWA / "mapa.js").read_text(encoding="utf-8")
+    panel = CARPETA_PWA.parents[1] / "panel" / "src" / "MiniMapa.tsx"
+    assert 'referrerPolicy: "strict-origin-when-cross-origin"' in panel.read_text(encoding="utf-8")
+
+
 def test_leaflet_va_dentro_del_repositorio_con_su_licencia(c):
     carpeta = CARPETA_PWA / "vendor" / "leaflet"
     assert "BSD" in (carpeta / "LICENSE").read_text(encoding="utf-8")
@@ -364,3 +373,18 @@ def test_consultar_es_publico_y_no_muestra_mapa_ni_direccion(c):
     assert "mapa" not in estado.lower() and "direccion" not in estado.lower()
     js = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
     assert "leaflet" not in js.lower() and "L.map" not in js
+
+
+def test_reportar_en_computador_tiene_panel_de_ayuda_que_el_telefono_oculta(c):
+    # Arreglos, parte D: pasos · formulario · foto real con «Un veterinario revisa tu reporte» y
+    # «Mientras llega la ayuda» (3 consejos). En el teléfono el panel derecho no se ve.
+    html = c.get("/app/").text
+    panel = html[html.index('<aside class="reportar-ayuda solo-pc"'):]
+    panel = panel[:panel.index("</aside>")]
+    assert 'data-animal="Max"' in panel and "Un veterinario revisa tu reporte" in panel
+    assert "Mientras llega la ayuda" in panel and panel.count("<li>") == 3
+    css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
+    assert ".reportar-ayuda { display: none; }" in css
+    tres = css[css.index("@media (min-width: 1024px)"):]
+    assert '"titulo cuerpo ayuda"' in tres and "max-width: 1280px" in tres
+    assert "grid-template-rows: auto 1fr" in css  # sin el hueco entre el título y los pasos
