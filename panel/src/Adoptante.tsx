@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import "@fontsource-variable/fredoka";
-import "@fontsource-variable/nunito";
 import "./adoptante.css";
 import {
   AnimalPublicado, MiSolicitud, Perfil, Recomendado, catalogo, descargarCompromiso, guardarPerfil,

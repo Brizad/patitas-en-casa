@@ -1,0 +1,113 @@
+/* Pantallas del personal (#432), con el estilo del prototipo docs/prototipo/personal-cola-veterinario
+   .dc.html: el mismo de la adopción, más tranquilo (sin música ni animales caminando). Es una capa
+   sobre las piezas del sistema (ds-tarjeta, ds-btn, ds-insignia, ds-msg…): ninguna pantalla cambia
+   su lógica ni sus permisos. Siempre en claro (los colores son fijos y cumplen AA). La vista del
+   adoptante (su vista «Elige a tu compañero») tiene sus propios colores y no se ve afectada. */
+.ds {
+  --ds-fondo: #FFF8EE; --ds-superficie: #FFFFFF; --ds-tinta: #2B2340; --ds-suave: #5B5070;
+  --ds-linea: #D9D2EA; --ds-linea-fuerte: #2B2340; --ds-realce: #F1ECFF;
+  --ds-marca: #5B3FD9; --ds-marca-tenue: #F1ECFF; --ds-marca-fuerte: #3D2A8C; --ds-sobre-marca: #FFFFFF;
+  --ds-accion: #2B2340; --ds-sobre-accion: #FFFFFF;
+  --ds-fuente: 'Nunito Variable', 'Nunito', system-ui, sans-serif;
+  --pc-serif: 'Fredoka Variable', 'Fredoka', system-ui, sans-serif;
+  --p-critica: #D93A3A; --p-alta: #F2A93B; --p-media: #FFD23F; --p-baja: #3FA66B;
+  color-scheme: light; background: #FFF8EE; color: #2B2340;
+}
+.ds h1, .ds h2, .ds h3 { font-family: var(--pc-serif); font-weight: 700; letter-spacing: -.01em; }
+.ds :focus-visible { outline: 3px solid #7A5AF8; outline-offset: 2px; }
+
+/* ---------- piezas del sistema con el estilo del prototipo ---------- */
+.ds .ds-tarjeta { background: #FFFFFF; border: 2.5px solid #2B2340; border-radius: 24px; box-shadow: 5px 5px 0 #2B2340; }
+:where(.personal, .acceso) button, :where(.personal, .acceso) .ds-btn { border: 2px solid #2B2340; border-radius: 999px; font-weight: 800; box-shadow: 2px 2px 0 #2B2340;
+  transition: translate .12s ease, box-shadow .12s ease, background-color .15s; }
+:where(.personal, .acceso) button:hover:not(:disabled), :where(.personal, .acceso) .ds-btn:hover { translate: -1px -1px; box-shadow: 3px 3px 0 #2B2340; background: #F1ECFF; }
+:where(.personal, .acceso) button:active:not(:disabled) { translate: 1px 1px; box-shadow: 0 0 0 #2B2340; }
+:where(.personal, .acceso) button.enlace, :where(.personal, .acceso) button.enlace:hover:not(:disabled) {
+  border: 0; border-radius: 4px; box-shadow: none; background: transparent; translate: none; padding: 0 4px;
+  color: #5B3FD9; text-decoration: underline; text-underline-offset: 3px; }
+:where(.personal, .acceso) button.principal, :where(.personal, .acceso) .ds-btn--pri { background: #2B2340; color: #FFFFFF; box-shadow: 4px 4px 0 #7A5AF8; }
+:where(.personal, .acceso) button.principal:hover:not(:disabled), :where(.personal, .acceso) .ds-btn--pri:hover { background: #3D2A8C; color: #FFFFFF; box-shadow: 5px 5px 0 #7A5AF8; }
+.ds .ds-btn--peligro { background: #FFFFFF; color: #A3123F; border-color: #A3123F; box-shadow: 2px 2px 0 #A3123F; }
+:where(.personal, .acceso) :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), select, textarea) {
+  border: 2px solid #2B2340; border-radius: 14px; background: #FFFFFF; font-weight: 700; }
+.ds .ds-suave { color: #5B5070; }
+.ds code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-weight: 700; }
+
+/* Avisos como tarjetas: verde si salió bien, rosa si falló, lila si informa. */
+.ds .ds-msg { border: 2px solid #2B2340; border-radius: 18px; box-shadow: 3px 3px 0 #2B2340; font-weight: 700; color: #2B2340; }
+.ds .ds-msg--ok { background: #D7F0DC; border-color: #2B2340; color: #1F5132; }
+.ds .ds-msg--error { background: #FFE3E3; border-color: #A3123F; color: #8A1030; box-shadow: 3px 3px 0 #A3123F; }
+.ds .ds-msg--info { background: #F1ECFF; color: #2B2340; }
+.ds .ds-msg--aviso { background: #FFF1C9; color: #2B2340; }
+
+/* Prioridad con color Y forma: crítica (triángulo con ! que late), alta (triángulo), media
+   (cuadrado), baja (círculo). La forma es una máscara SVG del propio servidor (/diseno/prioridad). */
+.ds .ds-insignia { border: 2px solid #2B2340; font-weight: 900; padding: 2px 10px 2px 6px; }
+.ds .ds-insignia::before { width: 14px; height: 14px; border: 0; border-radius: 0; transform: none; clip-path: none;
+  background: currentColor; -webkit-mask: var(--forma) center / contain no-repeat; mask: var(--forma) center / contain no-repeat; }
+.ds .ds-insignia--info::before, .ds .ds-insignia:not([class*="--"])::before { --forma: url(/diseno/prioridad/baja.svg); width: 8px; height: 8px; }
+.ds .ds-insignia--critica { --forma: url(/diseno/prioridad/critica.svg); background: var(--p-critica); color: #FFFFFF; animation: pulso 1.4s ease-out infinite; }
+.ds .ds-insignia--alta { --forma: url(/diseno/prioridad/alta.svg); background: var(--p-alta); color: #2B2340; }
+.ds .ds-insignia--media { --forma: url(/diseno/prioridad/media.svg); background: var(--p-media); color: #2B2340; }
+.ds .ds-insignia--baja { --forma: url(/diseno/prioridad/baja.svg); background: var(--p-baja); color: #10301C; }
+.ds .ds-insignia--info { background: #F1ECFF; color: #2B2340; }
+@keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(217, 58, 58, .55); } 100% { box-shadow: 0 0 0 10px rgba(217, 58, 58, 0); } }
+
+/* ---------- menú lateral oscuro (computador) y compacto (celular) ---------- */
+.personal { min-height: 100vh; }
+.lateral { background: #2B2340; color: #FFFFFF; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; }
+.lateral-marca { display: flex; align-items: center; gap: 8px; margin: 0; flex: 1; font: 700 19px var(--pc-serif); }
+.lateral .ds-pestanas { order: 3; width: 100%; display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; padding: 0 0 4px; }
+.lateral .ds-pestanas button { flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px;
+  border: 2px solid transparent; border-radius: 14px; background: transparent; color: #FFFFFF; box-shadow: none; font-size: 15px; }
+.lateral .ds-pestanas button:hover:not(:disabled) { background: #3D3358; translate: none; box-shadow: none; }
+.lateral .ds-pestanas button[aria-current="page"], .lateral .ds-pestanas button[aria-current="page"]:hover:not(:disabled) {
+  background: #FFFFFF; color: #2B2340; border-color: #FFFFFF; }
+.lateral .ds-pestanas svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.lateral-cuenta { display: flex; align-items: center; gap: 10px; }
+.lateral-cuenta .icono-rol { margin: 0; background: #FFFFFF; border-radius: 999px; padding: 4px; }
+.lateral-cuenta .quien { display: none; color: #FFFFFF; }
+.lateral-cuenta .quien strong { font-size: 13px; } .lateral-cuenta .rol { color: #C9C0E0; font-size: 12px; font-weight: 700; }
+.lateral-cuenta button { background: #FFFFFF; color: #2B2340; box-shadow: none; }
+.contenido { min-width: 0; }
+.encabezado { padding: 14px 16px 0; }
+.encabezado .saludo { margin: 0; font-size: 13px; font-weight: 800; color: #5B5070; }
+.encabezado h1 { margin: 0; font-size: 30px; line-height: 1.05; }
+@media (min-width: 900px) {
+  /* la columna oscura llega hasta el final aunque la página sea larga (el menú va pegado arriba) */
+  .personal { display: grid; grid-template-columns: 232px minmax(0, 1fr); align-items: start;
+    background: linear-gradient(to right, #2B2340 232px, #FFF8EE 232px); }
+  .lateral { position: sticky; top: 0; height: 100vh; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; padding: 20px 14px; }
+  .lateral-marca { flex: none; padding: 0 8px 18px; }
+  .lateral .ds-pestanas { order: 0; flex-direction: column; overflow: visible; padding: 0; }
+  .lateral .ds-pestanas button { width: 100%; justify-content: flex-start; min-height: 46px; padding: 0 12px; }
+  .lateral-cuenta { margin-top: auto; padding: 10px; border: 2px solid #4A3F66; border-radius: 16px; flex-wrap: wrap; }
+  .lateral-cuenta .quien { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .lateral-cuenta button { width: 100%; }
+  .encabezado { padding: 20px 24px 0; }
+  .personal .pagina, .personal .cola { max-width: 1200px; margin: 0; }
+  .personal > .contenido > .ds-tarjeta { margin-left: 24px; }
+}
+/* el panel ya no tiene la cabecera flotante de antes: el ancho lo pone .contenido */
+.personal .pagina, .personal .cola { padding-top: 14px; }
+
+/* ---------- cola de triaje ---------- */
+.ds .item { border: 2.5px solid #2B2340; border-radius: 20px; box-shadow: 3px 3px 0 #2B2340; background: #FFFFFF; }
+.ds .item--critica { background: #FFE3E3; border-left-width: 8px; border-left-color: #2B2340; }
+.ds .item--alta { background: #FFF1DC; border-left-width: 5px; border-left-color: #2B2340; }
+.ds .item--media { background: #FFFBE6; } .ds .item--baja { background: #EAF7EE; }
+.ds .item.activo, .ds .item.activo:hover:not(:disabled) { background: #2B2340; color: #FFFFFF; box-shadow: 4px 4px 0 #7A5AF8; }
+.relato { margin: 0; background: #FFF1C9; border: 2px solid #2B2340; border-radius: 18px 18px 18px 4px; padding: 12px 14px; font-weight: 700; }
+.sugerencia { display: flex; gap: 14px; align-items: center; background: #F1ECFF; border: 2px solid #2B2340; border-radius: 20px; padding: 14px; }
+.sugerencia p { margin: 0; font-weight: 800; }
+.anillo-confianza { position: relative; flex: none; width: 76px; height: 76px; border-radius: 999px; border: 2px solid #2B2340;
+  background: conic-gradient(#7A5AF8 var(--grados, 0deg), #FFFFFF 0); display: flex; align-items: center; justify-content: center; }
+.anillo-confianza span { width: 56px; height: 56px; border-radius: 999px; background: #F1ECFF; border: 2px solid #2B2340; display: flex;
+  align-items: center; justify-content: center; font: 700 18px var(--pc-serif); }
+.evidencias--chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.evidencias--chips li { background: #FFFFFF; border: 1.5px solid #2B2340; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 800; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds .ds-insignia--critica { animation: none; }
+  :where(.personal, .acceso) :is(button, .ds-btn) { transition: none; }
+}
