@@ -304,8 +304,8 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 | 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | **publicada** (25-nov, bundle `index-CJMqVlvU.js`) | #423 |
 | 2 | Publicar los 22 animales del prototipo por la API | **hecha en producción**: 19 publicados, 3 saltados | #425 |
 | 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
-| 4 | Ciudadano (PWA) | en curso | — |
-| 5 | Mapa (Leaflet + OSM) | **en rama `feat/rediseno-parte-5`, sin PR** (pruebas locales en verde) | — |
+| 4 | Ciudadano (PWA) | **unida a main** (25-nov) | #429 |
+| 5 | Mapa (Leaflet + OSM) | en PR | #431 |
 | 6 | Pantallas del personal | pendiente | — |
 | 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
 
@@ -343,3 +343,8 @@ Decisiones y pendientes para el autor (se van sumando):
   - Pruebas locales: pytest de la PWA y vitest en verde; axe en 0 y sin errores de consola en 390 y 1366.
   - Falta: rebase sobre `main` cuando se una #429, abrir el PR (issue nuevo), CI y publicar.
 - Partes 6 (personal) y 7 (RN-02 con video, paginación de la restauración y verificar el bundle desplegado): **sin empezar**.
+
+**Parte 4 (unida, #429).**
+- Qué cambió: la app del ciudadano es la del prototipo. Tiene portada, reportar en 4 pasos con barra (celular) o lista (computador), botones rápidos, comunas como botones, resumen, «¡Gracias por avisar!» con sello y consulta con línea de tiempo. Hay sonidos suaves con interruptor.
+- Qué ver: abre `/app/`, toca «Reportar emergencia» y haz un reporte completo. Prueba el botón de sonido de la barra.
+- Pendiente: nada. En Linux el paso que entra deslizándose ensanchaba la página 4 px; se corrigió con un recorte.
