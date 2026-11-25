@@ -4,6 +4,15 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Adopción, parte 1 del rediseño (#422): ficha opcional en la publicación.
+  - Datos nuevos: cariño, energía, juego y calma (0 a 100), hasta 3 etiquetas, y peso de hoy y de adulto. La migración 0036 es aditiva y los campos son opcionales.
+  - El coordinador los llena con deslizadores y corrige lo ya publicado con `PUT /refugio/animales/{id}/publicacion`.
+  - «Elige a tu compañero» los muestra como el prototipo; si un animal no los tiene, esa parte no aparece.
+
+### Corregido
+- Las recomendaciones del adoptante (`GET /adopciones/recomendaciones`) ahora traen la foto del animal (#422).
+
 ### Cambiado
 - Adoptante (#420): nueva vista «Elige a tu compañero», con el estilo y el flujo del prototipo de adopción.
   - Pantallas: bienvenida con collage del catálogo y animalitos que caminan; encuesta de una pregunta por pantalla, que llena el perfil real (las mismas siete casillas, precargadas si ya hay perfil); «¡Ellos combinan contigo!», con los 3 mejores según el puntaje del servidor, su razón y sus alertas; selección tipo videojuego, con barras sacadas solo de datos reales; «¡Lo elegiste!», con los pasos según el estado real de la solicitud y el compromiso en PDF.
