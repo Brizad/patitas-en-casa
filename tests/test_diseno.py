@@ -188,3 +188,17 @@ def test_una_tarjeta_suelta_del_panel_no_toca_los_bordes():
     """#307: el modo piloto es una sola tarjeta sin contenedor de página; queda centrada."""
     panel = (CSS.parents[2] / "panel" / "src" / "estilos.css").read_text(encoding="utf-8")
     assert "max-width: 960px" in re.search(r"\.panel > \.ds-tarjeta \{([^}]*)\}", panel).group(1)
+
+
+def test_el_personal_con_el_estilo_del_prototipo():
+    """#432: capa sobre el sistema (panel/src/personal.css). La prioridad se ve con color y
+    forma; los avisos son tarjetas verdes; el adoptante conserva su estilo propio."""
+    css = (CSS.parents[2] / "panel" / "src" / "personal.css").read_text(encoding="utf-8")
+    for p in ("critica", "alta", "media", "baja"):
+        assert f".ds .ds-insignia--{p} {{ --forma: url(/diseno/prioridad/{p}.svg);" in css, p
+    assert re.search(r"\.ds-insignia--critica \{[^}]*animation: pulso", css)
+    assert re.search(r"\.ds \.ds-msg--ok \{[^}]*background: #D7F0DC", css)
+    assert ".adop" not in css and ":where(.personal, .acceso) button" in css
+    assert "@media (prefers-reduced-motion: reduce)" in css
+    main = (CSS.parents[2] / "panel" / "src" / "main.tsx").read_text(encoding="utf-8")
+    assert main.index('"./estilos.css"') < main.index('"./personal.css"')

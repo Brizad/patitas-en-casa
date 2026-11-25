@@ -165,3 +165,15 @@ describe("textos para personas, no para el documento de requisitos (#400)", () =
     expect(fuentes).toContain("{v > 0 && <span");
   });
 });
+
+describe("pantallas del personal como el prototipo (#432)", () => {
+  it("menú lateral con las mismas pantallas y el mismo «Salir»", () => {
+    expect(pantallas["./App.tsx"]).toContain('<aside className="lateral">');
+    expect(pantallas["./App.tsx"]).toContain('<nav className="ds-pestanas" aria-label="Secciones">');
+    expect(pantallas["./App.tsx"]).toContain("ICONO_PANTALLA[p]");
+  });
+  it("la sugerencia de la IA muestra su confianza en un anillo y la decisión sigue siendo del veterinario", () => {
+    expect(pantallas["./Cola.tsx"]).toContain('className="anillo-confianza"');
+    expect(pantallas["./Cola.tsx"]).toContain("<Confirmar key={detalle.codigo}");
+  });
+});

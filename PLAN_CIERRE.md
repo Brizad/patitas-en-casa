@@ -306,7 +306,7 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 | 3 | Página de inicio | **unida a main** (se confirma en producción en la parte 4) | #427 |
 | 4 | Ciudadano (PWA) | en curso | — |
 | 5 | Mapa (Leaflet + OSM) | pendiente | — |
-| 6 | Pantallas del personal | pendiente | — |
+| 6 | Pantallas del personal | en PR | #433 |
 | 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
 
 Decisiones y pendientes para el autor (se van sumando):
@@ -332,3 +332,7 @@ Decisiones y pendientes para el autor (se van sumando):
 **Notas de la parte 4 (PWA).**
 - El código de seguimiento usa la fuente monoespaciada del sistema: JetBrains Mono, la del prototipo, no está entre las fuentes locales.
 - La consulta **no** muestra «Prioridad alta» como el prototipo: RN-14 prohíbe mostrarle la prioridad al ciudadano.
+
+**Notas de la parte 6 (personal).**
+- Cuando el veterinario cambia la prioridad sugerida, el motivo ya lo pide y lo guarda el backend (RN-16, «Ajustar prioridad…», en `decisiones_triaje`). Se conserva tal cual: no se inventó ningún campo. El prototipo lo muestra como 4 botones de prioridad más un texto; aquí se mantiene el flujo «Confirmar / Ajustar prioridad…» que ya probaba el e2e.
+- Las capturas locales de esta parte se tomaron con el servidor de demostración en memoria (`scripts/accesibilidad/servidor_demo.py`). El PostgreSQL temporal se detuvo porque el equipo se quedó sin memoria, y no se volvió a arrancar.
