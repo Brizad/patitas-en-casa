@@ -199,6 +199,13 @@ erDiagram
     boolean necesita_patio
     varchar estado
     timestamp_with_time_zone publicado_en
+    smallint carino
+    smallint energia_nivel
+    smallint juego
+    smallint calma
+    varchar etiquetas
+    numeric peso_kg
+    numeric peso_adulto_kg
   }
   solicitudes {
     integer id PK

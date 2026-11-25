@@ -311,8 +311,6 @@ Restricciones e índices: `ck_perfiles_claro_o_cifrado`: `datos_cifrados IS NOT 
 
 ## `publicaciones`
 
-RF-25 (#85): animales publicados para adopción; una publicación por animal.
-
 | Columna | Tipo | Nulo | Clave | Por defecto | Descripción |
 |---|---|---|---|---|---|
 | `animal_id` | INTEGER | no | PK FK → animales.id | — | — |
@@ -325,8 +323,15 @@ RF-25 (#85): animales publicados para adopción; una publicación por animal.
 | `necesita_patio` | BOOLEAN | no | — | — | — |
 | `estado` | VARCHAR(12) | no | — | — | — |
 | `publicado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
+| `carino` | SMALLINT | sí | — | — | — |
+| `energia_nivel` | SMALLINT | sí | — | — | — |
+| `juego` | SMALLINT | sí | — | — | — |
+| `calma` | SMALLINT | sí | — | — | — |
+| `etiquetas` | VARCHAR(20)[] | sí | — | — | — |
+| `peso_kg` | NUMERIC(5, 2) | sí | — | — | — |
+| `peso_adulto_kg` | NUMERIC(5, 2) | sí | — | — | — |
 
-Restricciones e índices: `ck_publicaciones_edad`: `edad_meses BETWEEN 0 AND 360`; `ck_publicaciones_energia`: `energia IN ('baja', 'media', 'alta')`; `ck_publicaciones_estado`: `estado IN ('disponible', 'adoptado')`; `ck_publicaciones_tamano`: `tamano IN ('pequeno', 'mediano', 'grande')`.
+Restricciones e índices: `ck_publicaciones_calma`: `calma BETWEEN 0 AND 100`; `ck_publicaciones_carino`: `carino BETWEEN 0 AND 100`; `ck_publicaciones_edad`: `edad_meses BETWEEN 0 AND 360`; `ck_publicaciones_energia`: `energia IN ('baja', 'media', 'alta')`; `ck_publicaciones_energia_nivel`: `energia_nivel BETWEEN 0 AND 100`; `ck_publicaciones_estado`: `estado IN ('disponible', 'adoptado', 'retirada')`; `ck_publicaciones_etiquetas`: `cardinality(etiquetas) <= 3`; `ck_publicaciones_juego`: `juego BETWEEN 0 AND 100`; `ck_publicaciones_peso`: `peso_kg > 0 AND peso_kg <= 150`; `ck_publicaciones_peso_adulto`: `peso_adulto_kg > 0 AND peso_adulto_kg <= 150`; `ck_publicaciones_tamano`: `tamano IN ('pequeno', 'mediano', 'grande')`.
 
 ## `solicitudes`
 
