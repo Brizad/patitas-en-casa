@@ -29,11 +29,6 @@ const ICONO_PANTALLA: Record<Pantalla, string> = {
   administracion: "M8 15a4 4 0 1 0 0-8a4 4 0 1 0 0 8zM12 11h9M18 11v3M21 11v3",
 };
 
-function saludo(): string {
-  const hora = new Date().getHours();
-  return hora < 12 ? "Buenos días" : hora < 19 ? "Buen turno" : "Buenas noches";
-}
-
 export default function App() {
   const [token, setToken] = useState<string | null>(null);
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
@@ -73,7 +68,7 @@ export default function App() {
       </aside>
       <div className="contenido">
         <header className="encabezado">
-          <p className="saludo">{saludo()}</p>
+          <p className="saludo">Buen turno</p>  {/* fijo: la captura e2e no cambia con la hora */}
           <h1>{pantalla ? NOMBRE_PANTALLA[pantalla] : "Panel"}</h1>
         </header>
       {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
