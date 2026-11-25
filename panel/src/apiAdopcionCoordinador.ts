@@ -1,11 +1,15 @@
 // Llamadas del coordinador para la adopción (RF-25, RF-27, RF-10). Requieren su sesión.
 import { pedir } from "./api";
-import { Compatibilidad, Perfil } from "./apiAdopcion";
+import { AnimalPublicado, Compatibilidad, Perfil } from "./apiAdopcion";
 
 export interface NuevaPublicacion {
   descripcion: string; tamano: "pequeno" | "mediano" | "grande";
   energia: "baja" | "media" | "alta"; edad_meses: number; apto_ninos: boolean;
   apto_otros_animales: boolean; necesita_patio: boolean;
+  // #422: ficha «Elige a tu compañero» (opcional)
+  carino: number | null; energia_nivel: number | null; juego: number | null;
+  calma: number | null; etiquetas: string[]; peso_kg: number | null;
+  peso_adulto_kg: number | null;
 }
 export interface SolicitudRefugio {
   id: number; animal_id: number; animal: string; adoptante: string; mensaje: string;
@@ -26,6 +30,34 @@ const enviar = (cuerpo: unknown): RequestInit => ({
 
 export const publicar = (t: string, animalId: number, p: NuevaPublicacion) =>
   pedir(`/refugio/animales/${animalId}/publicacion`, enviar(p), t);
+/** #422: lo que ya está publicado se carga en el formulario para corregirlo. */
+export function desdeCatalogo(a: AnimalPublicado): NuevaPublicacion {
+  return { descripcion: a.descripcion, tamano: a.tamano as NuevaPublicacion["tamano"],
+    energia: a.energia as NuevaPublicacion["energia"], edad_meses: a.edad_meses,
+    apto_ninos: a.apto_ninos, apto_otros_animales: a.apto_otros_animales,
+    necesita_patio: a.necesita_patio, carino: a.carino ?? null,
+    energia_nivel: a.energia_nivel ?? null, juego: a.juego ?? null, calma: a.calma ?? null,
+    etiquetas: a.etiquetas ?? [], peso_kg: a.peso_kg ?? null,
+    peso_adulto_kg: a.peso_adulto_kg ?? null };
+}
+
+/** Lo que se envía: descripción y etiquetas sin espacios de más; las vacías no van. */
+export function paraEnviar(p: NuevaPublicacion): NuevaPublicacion {
+  return { ...p, descripcion: p.descripcion.trim(),
+           etiquetas: p.etiquetas.map((e) => e.trim()).filter(Boolean).slice(0, 3) };
+}
+
+/** Cambia la etiqueta i (de 3) sin perder las demás. */
+export function conEtiqueta(etiquetas: string[], i: number, texto: string): string[] {
+  const nuevas = [...etiquetas];
+  while (nuevas.length <= i) nuevas.push("");
+  nuevas[i] = texto;
+  return nuevas;
+}
+
+/** #422: corrige la publicación (y la ficha) de un animal que sigue disponible. */
+export const editarPublicacion = (t: string, animalId: number, p: NuevaPublicacion) =>
+  pedir(`/refugio/animales/${animalId}/publicacion`, { ...enviar(p), method: "PUT" }, t);
 export const solicitudesRefugio = (t: string) =>
   pedir<SolicitudRefugio[]>("/refugio/solicitudes", {}, t);
 /** 409 con el motivo si hay una restricción dura (RN-05) o ya se decidió (RN-11). */

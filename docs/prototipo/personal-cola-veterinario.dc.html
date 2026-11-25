@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Panel · Cola de triaje</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@500;700;800;900&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5B3FD9}a:hover{color:#3D2A8C}
+.pn *{box-sizing:border-box}
+.pn button{font-family:inherit;cursor:pointer}
+.pn button:focus-visible,.pn textarea:focus-visible{outline:3px solid #7A5AF8;outline-offset:2px}
+.h{font-family:'Fredoka',system-ui,sans-serif}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.lift{transition:transform .12s ease, box-shadow .12s ease}
+.lift:hover{transform:translate(-1px,-1px)}
+.scroll{overflow-y:auto}
+.scroll::-webkit-scrollbar{width:8px}.scroll::-webkit-scrollbar-thumb{background:#D9D2EA;border-radius:8px}
+
+/* celular */
+.side{display:none}
+.main{position:absolute;inset:0;display:flex;flex-direction:column}
+.cols{flex-grow:1;display:flex;flex-direction:column;min-height:0}
+.lista{flex-grow:1;padding:0 14px 14px}
+.det{position:absolute;inset:0;background:#FFF8EE;z-index:8;padding:0 14px 14px}
+.det-back{display:flex}
+.hdr{padding:14px 14px 10px}
+.prios{display:flex;gap:6px;overflow-x:auto}
+.only-desk{display:none !important}
+.ia-grid{display:flex;flex-direction:column;gap:10px}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+
+/* computador */
+.desk .side{display:flex}
+.desk .main{left:232px}
+.desk .cols{flex-direction:row;gap:20px;padding:0 24px 20px}
+.desk .lista{flex:0 0 400px;padding:0}
+.desk .det{position:relative;inset:auto;flex:1 1 auto;z-index:auto;padding:0;background:transparent}
+.desk .det-back{display:none}
+.desk .hdr{padding:20px 24px 14px}
+.desk .only-desk{display:flex !important}
+.desk .only-phone{display:none !important}
+.desk .ia-grid{flex-direction:row}
+.desk .seg{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+.mov .pulso{animation:pulso 1.4s ease-out infinite}
+.mov .pop{animation:pop .4s cubic-bezier(.2,1.5,.4,1) both}
+.mov .slide{animation:slide .3s ease-out both}
+.mov .toast{animation:toast .5s cubic-bezier(.2,1.5,.4,1) both}
+.mov .wig{animation:wig 3s ease-in-out infinite}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(217,58,58,.55)}100%{box-shadow:0 0 0 10px rgba(217,58,58,0)}}
+@keyframes pop{from{opacity:0;transform:scale(.9) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes slide{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes toast{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes wig{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion: reduce){.mov *{animation:none !important}}
+</style>
+</helmet>
+<div class="pn {{movClass}} {{deskClass}}" style="width: {{ancho}}px; height: {{alto}}px; position: relative; overflow: hidden; background: #FFF8EE; color: #2B2340; font-family: 'Nunito', system-ui, sans-serif;">
+
+<!-- menú lateral (computador) -->
+<div class="side" style="position: absolute; left: 0; top: 0; bottom: 0; width: 232px; background: #2B2340; color: #FFFFFF; flex-direction: column; padding: 20px 14px; gap: 6px;">
+<div style="display: flex; align-items: center; gap: 8px; padding: 0 8px 18px;">
+<svg class="wig" width="28" height="28" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+<span class="h" style="font-size: 19px; font-weight: 700;">Patitas en Casa</span>
+</div>
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="5">
+<button style="display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 12px; border-radius: 14px; border: 2px solid {{m.borde}}; background: {{m.bg}}; color: {{m.color}}; font-size: 15px; font-weight: 800; text-align: left;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{m.icono}}"></path></svg>
+<span style="flex-grow: 1;">{{m.txt}}</span>
+<sc-if value="{{m.badge}}" hint-placeholder-val="{{ false }}"><span style="min-width: 24px; height: 24px; border-radius: 999px; background: #E8508A; color: #FFFFFF; font-size: 12px; display: flex; align-items: center; justify-content: center; padding: 0 6px;">{{m.badge}}</span></sc-if>
+</button>
+</sc-for>
+<div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border: 2px solid #4A3F66; border-radius: 16px;">
+<span class="h" style="width: 38px; height: 38px; border-radius: 999px; background: #D7F0DC; color: #2B2340; display: flex; align-items: center; justify-content: center; font-weight: 700;">V</span>
+<span style="display: flex; flex-direction: column; font-size: 13px; font-weight: 800;"><span>Veterinario de turno</span><span style="color: #C9C0E0; font-weight: 700;">Refugio Cúcuta</span></span>
+</div>
+</div>
+
+<div class="main">
+<!-- encabezado -->
+<div class="hdr" style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column;">
+<span style="font-size: 13px; font-weight: 800; color: #5B5070;">Buen turno</span>
+<h1 class="h" style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.05;">Cola de triaje</h1>
+</div>
+<div style="display: flex; gap: 8px; align-items: center;">
+<span class="only-desk" style="align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #5B5070;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #3FA66B;"></span>Actualizado hace 1 min</span>
+<button class="lift" onClick="{{actualizar}}" style="height: 44px; padding: 0 14px; border: 2px solid #2B2340; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 800; color: #2B2340; box-shadow: 2px 2px 0 #2B2340; display: flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"></path></svg>Actualizar</button>
+</div>
+</div>
+<div class="prios">
+<sc-for list="{{filtros}}" as="f" hint-placeholder-count="5">
+<button onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="flex-shrink: 0; height: 38px; padding: 0 12px; border-radius: 999px; border: 2px solid #2B2340; background: {{f.bg}}; color: {{f.color}}; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 7px; box-shadow: {{f.sombra}};">
+<span style="width: 10px; height: 10px; border-radius: 999px; background: {{f.punto}}; border: 1.5px solid #2B2340;"></span>{{f.txt}}<span style="opacity: .8;">{{f.n}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div class="cols">
+<!-- lista -->
+<div class="lista scroll" style="display: flex; flex-direction: column; gap: 10px;">
+<sc-for list="{{visibles}}" as="r" hint-placeholder-count="5">
+<button class="lift pop" onClick="{{r.pick}}" aria-pressed="{{r.on}}" style="text-align: left; color: #2B2340; background: {{r.fondo}}; border: 2.5px solid #2B2340; border-radius: 20px; box-shadow: {{r.sombra}}; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px;">
+<span style="display: flex; align-items: center; gap: 8px;">
+<span class="{{r.pulsoCls}}" style="display: flex; align-items: center; gap: 5px; background: {{r.pBg}}; color: {{r.pColor}}; border: 2px solid #2B2340; border-radius: 999px; padding: 2px 10px 2px 6px; font-size: 12px; font-weight: 900;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{r.pIcono}}"></path></svg>{{r.pTxt}}</span>
+<span class="mono" style="font-size: 13px;">{{r.codigo}}</span>
+<span style="margin-left: auto; font-size: 12px; font-weight: 800; color: #5B5070;">{{r.hace}}</span>
+</span>
+<span style="font-size: 14px; font-weight: 700; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{r.desc}}</span>
+<span style="display: flex; flex-wrap: wrap; gap: 6px;">
+<sc-for list="{{r.chips}}" as="c" hint-placeholder-count="2">
+<span style="background: {{c.bg}}; border: 1.5px solid #2B2340; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 800;">{{c.txt}}</span>
+</sc-for>
+</span>
+</button>
+</sc-for>
+<sc-if value="{{vacio}}" hint-placeholder-val="{{ false }}">
+<div style="text-align: center; padding: 30px 10px; font-weight: 800; color: #5B5070;">No hay reportes con esta prioridad.</div>
+</sc-if>
+</div>
+
+<!-- detalle -->
+<sc-if value="{{hayDetalle}}" hint-placeholder-val="{{ true }}">
+<div class="det scroll slide">
+<div style="background: #FFFFFF; border: 2.5px solid #2B2340; border-radius: 24px; box-shadow: 5px 5px 0 #2B2340; padding: 18px; display: flex; flex-direction: column; gap: 14px; margin-top: 4px;">
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+<button class="det-back" onClick="{{cerrar}}" aria-label="Volver a la cola" style="width: 44px; height: 44px; border-radius: 999px; border: 2px solid #2B2340; background: #FFFFFF; align-items: center; justify-content: center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<h2 class="h" style="margin: 0; font-size: 24px; font-weight: 700;">Reporte <span class="mono" style="font-size: 20px;">{{d.codigo}}</span></h2>
+<span style="display: flex; align-items: center; gap: 5px; background: {{d.pBg}}; color: {{d.pColor}}; border: 2px solid #2B2340; border-radius: 999px; padding: 3px 10px 3px 7px; font-size: 13px; font-weight: 900;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{d.pIcono}}"></path></svg>{{d.pTxt}} · sugerida</span>
+<span style="margin-left: auto; font-size: 13px; font-weight: 800; color: #5B5070;">Reportado {{d.hace}}</span>
+</div>
+
+<div class="ia-grid">
+<div style="flex: 1 1 0; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #5B5070;">QUÉ PASÓ</span>
+<div style="background: #FFF1C9; border: 2px solid #2B2340; border-radius: 18px 18px 18px 4px; padding: 12px 14px; font-size: 15px; font-weight: 700; line-height: 1.45;">«{{d.desc}}»</div>
+</div>
+<div style="flex: 0 0 auto; min-width: 230px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #5B5070;">DÓNDE</span>
+<div style="position: relative; height: 104px; border: 2px solid #2B2340; border-radius: 18px; overflow: hidden; background: #E3F1E6;">
+<svg width="100%" height="100%" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M0 70 L240 40" stroke="#FFFFFF" stroke-width="14"></path><path d="M90 0 L120 104" stroke="#FFFFFF" stroke-width="10"></path><path d="M0 20 L240 90" stroke="#FFFFFF" stroke-width="6"></path><rect x="150" y="56" width="40" height="26" rx="4" fill="#CFE5D4"></rect><rect x="20" y="8" width="44" height="22" rx="4" fill="#CFE5D4"></rect></svg>
+<svg class="pop" width="30" height="38" viewBox="0 0 24 30" aria-hidden="true" style="position: absolute; left: 50%; top: 18px; margin-left: -15px;"><path d="M12 29s-10-9.5-10-17a10 10 0 0 1 20 0c0 7.5-10 17-10 17z" fill="#E8508A" stroke="#2B2340" stroke-width="2"></path><circle cx="12" cy="12" r="4" fill="#FFFFFF"></circle></svg>
+</div>
+<span style="font-size: 13px; font-weight: 800;">{{d.donde}}</span>
+<a href="#" style="font-size: 13px; font-weight: 800;">Abrir en Google Maps</a>
+</div>
+</div>
+
+<!-- sugerencia de la IA -->
+<div style="background: #F1ECFF; border: 2px solid #2B2340; border-radius: 20px; padding: 14px; display: flex; gap: 14px; align-items: center;">
+<div style="position: relative; width: 76px; height: 76px; flex-shrink: 0; border-radius: 999px; background: conic-gradient(#7A5AF8 {{d.confDeg}}deg, #FFFFFF 0); border: 2px solid #2B2340; display: flex; align-items: center; justify-content: center;">
+<span class="h" style="width: 56px; height: 56px; border-radius: 999px; background: #F1ECFF; border: 2px solid #2B2340; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700;">{{d.conf}}%</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 14px; font-weight: 800;">El sistema sugiere <b>{{d.pTxtMin}}</b> con {{d.conf}}% de confianza. <span style="color: #5B5070;">Tú decides.</span></span>
+<span style="display: flex; flex-wrap: wrap; gap: 6px;">
+<sc-for list="{{d.razones}}" as="z" hint-placeholder-count="3">
+<span style="background: #FFFFFF; border: 1.5px solid #2B2340; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 800;">{{z}}</span>
+</sc-for>
+</span>
+<sc-if value="{{d.dup}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 800; color: #8A5A00;">Posible duplicado de {{d.dupDe}}: a menos de 200 m y 2 horas.</span></sc-if>
+</div>
+</div>
+
+<sc-if value="{{d.video}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 12px; border: 2px solid #2B2340; border-radius: 18px; padding: 10px; background: #FFFFFF;">
+<span style="position: relative; width: 120px; height: 70px; border-radius: 12px; overflow: hidden; border: 2px solid #2B2340; flex-shrink: 0; background: #2B2340;"><img src="{{d.foto}}" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: .85;"><span style="position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 999px; background: #FFFFFF; display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2B2340" aria-hidden="true"><path d="M7 4l13 8-13 8z"></path></svg></span></span>
+<span style="display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 800;"><span>Video · {{d.seg}} s</span><span style="color: #5B5070; font-weight: 700;">Análisis de movimiento: {{d.videoTxt}}</span></span>
+</div>
+</sc-if>
+
+<!-- decisión -->
+<div style="border-top: 2px dashed #D9D2EA; padding-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+<span class="h" style="font-size: 19px; font-weight: 700;">Tu decisión</span>
+<div class="seg" role="radiogroup" aria-label="Prioridad">
+<sc-for list="{{opciones}}" as="o" hint-placeholder-count="4">
+<button role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="height: 52px; border: 2.5px solid #2B2340; border-radius: 16px; background: {{o.bg}}; color: {{o.color}}; font-size: 15px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: {{o.sombra}}; transition: all .15s ease;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{o.icono}}"></path></svg>{{o.txt}}</button>
+</sc-for>
+</div>
+<sc-if value="{{cambio}}" hint-placeholder-val="{{ false }}">
+<label class="pop" style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 800;">Cambiaste la sugerencia: cuéntanos por qué (queda en la bitácora)
+<textarea rows="2" placeholder="Ej.: en el video sí apoya la pata, no es fractura" style="border: 2px solid #2B2340; border-radius: 14px; padding: 10px; font: 700 14px 'Nunito', sans-serif; resize: none;"></textarea>
+</label>
+</sc-if>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+<button class="lift" onClick="{{confirmar}}" style="flex: 1 1 220px; height: 54px; border: 2.5px solid #2B2340; border-radius: 999px; background: #2B2340; color: #FFFFFF; font-size: 16px; font-weight: 900; box-shadow: 4px 4px 0 #7A5AF8; display: flex; align-items: center; justify-content: center; gap: 8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>{{confirmarTxt}}</button>
+<button class="lift" onClick="{{descartar}}" style="flex: 0 1 auto; height: 54px; padding: 0 18px; border: 2.5px solid #2B2340; border-radius: 999px; background: #FFFFFF; color: #2B2340; font-size: 15px; font-weight: 800;">Descartar reporte</button>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sinDetalle}}" hint-placeholder-val="{{ false }}">
+<div class="only-desk" style="flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 2.5px dashed #C9C0E0; border-radius: 24px; color: #5B5070; font-weight: 800;">
+<svg class="wig" width="70" height="70" viewBox="0 0 24 24" fill="#E4DDFB" stroke="#2B2340" stroke-width="1" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+Elige un reporte de la cola.
+</div>
+</sc-if>
+</div>
+</div>
+
+<!-- aviso -->
+<sc-if value="{{hayToast}}" hint-placeholder-val="{{ false }}">
+<div class="toast" role="status" style="position: absolute; left: 50%; bottom: 20px; width: min(520px, calc(100% - 28px)); transform: translateX(-50%); z-index: 20;">
+<div style="background: #D7F0DC; border: 2.5px solid #2B2340; border-radius: 20px; box-shadow: 4px 4px 0 #2B2340; padding: 12px 14px; display: flex; gap: 12px; align-items: center;">
+<span style="width: 36px; height: 36px; border-radius: 999px; background: #3FA66B; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+<span style="font-size: 14px; font-weight: 800; flex-grow: 1;">{{toast}}</span>
+<button onClick="{{cerrarToast}}" aria-label="Cerrar aviso" style="width: 36px; height: 36px; border: none; background: transparent; font-size: 18px; font-weight: 900; color: #2B2340;">×</button>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"movimiento":{"editor":"boolean","default":true},"ancho":{"editor":"int","default":1280,"min":360,"max":1600},"alto":{"editor":"int","default":800,"min":600,"max":1200},"conDetalle":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filtro: 'todas', sel: undefined, decision: null, hechos: {}, toast: '' };
+  }
+  componentWillUnmount() { if (this.t) clearTimeout(this.t); }
+  renderVals() {
+    var self = this, st = this.state;
+    var ancho = this.props.ancho ?? 1280, alto = this.props.alto ?? 800, desk = ancho >= 900;
+    var P = {
+      critica: { txt: 'Crítica', bg: '#D93A3A', color: '#FFFFFF', punto: '#D93A3A', fondo: '#FFE3E3', icono: 'M12 2l10 18H2zM11 9h2v5h-2zM11 16h2v2h-2z' },
+      alta: { txt: 'Alta', bg: '#F2A93B', color: '#2B2340', punto: '#F2A93B', fondo: '#FFF1DC', icono: 'M12 3l9 16H3z' },
+      media: { txt: 'Media', bg: '#FFD23F', color: '#2B2340', punto: '#FFD23F', fondo: '#FFFBE6', icono: 'M4 4h16v16H4z' },
+      baja: { txt: 'Baja', bg: '#3FA66B', color: '#FFFFFF', punto: '#3FA66B', fondo: '#EAF7EE', icono: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z' }
+    };
+    var FOTOS = { toby: '/_blob/143b32de0f848cc57378a674b6bcba00', winny: '/_blob/bc4c2a72b414f9a40e3aa7889fe25a03', pecas: '/_blob/6abaf280d6242a5704c01e8b78edd5ad' };
+    var R = [
+      { codigo: 'K7QM2XRA', p: 'critica', hace: 'hace 4 min', desc: 'Perro atropellado en la avenida, no se levanta y sangra de una pata. La gente pasa y nadie lo ayuda.', donde: 'Av. 0 con calle 10 · comuna 2', conf: 91, razones: ['«atropellado»', '«no se levanta»', '«sangra»', 'video: casi no se mueve'], video: true, seg: 14, videoTxt: 'se mueve muy poco', foto: FOTOS.toby, chips: ['video', 'comuna 2'] },
+      { codigo: 'B3TN8PLW', p: 'critica', hace: 'hace 11 min', desc: 'Gata atrapada en un desagüe, se escucha maullar muy débil desde ayer.', donde: 'Barrio La Libertad · comuna 6', conf: 74, razones: ['«atrapada»', '«desde ayer»', '«débil»'], video: false, chips: ['sin video', 'comuna 6'] },
+      { codigo: 'F2HW5RTB', p: 'alta', hace: 'hace 25 min', desc: 'Perrita muy flaca con una herida en el lomo, está echada frente a una tienda.', donde: 'Calle 8 con 15 · comuna 4', conf: 68, razones: ['«herida»', '«muy flaca»'], video: true, seg: 22, videoTxt: 'camina, pero cojea', foto: FOTOS.winny, chips: ['video', 'posible duplicado'], dup: 'C9DK2MZT' },
+      { codigo: 'H6YP4QSV', p: 'alta', hace: 'hace 40 min', desc: 'Cachorros solos en una caja junto a la basura, parecen de pocas semanas.', donde: 'Barrio Motilones · comuna 8', conf: 63, razones: ['«cachorros solos»', '«pocas semanas»'], video: false, chips: ['sin video', 'comuna 8'] },
+      { codigo: 'M8RA3JNE', p: 'media', hace: 'hace 1 h', desc: 'Gatito con un ojo irritado, come pero se ve decaído en el parque.', donde: 'Parque Santander · comuna 1', conf: 58, razones: ['«ojo irritado»', '«come»'], video: true, seg: 9, videoTxt: 'camina normal', foto: FOTOS.pecas, chips: ['video', 'comuna 1'] },
+      { codigo: 'T2LC7WQD', p: 'baja', hace: 'hace 2 h', desc: 'Perro que anda solo por el barrio hace días, se ve sano y deja que lo toquen.', donde: 'Barrio Prados del Este · comuna 3', conf: 81, razones: ['«se ve sano»', 'sin señales de herida'], video: false, chips: ['sin video', 'comuna 3'] }
+    ].filter(function (r) { return !st.hechos[r.codigo]; });
+    var filtro = st.filtro;
+    var cuenta = function (k) { return R.filter(function (r) { return k === 'todas' || r.p === k; }).length; };
+    var filtros = ['todas', 'critica', 'alta', 'media', 'baja'].map(function (k) {
+      var on = filtro === k, info = P[k];
+      return { txt: k === 'todas' ? 'Todas' : info.txt, n: cuenta(k), on: on ? 'true' : 'false', punto: k === 'todas' ? '#9B83FA' : info.punto,
+        bg: on ? '#2B2340' : '#FFFFFF', color: on ? '#FFFFFF' : '#2B2340', sombra: on ? '2px 2px 0 #7A5AF8' : 'none',
+        pick: function () { self.setState({ filtro: k }); } };
+    });
+    var lista = R.filter(function (r) { return filtro === 'todas' || r.p === filtro; });
+    var defSel = (this.props.conDetalle ?? true) && desk ? (lista[0] && lista[0].codigo) : null;
+    var selCod = st.sel === undefined ? defSel : st.sel;
+    var det = R.filter(function (r) { return r.codigo === selCod; })[0] || null;
+    var visibles = lista.map(function (r) {
+      var on = det && r.codigo === det.codigo, info = P[r.p];
+      return { codigo: r.codigo, hace: r.hace, desc: r.desc, on: on ? 'true' : 'false', fondo: on ? '#FFFFFF' : info.fondo,
+        sombra: on ? '5px 5px 0 #7A5AF8' : '3px 3px 0 #2B2340', pBg: info.bg, pColor: info.color, pTxt: info.txt, pIcono: info.icono,
+        pulsoCls: r.p === 'critica' ? 'pulso' : '',
+        chips: r.chips.map(function (c) { return { txt: c, bg: c === 'posible duplicado' ? '#FFE9A6' : '#FFFFFF' }; }),
+        pick: function () { self.setState({ sel: r.codigo, decision: null }); } };
+    });
+    var d = null, decision = null;
+    if (det) {
+      var info = P[det.p];
+      decision = st.decision || det.p;
+      d = { codigo: det.codigo, hace: det.hace, desc: det.desc, donde: det.donde, conf: det.conf, confDeg: Math.round(det.conf * 3.6),
+        razones: det.razones, video: det.video, seg: det.seg, videoTxt: det.videoTxt, foto: det.foto, dup: !!det.dup, dupDe: det.dup,
+        pBg: info.bg, pColor: info.color, pTxt: info.txt, pTxtMin: info.txt.toLowerCase(), pIcono: info.icono };
+    }
+    var opciones = ['critica', 'alta', 'media', 'baja'].map(function (k) {
+      var on = decision === k, info = P[k];
+      return { txt: info.txt, icono: info.icono, on: on ? 'true' : 'false', bg: on ? info.bg : '#FFFFFF', color: on ? info.color : '#2B2340',
+        sombra: on ? '3px 3px 0 #2B2340' : 'none', pick: function () { self.setState({ decision: k }); } };
+    });
+    var mostrar = function (txt) {
+      self.setState({ toast: txt });
+      if (self.t) clearTimeout(self.t);
+      self.t = setTimeout(function () { self.setState({ toast: '' }); }, 4000);
+    };
+    return {
+      ancho: ancho, alto: alto, movClass: (this.props.movimiento ?? true) ? 'mov' : '', deskClass: desk ? 'desk' : '',
+      menu: [
+        { txt: 'Cola de triaje', badge: String(R.length), icono: 'M4 6h16M4 12h16M4 18h10', on: true },
+        { txt: 'Fichas clínicas', badge: '', icono: 'M6 3h9l4 4v14H6zM9 12h6M9 16h6' },
+        { txt: 'Historial', badge: '', icono: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z' },
+        { txt: 'Refugio', badge: '', icono: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
+        { txt: 'Indicadores', badge: '', icono: 'M4 20V10M10 20V4M16 20v-7M22 20H2' }
+      ].map(function (m) { return Object.assign(m, { bg: m.on ? '#FFFFFF' : 'transparent', color: m.on ? '#2B2340' : '#FFFFFF', borde: m.on ? '#FFFFFF' : 'transparent', badge: m.badge || false }); }),
+      filtros: filtros, visibles: visibles, vacio: visibles.length === 0,
+      hayDetalle: !!d, sinDetalle: !d, d: d || {}, opciones: opciones, cambio: !!(d && decision !== det.p),
+      confirmarTxt: d && decision !== det.p ? 'Corregir a ' + P[decision].txt.toLowerCase() : 'Confirmar prioridad',
+      confirmar: function () {
+        if (!det) return;
+        var h = Object.assign({}, self.state.hechos); h[det.codigo] = true;
+        self.setState({ hechos: h, sel: desk ? undefined : null, decision: null });
+        mostrar(det.codigo + ': prioridad ' + P[decision].txt.toLowerCase() + ' confirmada. Se avisó a los rescatistas de la zona.');
+      },
+      descartar: function () {
+        if (!det) return;
+        var h = Object.assign({}, self.state.hechos); h[det.codigo] = true;
+        self.setState({ hechos: h, sel: desk ? undefined : null, decision: null });
+        mostrar(det.codigo + ': reporte descartado. Queda en el historial.');
+      },
+      cerrar: function () { self.setState({ sel: null }); },
+      actualizar: function () { mostrar('Cola actualizada.'); },
+      hayToast: !!st.toast, toast: st.toast, cerrarToast: function () { self.setState({ toast: '' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

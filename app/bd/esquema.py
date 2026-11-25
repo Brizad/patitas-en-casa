@@ -13,6 +13,7 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     MetaData,
+    Numeric,
     SmallInteger,
     String,
     Table,
@@ -182,6 +183,7 @@ perfiles_adoptante = Table(
 )
 
 # RF-25 (#85): animales publicados para adopción; una publicación por animal.
+NIVELES_PUBLICACION = ("carino", "energia_nivel", "juego", "calma")
 publicaciones = Table(
     "publicaciones",
     metadata,
@@ -200,6 +202,17 @@ publicaciones = Table(
     CheckConstraint(f"estado IN ({_valores(EstadoPublicacion)})",
                     name="ck_publicaciones_estado"),
     CheckConstraint("edad_meses BETWEEN 0 AND 360", name="ck_publicaciones_edad"),
+    # #422 (0036): ficha «Elige a tu compañero», todo opcional.
+    *(Column(n, SmallInteger) for n in NIVELES_PUBLICACION),
+    Column("etiquetas", ARRAY(String(20))),
+    Column("peso_kg", Numeric(5, 2)),
+    Column("peso_adulto_kg", Numeric(5, 2)),
+    *(CheckConstraint(f"{n} BETWEEN 0 AND 100", name=f"ck_publicaciones_{n}")
+      for n in NIVELES_PUBLICACION),
+    CheckConstraint("cardinality(etiquetas) <= 3", name="ck_publicaciones_etiquetas"),
+    CheckConstraint("peso_kg > 0 AND peso_kg <= 150", name="ck_publicaciones_peso"),
+    CheckConstraint("peso_adulto_kg > 0 AND peso_adulto_kg <= 150",
+                    name="ck_publicaciones_peso_adulto"),
 )
 
 # RF-27 (#85): solicitudes de adopción.

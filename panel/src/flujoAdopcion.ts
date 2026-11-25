@@ -119,27 +119,45 @@ export function edadTexto(meses: number): string {
   return `${anos} ${anos === 1 ? "año" : "años"}`;
 }
 
-/** Franja «Hoy → De adulto» con la edad y el tamaño que registró el refugio. */
+/** «3,5 kg»: coma decimal, sin ceros de más. */
+export const kg = (v: number) => `${String(Math.round(v * 10) / 10).replace(".", ",")} kg`;
+
+/** Franja «Hoy → De adulto» con la edad, el tamaño y los pesos que registró el refugio (los
+ *  pesos solo si los hay: #422). */
 export function hoyYAdulto(a: AnimalPublicado): { hoy: string; adulto: string } {
   const tamano = TAMANO[a.tamano] ?? a.tamano;
+  const hoy = edadTexto(a.edad_meses) + (a.peso_kg ? ` · ${kg(a.peso_kg)}` : "");
+  const estimado = a.peso_adulto_kg ? ` · ~${kg(a.peso_adulto_kg)}` : "";
   return a.edad_meses < 12
-    ? { hoy: `${edadTexto(a.edad_meses)}, aún crece`, adulto: `Tamaño ${tamano}` }
-    : { hoy: edadTexto(a.edad_meses), adulto: `Ya es adulto · tamaño ${tamano}` };
+    ? { hoy, adulto: `${mayuscula(tamano)}${estimado}` }
+    : { hoy, adulto: `Ya es adulto${estimado || ` · tamaño ${tamano}`}` };
 }
 
-export interface Estadistica { etiqueta: string; valor: number; texto: string }
+export interface Estadistica { etiqueta: string; valor: number; texto: string; color?: string }
 
-/** Barras solo con datos reales de la publicación (y el puntaje del servidor, si lo hay). */
+/** #422: las 4 barras del prototipo, con sus colores; solo las que el refugio llenó. */
+export function ficha(a: AnimalPublicado): Estadistica[] {
+  const barras: [string, number | null | undefined, string][] = [
+    ["Cariño", a.carino, "#E8508A"], ["Energía", a.energia_nivel, "#F2A93B"],
+    ["Juego", a.juego, "#7A5AF8"], ["Calma", a.calma, "#3FA66B"]];
+  return barras.filter(([, v]) => typeof v === "number")
+    .map(([etiqueta, v, color]) => ({ etiqueta, valor: v as number, texto: String(v), color }));
+}
+
+/** Con quién convive y qué necesita (siempre, aunque no haya ficha: RN-05 depende de esto). */
+export function convivencia(a: AnimalPublicado): string[] {
+  return [a.apto_ninos ? "Convive con niños" : "Mejor sin niños",
+          a.apto_otros_animales ? "Convive con otros animales" : "Mejor sin otros animales",
+          a.necesita_patio ? "Necesita patio" : "Sin patio está bien"];
+}
+
+/** Barras del recuadro: la ficha del refugio (si la hay) y el puntaje del servidor (si lo hay).
+ *  Nada se inventa: sin datos, no hay barra. */
 export function estadisticas(a: AnimalPublicado | Recomendado): Estadistica[] {
-  const energia = { baja: 33, media: 66, alta: 100 }[a.energia] ?? 0;
-  const siNo = (v: boolean) => ({ valor: v ? 100 : 0, texto: v ? "Sí" : "No" });
-  const filas: Estadistica[] = [
-    { etiqueta: "Energía", valor: energia, texto: mayuscula(a.energia) },
-    { etiqueta: "Apto con niños", ...siNo(a.apto_ninos) },
-    { etiqueta: "Apto con otros animales", ...siNo(a.apto_otros_animales) },
-    { etiqueta: "Necesita patio", ...siNo(a.necesita_patio) },
-  ];
-  if ("puntaje" in a) filas.push({ etiqueta: "Compatibilidad", valor: a.puntaje, texto: `${a.puntaje} %` });
+  const filas = ficha(a);
+  if ("puntaje" in a) {
+    filas.push({ etiqueta: "Compatibilidad", valor: a.puntaje, texto: `${a.puntaje} %`, color: "#3B82C4" });
+  }
   return filas;
 }
 
@@ -147,8 +165,9 @@ export function estadisticas(a: AnimalPublicado | Recomendado): Estadistica[] {
 export const resumenCorto = (a: AnimalPublicado) =>
   `${especieTexto(a.especie)} · ${edadTexto(a.edad_meses)} · tamaño ${TAMANO[a.tamano] ?? a.tamano}`;
 
-/** Insignias con lo que dice la publicación (la especie y el tamaño ya están en el resumen). */
+/** Insignias: las etiquetas del refugio (#422); sin ellas, lo que dice la publicación. */
 export function insignias(a: AnimalPublicado): string[] {
+  if (a.etiquetas?.length) return a.etiquetas.slice(0, 3);
   return [`Energía ${a.energia}`, a.apto_ninos ? "Convive con niños" : "",
           a.apto_otros_animales ? "Convive con otros animales" : "",
           a.necesita_patio ? "Necesita patio" : "Sin patio está bien"].filter(Boolean);

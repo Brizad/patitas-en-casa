@@ -6,7 +6,7 @@ import Animalitos from "./Animalitos";
 import Cargando from "./Cargando";
 import { PREGUNTAS, Respuestas, opcionElegida } from "./encuesta";
 import {
-  ESTADO_SOLICITUD, Filtro, abierta, especieTexto, estadisticas, fondoDe, hoyYAdulto, insignias,
+  ESTADO_SOLICITUD, Filtro, abierta, convivencia, especieTexto, estadisticas, fondoDe, hoyYAdulto, insignias,
   mejores, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
 } from "./flujoAdopcion";
 import { Confeti, Corazon, FLECHA, FotoAnimal, Huella, Icono } from "./Ilustraciones";
@@ -20,10 +20,10 @@ function BotonAtras({ alTocar }: { alTocar: () => void }) {
 }
 
 /** Barra decorativa: el valor ya está escrito al lado (lo lee el lector de pantalla). */
-function Barra({ valor }: { valor: number }) {
+function Barra({ valor, color }: { valor: number; color?: string }) {
   return (
     <span className="barra" aria-hidden="true">
-      {valor > 0 && <span className="barra-relleno crece" style={pct(valor)} />}
+      {valor > 0 && <span className="barra-relleno crece" style={{ ...pct(valor), backgroundColor: color }} />}
     </span>
   );
 }
@@ -237,13 +237,15 @@ export function Elegir({ lista, animal, filtro, conteo, ocultos, cargando, conPe
             {insignias(animal).map((t, k) => <span key={t} className={`insignia insignia--${k}`}>{t}</span>)}
           </div>
           <p className="elegir-desc">{animal.descripcion}</p>
-          <ul className="stats">
-            {estadisticas(animal).map((e) => (
-              <li key={e.etiqueta} className="stat">
-                <span className="stat-nombre">{e.etiqueta}</span><span className="stat-valor">{e.texto}</span>
-                <Barra valor={e.valor} />
-              </li>))}
-          </ul>
+          {estadisticas(animal).length > 0 && (
+            <ul className="stats" key={`s${animal.animal_id}`}>
+              {estadisticas(animal).map((e) => (
+                <li key={e.etiqueta} className="stat">
+                  <span className="stat-nombre">{e.etiqueta}</span><span className="stat-valor">{e.texto}</span>
+                  <Barra valor={e.valor} color={e.color} />
+                </li>))}
+            </ul>)}
+          <p className="convive">{convivencia(animal).join(" · ")}</p>
           {conPuntaje(animal) && animal.restricciones.length > 0 && (
             <p className="adop-alerta adop-alerta--dura" role="note">
               El refugio no podría aprobar esta adopción: {animal.restricciones.join("; ")}.</p>)}

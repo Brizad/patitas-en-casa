@@ -293,3 +293,22 @@ vive solo en la otra copia local, `Documents\Proyectos\patitas-en-casa\docs\prot
 - Único cambio en la API (aditivo): `GET /adopciones/solicitudes/mias` trae `nombre` y `especie`.
 - Pendiente: animaciones Lottie (el espacio está en `panel/src/Animalitos.tsx`); actualizar el
   manual de usuario (sección del adoptante y su captura) cuando se una el PR.
+
+## 10. Rediseño completo igual a los prototipos (noche del 25-nov)
+
+Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos en
+`docs/prototipo/*.dc.html`; las fotos se leen de la otra copia local y no se suben.
+
+| Parte | Qué | Estado | PR |
+|---|---|---|---|
+| 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | en curso | — |
+| 2 | Publicar los 22 animales del prototipo por la API | pendiente (después de la 1) | — |
+| 3 | Página de inicio | pendiente | — |
+| 4 | Ciudadano (PWA) | pendiente | — |
+| 5 | Mapa (Leaflet + OSM) | pendiente | — |
+| 6 | Pantallas del personal | pendiente | — |
+| 7 | Tres arreglos: RN-02 con video, restauración y verificación del despliegue | pendiente | — |
+
+Decisiones y pendientes para el autor (se van sumando):
+- El **sexo** del prototipo («Perra», «Macho») no tiene campo en la ficha del animal: no se guardó
+  ni se muestra. Si se quiere, va en una migración aditiva aparte.

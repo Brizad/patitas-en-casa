@@ -57,6 +57,9 @@ def test_api_subir_y_ver_la_foto_en_el_catalogo():
     assert foto.status_code == 200 and foto.content == JPEG
     assert foto.headers["content-type"] == "image/jpeg"
     assert foto.headers["x-content-type-options"] == "nosniff"
+    # #422: las recomendaciones (lo que ve el adoptante con perfil) también traen la foto.
+    (recomendado,) = c.get("/adopciones/recomendaciones", headers=h(c, "lau@correo.co")).json()
+    assert recomendado["foto"] == publicado["foto"]
 
 
 def test_api_rechaza_archivos_que_no_son_fotos_y_otros_roles():

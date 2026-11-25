@@ -1,4 +1,6 @@
 """RF-25 (#85): el coordinador publica un animal de su refugio; el catálogo es público."""
+from dataclasses import replace
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -96,3 +98,72 @@ def test_contrato_una_publicacion_por_animal(repos):
         luna.id, "Luna", Tamano.MEDIANO)
     assert adopciones.publicacion(luna.id).energia == Energia.ALTA
     assert adopciones.publicacion(9999) is None
+
+
+# ---------- #422: ficha «Elige a tu compañero» (opcional, solo para mostrar) ----------
+
+FICHA = {"carino": 95, "energia_nivel": 92, "juego": 90, "calma": 38,
+         "etiquetas": ["Juguetón", " Guardián ", "Vacunado"], "peso_kg": 8, "peso_adulto_kg": 35.5}
+
+
+def test_la_ficha_se_publica_y_sale_en_el_catalogo(c):
+    h = sesion(c)
+    animal_id = ingresar(c, h)
+    r = c.post(f"/refugio/animales/{animal_id}/publicacion", json={**DATOS, **FICHA}, headers=h)
+    assert r.status_code == 201
+    (publicado,) = c.get("/adopciones/animales").json()
+    assert {k: publicado[k] for k in FICHA} == {**FICHA, "etiquetas": ["Juguetón", "Guardián",
+                                                                       "Vacunado"]}
+
+
+def test_sin_ficha_los_campos_quedan_vacios(c):
+    h = sesion(c)
+    c.post(f"/refugio/animales/{ingresar(c, h)}/publicacion", json=DATOS, headers=h)
+    (publicado,) = c.get("/adopciones/animales").json()
+    assert [publicado[k] for k in FICHA] == [None, None, None, None, [], None, None]
+
+
+@pytest.mark.parametrize("malo", [{"carino": 101}, {"calma": -1}, {"juego": "mucho"},
+                                  {"etiquetas": ["a", "b", "c", "d"]}, {"etiquetas": ["x" * 21]},
+                                  {"etiquetas": ["  "]}, {"peso_kg": 0}, {"peso_adulto_kg": 151}])
+def test_la_ficha_se_valida(c, malo):
+    h = sesion(c)
+    r = c.post(f"/refugio/animales/{ingresar(c, h)}/publicacion", json={**DATOS, **malo},
+               headers=h)
+    assert r.status_code == 422
+
+
+def test_editar_la_publicacion(c):
+    h = sesion(c)
+    animal_id = ingresar(c, h)
+    ruta = f"/refugio/animales/{animal_id}/publicacion"
+    assert c.put(ruta, json=DATOS, headers=h).status_code == 404  # aún no publicado
+    c.post(ruta, json=DATOS, headers=h)
+    assert c.put(ruta, json=DATOS).status_code == 401
+    assert c.put(ruta, json=DATOS, headers=sesion(c, "vet@patitas.co")).status_code == 403
+    assert c.put(ruta, json={**DATOS, "carino": 200}, headers=h).status_code == 422
+    r = c.put(ruta, json={**DATOS, **FICHA, "energia": "alta"}, headers=h)
+    assert r.status_code == 200
+    assert (r.json()["carino"], r.json()["energia"], r.json()["nombre"]) == (95, "alta", "Canela")
+    (publicado,) = c.get("/adopciones/animales").json()
+    assert (publicado["energia"], publicado["peso_adulto_kg"]) == ("alta", 35.5)
+    assert c.put("/refugio/animales/999/publicacion", json=DATOS, headers=h).status_code == 404
+
+
+def test_contrato_ficha_y_edicion(repos):
+    cupos, adopciones = repos
+    toby = Animal("Toby", Especie.PERRO, "sano")
+    cupos.ocupar_cupo(toby)
+    base = Publicacion(toby.id, "Perro juguetón que ama correr", Tamano.GRANDE, Energia.ALTA, 3,
+                       True, True, True, nombre="Toby", especie="perro")
+    adopciones.publicar(replace(base, carino=95, etiquetas=["Juguetón"], peso_kg=8.5))
+    guardada = adopciones.publicacion(toby.id)
+    assert (guardada.carino, guardada.juego, guardada.etiquetas, guardada.peso_kg) == (
+        95, None, ["Juguetón"], 8.5)
+    assert adopciones.actualizar_publicacion(replace(
+        base, juego=90, etiquetas=[], peso_adulto_kg=35.25, descripcion="Cambió la descripción"))
+    (editada,) = adopciones.disponibles()
+    assert (editada.carino, editada.juego, editada.etiquetas, editada.peso_adulto_kg,
+            editada.descripcion, editada.nombre) == (
+        None, 90, [], 35.25, "Cambió la descripción", "Toby")
+    assert not adopciones.actualizar_publicacion(replace(base, animal_id=9999))
