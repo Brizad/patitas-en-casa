@@ -441,3 +441,13 @@ Plan del autor: tarea 1 (página de inicio igual al prototipo nuevo `inicio-pagi
   - **Caso «despertando»:** se probó en local, simulando dos respuestas 503 del catálogo y la primera petición de cada foto fallida; todo se recuperó solo.
   - **Capturas:** `docs/revision-visual/inicio-v3/` (`t1-`, `t2-`, `t3-despliegue-`, `t3-frio-`).
 - **Tarea 4, prototipo:** el archivo `adopcion-elige-tu-companero.dc.html` «nuevo» es idéntico al versionado (git no ve cambios). Las secciones «Te están esperando» y «Así funciona tu adopción» se hicieron según la descripción del autor.
+- **Tarea 4 (PR #456):** publicada.
+  - **Bienvenida del adoptante en computador:** hero compacto, «Te están esperando» con 6 animales reales y el bloque «Así funciona tu adopción» + «Mi hogar» + «Mis solicitudes». En el celular no cambia.
+  - **Tarjetas:** con perfil, «Elige» muestra solo los compatibles (RN-05); las 6 tarjetas salen de esa misma lista para que tocar una siempre abra ese animal.
+  - **Toby:** su foto se reemplazó por la API con la `toby.jpg` nueva; producción la sirve igual byte a byte, sin «Buscar imagen». El navegador puede guardar la anterior hasta una hora (`max-age=3600`).
+- **Tarea 5 (PR #458):** publicada.
+  - **Comportamiento:** la música arranca sola al entrar (fundido de 1,5 s), respeta «apagada», el botón la prende y al salir se detiene.
+  - **Verificación en producción:** con Edge (Chromium, la misma política de autoplay que Chrome), porque en este equipo no está instalado Chrome: suena sin tocar el botón.
+  - **Sin activación:** como el token vive solo en memoria, en la práctica siempre se entra con un clic en «Entrar». El caso «sin activación» (primer toque o tecla) está cubierto por vitest.
+- **Tarea 6 (PR #460):** publicada. No queda ninguna mención del repositorio en `/`, `/app/`, el manifest, `/panel/`, `/docs` ni `/openapi.json` (revisado en producción). `tests/test_sin_repositorio.py` lo vigila.
+- **Cómo se verificaron las vistas con sesión:** la contraseña del adoptante de demostración en producción no la conozco y no se crearon cuentas reales. Por eso la verificación usó la interfaz y el catálogo publicados, con la sesión servida por el servidor local en memoria.
