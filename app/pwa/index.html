@@ -31,9 +31,9 @@
   <span class="mancha mancha-1"></span><span class="mancha mancha-2"></span><span class="mancha mancha-3"></span>
 </div>
 <header class="barra">
-  <a class="marca" href="#inicio"><svg class="marca-huella" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg><span class="h">Patitas en Casa</span></a>
+  <a class="marca" href="/"><svg class="marca-huella" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg><span class="h">Patitas en Casa</span></a>
   <nav class="pestanas" aria-label="Pantallas">
-    <a href="#inicio" data-pantalla="inicio" class="solo-pc">Inicio</a>
+    <a href="/" class="solo-pc">Inicio</a>
     <a href="#reportar" data-pantalla="reportar">Reportar</a>
     <a href="#estado" data-pantalla="estado">Consultar</a>
   </nav>
@@ -47,34 +47,6 @@
   <p id="aviso-piloto" class="aviso aviso--amarillo" role="status" hidden>Modo prueba: lo que
     envíes aquí no le llega a nadie. Haz la tarea como si fuera real.</p>
 
-  <!-- Portada de la app (#inicio). -->
-  <section id="pantalla-inicio" class="pantalla portada" aria-labelledby="titulo-inicio" hidden>
-    <div class="portada-texto">
-      <p class="cinta aparece"><span class="sirena-punto late-anillo" aria-hidden="true"></span>Emergencias animales en Cúcuta</p>
-      <h1 id="titulo-inicio" class="h aparece d1">Un animal herido <span class="vino">no debería esperar.</span></h1>
-      <p class="entrada aparece d2">Repórtalo en un minuto y sin crear cuenta. Un veterinario lo revisa por gravedad y el rescate llega a quien está cerca.</p>
-      <a class="boton-grande hunde aparece d3" href="#reportar"><span class="boton-grande-izq"><span class="sirena gira-sirena" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18v-6a5 5 0 0 1 10 0v6M5 21h14M12 3v2M4.2 6.2l1.4 1.4M19.8 6.2l-1.4 1.4"/></svg></span><span class="h">Reportar emergencia</span></span><span class="punta" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
-      <div class="portada-tarjetas aparece d4">
-        <a class="tarjeta-accion tarjeta-accion--lila hunde" href="#estado"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"/></svg><span class="h">Consultar mi reporte</span><span class="sub">Con tu código</span></a>
-        <a class="tarjeta-accion tarjeta-accion--menta hunde" href="/panel/#adoptar"><svg class="relleno" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg><span class="h">Quiero adoptar</span><span class="sub">Encuentra tu match</span></a>
-      </div>
-      <ul class="confianza" aria-label="Por qué confiar">
-        <li>Sin crear cuenta</li><li>El veterinario siempre confirma</li><li>Datos cifrados</li>
-      </ul>
-    </div>
-    <div class="portada-arte solo-pc" aria-hidden="true">
-      <span class="foto foto-1" data-animal="Pinina"></span>
-      <span class="foto foto-2" data-animal="Mochi"></span>
-      <span class="foto foto-3 flota2" data-animal="Lupe"></span>
-      <p class="globo-tiempo flota"><span class="globo-icono"><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z"/></svg></span><span><strong class="h">Reportar toma 1 minuto</strong><span>Sin cuenta y sin dar tu nombre</span></span></p>
-    </div>
-    <!-- Perro y gato caminando (decorativos). Lottie: este carril se puede cambiar sin tocar lo demás. -->
-    <div class="carril" aria-hidden="true">
-      <svg class="paseante paseante--perro" viewBox="0 0 96 64"><path class="cola" d="M20 26 q-10 -10 -14 -2" stroke="#C98A4B" stroke-width="5" fill="none" stroke-linecap="round"/><rect class="pata-a" x="26" y="36" width="7" height="18" rx="3.5" fill="#B9773D"/><rect class="pata-b" x="36" y="36" width="7" height="18" rx="3.5" fill="#C98A4B"/><rect class="pata-b" x="54" y="36" width="7" height="18" rx="3.5" fill="#B9773D"/><rect class="pata-a" x="63" y="36" width="7" height="18" rx="3.5" fill="#C98A4B"/><ellipse cx="46" cy="32" rx="27" ry="13" fill="#E3A866" stroke="#2B2340" stroke-width="2"/><circle cx="74" cy="20" r="13" fill="#E3A866" stroke="#2B2340" stroke-width="2"/><ellipse cx="68" cy="13" rx="5" ry="9" fill="#8A5428" transform="rotate(-25 68 13)"/><circle cx="78" cy="18" r="2.2" fill="#2B2340"/><ellipse cx="86" cy="23" rx="3" ry="2.4" fill="#2B2340"/><path d="M30 24 l10 -4 M34 30 l8 -6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/></svg>
-      <svg class="paseante paseante--gato" viewBox="0 0 80 56"><path class="cola" d="M14 24 q-12 -18 2 -20" stroke="#8C8FA3" stroke-width="5" fill="none" stroke-linecap="round"/><rect class="pata-a" x="20" y="32" width="6" height="16" rx="3" fill="#6F7287"/><rect class="pata-b" x="29" y="32" width="6" height="16" rx="3" fill="#8C8FA3"/><rect class="pata-b" x="44" y="32" width="6" height="16" rx="3" fill="#6F7287"/><rect class="pata-a" x="52" y="32" width="6" height="16" rx="3" fill="#8C8FA3"/><ellipse cx="38" cy="29" rx="23" ry="10" fill="#A4A7B8" stroke="#2B2340" stroke-width="2"/><circle cx="62" cy="19" r="11" fill="#A4A7B8" stroke="#2B2340" stroke-width="2"/><path d="M54 12 l2 -10 l6 7 z M64 9 l6 -7 l2 10 z" fill="#A4A7B8" stroke="#2B2340" stroke-width="2" stroke-linejoin="round"/><circle cx="66" cy="18" r="2" fill="#2B2340"/><circle cx="72" cy="22" r="1.6" fill="#E8508A"/></svg>
-      <span class="carril-suelo"></span>
-    </div>
-  </section>
 
   <!-- #61 / #428: reportar en 4 pasos. -->
   <section id="pantalla-reportar" class="pantalla reportar" aria-labelledby="titulo-reportar" hidden>
@@ -214,7 +186,7 @@
     </div>
     <!-- Arreglos, parte D: panel derecho solo en computador (foto real, quién revisa y consejos). -->
     <aside class="reportar-ayuda solo-pc" aria-label="Mientras haces el reporte">
-      <div class="ayuda-foto" data-animal="Max"></div>
+      <div class="ayuda-foto"><img src="/inicio/img/animales/max.jpg" width="600" height="750" loading="lazy" alt="Foto de Max, un perro del refugio que sonríe"></div>
       <div class="tarjeta-ayuda tarjeta-ayuda--vet">
         <span class="tarjeta-ayuda-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
         <p><strong>Un veterinario revisa tu reporte</strong> y confirma la prioridad antes de avisar al rescatista de tu zona.</p>

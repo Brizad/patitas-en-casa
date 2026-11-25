@@ -61,7 +61,7 @@ def test_hero_lila_con_burbujas_en_las_o_y_capsula_con_la_ilustracion():
     html, css = _html(), _css()
     assert '<span class="oculto">Adopta amor, reporta a tiempo</span>' in html
     titulo = html[html.index('<h1 id="titulo"'):html.index("</h1>")]
-    assert titulo.count('class="burbuja burbuja--') == 3 and 'data-animal="Lupe"' in titulo
+    assert titulo.count('class="burbuja burbuja--') == 3 and "animales/lupe.jpg" in titulo
     assert '<span class="hero-amarillo">a tiempo</span>' in titulo
     assert html.count('class="flor ') == 2 and 'class="capsula"' in html
     assert 'src="/inicio/img/ilustracion-gatos.jpg"' in html
@@ -110,12 +110,26 @@ def test_las_cifras_nunca_se_inventan():
     assert 'ponerCifra("en_adopcion", lista.length)' in js
 
 
-def test_fotos_reales_por_nombre_y_nunca_rotas():
-    html, js = _html(), _js()
-    for nombre in ("Lupe", "Cascabel", "Copo", "Nube", "Toby"):
-        assert f'data-animal="{nombre}"' in html, nombre
+def test_fotos_fijas_del_diseno_son_estaticas_y_siempre_cargan(c):
+    # #452: el hero y las secciones no dependen del catálogo (Render puede estar despertando).
+    html = _html()
+    assert "data-animal" not in html
+    for nombre in ("lupe", "cascabel", "copo", "nube", "toby"):
+        assert f'<img src="/inicio/img/animales/{nombre}.jpg"' in html, nombre
+        archivo = CARPETA / "img" / "animales" / f"{nombre}.jpg"
+        assert archivo.stat().st_size < 60_000, nombre
+        assert c.get(f"/inicio/img/animales/{nombre}.jpg").status_code == 200, nombre
+    titulo = html[html.index('<h1 id="titulo"'):html.index("</h1>")]
+    assert '<img src="/inicio/img/animales/lupe.jpg"' in titulo
+
+
+def test_fotos_del_catalogo_se_reintentan_y_la_huella_solo_si_no_hay_foto():
+    js = _js()
     assert '"/adopciones/animales"' in js and "innerHTML" not in js
-    assert 'img.addEventListener("error", () => img.remove())' in js
+    assert "for (let intento = 0; intento < 6; intento++)" in js  # mientras Render despierta
+    assert "new AbortController()" in js
+    assert "if (intentos < 3)" in js and "img.replaceWith(huella())" in js  # nunca rota
+    assert 'foto.append(animal.foto ? imagen(animal, "") : huella());' in js
 
 
 def test_los_enlaces_llevan_a_las_partes_reales(c):

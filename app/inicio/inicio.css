@@ -137,6 +137,7 @@ main { overflow: hidden; }
 .animal-foto { display: flex; align-items: center; justify-content: center; width: 110px; height: 110px; overflow: hidden;
   border: 3px solid var(--oscuro); border-radius: 999px; background: var(--fondo); box-shadow: 0 0 0 6px var(--fondo); }
 .animal-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.huella-reemplazo { width: 46%; height: 46%; fill: var(--oscuro); opacity: .35; }
 .tarjetas li:nth-child(4n+1) .animal { --fondo: #E4DDFB; }
 .tarjetas li:nth-child(4n+2) .animal { --fondo: #FFE9A6; }
 .tarjetas li:nth-child(4n+3) .animal { --fondo: #D7F0DC; }

@@ -1,8 +1,12 @@
-// Portada (#426; inicio v3). La página funciona sin esto; aquí solo se agrega lo que viene del servidor:
-// - fotos reales de los animales publicados (Lupe, Cascabel, Copo, Nube, Toby; si no están, otros con foto),
-// - cuatro animales «En adopción» del catálogo,
-// - las tres cifras anónimas de /indicadores/publicos (si fallan, se queda «—»: nunca se inventan),
+// Portada (#426; inicio v3). La página funciona sin esto: las ilustraciones y las fotos fijas del
+// diseño (Lupe, Cascabel, Copo, Nube y Toby) son imágenes estáticas del repo (#452) y nunca
+// dependen del catálogo. Aquí solo se agrega lo que viene del servidor:
+// - cuatro animales «En adopción» del catálogo, con su foto real,
+// - las cifras anónimas (reportes y en adopción; si fallan, se queda «—»: nunca se inventan),
 // - «Copiar enlace» con el portapapeles real.
+// Render (plan gratuito) se duerme: la primera petición puede tardar o fallar mientras despierta.
+// Por eso se reintenta con espera creciente, y una foto que falla se vuelve a pedir antes de
+// rendirse; la huella de reemplazo sale solo si el animal de verdad no tiene foto.
 // Los datos nunca se pegan como HTML (XSS): todo se arma con createElement y textContent.
 (function () {
   "use strict";
@@ -16,38 +20,66 @@
     return anos + (anos === 1 ? " año" : " años");
   }
 
+  const esperar = (ms) => new Promise((listo) => setTimeout(listo, ms));
+
+  /** GET con reintentos: 6 intentos (unos 90 s en total) mientras el servidor despierta. Un 4xx
+   *  no se reintenta (no va a cambiar). */
   async function pedir(ruta) {
-    const r = await fetch(ruta, { headers: { Accept: "application/json" } });
-    if (!r.ok) throw new Error(String(r.status));
-    return r.json();
+    let ultimo;
+    for (let intento = 0; intento < 6; intento++) {
+      const corte = new AbortController();
+      const reloj = setTimeout(() => corte.abort(), 25000);
+      try {
+        const r = await fetch(ruta, { headers: { Accept: "application/json" }, signal: corte.signal });
+        if (r.ok) return await r.json();
+        ultimo = new Error(String(r.status));
+        if (r.status >= 400 && r.status < 500) throw ultimo;
+      } catch (e) {
+        if (e === ultimo && /^4/.test(e.message)) throw e;
+        ultimo = e;
+      } finally {
+        clearTimeout(reloj);
+      }
+      await esperar(Math.min(2000 * 2 ** intento, 15000));
+    }
+    throw ultimo;
   }
 
+  const SVG = "http://www.w3.org/2000/svg";
+
+  /** Huella de reemplazo: solo para el animal que de verdad no tiene foto. */
+  function huella() {
+    const svg = document.createElementNS(SVG, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("class", "huella-reemplazo");
+    const partes = [["ellipse", { cx: 12, cy: 15.5, rx: 5, ry: 4.2 }], ["circle", { cx: 6, cy: 9.5, r: 2.2 }],
+      ["circle", { cx: 10, cy: 6, r: 2.2 }], ["circle", { cx: 14, cy: 6, r: 2.2 }], ["circle", { cx: 18, cy: 9.5, r: 2.2 }]];
+    for (const [tipo, attrs] of partes) {
+      const el = document.createElementNS(SVG, tipo);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+      svg.append(el);
+    }
+    return svg;
+  }
+
+  /** Foto del catálogo. Si falla (el servidor despertando), se pide otra vez hasta 3 veces con
+   *  espera creciente; solo entonces queda la huella. Nunca una imagen rota. */
   function imagen(animal, alt) {
     const img = document.createElement("img");
-    img.src = animal.foto;
+    let intentos = 0;
     img.alt = alt;
-    img.loading = "lazy";
     img.decoding = "async";
-    img.addEventListener("error", () => img.remove()); // sin foto rota: queda la huella
+    img.addEventListener("error", () => {
+      if (intentos < 3) {
+        intentos += 1;
+        setTimeout(() => { img.src = animal.foto + "?intento=" + intentos; }, 1500 * 2 ** intentos);
+      } else {
+        img.replaceWith(huella());
+      }
+    });
+    img.src = animal.foto;
     return img;
-  }
-
-  /** Pone la foto en cada hueco [data-animal]: el animal de ese nombre o, si no está, otro con
-   *  foto que aún no se haya usado. */
-  function ponerFotos(animales) {
-    const conFoto = animales.filter((a) => a.foto);
-    const usados = new Set();
-    for (const hueco of document.querySelectorAll("[data-animal]")) {
-      const nombre = hueco.getAttribute("data-animal");
-      // El mismo animal puede salir en dos secciones (como Winny en el prototipo); el reemplazo,
-      // si no está publicado, es uno que aún no se haya usado.
-      const animal = conFoto.find((a) => a.nombre === nombre)
-        || conFoto.find((a) => !usados.has(a.animal_id));
-      if (!animal) continue;
-      usados.add(animal.animal_id);
-      const alt = hueco.hasAttribute("data-alt") ? "Foto de " + animal.nombre : "";
-      hueco.prepend(imagen(animal, alt));
-    }
   }
 
   function texto(clase, valor, etiqueta) {
@@ -66,7 +98,7 @@
     a.href = "/panel/#adoptar/animales";
     const foto = document.createElement("span");
     foto.className = "animal-foto";
-    if (animal.foto) foto.append(imagen(animal, ""));
+    foto.append(animal.foto ? imagen(animal, "") : huella());
     const especie = animal.especie === "gato" ? "Gatito" : "Perrito";
     a.append(foto, texto("h animal-nombre", animal.nombre),
       texto("animal-datos", [especie, edad(animal.edad_meses), TAMANO[animal.tamano] || animal.tamano].join(" · ")));
@@ -93,7 +125,6 @@
   async function animales() {
     try {
       const lista = await pedir("/adopciones/animales");
-      ponerFotos(lista);
       ponerCifra("en_adopcion", lista.length);  // en adopción = el catálogo público
       const cuatro = elegirCuatro(lista);
       if (cuatro.length) document.getElementById("en-adopcion").replaceChildren(...cuatro.map(tarjeta));

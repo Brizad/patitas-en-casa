@@ -3,7 +3,7 @@
   "short_name": "Patitas",
   "description": "Reporta un animal en emergencia en Cúcuta y consulta el estado de tu reporte.",
   "lang": "es",
-  "start_url": "/app/",
+  "start_url": "/app/#reportar",
   "scope": "/app/",
   "display": "standalone",
   "background_color": "#ffffeb",
