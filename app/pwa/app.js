@@ -62,6 +62,7 @@
       mostrarPantalla('codigo');
     } else {
       mostrarPantalla('reportar');
+      if (window.matchMedia('(min-width: 1024px)').matches) fotosDeLaPortada();  // panel derecho
     }
     window.scrollTo(0, 0);
   }

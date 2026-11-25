@@ -22,7 +22,9 @@ export default function MiniMapa({ latitud, longitud }: { latitud: number; longi
     if (!caja.current) return;
     const mapa = L.map(caja.current, { center: [latitud, longitud], zoom: 16, scrollWheelZoom: false });
     mapa.attributionControl.setPrefix(false);
-    L.tileLayer(TESELAS, { maxZoom: 19, attribution: ATRIBUCION }).addTo(mapa);
+    // OSM bloquea las teselas sin Referer; solo ellas envían el origen (la página sigue sin Referer).
+    L.tileLayer(TESELAS, { maxZoom: 19, attribution: ATRIBUCION,
+      referrerPolicy: "strict-origin-when-cross-origin" }).addTo(mapa);
     L.marker([latitud, longitud], { icon: PIN, keyboard: false, title: "Lugar del reporte",
       alt: "Pin del lugar del reporte" }).addTo(mapa);
     return () => { mapa.remove(); };
