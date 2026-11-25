@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import AccesoAdoptante, { VistaAcceso, vistaDesdeHash } from "./AccesoAdoptante";
 import { Cuenta, iniciarSesion, miCuenta } from "./api";
 import Administracion from "./Administracion";
 import AdopcionesCoordinador from "./AdopcionesCoordinador";
@@ -9,7 +10,6 @@ import Indicadores from "./Indicadores";
 import { textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
-import RegistroAdoptante from "./RegistroAdoptante";
 import MisRescates from "./MisRescates";
 import Piloto from "./Piloto";
 import Rescatista from "./Rescatista";
@@ -87,13 +87,28 @@ export default function App() {
 }
 
 function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) => void }) {
+  // Arreglos, parte B: /panel/#adoptar es la entrada del adoptante (su propio estilo); /panel/ y
+  // /panel/#personal, la del personal del refugio. #registro (enlaces de antes) abre «crear cuenta».
+  const [acceso, setAcceso] = useState<VistaAcceso | null>(() => vistaDesdeHash(window.location.hash));
+  useEffect(() => {
+    const alCambiarHash = () => setAcceso(vistaDesdeHash(window.location.hash));
+    window.addEventListener("hashchange", alCambiarHash);
+    return () => window.removeEventListener("hashchange", alCambiarHash);
+  }, []);
+  const ir = (v: VistaAcceso | "personal") => {
+    window.location.hash = v === "personal" ? "#personal" : v === "inicio" ? "#adoptar" : `#adoptar/${v}`;
+  };
+  if (acceso) return <AccesoAdoptante vista={acceso} alCambiar={ir} alEntrar={alEntrar} />;
+  return <EntrarPersonal alEntrar={alEntrar} alAdoptar={() => ir("inicio")} />;
+}
+
+function EntrarPersonal({ alEntrar, alAdoptar }: {
+  alEntrar: (token: string, cuenta: Cuenta) => void; alAdoptar: () => void;
+}) {
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
-  // El botón «Adoptar» de la página de inicio abre /panel/#registro (#145).
-  const [registro, setRegistro] = useState(() => window.location.hash === "#registro");
-  const [aviso, setAviso] = useState("");
 
   async function entrar(evento: React.FormEvent) {
     evento.preventDefault();
@@ -109,29 +124,21 @@ function InicioSesion({ alEntrar }: { alEntrar: (token: string, cuenta: Cuenta) 
     }
   }
 
-  if (registro) {
-    return (
-      <main className="acceso">
-        <RegistroAdoptante alTerminar={(m) => { setAviso(m); setRegistro(false); }} />
-      </main>
-    );
-  }
   return (
     <main className="acceso">
       <Despertando />
       <form className="ds-tarjeta inicio" onSubmit={entrar}>
         <img src="/app/icono.svg" alt="" width="56" height="56" className="logo" />
-        <h1>Patitas en Casa</h1>
-        <p className="ds-suave">Panel del personal. Entra con tu cuenta.</p>
-        {aviso && <p className="ds-msg ds-msg--ok" role="status">{aviso}</p>}
+        <h1>Entrar como personal del refugio</h1>
+        <p className="ds-suave">Veterinarios, rescatistas, coordinación, administración y Alcaldía.</p>
         <label>Correo<input type="email" value={correo} required autoComplete="username"
           onChange={(e) => setCorreo(e.target.value)} /></label>
         <label>Contraseña<input type="password" value={clave} required
           autoComplete="current-password" onChange={(e) => setClave(e.target.value)} /></label>
         {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
         <button className="principal" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
-        <p><button type="button" className="enlace" onClick={() => setRegistro(true)}>
-          ¿Quieres adoptar? Crea tu cuenta</button></p>
+        <p><button type="button" className="enlace" onClick={alAdoptar}>
+          ¿Quieres adoptar? Entra por la zona de adopción</button></p>
       </form>
     </main>
   );
