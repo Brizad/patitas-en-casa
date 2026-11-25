@@ -5,11 +5,15 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Mapa (#442): OSM bloqueaba las teselas que llegaban sin Referer. Ahora la capa de Leaflet (PWA y panel) usa `referrerPolicy: strict-origin-when-cross-origin`: solo las teselas envían el origen del sitio, y la página sigue con `no-referrer`.
 - RN-02 con video (#434): si el análisis de video sube un reporte a media o baja con confianza menor que 0,6, ahora va a «requiere revisión» (antes quedaba «clasificado»). La regla vive en `estado_automatico()`, compartida por el texto y el video.
 - Respaldo (#434): la restauración y la vigilancia del respaldo recorren todas las páginas de artefactos. Antes, con más de 100 artefactos, no encontraban ningún respaldo.
 - Verificar despliegue (#434): espera el commit que producción dice en `X-Version-Commit` (`RENDER_GIT_COMMIT`), no solo la versión.
 
 ### Agregado
+- Entrada del adoptante (#439): en `/panel/#adoptar`, «Ya tengo cuenta», «Soy nuevo» y «Ver los animales sin cuenta». Está separada de «Entrar como personal del refugio». Al crear la cuenta, el adoptante entra directo.
+- «Mi hogar» (#441): resumen de las respuestas guardadas y «Cambiar mis respuestas». Con perfil, la bienvenida ofrece «Ver mis compañeros con mis respuestas guardadas».
+- Reportar en computador (#442): 3 columnas (pasos, formulario y un panel con la foto real, quién revisa el reporte y «Mientras llega la ayuda»).
 - Mapa (#430), con Leaflet y teselas de OpenStreetMap:
   - PWA: pin arrastrable en «¿Dónde está?», que guarda la latitud y la longitud de siempre. Si el mapa no carga, el paso sigue funcionando.
   - Panel: mini mapa, «Abrir en Google Maps» y «Cómo llegar» para el veterinario y el rescatista.
@@ -17,6 +21,8 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
   - «Consultar» no muestra mapa.
 
 ### Cambiado
+- Portada (#437): hero editorial, cinta de frases, bloques de color, adopción, «Cómo funciona», roles y CTA final, con fotos reales por nombre y cifras reales («—» si no hay datos). Se quitan el rastro de huellas, «Pausar animaciones» y la nota de las cifras.
+- Encuesta del adoptante (#441): «¡Empezar!» arranca sin nada marcado, la burbuja usa una foto real y la respuesta guardada se nota con un borde (sin «Tu respuesta»).
 - Pantallas del personal (#432), con el estilo del prototipo. Es solo visual: misma lógica y mismos permisos.
   - Menú lateral oscuro en el computador y compacto en el celular.
   - Prioridad con color y forma: triángulo con ! que late, triángulo, cuadrado y círculo.
