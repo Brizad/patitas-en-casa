@@ -47,20 +47,35 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Versión esperada: $version"
 
-      - name: Esperar a que producción corra esa versión (hasta 20 min)
+      - name: Esperar a que producción corra ese commit (hasta 20 min)
         id: espera
         env:
           ESPERADA: ${{ steps.esperada.outputs.version }}
+          COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
+          # Parte 7c: la versión de pyproject no cambia en cada PR, así que comparar solo la versión
+          # daba verde aunque Render siguiera con el código anterior. Ahora se espera el commit que
+          # producción dice en la cabecera X-Version-Commit (Render pone RENDER_GIT_COMMIT). Si esa
+          # cabecera no existe (despliegue anterior a la parte 7c), se compara la versión y se avisa.
           # Un despliegue de Render tarda de 5 a 10 min; el primer intento puede despertar el servicio.
           for intento in $(seq 1 40); do
-            actual=$(curl -s -m 60 "$URL/openapi.json" | python3 -c "import sys,json; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null || true)
-            echo "intento $intento: producción dice «${actual:-sin respuesta}», se espera «$ESPERADA»"
-            if [ "$actual" = "$ESPERADA" ]; then echo "viva=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+            commit=$(curl -s -m 60 -o /dev/null -D - "$URL/app/" | tr -d '\r' \
+              | awk 'tolower($1)=="x-version-commit:" {print $2}')
+            if [ -n "$commit" ]; then
+              echo "intento $intento: producción corre el commit ${commit:0:7}, se espera ${COMMIT:0:7}"
+              if [ "$commit" = "$COMMIT" ]; then echo "viva=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+            else
+              actual=$(curl -s -m 60 "$URL/openapi.json" | python3 -c "import sys,json; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null || true)
+              echo "intento $intento: sin X-Version-Commit; producción dice «${actual:-sin respuesta}», se espera «$ESPERADA»"
+              if [ "$actual" = "$ESPERADA" ] && [ "$intento" -ge 20 ]; then
+                echo "::warning::Producción no dice su commit: se confirmó solo la versión."
+                echo "viva=true" >> "$GITHUB_OUTPUT"; exit 0
+              fi
+            fi
             sleep 30
           done
           echo "viva=false" >> "$GITHUB_OUTPUT"
-          echo "::error::Producción no llegó a la versión $ESPERADA en 20 minutos. Render dejó viva la anterior: abre el despliegue fallido en el panel de Render (Events → Deploys) y lee el registro."
+          echo "::error::Producción no llegó al commit ${COMMIT:0:7} (versión $ESPERADA) en 20 minutos. Render dejó viva la anterior: abre el despliegue fallido en el panel de Render (Events → Deploys) y lee el registro."
           exit 1
 
       - name: La PWA y la API de reportes responden

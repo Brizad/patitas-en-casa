@@ -5,6 +5,7 @@ import asyncio
 import contextlib
 import hmac
 import logging
+import os
 import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -102,6 +103,11 @@ def instalar_despertador(app: FastAPI, de_fondo: list[TareaDeFondo]) -> None:
         return respuesta
 
 
+# Parte 7c: el commit que Render desplegó (variable que Render pone sola). «Verificar despliegue»
+# lo compara con el commit unido a main; la versión de pyproject no cambia en cada PR.
+COMMIT_DESPLEGADO = os.environ.get("RENDER_GIT_COMMIT", "").strip()
+
+
 def poner_cabeceras(peticion: Request, respuesta):
     """Cabeceras de seguridad de toda respuesta (#121, ASVS 8.2.1 y 14.4)."""
     # Prueba de punta a punta (#121, OWASP ZAP): en todas las respuestas, HTTPS por un año
@@ -110,6 +116,8 @@ def poner_cabeceras(peticion: Request, respuesta):
     respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
     respuesta.headers["Permissions-Policy"] = POLITICA_PERMISOS
     respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    if COMMIT_DESPLEGADO:  # el código es abierto: decir qué commit corre no expone nada
+        respuesta.headers["X-Version-Commit"] = COMMIT_DESPLEGADO
     respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
     # ASVS 14.4.6 y 14.4.7: ninguna respuesta (tampoco la API ni /docs) se puede meter en
     # un marco de otro sitio ni le cuenta a otro sitio de qué página venía el usuario.

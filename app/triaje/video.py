@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from app.dominio.modelos import EstadoReporte, Reporte
-from app.triaje.clasificador import ORDEN_GRAVEDAD, Resultado
+from app.triaje.clasificador import ORDEN_GRAVEDAD, Resultado, estado_automatico
 
 
 class VideoNoDisponible(RuntimeError):
@@ -61,5 +61,7 @@ def aplicar_video(reporte: Reporte, video: Resultado) -> bool:
     if fusion.prioridad == reporte.prioridad:
         return False
     reporte.prioridad, reporte.confianza = fusion.prioridad, fusion.confianza
-    reporte.estado = EstadoReporte.CLASIFICADO  # subió a una prioridad más grave
+    # Subió a una prioridad más grave; RN-02 vale igual que con el texto (parte 7a): media o
+    # baja con poca confianza no queda «clasificado», va a revisión.
+    reporte.estado = estado_automatico(fusion.prioridad, fusion.confianza)
     return True

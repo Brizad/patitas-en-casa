@@ -6,9 +6,8 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as TiempoAgotado
 
-from app import config
 from app.dominio.modelos import EstadoReporte, Prioridad, Reporte
-from app.triaje.clasificador import VERSION, Resultado, clasificar
+from app.triaje.clasificador import VERSION, Resultado, clasificar, estado_automatico
 
 Clasificador = Callable[[str], Resultado]
 
@@ -45,13 +44,8 @@ class ServicioTriaje:
         reporte.confianza = resultado.confianza
         reporte.evidencias = resultado.evidencias
         reporte.version_modelo = self._version
-        if resultado.confianza < config.UMBRAL_CONFIANZA and resultado.prioridad in (
-            Prioridad.MEDIA, Prioridad.BAJA,
-        ):
-            # Nunca se asigna prioridad baja o media automática con baja confianza.
-            reporte.estado = EstadoReporte.REQUIERE_REVISION
-        else:
-            reporte.estado = EstadoReporte.CLASIFICADO
+        # RN-02: nunca se asigna prioridad baja o media automática con baja confianza.
+        reporte.estado = estado_automatico(resultado.prioridad, resultado.confianza)
         return reporte
 
     def _descartar_ejecutor(self, futuro) -> None:

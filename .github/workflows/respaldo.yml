@@ -129,5 +129,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" > artefactos.json
+          # Parte 7b: todas las páginas (no solo las 100 más nuevas), solo los respaldos.
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.name | startswith("respaldo-"))' \
+            | jq -s '{artifacts: .}' > artefactos.json
           python -m scripts.operacion.vigilar_respaldo respaldos artefactos.json

@@ -8,7 +8,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from app.dominio.modelos import Prioridad
+from app import config
+from app.dominio.modelos import EstadoReporte, Prioridad
 from app.triaje.normalizacion import normalizar
 
 # RF-20 (#75): se guarda con cada reporte y decisión. Cambiarla cuando cambie el léxico o
@@ -61,6 +62,14 @@ class Resultado:
 
 
 ORDEN_GRAVEDAD = [Prioridad.CRITICA, Prioridad.ALTA, Prioridad.MEDIA, Prioridad.BAJA]
+
+
+def estado_automatico(prioridad: Prioridad, confianza: float) -> EstadoReporte:
+    """RN-02: una prioridad media o baja con confianza < UMBRAL_CONFIANZA no se asigna sola:
+    requiere revisión. Crítica y alta no se degradan. La usan el texto y el video (parte 7a)."""
+    if confianza < config.UMBRAL_CONFIANZA and prioridad in (Prioridad.MEDIA, Prioridad.BAJA):
+        return EstadoReporte.REQUIERE_REVISION
+    return EstadoReporte.CLASIFICADO
 CONFIANZA_SIN_SENALES = 0.3
 CONFIANZA_BASE = 0.5
 CONFIANZA_POR_SENAL = 0.15
