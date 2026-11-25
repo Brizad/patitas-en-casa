@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Adoptante (#445): en el teléfono, «Mi hogar» se abre desde la bienvenida (el menú superior es solo de computador).
 - Mapa (#442): OSM bloqueaba las teselas que llegaban sin Referer. Ahora la capa de Leaflet (PWA y panel) usa `referrerPolicy: strict-origin-when-cross-origin`: solo las teselas envían el origen del sitio, y la página sigue con `no-referrer`.
 - RN-02 con video (#434): si el análisis de video sube un reporte a media o baja con confianza menor que 0,6, ahora va a «requiere revisión» (antes quedaba «clasificado»). La regla vive en `estado_automatico()`, compartida por el texto y el video.
 - Respaldo (#434): la restauración y la vigilancia del respaldo recorren todas las páginas de artefactos. Antes, con más de 100 artefactos, no encontraban ningún respaldo.
