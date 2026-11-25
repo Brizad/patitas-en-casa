@@ -47,3 +47,11 @@ describe("encuesta y Mi hogar (arreglos, parte C)", () => {
     expect(pantallas["./Adoptante.tsx"]).toContain('["hogar", "Mi hogar", miHogar]');
   });
 });
+
+describe("«Mi hogar» en el teléfono", () => {
+  it("la bienvenida tiene su enlace (el menú superior es solo de computador)", () => {
+    const vista = pantallas["./AdoptantePantallas.tsx"] as string;
+    expect(vista).toMatch(/solo-movil" onClick=\{alMiHogar\}>Mi hogar/);
+    expect(pantallas["./Adoptante.tsx"]).toContain("alMiHogar={miHogar}");
+  });
+});
