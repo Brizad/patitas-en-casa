@@ -45,6 +45,12 @@ class RepositorioAdopciones(Protocol):
         """Catálogo público: publicaciones disponibles, la más antigua primero."""
         ...
 
+    def retirar_publicacion(self, animal_id: int) -> bool:
+        """#450: disponible → retirada (sale del catálogo; el animal y su ficha siguen en el
+        refugio y no se borra nada). False si no estaba disponible o tiene solicitudes
+        abiertas (pendientes o con visita)."""
+        ...
+
     def crear_solicitud(self, solicitud: Solicitud) -> bool:
         """Asigna solicitud.id. False si el adoptante ya tiene una pendiente por ese animal."""
         ...
@@ -130,6 +136,15 @@ class RepositorioAdopcionesEnMemoria:
         return sorted((replace(p) for p in self._publicaciones.values()
                        if p.estado == EstadoPublicacion.DISPONIBLE),
                       key=lambda p: p.publicado_en)
+
+    def retirar_publicacion(self, animal_id: int) -> bool:
+        actual = self._publicaciones.get(animal_id)
+        if (actual is None or actual.estado != EstadoPublicacion.DISPONIBLE
+                or any(s.animal_id == animal_id and s.estado in ABIERTAS
+                       for s in self._solicitudes)):
+            return False
+        actual.estado = EstadoPublicacion.RETIRADA
+        return True
 
     def crear_solicitud(self, solicitud: Solicitud) -> bool:
         if any(s.animal_id == solicitud.animal_id and s.adoptante == solicitud.adoptante

@@ -12,6 +12,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 - Verificar despliegue (#434): espera el commit que producción dice en `X-Version-Commit` (`RENDER_GIT_COMMIT`), no solo la versión.
 
 ### Agregado
+- Retirar de la adopción (#450): `POST /refugio/animales/{id}/publicacion/retiro` (solo coordinación) saca del catálogo a un animal sin borrar nada. Su ficha, su foto y la publicación quedan en estado `retirada` (migración 0037, aditiva). No se retira si tiene solicitudes abiertas.
 - Entrada del adoptante (#439): en `/panel/#adoptar`, «Ya tengo cuenta», «Soy nuevo» y «Ver los animales sin cuenta». Está separada de «Entrar como personal del refugio». Al crear la cuenta, el adoptante entra directo.
 - «Mi hogar» (#441): resumen de las respuestas guardadas y «Cambiar mis respuestas». Con perfil, la bienvenida ofrece «Ver mis compañeros con mis respuestas guardadas».
 - Reportar en computador (#442): 3 columnas (pasos, formulario y un panel con la foto real, quién revisa el reporte y «Mientras llega la ayuda»).
