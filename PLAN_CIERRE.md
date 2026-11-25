@@ -423,3 +423,15 @@ Plan del autor: tarea 1 (página de inicio igual al prototipo nuevo `inicio-pagi
   - sobre el rosa #E8508A solo va texto grande (19 px, 800);
   - las etiquetas pequeñas «En adopción» y «Quién hace qué» usan #9E1F55 y #5B3FD9.
 - **Tarea 1, íconos de los roles:** van dibujados como en el prototipo (trazo oscuro en un círculo blanco), no con los SVG de colores de `/diseno/roles/`, que siguen en la cabecera del panel.
+- **Tarea 1 (PR #449):** publicada y comprobada en producción a 1440 y 390 px (axe en 0, cifras reales 23 y 18, todas las fotos cargadas). En celulares de 360 px el título no se corta: el tamaño se ajusta al ancho.
+- **Tarea 2 (PR #451 y operación por la API):**
+  - **Despublicar:** la API no lo permitía. Se agregó, de forma aditiva, `POST /refugio/animales/{id}/publicacion/retiro` (solo coordinación) con el estado `retirada` (migración 0037). No borra nada y no retira si hay solicitudes abiertas.
+  - **En producción, como coordinador:**
+    - se retiraron Canela (id 1) y la Luna perra (id 3), que siguen en el refugio con su ficha;
+    - se registró y publicó a Luna gata (id 25) con los datos del prototipo y `luna.jpg`.
+  - **Resultado:** el catálogo tiene 22 animales y ninguno sin foto.
+  - **Pendiente de Brayan (opcional):** el refugio tiene ahora dos «Luna» (la perra retirada y la gata publicada). Si se quiere, la perra se puede renombrar más adelante con el endpoint de ficha propuesto en §11.
+- **Tarea 3 (PR #ISSUE_PR):**
+  - **Una sola portada:** se quitó la portada vieja de `/app/`. «Inicio» y el logo van a `/`, y `/app/` y la PWA instalada (`start_url`) abren en «Reportar»; el service worker pasa a v13.
+  - **Fotos fijas estáticas:** las del diseño (Lupe, Cascabel, Copo, Nube, Toby y Max en el panel de Reportar) son imágenes del repo en `app/inicio/img/animales/`, recortadas y optimizadas (5 a 40 KB). Ya no dependen del catálogo.
+  - **Fotos del catálogo:** las tarjetas reintentan el catálogo 6 veces (unos 90 s, mientras Render despierta) y cada foto 3 veces. La huella sale solo si el animal no tiene foto.

@@ -52,7 +52,7 @@ def test_los_archivos_de_la_pwa_se_sirven_con_su_tipo(c, archivo, tipo):
 def test_el_manifiesto_describe_una_pwa_instalable(c):
     manifiesto = json.loads(c.get("/app/manifest.webmanifest").text)
     assert manifiesto["lang"] == "es"
-    assert manifiesto["start_url"] == "/app/"
+    assert manifiesto["start_url"] == "/app/#reportar"  # #452: instalada, abre en Reportar
     assert manifiesto["scope"] == "/app/"
     assert manifiesto["display"] == "standalone"
     assert manifiesto["icons"] and all(i["src"] for i in manifiesto["icons"])
@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v12" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+    assert "patitas-pwa-v13" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #452
 
 
 
@@ -323,9 +323,15 @@ def test_los_sonidos_de_la_pwa_y_del_panel_son_los_mismos():
         assert all(f in pwa for f in frecuencias.split(", ")), nombre
 
 
-def test_la_portada_de_la_app_y_la_consulta_sin_prioridad(c):
+def test_un_solo_inicio_la_app_abre_en_reportar_y_la_consulta_sin_prioridad(c):
+    # #452: la portada vieja de /app/ ya no existe; «Inicio» y el logo llevan a la principal.
     html = c.get("/app/").text
-    assert 'id="pantalla-inicio"' in html and "no debería esperar." in html
+    assert 'id="pantalla-inicio"' not in html and "no debería esperar" not in html
+    assert '<a class="marca" href="/">' in html and '<a href="/" class="solo-pc">Inicio</a>' in html
+    assert 'href="#inicio"' not in html
+    app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    assert "mostrarPantalla('inicio')" not in app and "fotosDeLaPortada" not in app
+    assert '<img src="/inicio/img/animales/max.jpg"' in html  # foto fija, sin el catálogo
     estado = _seccion(html, "pantalla-estado").lower()
     assert "prioridad" not in estado  # RN-14: el ciudadano nunca ve la prioridad
 
@@ -381,7 +387,7 @@ def test_reportar_en_computador_tiene_panel_de_ayuda_que_el_telefono_oculta(c):
     html = c.get("/app/").text
     panel = html[html.index('<aside class="reportar-ayuda solo-pc"'):]
     panel = panel[:panel.index("</aside>")]
-    assert 'data-animal="Max"' in panel and "Un veterinario revisa tu reporte" in panel
+    assert "animales/max.jpg" in panel and "Un veterinario revisa tu reporte" in panel
     assert "Mientras llega la ayuda" in panel and panel.count("<li>") == 3
     css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
     assert ".reportar-ayuda { display: none; }" in css

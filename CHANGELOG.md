@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Un solo inicio (#452): se quita la portada vieja de `/app/`. «Inicio» y el logo de la app llevan a `/`, y la app (también instalada) abre en «Reportar». Las fotos fijas del diseño son estáticas del repo, y las del catálogo se reintentan mientras Render despierta: la huella sale solo si de verdad no hay foto.
 - Adoptante (#445): en el teléfono, «Mi hogar» se abre desde la bienvenida (el menú superior es solo de computador).
 - Mapa (#442): OSM bloqueaba las teselas que llegaban sin Referer. Ahora la capa de Leaflet (PWA y panel) usa `referrerPolicy: strict-origin-when-cross-origin`: solo las teselas envían el origen del sitio, y la página sigue con `no-referrer`.
 - RN-02 con video (#434): si el análisis de video sube un reporte a media o baja con confianza menor que 0,6, ahora va a «requiere revisión» (antes quedaba «clasificado»). La regla vive en `estado_automatico()`, compartida por el texto y el video.

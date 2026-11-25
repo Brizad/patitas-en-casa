@@ -53,38 +53,16 @@
       }
     } else if (nombre === 'sus' && window.PatitasPiloto && window.PatitasPiloto.activo) {
       mostrarPantalla('sus');  // RNF-06 (#258): solo en modo piloto
-    } else if (nombre === '' || nombre === 'inicio') {
-      mostrarPantalla('inicio');  // #428: portada de la app, como el prototipo
-      fotosDeLaPortada();
     } else if (nombre === 'codigo' && leer(ULTIMO_CODIGO)) {
       const ultimo = leer(ULTIMO_CODIGO);
       if (normalizar($('codigo-grande').textContent) !== ultimo) pintarCodigo(ultimo);
       mostrarPantalla('codigo');
     } else {
+      // Un solo inicio (#452): la portada es la página principal (/); /app/ (y el #inicio de
+      // los enlaces viejos) abre directo en «Reportar».
       mostrarPantalla('reportar');
-      if (window.matchMedia('(min-width: 1024px)').matches) fotosDeLaPortada();  // panel derecho
     }
     window.scrollTo(0, 0);
-  }
-
-  // #428: fotos reales de los animales publicados en la portada (si no hay, quedan los colores).
-  let fotosPuestas = false;
-  async function fotosDeLaPortada() {
-    if (fotosPuestas) return;
-    fotosPuestas = true;
-    try {
-      const respuesta = await fetch('/adopciones/animales', { headers: { Accept: 'application/json' } });
-      const conFoto = (respuesta.ok ? await respuesta.json() : []).filter((a) => a.foto);
-      for (const hueco of document.querySelectorAll('[data-animal]')) {
-        const animal = conFoto.find((a) => a.nombre === hueco.dataset.animal) || conFoto.shift();
-        if (!animal) continue;
-        const img = document.createElement('img');
-        img.src = animal.foto;
-        img.alt = '';
-        img.addEventListener('error', () => img.remove());
-        hueco.replaceChildren(img);
-      }
-    } catch (error) { /* sin señal: la portada se ve igual, sin fotos */ }
   }
 
   // --- Código de seguimiento (P-02) --------------------------------------------------
