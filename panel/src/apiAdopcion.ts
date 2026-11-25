@@ -17,7 +17,10 @@ export interface Compatibilidad {
 }
 export type Recomendado = AnimalPublicado & Compatibilidad;
 
-export interface MiSolicitud { id: number; animal_id: number; estado: string; creada_en: string }
+export interface MiSolicitud {
+  id: number; animal_id: number; estado: string; creada_en: string;
+  nombre?: string | null; especie?: string | null; // #420: siguen aunque el animal ya no esté publicado
+}
 
 export const PERFIL_VACIO: Perfil = {
   vivienda: "casa", tiene_patio: false, hay_ninos: false, otros_animales: false,

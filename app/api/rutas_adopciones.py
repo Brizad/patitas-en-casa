@@ -246,9 +246,17 @@ def _recomendaciones(ctx: Contexto, adoptante: Usuario) -> list[dict]:
 
 
 def _mis_solicitudes(ctx: Contexto, adoptante: Usuario) -> list[dict]:
-    return [{"id": s.id, "animal_id": s.animal_id, "estado": s.estado.value,
-             "creada_en": fecha_utc(s.creada_en)}
-            for s in ctx.repositorio_adopciones.solicitudes() if s.adoptante == adoptante.correo]
+    """#420 (aditivo): con nombre y especie del animal, que sale del catálogo al adoptarse."""
+    repositorio = ctx.repositorio_adopciones
+    filas = []
+    for s in repositorio.solicitudes():
+        if s.adoptante != adoptante.correo:
+            continue
+        p = repositorio.publicacion(s.animal_id)
+        filas.append({"id": s.id, "animal_id": s.animal_id, "estado": s.estado.value,
+                      "creada_en": fecha_utc(s.creada_en),
+                      "nombre": p.nombre if p else None, "especie": p.especie if p else None})
+    return filas
 
 
 def _solicitudes_del_refugio(ctx: Contexto, coordinador: Usuario) -> list[dict]:

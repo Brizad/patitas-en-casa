@@ -83,10 +83,14 @@ export default function Adoptante({ token, nombre, alSalir }: {
   const visibles = filtrar(fuente, s.filtro);
   const idActual = actual(visibles.map((a) => a.animal_id), s.elegido);
   const animal = visibles.find((a) => a.animal_id === idActual) ?? null;
-  const animalDe = (id: number): AnimalPublicado =>
-    fuente.find((a) => a.animal_id === id) ?? datos.catalogo.find((a) => a.animal_id === id)
-    ?? { animal_id: id, nombre: `Animal ${id}`, especie: "", descripcion: "", tamano: "", energia: "",
-         edad_meses: 0, apto_ninos: false, apto_otros_animales: false, necesita_patio: false };
+  // Un animal ya adoptado sale del catálogo: su nombre y especie vienen con la solicitud.
+  const animalDe = (id: number): AnimalPublicado => {
+    const s = datos.mias.find((x) => x.animal_id === id);
+    return fuente.find((a) => a.animal_id === id) ?? datos.catalogo.find((a) => a.animal_id === id)
+      ?? { animal_id: id, nombre: s?.nombre ?? `Animal ${id}`, especie: s?.especie ?? "",
+           descripcion: "", tamano: "", energia: "", edad_meses: 0, apto_ninos: false,
+           apto_otros_animales: false, necesita_patio: false };
+  };
 
   const empezar = () => ir("siguiente", { tipo: "empezar", perfil: datos.perfil });
 

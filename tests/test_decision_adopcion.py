@@ -100,6 +100,17 @@ def test_aprobar_egresa_rechaza_las_otras_y_programa_seguimientos(c):
     assert again.status_code == 409
 
 
+def test_mis_solicitudes_dicen_el_nombre_aunque_ya_no_este_en_el_catalogo(c):
+    """#420: al aprobar, el animal sale del catálogo; el adoptante sigue viendo a quién adoptó."""
+    coord, _, ids = preparar(c)
+    c.post(f"/refugio/solicitudes/{ids['lau@correo.co']}/decision", json={"aprobar": True},
+           headers=coord)
+    assert c.get("/adopciones/animales").json() == []
+    mias = c.get("/adopciones/solicitudes/mias", headers=h(c, "lau@correo.co")).json()
+    assert mias[0]["estado"] == "aprobada"
+    assert (mias[0]["nombre"], mias[0]["especie"]) == ("Canela", "gato")
+
+
 def test_rechazar_exige_razon_sin_relleno(c):
     coord, _, ids = preparar(c)
     ruta = f"/refugio/solicitudes/{ids['lau@correo.co']}/decision"
