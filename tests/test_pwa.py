@@ -156,17 +156,19 @@ def test_video_opcional_en_el_formulario_y_blob_solo_local():
 
 # --- #168: sistema de diseño compartido ------------------------------------------------
 
-def test_la_pwa_usa_el_sistema_de_diseno(c):
+def test_la_pwa_usa_el_estilo_de_los_prototipos(c):
+    """#428: la PWA usa los colores y las fuentes de los prototipos (/diseno/patitas.css)."""
     html = c.get("/app/").text
-    assert re.search(r"<body[^>]*class=\"ds\"", html)
-    assert html.index("/diseno/sistema.css") < html.index("estilos.css")
-    assert 'class="ds-btn ds-btn--pri' in html and 'class="ds-tarjeta"' in html
+    assert re.search(r'<body class="p pwa"', html)
+    assert html.index("/diseno/patitas.css") < html.index("estilos.css")
+    assert "/diseno/sistema.css" not in html
 
 
 def test_el_service_worker_guarda_la_hoja_compartida_para_abrir_sin_senal():
     sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
-    assert "/diseno/sistema.css" in sw
-    assert "patitas-pwa-v3'" not in sw  # versión nueva: se baja la interfaz rediseñada
+    assert "'/diseno/patitas.css'" in sw
+    for archivo in ("'pasos.js'", "'sonido.js'", "'reportar.js'", "'piloto.js'"):
+        assert archivo in sw, archivo
 
 
 def test_la_pwa_valida_que_la_descripcion_tenga_palabras():
@@ -178,25 +180,25 @@ def test_la_pwa_valida_que_la_descripcion_tenga_palabras():
 # --- #298: rediseño con el sistema visual nuevo -----------------------------------------
 
 def test_la_pwa_usa_las_fuentes_locales_tambien_sin_senal(c):
-    html = c.get("/app/").text
-    assert html.index("/diseno/fuentes.css") < html.index("/diseno/sistema.css")
     sw = (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
-    for recurso in ("/diseno/fuentes.css", "/diseno/fuentes/eb-garamond-latin-400-normal.woff2",
-                    "/diseno/fuentes/figtree-latin-wght-normal.woff2"):
+    for recurso in ("/diseno/fuentes/fredoka-latin-wght-normal.woff2",
+                    "/diseno/fuentes/nunito-latin-wght-normal.woff2"):
         assert f"'{recurso}'" in sw, recurso
-    # #298 la subió a v9 (interfaz rediseñada); #308 a v10 (ícono nuevo).
-    assert int(re.search(r"patitas-pwa-v(\d+)'", sw).group(1)) >= 9
+        assert c.get(recurso).status_code == 200
+    assert int(re.search(r"patitas-pwa-v(\d+)'", sw).group(1)) >= 12  # #428
     assert "url.pathname.startsWith('/diseno/')" in sw
 
 
-def test_estilo_propio_de_la_pwa_con_el_sistema_nuevo():
+def test_estilo_propio_de_la_pwa_igual_al_prototipo():
     css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
-    # Pestañas como control segmentado: la actual se marca con fondo invertido, no solo color.
-    actual = r'\.pestanas a\[aria-current="page"\] \{[^}]*background: var\(--ds-tinta\)'
+    # La pestaña actual se marca con fondo invertido, no solo con color.
+    actual = r'\.pestanas a\[aria-current="page"\] \{[^}]*background: var\(--p-tinta\)'
     assert re.search(actual, css)
-    assert "border-radius: var(--pc-radio-pildora)" in css  # cabecera y pestañas en píldora
-    assert re.search(r"\.big \{[^}]*background: var\(--ds-accion\)", css)  # código en lavanda
-    assert "dashed" not in css and "box-shadow" not in css
+    # Botones con sombra dura que se hunden al tocarlos; computador desde 900 px.
+    assert ".hunde:active:not(:disabled) { translate: 2px 2px;" in css
+    assert "@media (min-width: 900px)" in css
+    assert "@media (prefers-reduced-motion: reduce)" in css
+    assert "data:" not in css  # la CSP no admite imágenes data:
 
 
 def test_los_enlaces_con_forma_de_boton_no_toman_el_color_de_enlace():
@@ -246,4 +248,76 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v11" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+    assert "patitas-pwa-v12" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")
+
+
+
+
+# --- #428: reportar en 4 pasos, igual al prototipo ---
+
+def test_reportar_en_cuatro_pasos_con_barra_y_lista(c):
+    html = c.get("/app/").text
+    pasos = re.findall(r'<div class="paso" data-paso="(\d)"', html)
+    assert pasos == ["1", "2", "3", "4"]
+    assert re.search(r'data-paso="2"[^>]*hidden', html)  # se ve un paso a la vez
+    assert html.count('class="paso-boton" data-ir=') == 4  # lista de pasos en el computador
+    assert html.count("<span class=\"progreso-barra\">") == 4  # barra en el celular
+    assert 'id="paso-siguiente"' in html and 'aria-label="Paso anterior"' in html
+    assert re.search(r'<button type="submit"[^>]*id="enviar"', html)
+
+
+def test_paso_1_botones_rapidos_y_contador_del_minimo(c):
+    html = c.get("/app/").text
+    assert html.count('class="sintoma" aria-pressed="false" data-frase=') == 6
+    js = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
+    assert "'Faltan ' + falta + ' caracteres (mínimo ' + MIN_CARACTERES + ')'" in js
+    pasos = (CARPETA_PWA / "pasos.js").read_text(encoding="utf-8")
+    assert "innerHTML" not in pasos and "textContent" in pasos
+
+
+def test_pasos_valida_con_las_mismas_reglas_y_no_cambia_el_envio():
+    pasos = (CARPETA_PWA / "pasos.js").read_text(encoding="utf-8")
+    for regla in ("reporte.validarDescripcion(", "reporte.validarUbicacion(",
+                  "reporte.validarContacto("):
+        assert regla in pasos, regla
+    assert "fetch(" not in pasos  # el envío sigue solo en reportar.js (cola, piloto, video)
+
+
+def test_comunas_como_botones_que_cambian_el_valor_que_se_envia(c):
+    html = c.get("/app/").text
+    assert html.count('class="comuna" data-comuna=') == 11
+    assert re.search(r'<select id="comuna" name="comuna" hidden>', html)
+
+
+def test_gracias_con_codigo_grande_copiar_y_sello(c):
+    gracias = _seccion(c.get("/app/").text, "pantalla-codigo")
+    assert 'class="sello-huella"' in gracias and 'id="copiar"' in gracias
+    assert 'class="big mono" id="codigo-grande"' in gracias
+    app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    assert "navigator.clipboard.writeText(codigo)" in app
+
+
+def test_sonidos_suaves_con_interruptor_y_sin_musica(c):
+    html = c.get("/app/").text
+    boton = r'<button[^>]*id="sonido"[^>]*aria-label="Sonidos al tocar" aria-pressed='
+    assert re.search(boton, html)
+    sonido = (CARPETA_PWA / "sonido.js").read_text(encoding="utf-8")
+    assert "setInterval" not in sonido and "musica" not in sonido.lower()  # nada en bucle
+    assert "localStorage" in sonido and "try {" in sonido
+
+
+def test_los_sonidos_de_la_pwa_y_del_panel_son_los_mismos():
+    """Las recetas comunes (pop, siguiente, atrás) no se separan entre la PWA y el panel."""
+    sonido = (CARPETA_PWA / "sonido.js").read_text(encoding="utf-8")
+    panel = (CARPETA_PWA.parents[1] / "panel" / "src" / "sonido.ts").read_text(encoding="utf-8")
+    for nombre, frecuencias in (("pop", "560"), ("siguiente", "523, 784"), ("atras", "659, 440")):
+        assert re.search(rf'case "{nombre}": return [^;]*{frecuencias}', panel), nombre
+        pwa = re.search(rf"{nombre}: \[(.*?)\],\n", sonido, re.S).group(1)
+        assert all(f in pwa for f in frecuencias.split(", ")), nombre
+
+
+def test_la_portada_de_la_app_y_la_consulta_sin_prioridad(c):
+    html = c.get("/app/").text
+    assert 'id="pantalla-inicio"' in html and "no debería esperar." in html
+    estado = _seccion(html, "pantalla-estado").lower()
+    assert "prioridad" not in estado  # RN-14: el ciudadano nunca ve la prioridad

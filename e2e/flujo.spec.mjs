@@ -38,10 +38,9 @@ async function sinScrollHorizontal(page) {
 
 test("el ciudadano no puede enviar una descripción sin sentido (RN-01)", async ({ page }) => {
   await page.setViewportSize(TELEFONO);
-  await page.goto("/app/");
+  await page.goto("/app/#reportar");
   await page.locator("#descripcion").fill("Jsjsisoslqmwnabsnsnans Eksowpwpwowowowlwkksksks");
-  await page.locator("#direccion").fill("Avenida Libertadores con calle 10, Cúcuta");
-  await page.getByRole("button", { name: "Enviar reporte" }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click(); // #428: el paso 1 valida
   await expect(page.locator("#error-descripcion"))
     .toHaveText("Describe con palabras qué le pasa al animal.");
   await expect(page.locator("#codigo-grande")).toBeHidden();
@@ -49,10 +48,13 @@ test("el ciudadano no puede enviar una descripción sin sentido (RN-01)", async 
 
 test("el ciudadano reporta desde el teléfono y recibe su código", async ({ page }) => {
   await page.setViewportSize(TELEFONO);
-  await page.goto("/app/");
+  await page.goto("/app/#reportar");
   await page.locator("#descripcion").fill(DESCRIPCION);
+  await page.getByRole("button", { name: "Siguiente" }).click(); // #428: 4 pasos
   await page.locator("#direccion").fill("Avenida Libertadores con calle 10, Cúcuta");
-  await page.locator("#comuna").selectOption("5");
+  await page.getByRole("button", { name: "Comuna 5" }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await page.getByRole("button", { name: "Saltar este paso" }).click();
   await sinScrollHorizontal(page);
   await page.getByRole("button", { name: "Enviar reporte" }).click();
   await expect(page.locator("#codigo-grande")).toBeVisible();

@@ -108,7 +108,7 @@ for (const tema of ["light", "dark"]) {
     }
     // Errores visibles: enviar el reporte vacío y entrar con una clave equivocada.
     await p.goto(`${BASE}/app/#reportar`);
-    await p.locator('#reporte button[type="submit"]').click();
+    await p.locator("#paso-siguiente").click(); // #428: «Siguiente» con el paso 1 vacío
     await revisar(p, "pwa-reportar-errores", ancho, tema);
     await p.goto(`${BASE}/panel/`);
     await p.getByLabel("Correo").fill("nadie@demo.patitas.co");

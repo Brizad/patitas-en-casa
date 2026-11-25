@@ -17,9 +17,12 @@ test("H-2: el aviso de «sin conexión» solo aparece cuando no hay señal", asy
 });
 
 test("H-1: «¡Gracias por avisar!» dice qué hacer mientras llega ayuda, sin la prioridad (RN-14)", async ({ page }) => {
-  await page.goto("/app/");
+  await page.goto("/app/#reportar");
   await page.locator("#descripcion").fill("Perro atropellado convulsionando en la avenida, sangra mucho");
+  await page.getByRole("button", { name: "Siguiente" }).click(); // #428: 4 pasos
   await page.locator("#direccion").fill("Avenida Libertadores con calle 10, Cúcuta");
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await page.getByRole("button", { name: "Saltar este paso" }).click(); // sin video
   await page.getByRole("button", { name: "Enviar reporte" }).click();
   await expect(page.getByRole("heading", { name: "¡Gracias por avisar!" })).toBeVisible();
   const consejos = page.locator("#mientras-llega");
