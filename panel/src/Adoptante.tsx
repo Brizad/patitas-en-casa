@@ -15,7 +15,8 @@ import {
 import { Huella, Icono } from "./Ilustraciones";
 import { textoError } from "./mensajes";
 import {
-  Efecto, Preferencias, Sonido, guardarPreferencias, leerPreferencias, sonidoDeEspecie,
+  Efecto, Preferencias, Sonido, arrancarSola, documentoActivado, guardarPreferencias, leerPreferencias,
+  sonidoDeEspecie,
 } from "./sonido";
 
 type Animal = AnimalPublicado | Recomendado;
@@ -239,8 +240,10 @@ function Fondo() {
   );
 }
 
-/** Sonido y preferencias: la música espera el primer toque y se detiene al salir de la vista
- *  o al ocultar la pestaña; las preferencias se recuerdan en este navegador. */
+/** Sonido y preferencias: la música arranca sola al entrar (tarea 5: ya, si el documento tuvo un
+ *  gesto; si no, con el primer toque o tecla en cualquier parte) salvo que la persona la haya
+ *  apagado, y se detiene al salir de la vista o al ocultar la pestaña; las preferencias se
+ *  recuerdan en este navegador. */
 function useSonido() {
   const [prefs, setPrefs] = useState<Preferencias>(() => leerPreferencias());
   const sonido = useRef<Sonido | null>(null);
@@ -254,7 +257,13 @@ function useSonido() {
       setSonando(so.sonando);
     };
     document.addEventListener("visibilitychange", alCambiarVisibilidad);
+    // Tarea 5: la música arranca sola (ya, si hubo un gesto; si no, con el primer toque o tecla).
+    const quitarArranque = arrancarSola(so, {
+      musica: prefs.musica, activado: documentoActivado(), destino: window,
+      alArrancar: () => setSonando(so.sonando),
+    });
     return () => {
+      quitarArranque();
       document.removeEventListener("visibilitychange", alCambiarVisibilidad);
       so.cerrar(); // salir de la vista (por ejemplo, «Salir»): se calla y suelta el audio
     };

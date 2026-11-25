@@ -45,6 +45,7 @@ export const MELODIA = [72, 76, 79, 76, 77, 81, 79, 0, 76, 79, 84, 79, 81, 79, 7
 export const BAJO = [48, 53, 48, 55, 50, 55, 53, 48];
 export const PASO_S = 0.19;
 export const VOLUMEN_MUSICA = 0.07; // bajito: acompaña, no tapa los efectos
+export const FUNDIDO_S = 1.5; // tarea 5: al arrancar sola, sube suave hasta VOLUMEN_MUSICA
 
 /** Las notas de un paso de la música (melodía, bajo y un tic suave en los impares). */
 export function tonosDelPaso(paso: number): Tono[] {
@@ -145,11 +146,12 @@ export class Sonido {
     o.stop(t + n.d + 0.05);
   }
 
-  /** El primer toque del usuario: desde aquí el navegador deja sonar la música. */
-  despertar(): void {
+  /** El primer toque del usuario: desde aquí el navegador deja sonar la música. Con
+   *  `fundido`, la música entra subiendo en FUNDIDO_S (tarea 5: cuando arranca sola). */
+  despertar(fundido = false): void {
     if (this.despierto) return;
     this.despierto = true;
-    if (this.musicaActiva) this.iniciarMusica();
+    if (this.musicaActiva) this.iniciarMusica(fundido);
   }
 
   efecto(e: Efecto): void {
@@ -171,12 +173,17 @@ export class Sonido {
     if (this.despierto && this.musicaActiva) this.iniciarMusica();
   }
 
-  private iniciarMusica(): void {
+  private iniciarMusica(fundido = false): void {
     if (this.reloj) return;
     const c = this.audio();
     if (!c || !this.maestro) return;
     this.volMusica = c.createGain();
-    this.volMusica.gain.value = VOLUMEN_MUSICA;
+    if (fundido) {
+      this.volMusica.gain.setValueAtTime(0.0001, c.currentTime);
+      this.volMusica.gain.exponentialRampToValueAtTime(VOLUMEN_MUSICA, c.currentTime + FUNDIDO_S);
+    } else {
+      this.volMusica.gain.value = VOLUMEN_MUSICA;
+    }
     this.volMusica.connect(this.maestro);
     this.paso = 0;
     this.proxima = c.currentTime + 0.08;
@@ -207,3 +214,36 @@ export class Sonido {
     this.maestro = null;
   }
 }
+
+/** Lo mínimo de Sonido que necesita arrancarSola (para probarla sin audio). */
+export interface Despertable { despertar(fundido?: boolean): void }
+
+/** Tarea 5: la música del adoptante arranca SOLA al entrar a su vista.
+ *  - Con la música apagada por la persona (preferencia guardada), nunca arranca sola.
+ *  - Si el documento ya tiene activación del usuario (navigator.userActivation.hasBeenActive:
+ *    por ejemplo, viene de tocar «Entrar» o «Crear cuenta»), arranca ya, con fundido.
+ *  - Si no (abrió /panel/ con la sesión ya iniciada), arranca con el PRIMER pointerdown o
+ *    keydown en cualquier parte (los navegadores no dejan sonar audio antes).
+ *  Devuelve la función que quita los escuchas (al salir de la vista). */
+export function arrancarSola(sonido: Despertable, opciones: {
+  musica: boolean; activado: boolean; destino: Pick<EventTarget, "addEventListener" | "removeEventListener">;
+  alArrancar?: () => void;
+}): () => void {
+  const { musica, activado, destino, alArrancar } = opciones;
+  if (!musica) return () => {};
+  const arrancar = () => { sonido.despertar(true); alArrancar?.(); };
+  if (activado) { arrancar(); return () => {}; }
+  const quitar = () => {
+    destino.removeEventListener("pointerdown", alPrimerToque);
+    destino.removeEventListener("keydown", alPrimerToque);
+  };
+  function alPrimerToque() { quitar(); arrancar(); }
+  destino.addEventListener("pointerdown", alPrimerToque, { once: true });
+  destino.addEventListener("keydown", alPrimerToque, { once: true });
+  return quitar;
+}
+
+/** ¿El documento ya tuvo un gesto del usuario? (Chrome, Edge, Safari 16.4+, Firefox 120+). */
+export const documentoActivado = (): boolean =>
+  (globalThis.navigator as Navigator & { userActivation?: { hasBeenActive: boolean } } | undefined)
+    ?.userActivation?.hasBeenActive ?? false;

@@ -24,6 +24,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
   - «Consultar» no muestra mapa.
 
 ### Cambiado
+- Música del adoptante (#457): arranca sola al entrar a su vista (con fundido de 1,5 s si ya hubo un gesto, como tocar «Entrar»; si no, con el primer toque o tecla en cualquier parte), salvo que la persona la haya apagado. Se detiene al salir.
 - Página de inicio v3 (#448): igual al prototipo nuevo. Paleta del adoptante (sin naranja), nav amarilla, hero lila con burbujas en las «o» (cifras reales y la foto de Lupe) y cápsula con ilustración, bloques con borde y sombra dura, «Esperan un hogar» centrado, un solo bloque «Ayúdalos» con «Cómo funciona», 8 roles en tarjetas de colores y pie nuevo con la firma del autor. Las 4 ilustraciones van optimizadas en `app/inicio/img/`.
 - Portada (#437): hero editorial, cinta de frases, bloques de color, adopción, «Cómo funciona», roles y CTA final, con fotos reales por nombre y cifras reales («—» si no hay datos). Se quitan el rastro de huellas, «Pausar animaciones» y la nota de las cifras.
 - Encuesta del adoptante (#441): «¡Empezar!» arranca sin nada marcado, la burbuja usa una foto real y la respuesta guardada se nota con un borde (sin «Tu respuesta»).

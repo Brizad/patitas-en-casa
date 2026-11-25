@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  BAJO, Efecto, MELODIA, PREFERENCIAS_POR_DEFECTO, Sonido, guardarPreferencias, leerPreferencias,
+  BAJO, Efecto, FUNDIDO_S, MELODIA, PREFERENCIAS_POR_DEFECTO, Sonido, VOLUMEN_MUSICA, arrancarSola,
+  guardarPreferencias, leerPreferencias,
   mtof, receta, sonidoDeEspecie, tonosDelPaso,
 } from "./sonido";
 
@@ -152,5 +153,71 @@ describe("Sonido", () => {
     const s = new Sonido({ musica: true, efectos: true }, () => null);
     expect(() => { s.despertar(); s.efecto("guau"); s.cerrar(); }).not.toThrow();
     expect(s.sonando).toBe(false);
+  });
+});
+
+
+describe("la música del adoptante arranca sola (tarea 5)", () => {
+  const sonido = () => ({ despertar: vi.fn() });
+
+  it("con activación del usuario (viene de «Entrar»): arranca al montar, con fundido", () => {
+    const so = sonido();
+    const destino = new EventTarget();
+    const alArrancar = vi.fn();
+    arrancarSola(so, { musica: true, activado: true, destino, alArrancar });
+    expect(so.despertar).toHaveBeenCalledWith(true);
+    expect(alArrancar).toHaveBeenCalledTimes(1);
+  });
+
+  it("sin activación: espera el PRIMER pointerdown o tecla en cualquier parte, una sola vez", () => {
+    const so = sonido();
+    const destino = new EventTarget();
+    arrancarSola(so, { musica: true, activado: false, destino });
+    expect(so.despertar).not.toHaveBeenCalled();
+    destino.dispatchEvent(new Event("pointerdown"));
+    expect(so.despertar).toHaveBeenCalledTimes(1);
+    destino.dispatchEvent(new Event("keydown"));
+    destino.dispatchEvent(new Event("pointerdown"));
+    expect(so.despertar).toHaveBeenCalledTimes(1);  // se quitaron los dos escuchas
+
+    const otra = sonido();
+    const teclado = new EventTarget();
+    arrancarSola(otra, { musica: true, activado: false, destino: teclado });
+    teclado.dispatchEvent(new Event("keydown"));
+    expect(otra.despertar).toHaveBeenCalledWith(true);
+  });
+
+  it("con la música apagada por la persona (preferencia guardada) no arranca sola", () => {
+    const so = sonido();
+    const destino = new EventTarget();
+    arrancarSola(so, { musica: false, activado: true, destino });
+    destino.dispatchEvent(new Event("pointerdown"));
+    expect(so.despertar).not.toHaveBeenCalled();
+    const guardadas = leerPreferencias({ getItem: () => JSON.stringify({ musica: false }), setItem: () => {} });
+    expect(guardadas.musica).toBe(false);
+  });
+
+  it("al salir de la vista antes del primer toque, ya no arranca", () => {
+    const so = sonido();
+    const destino = new EventTarget();
+    const quitar = arrancarSola(so, { musica: true, activado: false, destino });
+    quitar();
+    destino.dispatchEvent(new Event("pointerdown"));
+    expect(so.despertar).not.toHaveBeenCalled();
+  });
+
+  it("el fundido sube el volumen de la música en 1,5 s", () => {
+    vi.useFakeTimers();
+    const ctx = contextoFalso();
+    const ganancias: { gain: { setValueAtTime: ReturnType<typeof vi.fn>;
+      exponentialRampToValueAtTime: ReturnType<typeof vi.fn> } }[] = [];
+    const crear = ctx.createGain;
+    ctx.createGain = () => { const g = crear(); ganancias.push(g); return g; };
+    const s = new Sonido({ musica: true, efectos: true }, () => ctx as unknown as AudioContext);
+    s.despertar(true);
+    const musica = ganancias[ganancias.length - 1];
+    expect(musica.gain.setValueAtTime).toHaveBeenCalledWith(0.0001, 0);
+    expect(musica.gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(VOLUMEN_MUSICA, FUNDIDO_S);
+    s.cerrar();
   });
 });
