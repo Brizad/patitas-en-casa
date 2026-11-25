@@ -108,7 +108,10 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
 
 /* ---------- reportar ---------- */
 .reportar-titulo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.reportar-cuerpo { display: flex; flex-direction: column; }
+.reportar-cuerpo { display: flex; flex-direction: column; min-width: 0;
+  /* el paso entra deslizándose 24 px: no debe ensanchar la página mientras tanto (las sombras
+     duras de 4-6 px sí se ven, por el margen del recorte) */
+  overflow-x: clip; overflow-clip-margin: 8px; }
 .progreso { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
 .progreso li { flex: 1 1 0; display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 800; color: var(--p-suave); }
 .progreso-barra { height: 10px; border-radius: 999px; border: 2px solid var(--p-tinta); background: #FFFFFF; transition: background-color .3s ease; }
