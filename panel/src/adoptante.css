@@ -388,3 +388,35 @@
   .adop *, .adop *::before, .adop *::after { animation: none !important; transition: none !important; }
   .adop .confeti { display: none; }
 }
+
+/* ---------- entrada del adoptante (arreglos, parte B) ---------- */
+.acceso-marca { display: inline; }
+.adop-marca { text-decoration: none; color: var(--tinta); min-height: 44px; }
+.entrada-adop { align-items: center; padding: 8px 20px 40px; }
+.acceso-caja { width: min(560px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.ds .adop .acceso-titulo { font-size: clamp(32px, 9vw, 46px); line-height: 1.04; }
+.acceso-opciones { display: grid; gap: 14px; margin-top: 6px; }
+.ds .adop .acceso-opcion { --fondo-b: var(--amarillo); min-height: 96px; }
+.ds .adop .acceso-opcion--rosa { --fondo-b: var(--rosa); }
+.entrada-adop .adop-enlace { align-self: flex-start; }
+.acceso-form .adop-boton { margin-top: 8px; }
+.acceso-campo { display: flex; flex-direction: column; gap: 6px; font-weight: 800; font-size: 15px; }
+.ds .adop .acceso-campo input { min-height: 50px; padding: 0 14px; border: 2.5px solid var(--tinta); border-radius: 16px;
+  background: #FFFFFF; font: 700 16px 'Nunito Variable', 'Nunito', system-ui, sans-serif; color: var(--tinta); }
+.acceso-casilla { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 700; color: var(--suave); }
+.acceso-casilla input { width: 24px; height: 24px; flex: none; margin: 0; accent-color: var(--vino); }
+.acceso-pie { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; }
+.acceso-catalogo { width: min(1000px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.acceso-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.acceso-animal { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 16px; background: #FFFFFF;
+  border: 2.5px solid var(--tinta); border-radius: 22px; box-shadow: 4px 4px 0 var(--tinta); }
+.acceso-foto { width: 104px; height: 104px; border-radius: 999px; border: 2.5px solid var(--tinta); }
+.acceso-nombre { font-size: 22px; font-weight: 700; }
+.acceso-convive { font-size: 12px; font-weight: 700; color: var(--suave); }
+.acceso-llamado { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 18px; background: #FFFFFF;
+  border: 2.5px dashed var(--tinta); border-radius: 22px; }
+.ds .adop .acceso-boton { width: auto; }
+@media (min-width: 900px) {
+  .acceso-opciones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ds .adop .acceso-opcion { min-height: 170px; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 20px; }
+}
