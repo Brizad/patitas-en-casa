@@ -59,7 +59,7 @@ def test_la_pagina_de_inicio_muestra_un_icono_por_rol(c):
     html = c.get("/").text
     css = (RAIZ / "app" / "inicio" / "inicio.css").read_text(encoding="utf-8")
     for rol in ROLES:
-        assert f'class="rol-{rol}"' in html, rol
+        assert f"rol-{rol} tarjeta" in html, rol  # #426: tarjeta del rol con su icono
         assert f"url(/diseno/roles/{rol}.svg)" in css, rol
 
 

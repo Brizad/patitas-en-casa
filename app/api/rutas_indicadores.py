@@ -1,12 +1,15 @@
 """Rutas de indicadores, exportaciones y bitácora (RF-30, RF-31, RF-32; DT-13, #267)."""
 from __future__ import annotations
 
+import time
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Response
 
+from app import config
+from app.adopciones.modelos import EstadoSolicitud
 from app.api.comun import Contexto, fecha_utc
-from app.dominio.modelos import Usuario
+from app.dominio.modelos import ResultadoRescate, Usuario
 from app.indicadores.calculo import Datos
 from app.indicadores.calculo import calcular as calcular_indicadores
 from app.indicadores.exportar import a_csv, fichas_csv, filas_anonimizadas, resumen_pdf
@@ -42,6 +45,24 @@ def crear_rutas_indicadores(ctx: Contexto) -> APIRouter:
         """RF-30: conteos, porcentajes y tiempos; ningún dato personal. Se calculan al pedirlos
         (pocos datos: no hace falta un almacén aparte)."""
         return calcular_indicadores(datos_para_indicadores(), datetime.now(UTC))
+
+    publicas: dict = {"hasta": 0.0, "cifras": None}
+
+    @rutas.get("/indicadores/publicos")
+    def indicadores_publicos():
+        """#426, público (página de inicio): solo tres totales anónimos, sin nada por persona,
+        zona ni fecha. Se recalculan cada CACHE_INDICADORES_PUBLICOS_S como mucho: las visitas a
+        la portada no despiertan la base a cada rato."""
+        if publicas["cifras"] is None or time.monotonic() >= publicas["hasta"]:
+            d = datos_para_indicadores()
+            publicas["cifras"] = {
+                "reportes": len(d.reportes),
+                "rescatados": sum(r.resultado in (ResultadoRescate.TRASLADADO,
+                                                  ResultadoRescate.ATENDIDO_EN_SITIO)
+                                  for r in d.rescates),
+                "adoptados": sum(s.estado == EstadoSolicitud.APROBADA for s in d.solicitudes)}
+            publicas["hasta"] = time.monotonic() + config.CACHE_INDICADORES_PUBLICOS_S
+        return publicas["cifras"]
 
     @rutas.get("/indicadores/reportes.csv", dependencies=[gestion])
     def exportar_reportes_csv():

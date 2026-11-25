@@ -301,9 +301,9 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 
 | Parte | Qué | Estado | PR |
 |---|---|---|---|
-| 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | en curso | — |
-| 2 | Publicar los 22 animales del prototipo por la API | pendiente (después de la 1) | — |
-| 3 | Página de inicio | pendiente | — |
+| 1 | Adoptante igual al prototipo: ficha, migración 0036 y `PUT` de la publicación | **publicada** (25-nov, bundle `index-CJMqVlvU.js`) | #423 |
+| 2 | Publicar los 22 animales del prototipo por la API | **hecha en producción**: 19 publicados, 3 saltados | #425 |
+| 3 | Página de inicio | en curso | — |
 | 4 | Ciudadano (PWA) | pendiente | — |
 | 5 | Mapa (Leaflet + OSM) | pendiente | — |
 | 6 | Pantallas del personal | pendiente | — |
@@ -312,3 +312,14 @@ Plan del autor: 7 partes, cada una publicada en Render al quedar lista. Modelos 
 Decisiones y pendientes para el autor (se van sumando):
 - El **sexo** del prototipo («Perra», «Macho») no tiene campo en la ficha del animal: no se guardó
   ni se muestra. Si se quiere, va en una migración aditiva aparte.
+
+**Parte 1 (publicada, #423).**
+- Qué cambió: el coordinador ya puede ponerle a cada animal cariño, energía, juego y calma, 3 etiquetas y los pesos, y corregir lo publicado. «Elige a tu compañero» muestra las 4 barras de colores, las etiquetas y «Hoy → De adulto» con los pesos. Las recomendaciones ahora traen la foto: antes no la traían.
+- Qué ver: entra como adoptante, toca «Ver a todos» y pasa animales con las flechas. Como coordinador, en Adopciones elige un animal ya publicado: el formulario se llena para editarlo.
+- Pendiente: nada.
+
+**Parte 2 (hecha, #425).**
+- Qué cambió: 19 animales del prototipo están publicados en producción, con foto y ficha, por la API normal (22 en el catálogo).
+- Qué ver: la bienvenida del adoptante y «Elige a tu compañero», con fotos reales.
+- Pendiente (decisión tuya): **Toby y Luna** ya existían (demo: Toby perro sin ficha; Luna es *perra* en la demo y *gata* en el prototipo) y **Rocky** ya estaba en el refugio sin publicar. El script no los tocó. Si quieres los del prototipo: edita Toby y Luna desde Adopciones (ficha y foto) y publica a Rocky desde el mismo formulario.
+- El estado de salud del ingreso, que el prototipo no trae, quedó como «Sano, listo para adopción».
