@@ -180,7 +180,8 @@ export default function Adoptante({ token, nombre, alSalir }: {
         {s.pantalla === "inicio" && (
           <Bienvenida catalogo={datos.catalogo} cargando={datos.cargando} mias={datos.mias}
             conPerfil={conPerfil} alVerCompaneros={verCompaneros} alMiHogar={miHogar}
-            alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
+            alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
+            destacados={fuente} alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
             alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
         {s.pantalla === "encuesta" && (
           <Encuesta paso={s.paso} respuestas={s.respuestas} catalogo={datos.catalogo}

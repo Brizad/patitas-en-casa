@@ -6,8 +6,8 @@ import Animalitos from "./Animalitos";
 import Cargando from "./Cargando";
 import { PREGUNTAS, Respuestas, opcionElegida } from "./encuesta";
 import {
-  ESTADO_SOLICITUD, Filtro, abierta, convivencia, especieTexto, estadisticas, fondoDe, hoyYAdulto, insignias,
-  mejores, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
+  ESTADO_SOLICITUD, Filtro, abierta, convivencia, edadTexto, especieTexto, estadisticas, fondoDe, hoyYAdulto,
+  insignias, mejores, paraLaBienvenida, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
 } from "./flujoAdopcion";
 import { Confeti, Corazon, FLECHA, FotoAnimal, Huella, Icono } from "./Ilustraciones";
 
@@ -43,10 +43,12 @@ function NotaOcultos({ ocultos, alRevisar }: { ocultos: number; alRevisar: () =>
 // ---------- 1 · Bienvenida ----------
 
 export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alVerCompaneros, alVerTodos,
-  alVerSolicitudes, alMiHogar }: {
+  alVerSolicitudes, alMiHogar, alVer, destacados }: {
   catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
   alEmpezar: () => void; alVerCompaneros: () => void; alVerTodos: () => void; alVerSolicitudes: () => void;
-  alMiHogar: () => void;
+  alMiHogar: () => void; alVer: (a: AnimalPublicado) => void;
+  /** Los que se pueden abrir en «Elige» (con perfil, los compatibles; RN-05). */
+  destacados: AnimalPublicado[];
 }) {
   // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage.
   const orden = [...catalogo].sort((x, y) => Number(!!y.foto) - Number(!!x.foto));
@@ -90,6 +92,68 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
           </span>)}
       </div>
       <Animalitos />
+      <MasBienvenida catalogo={catalogo} destacados={destacados} cargando={cargando} mias={mias} conPerfil={conPerfil}
+        alVer={alVer} alVerTodos={alVerTodos} alMiHogar={alMiHogar} alVerSolicitudes={alVerSolicitudes} />
+    </div>
+  );
+}
+
+const PASOS_ADOPCION: [string, string][] = [
+  ["Responde", `${PREGUNTAS.length} preguntas rápidas sobre tu hogar.`],
+  ["Elige", "Mira quién combina contigo y conócelo."],
+  ["Solicita", "El refugio revisa tu solicitud y te propone una visita."],
+  ["¡A casa!", "Firmas el compromiso y te acompañamos a 30, 90 y 180 días."],
+];
+
+/** Tarea 4: solo en computador (≥1024 px), debajo del hero: «Te están esperando» con 6
+ *  animales reales y el bloque «Así funciona tu adopción» + «Mi hogar» + «Mis solicitudes». */
+function MasBienvenida({ catalogo, destacados, cargando, mias, conPerfil, alVer, alVerTodos, alMiHogar, alVerSolicitudes }: {
+  catalogo: AnimalPublicado[]; destacados: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
+  alVer: (a: AnimalPublicado) => void; alVerTodos: () => void; alMiHogar: () => void; alVerSolicitudes: () => void;
+}) {
+  // Tocar una tarjeta abre ESE animal en «Elige»: salen solo los que «Elige» puede mostrar.
+  const seis = paraLaBienvenida(destacados);
+  return (
+    <div className="ini-mas">
+      <section className="ini-esperan" aria-labelledby="titulo-esperan">
+        <p className="ini-etiqueta">Te están esperando</p>
+        <h2 id="titulo-esperan" className="h ini-h2">
+          {cargando ? "Conoce a algunos de ellos" : `Conoce a algunos de los ${catalogo.length}`}</h2>
+        <ul className="ini-tarjetas">
+          {seis.map((a) => (
+            <li key={a.animal_id}>
+              <button className="ini-tarjeta" onClick={() => alVer(a)}>
+                <FotoAnimal a={a} alt={`Foto de ${a.nombre}`} className="ini-tarjeta-foto" />
+                <span className="h ini-tarjeta-nombre">{a.nombre}</span>
+                <span className="ini-tarjeta-datos">{especieTexto(a.especie)} · {edadTexto(a.edad_meses)}</span>
+              </button>
+            </li>))}
+        </ul>
+        <button className="ini-ver-todos" onClick={alVerTodos}><span className="h">Ver a todos</span>
+          <Icono d={FLECHA.adelante} /></button>
+      </section>
+      <section className="ini-bloque" aria-labelledby="titulo-asi">
+        <div className="ini-asi">
+          <h2 id="titulo-asi" className="h ini-h2">Así funciona tu adopción</h2>
+          <ol className="ini-pasos">
+            {PASOS_ADOPCION.map(([t, s], i) => (
+              <li key={t}><span className="h ini-paso-n">{i + 1}</span>
+                <span><strong className="h">{t}</strong><span>{s}</span></span></li>))}
+          </ol>
+        </div>
+        <div className="ini-lado">
+          <div className="ini-hogar">
+            <h3 className="h">Mi hogar</h3>
+            <p>{conPerfil ? "Tus respuestas guardadas: míralas o cámbialas." : "Cuéntanos cómo es tu hogar para recomendarte."}</p>
+            <button className="adop-enlace" onClick={alMiHogar}>Ir a Mi hogar</button>
+          </div>
+          <div className="ini-mias">
+            <h3 className="h">Mis solicitudes</h3>
+            <p>{mias.length === 0 ? "Aún no has enviado ninguna." : `Tienes ${mias.length} ${mias.length === 1 ? "solicitud" : "solicitudes"}.`}</p>
+            <button className="adop-enlace ini-enlace-claro" onClick={alVerSolicitudes}>Ver mis solicitudes</button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

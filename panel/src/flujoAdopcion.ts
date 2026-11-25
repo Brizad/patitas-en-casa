@@ -218,3 +218,9 @@ export function pasosSolicitud(estado: string): Paso[] {
       { titulo: ESTADO_SOLICITUD[estado] ?? mayuscula(estado), detalle: "Pregunta en el refugio por los detalles", estado: "no" }];
   }
 }
+
+/** Bienvenida en computador (tarea 4): hasta 6 animales distintos para «Te están esperando»,
+ *  primero los que tienen foto, en el orden del catálogo. */
+export function paraLaBienvenida(catalogo: AnimalPublicado[], cuantos = 6): AnimalPublicado[] {
+  return [...catalogo.filter((a) => a.foto), ...catalogo.filter((a) => !a.foto)].slice(0, cuantos);
+}
