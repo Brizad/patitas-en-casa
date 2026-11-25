@@ -49,3 +49,13 @@ def test_restaurar_descifra_igual_que_el_respaldo_y_verifica_la_restauracion():
     assert 'PG_VERSION: "18"' in texto
     assert "--exit-on-error" in texto and "alembic_version" in texto
     assert "no se restaura encima" in texto  # nunca sobre una base con tablas
+
+
+def test_respaldo_y_restauracion_buscan_en_todas_las_paginas_de_artefactos():
+    """Parte 7b: con ~500 artefactos, la primera página (100) no traía ningún respaldo y la
+    restauración fallaba con «No hay ningún respaldo vigente». Ahora se pagina y se filtra."""
+    for flujo in (RESTAURAR, FLUJOS / "respaldo.yml"):
+        texto = flujo.read_text(encoding="utf-8")
+        llamadas = [linea for linea in texto.splitlines() if "actions/artifacts" in linea]
+        assert llamadas and all("--paginate" in linea for linea in llamadas), flujo.name
+        assert 'select(.name | startswith("respaldo-"))' in texto, flujo.name

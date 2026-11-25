@@ -60,9 +60,11 @@ jobs:
           else
             # Solo un respaldo que pasó todos sus pasos (copia, cifrado y prueba de
             # restauración) sube el artefacto: el más reciente vigente es el último bueno.
-            ejecucion=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq \
-              '[.artifacts[] | select(.name | startswith("respaldo-")) | select(.expired | not)]
-               | sort_by(.created_at) | last | .workflow_run.id // empty')
+            # Parte 7b: con más de 100 artefactos (los e2e de cada PR) la primera página no traía
+            # ningún respaldo. Se recorren todas las páginas y se filtra por nombre.
+            ejecucion=$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name | startswith("respaldo-")) | select(.expired | not)' \
+              | jq -rs 'sort_by(.created_at) | last | .workflow_run.id // empty')
           fi
           if [ -z "$ejecucion" ]; then
             echo "::error::No hay ningún respaldo vigente (los artefactos duran 14 días)."; exit 1
