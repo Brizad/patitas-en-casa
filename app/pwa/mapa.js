@@ -53,7 +53,9 @@
     caja.hidden = false;
     mapa = window.L.map('mapa', { center: CUCUTA, zoom: 13, scrollWheelZoom: false, tap: true });
     mapa.attributionControl.setPrefix(false);
-    window.L.tileLayer(TESELAS, { maxZoom: 19, attribution: ATRIBUCION })
+    // La página va con Referrer-Policy: no-referrer; OSM bloquea (403) las teselas sin Referer.
+    // Solo las teselas envían el origen del sitio (nunca la ruta ni el código del reporte).
+    window.L.tileLayer(TESELAS, { maxZoom: 19, attribution: ATRIBUCION, referrerPolicy: 'strict-origin-when-cross-origin' })
       .on('tileerror', () => { if (++fallas > 6 && !pin) sinMapa('El mapa no cargó: usa el GPS o escribe la dirección.'); })
       .addTo(mapa);
     mapa.on('click', (evento) => marcar(evento.latlng, false));
