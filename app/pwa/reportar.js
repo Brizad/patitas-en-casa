@@ -162,9 +162,14 @@
     mensaje.hidden = !texto;
   }
 
+  // #428: como el prototipo, dice cuánto falta para el mínimo de RN-01.
   function contar() {
-    $('contador').textContent = 'Mínimo ' + MIN_CARACTERES + ' caracteres · '
-      + descripcion.value.trim().length + '/500';
+    const n = descripcion.value.trim().length;
+    const falta = MIN_CARACTERES - n;
+    $('contador').textContent = (falta > 0
+      ? 'Faltan ' + falta + ' caracteres (mínimo ' + MIN_CARACTERES + ')'
+      : '¡Listo! Ya puedes seguir') + ' · ' + descripcion.value.length + '/500';
+    $('contador').classList.toggle('listo', falta <= 0);
   }
 
   function conSentido(texto) {
@@ -175,22 +180,42 @@
     return proporcion >= VOCALES_MIN && proporcion <= VOCALES_MAX;
   }
 
-  function validar() {
+  // #428: una validación por paso (pasos.js las usa al tocar «Siguiente»); al enviar, todas.
+  function validarDescripcion(enfocar) {
     const texto = descripcion.value.trim();
     const corta = texto.length < MIN_CARACTERES;
     const sinSentido = !corta && !conSentido(texto);
-    const sinUbicacion = !gps && !direccion.value.trim();
     errorEn(descripcion, 'error-descripcion', corta
       ? 'Describe un poco más: mínimo ' + MIN_CARACTERES + ' caracteres.'
       : sinSentido ? 'Describe con palabras qué le pasa al animal.' : '');
+    if ((corta || sinSentido) && enfocar) descripcion.focus();
+    return !corta && !sinSentido;
+  }
+
+  function validarUbicacion(enfocar) {
+    const sinUbicacion = !gps && !direccion.value.trim();
     errorEn(direccion, 'error-ubicacion', sinUbicacion
       ? 'Escribe dónde está el animal o toca «Usar mi GPS».' : '');
-    if (corta || sinSentido) descripcion.focus();
-    else if (sinUbicacion) direccion.focus();
+    if (sinUbicacion && enfocar) direccion.focus();
+    return !sinUbicacion;
+  }
+
+  function validarContacto(enfocar) {
     const sinPermiso = $('contacto').value.trim() !== '' && !$('autoriza-contacto').checked;
     errorEn($('contacto'), 'error-contacto', sinPermiso
       ? 'Marca la autorización o deja el contacto vacío.' : '');
-    return !corta && !sinSentido && !sinUbicacion && !sinPermiso;
+    if (sinPermiso && enfocar) $('autoriza-contacto').focus();
+    return !sinPermiso;
+  }
+
+  function validar() {
+    const bien = [validarDescripcion(false), validarUbicacion(false), validarContacto(false)];
+    const primero = bien.indexOf(false);
+    if (primero >= 0) {
+      document.dispatchEvent(new CustomEvent('patitas:invalido', { detail: { paso: [1, 2, 4][primero] } }));
+      [descripcion, direccion, $('autoriza-contacto')][primero].focus();
+    }
+    return primero < 0;
   }
 
   // --- Video opcional (#125) ---------------------------------------------------------
@@ -353,9 +378,9 @@
     cerrarGrabadora();
     errorEn($('video'), 'error-video', '');
     $('info-video').textContent = TEXTO_VIDEO;
-    $('estado-gps').textContent = 'o escribe la dirección';
-    $('usar-gps').textContent = 'Usar mi GPS';
+    pintarGps('', 'Usar mi GPS', 'Lo más rápido y preciso');
     contar();
+    document.dispatchEvent(new CustomEvent('patitas:limpio'));
   }
 
   formulario.addEventListener('submit', async (evento) => {
@@ -418,22 +443,40 @@
     if (direccion.value.trim()) errorEn(direccion, 'error-ubicacion', '');
   });
 
+  // #428: el botón grande del GPS tiene título y subtítulo, y un estado para su color.
+  function pintarGps(estado, titulo, detalle) {
+    $('usar-gps').dataset.estado = estado;
+    $('gps-titulo').textContent = titulo;
+    $('estado-gps').textContent = detalle;
+  }
+
+  /** Ubicación tomada por el GPS o puesta en el mapa (parte 5). */
+  function ponerUbicacion(latitud, longitud, detalle) {
+    gps = { latitud, longitud };
+    pintarGps('ok', 'Ubicación tomada', detalle);
+    errorEn(direccion, 'error-ubicacion', '');
+    document.dispatchEvent(new CustomEvent('patitas:ubicacion', { detail: { latitud, longitud } }));
+  }
+
   $('usar-gps').addEventListener('click', () => {
-    const estado = $('estado-gps');
     if (!('geolocation' in navigator)) {
-      estado.textContent = 'Este teléfono no permite usar el GPS: escribe la dirección.';
+      pintarGps('error', 'Usar mi GPS', 'Este teléfono no permite usar el GPS: escribe la dirección.');
       return;
     }
-    estado.textContent = 'Buscando tu ubicación…';
+    pintarGps('buscando', 'Buscando tu ubicación…', 'Un momento');
     navigator.geolocation.getCurrentPosition((posicion) => {
-      gps = { latitud: posicion.coords.latitude, longitud: posicion.coords.longitude };
-      estado.textContent = 'GPS listo · ±' + Math.round(posicion.coords.accuracy) + ' m';
-      $('usar-gps').textContent = 'Actualizar GPS';
-      errorEn(direccion, 'error-ubicacion', '');
+      ponerUbicacion(posicion.coords.latitude, posicion.coords.longitude,
+                     'Precisión: unos ' + Math.round(posicion.coords.accuracy) + ' metros');
     }, () => {
-      estado.textContent = 'No pudimos usar el GPS: escribe la dirección.';
+      pintarGps('error', 'Usar mi GPS', 'No pudimos usar el GPS: escribe la dirección.');
     }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
   });
+
+  // Lo que pasos.js (y el mapa) necesitan del formulario, sin tocar su lógica.
+  window.PatitasReporte = {
+    validarDescripcion, validarUbicacion, validarContacto, ponerUbicacion, contar,
+    ubicacion: () => gps, video: () => video,
+  };
 
   window.addEventListener('online', reintentar);
   document.addEventListener('visibilitychange', () => {

@@ -87,7 +87,13 @@ async function reportar(pagina) {
   // El reporte crea un código: así se revisan también las pantallas de código y de estado.
   await pagina.goto(`${BASE}/app/#reportar`);
   await pagina.locator("#descripcion").fill("Perro herido en la calle, cojea y no se levanta bien");
+  await pagina.locator("#paso-siguiente").click(); // #428: el reporte va en 4 pasos
+  await revisar(pagina, "PWA · Reportar · Dónde");
   await pagina.locator("#direccion").fill("Barrio La Playa, calle 10");
+  await pagina.locator("#paso-siguiente").click();
+  await revisar(pagina, "PWA · Reportar · Video");
+  await pagina.locator("#paso-siguiente").click();
+  await revisar(pagina, "PWA · Reportar · Aviso");
   await pagina.locator('#reporte button[type="submit"]').click();
   await pagina.waitForURL(/#codigo/);
   await revisar(pagina, "PWA · Código de seguimiento");

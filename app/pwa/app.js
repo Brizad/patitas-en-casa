@@ -31,6 +31,7 @@
   // --- Pantallas: #reportar (inicio), #codigo y #estado/CODIGO -------------------------
 
   function mostrarPantalla(nombre) {
+    document.body.dataset.pantalla = nombre;  // #428: el CSS ajusta la barra según la pantalla
     for (const seccion of document.querySelectorAll('.pantalla')) {
       seccion.hidden = seccion.id !== 'pantalla-' + nombre;
     }
@@ -52,6 +53,9 @@
       }
     } else if (nombre === 'sus' && window.PatitasPiloto && window.PatitasPiloto.activo) {
       mostrarPantalla('sus');  // RNF-06 (#258): solo en modo piloto
+    } else if (nombre === '' || nombre === 'inicio') {
+      mostrarPantalla('inicio');  // #428: portada de la app, como el prototipo
+      fotosDeLaPortada();
     } else if (nombre === 'codigo' && leer(ULTIMO_CODIGO)) {
       const ultimo = leer(ULTIMO_CODIGO);
       if (normalizar($('codigo-grande').textContent) !== ultimo) pintarCodigo(ultimo);
@@ -60,6 +64,26 @@
       mostrarPantalla('reportar');
     }
     window.scrollTo(0, 0);
+  }
+
+  // #428: fotos reales de los animales publicados en la portada (si no hay, quedan los colores).
+  let fotosPuestas = false;
+  async function fotosDeLaPortada() {
+    if (fotosPuestas) return;
+    fotosPuestas = true;
+    try {
+      const respuesta = await fetch('/adopciones/animales', { headers: { Accept: 'application/json' } });
+      const conFoto = (respuesta.ok ? await respuesta.json() : []).filter((a) => a.foto);
+      for (const hueco of document.querySelectorAll('[data-animal]')) {
+        const animal = conFoto.find((a) => a.nombre === hueco.dataset.animal) || conFoto.shift();
+        if (!animal) continue;
+        const img = document.createElement('img');
+        img.src = animal.foto;
+        img.alt = '';
+        img.addEventListener('error', () => img.remove());
+        hueco.replaceChildren(img);
+      }
+    } catch (error) { /* sin señal: la portada se ve igual, sin fotos */ }
   }
 
   // --- Código de seguimiento (P-02) --------------------------------------------------
@@ -73,6 +97,9 @@
   // «nota»: aviso opcional, por ejemplo cuando el reporte salió al volver la señal.
   function mostrarCodigo(codigo, nota) {
     escribir(ULTIMO_CODIGO, codigo);
+    $('copiar').classList.remove('copiado');
+    $('copiar-texto').textContent = 'Copiar código';
+    document.dispatchEvent(new CustomEvent('patitas:codigo'));
     pintarCodigo(codigo, nota);
     if (location.hash === '#codigo') segunLaDireccion();
     else location.hash = '#codigo';
@@ -84,6 +111,8 @@
     try {
       await navigator.clipboard.writeText(codigo);
       aviso.textContent = 'Código copiado.';
+      $('copiar').classList.add('copiado');
+      $('copiar-texto').textContent = '¡Copiado!';
     } catch (error) {
       aviso.textContent = 'Anota tu código: ' + codigo;
     }

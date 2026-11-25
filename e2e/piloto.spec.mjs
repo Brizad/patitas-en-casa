@@ -23,7 +23,10 @@ test("un participante hace la prueba en el celular y su resultado sale en el CSV
   await expect(page.locator("#aviso-piloto")).toBeVisible();
   expect(page.url()).not.toContain("piloto=");  // el token no queda en la barra
   await page.locator("#descripcion").fill(TEXTO);
+  await page.getByRole("button", { name: "Siguiente" }).click(); // #428: 4 pasos
   await page.locator("#direccion").fill("Parque Santander, Cúcuta");
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await page.getByRole("button", { name: "Saltar este paso" }).click();
   await page.getByRole("button", { name: "Enviar reporte" }).click();
   await expect(page.locator("#codigo-grande")).toBeVisible();
   await expect(page.locator("#ver-estado")).toBeHidden();

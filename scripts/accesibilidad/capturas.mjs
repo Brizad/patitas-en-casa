@@ -56,9 +56,12 @@ await p.goto(`${BASE}/`);
 await foto(p, "01-inicio");
 await p.goto(`${BASE}/app/#reportar`);
 await p.locator("#descripcion").fill("Perro atropellado en la avenida, no se levanta y sangra");
-await p.locator("#direccion").fill("Barrio La Playa, calle 10 con avenida 5");
-await p.locator("#comuna").selectOption("2");
 await foto(p, "02-ciudadano-reportar");
+await p.locator("#paso-siguiente").click(); // #428: 4 pasos
+await p.locator("#direccion").fill("Barrio La Playa, calle 10 con avenida 5");
+await p.getByRole("button", { name: "Comuna 2" }).click();
+await p.locator("#paso-siguiente").click();
+await p.locator("#paso-siguiente").click();
 await p.locator('#reporte button[type="submit"]').click();
 await p.waitForURL(/#codigo/);
 await foto(p, "03-ciudadano-codigo");

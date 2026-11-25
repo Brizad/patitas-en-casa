@@ -32,7 +32,8 @@
   const enlace = new URLSearchParams(location.search).get('piloto');
   if (enlace) {
     guardar(enlace);
-    history.replaceState(null, '', location.pathname + location.hash);  // el token sale de la barra
+    // El token sale de la barra; sin pantalla elegida, la prueba empieza en «Reportar» (#428).
+    history.replaceState(null, '', location.pathname + (location.hash || '#reportar'));
   }
   const token = enlace || leer();
   let inicio = null;
