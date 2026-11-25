@@ -59,7 +59,7 @@ def test_la_pagina_de_inicio_muestra_un_icono_por_rol(c):
     html = c.get("/").text
     css = (RAIZ / "app" / "inicio" / "inicio.css").read_text(encoding="utf-8")
     for rol in ROLES:
-        assert f"rol-{rol} tarjeta" in html, rol  # #426: tarjeta del rol con su icono
+        assert f'class="rol rol-{rol}"' in html, rol  # tarjeta blanca del rol con su icono
         assert f"url(/diseno/roles/{rol}.svg)" in css, rol
 
 
@@ -69,10 +69,11 @@ def test_el_panel_muestra_el_icono_del_rol_en_la_cabecera():
 
 
 def test_la_portada_tiene_su_dibujo_decorativo(c):
-    # #328: la ilustración de la portada se cambió por el rastro de huellas (dibujado en línea).
+    # Arreglos, parte A: el rastro de huellas de #328 se quitó; quedan el perro y el gato que
+    # caminan (dibujados en línea, decorativos).
     html = c.get("/").text
-    assert re.search(r'<svg class="rastro"[^>]*aria-hidden="true"', html)
-    assert "/diseno/ilustraciones/portada.svg" not in html
+    assert re.search(r'<div class="carril" aria-hidden="true">', html)
+    assert 'class="rastro"' not in html and "/diseno/ilustraciones/portada.svg" not in html
 
 
 def test_los_estados_vacios_del_panel_tienen_ilustracion():

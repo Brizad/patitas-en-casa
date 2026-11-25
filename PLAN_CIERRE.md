@@ -380,3 +380,12 @@ Pendiente para después:
 - Toby, Luna y Rocky (parte 2).
 - Probar la restauración en una base nueva.
 - Actualizar el manual de usuario con las capturas nuevas (`docs/revision-visual/rediseno/`).
+
+## 11. Arreglos visuales y de flujo frente a los prototipos (25-nov)
+
+Plan del autor: partes A a E, cada una en su PR, publicada y comprobada en producción con
+capturas a 1440 y 390 px (`docs/revision-visual/arreglos/`).
+
+- **Los prototipos «actualizados» son idénticos a los que ya estaban versionados.** `inicio-pagina-completa` y `ciudadano-portada-y-reportar` tienen el mismo contenido byte a byte (solo cambian los saltos de línea). Por eso la portada (A) y el panel derecho de reportar (D) siguen la descripción del autor y las 2 referencias de `docs\prototipoeferencias\`. Si había una versión nueva, no llegó a esa carpeta.
+- **Parte A, contraste:** el naranja #F2603A lleva texto blanco grande (19 px, 800), porque con texto pequeño no llega a AA. «volver» va en #D9461C. El lila de los cuadros es #8457E6: #9B6BF2 no llega a 4,5:1 con texto pequeño, ni en blanco ni en oscuro.
+- **Parte A, fotos:** Luna (demo) no tiene foto, así que en el CTA final sale otro animal con foto (la regla es nunca mostrar una imagen rota).
