@@ -386,6 +386,25 @@ Pendiente para después:
 Plan del autor: partes A a E, cada una en su PR, publicada y comprobada en producción con
 capturas a 1440 y 390 px (`docs/revision-visual/arreglos/`).
 
-- **Los prototipos «actualizados» son idénticos a los que ya estaban versionados.** `inicio-pagina-completa` y `ciudadano-portada-y-reportar` tienen el mismo contenido byte a byte (solo cambian los saltos de línea). Por eso la portada (A) y el panel derecho de reportar (D) siguen la descripción del autor y las 2 referencias de `docs\prototipoeferencias\`. Si había una versión nueva, no llegó a esa carpeta.
+- **Los prototipos «actualizados» son idénticos a los que ya estaban versionados.** `inicio-pagina-completa` y `ciudadano-portada-y-reportar` tienen el mismo contenido byte a byte (solo cambian los saltos de línea). Por eso la portada (A) y el panel derecho de reportar (D) siguen la descripción del autor y las 2 referencias de `docs\prototipo\referencias\`. Si había una versión nueva, no llegó a esa carpeta.
 - **Parte A, contraste:** el naranja #F2603A lleva texto blanco grande (19 px, 800), porque con texto pequeño no llega a AA. «volver» va en #D9461C. El lila de los cuadros es #8457E6: #9B6BF2 no llega a 4,5:1 con texto pequeño, ni en blanco ni en oscuro.
 - **Parte A, fotos:** Luna (demo) no tiene foto, así que en el CTA final sale otro animal con foto (la regla es nunca mostrar una imagen rota).
+- **Parte A (PR #438):** publicada. En producción, axe en 0 a 1440 y 390 px, fotos reales por nombre y cifras 18 / 4 / 22. Diferencia que queda frente a las referencias: allí los animales son recortes sin fondo; aquí son fotos reales del refugio en círculos y marcos redondeados (recortarlas exigiría editar las fotos).
+- **Parte B (PR #440):** publicada. `/panel/#adoptar` muestra las opciones «Ya tengo cuenta» y «Soy nuevo», más «Ver los animales sin cuenta». La entrada del personal es «Entrar como personal del refugio» (`/panel/` y `#personal`). Al crear la cuenta, el adoptante entra directo; si el correo ya existía (DT-09), se le pide entrar con su contraseña sin revelar nada.
+- **Parte C (PR #443, más #446):** publicada. «¡Empezar!» arranca sin nada marcado. «Mi hogar» resume las 7 respuestas y tiene «Cambiar mis respuestas», donde la respuesta anterior se nota con un borde punteado. La burbuja usa la foto real de un animal con foto, y con perfil aparece «Ver mis compañeros con mis respuestas guardadas». En la verificación apareció que en el teléfono no había cómo llegar a «Mi hogar» (el menú superior es solo de computador); #446 agrega el enlace en la bienvenida. Se verificó en producción con la interfaz publicada y la sesión del adoptante de demostración servida por el servidor local (no se crearon cuentas en producción).
+- **Parte D (PR #444):** publicada.
+  - **Mapa:** la página va con `Referrer-Policy: no-referrer` y OSM bloquea las teselas sin Referer. Ahora la capa de Leaflet (PWA y panel) usa `referrerPolicy: strict-origin-when-cross-origin`: solo las teselas envían el origen del sitio; la página y la CSP no cambian. En producción, antes el Referer de las teselas iba vacío; ahora va el origen del sitio, con 200 en la PWA (1440, 1024 y 390 px) y en el mini mapa del panel.
+  - **Reportar en computador:** 3 columnas centradas (máx. 1280), con el panel derecho (foto, «Un veterinario revisa tu reporte…» y «Mientras llega la ayuda»). En el teléfono el panel derecho no se ve.
+  - **CARTO:** no hizo falta.
+- **Parte E (por la API normal, como coordinador; credenciales solo en memoria):**
+  - **Toby (id 2):** ficha del prototipo (3 meses, grande…) y `toby.jpg`.
+  - **Rocky (id 5):** publicado con su ficha y `rocky.jpg`.
+  - **Luna (id 3):** sigue siendo perro y sin foto: la API no tiene forma de corregir la especie ni el nombre. **No se borró ni se modificó nada.**
+
+### Decisión pendiente de Brayan: Luna (perro → gata)
+
+La ficha del refugio (`animales`) solo cambia por ingreso, historial clínico (solo se inserta) y egreso; la publicación no guarda la especie. Opciones, de la más limpia a la menos:
+
+1. **(Recomendada)** Un endpoint aditivo `PUT /refugio/animales/{id}/ficha`, solo del coordinador. Corrige `nombre` y `especie` con una justificación de 10 caracteres o más (`validar_justificacion`) y deja el cambio en la bitácora (RF-32). No cambia reglas ni contratos existentes. Luego se sube `luna.jpg` y se ajusta la ficha con `PUT .../publicacion`. Unas 80 líneas con pruebas.
+2. **Sin código:** registrar un ingreso nuevo «Luna» (gata), publicarla con `luna.jpg` y dar egreso al perro Luna (id 3) con un motivo como «error de registro». Funciona hoy, pero deja un egreso que no ocurrió en la realidad y gasta un cupo.
+3. **Dejarla como está:** Luna perro sin foto. La portada y la encuesta ya la saltan porque no tiene foto.
