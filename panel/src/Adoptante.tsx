@@ -178,7 +178,7 @@ export default function Adoptante({ token, nombre, alSalir }: {
             role={mensaje.error ? "alert" : "status"}>{mensaje.texto}</p>)}
         {s.pantalla === "inicio" && (
           <Bienvenida catalogo={datos.catalogo} cargando={datos.cargando} mias={datos.mias}
-            conPerfil={conPerfil} alVerCompaneros={verCompaneros}
+            conPerfil={conPerfil} alVerCompaneros={verCompaneros} alMiHogar={miHogar}
             alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
             alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
         {s.pantalla === "encuesta" && (

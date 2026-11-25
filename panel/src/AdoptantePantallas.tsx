@@ -43,9 +43,10 @@ function NotaOcultos({ ocultos, alRevisar }: { ocultos: number; alRevisar: () =>
 // ---------- 1 · Bienvenida ----------
 
 export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alVerCompaneros, alVerTodos,
-  alVerSolicitudes }: {
+  alVerSolicitudes, alMiHogar }: {
   catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
   alEmpezar: () => void; alVerCompaneros: () => void; alVerTodos: () => void; alVerSolicitudes: () => void;
+  alMiHogar: () => void;
 }) {
   // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage.
   const orden = [...catalogo].sort((x, y) => Number(!!y.foto) - Number(!!x.foto));
@@ -73,6 +74,8 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
           <button className="adop-enlace adop-enlace--suave" onClick={alVerSolicitudes}>
             Mis solicitudes{mias.length > 0 && ` (${mias.length})`}
           </button>
+          {/* En el teléfono no hay menú superior: «Mi hogar» se abre desde aquí. */}
+          <button className="adop-enlace adop-enlace--suave solo-movil" onClick={alMiHogar}>Mi hogar</button>
         </div>
       </div>
       <div className="collage" aria-hidden={collage.length === 0}>

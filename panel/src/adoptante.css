@@ -292,6 +292,7 @@
 @media (min-width: 900px) {
   .adop-barra { min-height: 76px; padding: 0 48px; }
   .adop .adop-nav.solo-pc { display: flex; }
+  .adop .solo-movil { display: none; }
   .adop .adop-cinta.solo-pc { display: inline-flex; margin-bottom: 18px; font-size: 14px; }
   .adop .elegir-nombre.solo-pc { display: block; }
   .adop .adop-control-texto.solo-pc { display: inline; }
