@@ -34,3 +34,16 @@ describe("entrada del adoptante (arreglos, parte B)", () => {
     expect(crear).toContain("alEntrar(token, await miCuenta(token))");
   });
 });
+
+describe("encuesta y Mi hogar (arreglos, parte C)", () => {
+  const vista = pantallas["./AdoptantePantallas.tsx"] as string;
+  it("la burbuja usa solo animales con foto y no hay etiqueta «Tu respuesta»", () => {
+    expect(vista).toContain("catalogo.filter((a) => a.foto)");
+    expect(vista).not.toContain("Tu respuesta");
+  });
+  it("«Mi hogar» resume lo guardado y ofrece «Cambiar mis respuestas»; la bienvenida, ver los compañeros", () => {
+    expect(vista).toContain("Cambiar mis respuestas");
+    expect(vista).toContain("Ver mis compañeros con mis respuestas guardadas");
+    expect(pantallas["./Adoptante.tsx"]).toContain('["hogar", "Mi hogar", miHogar]');
+  });
+});
