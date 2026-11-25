@@ -7,7 +7,7 @@
 (function () {
   "use strict";
 
-  const PREFERIDOS = ["Lupe", "Cascabel", "Toby", "Luna"]; // los del prototipo, si están publicados
+  const PREFERIDOS = ["Cascabel", "Bombón", "Mochi", "Copo"]; // si están publicados (con foto)
   const TAMANO = { pequeno: "Pequeño", mediano: "Mediano", grande: "Grande" };
 
   function edad(meses) {
@@ -62,7 +62,7 @@
     const li = document.createElement("li");
     const a = document.createElement("a");
     a.className = "animal tarjeta";
-    a.href = "/panel/#registro";
+    a.href = "/panel/#adoptar";
     const foto = document.createElement("span");
     foto.className = "foto";
     if (animal.foto) foto.append(imagen(animal, ""));
@@ -103,6 +103,7 @@
     try {
       const lista = await pedir("/adopciones/animales");
       ponerFotos(lista);
+      ponerCifra("en_adopcion", lista.length);  // en adopción = el catálogo público
       const cuatro = elegirCuatro(lista);
       if (cuatro.length) document.getElementById("en-adopcion").replaceChildren(...cuatro.map(tarjeta));
     } catch (e) {
@@ -110,13 +111,19 @@
     }
   }
 
+  /** Pone una cifra real en todos sus huecos (el hero y los óvalos); sin dato, queda «—». */
+  function ponerCifra(clave, valor) {
+    if (!Number.isInteger(valor)) return;
+    for (const el of document.querySelectorAll('[data-cifra="' + clave + '"]')) {
+      el.textContent = valor.toLocaleString("es-CO");
+    }
+  }
+
   async function cifras() {
     try {
       const c = await pedir("/indicadores/publicos");
-      for (const el of document.querySelectorAll("[data-cifra]")) {
-        const valor = c[el.getAttribute("data-cifra")];
-        if (Number.isInteger(valor)) el.textContent = valor.toLocaleString("es-CO");
-      }
+      ponerCifra("reportes", c.reportes);
+      ponerCifra("rescatados", c.rescatados);
     } catch (e) {
       /* se quedan los «—» */
     }
