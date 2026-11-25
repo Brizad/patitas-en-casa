@@ -4,6 +4,16 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Cambiado
+- Portada (#426), igual al prototipo de inicio:
+  - Secciones: hero con fotos de los animales publicados, franja de 3 cuadros, la caminata de huellas, cifras, el problema, cómo funciona, 4 animales del catálogo, quién hace qué, cómo ayudar («Copiar enlace»), CTA final y pie.
+  - Se quitó la sección «Tecnología».
+  - Fuentes Fredoka y Nunito locales en `/diseno/patitas.css`.
+
+### Agregado
+- `GET /indicadores/publicos` (#426), público: tres totales anónimos (reportes, rescatados y adoptados) para la portada, recalculados como mucho cada 10 minutos.
+- Publicados en producción los animales del prototipo con `scripts/operacion/publicar_animales_prototipo.py` (#424): 19 nuevos, con foto y ficha. Se saltaron Toby, Luna y Rocky porque ya existían.
+
 ### Agregado
 - Adopción, parte 1 del rediseño (#422): ficha opcional en la publicación.
   - Datos nuevos: cariño, energía, juego y calma (0 a 100), hasta 3 etiquetas, y peso de hoy y de adulto. La migración 0036 es aditiva y los campos son opcionales.
