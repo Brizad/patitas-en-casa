@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { AnimalPublicado, Perfil, Recomendado } from "./apiAdopcion";
 import { PREGUNTAS } from "./encuesta";
 import {
-  EstadoFlujo, INICIAL, actual, contar, edadTexto, estadisticas, filtrar, flujo, hoyYAdulto,
-  mejores, pasosSolicitud, razonCorta, solicitudDe,
+  EstadoFlujo, INICIAL, actual, contar, edadTexto, estadisticas, filtrar, flujo, hoyYAdulto, insignias,
+  mejores, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
 } from "./flujoAdopcion";
 
 const animal = (id: number, especie: string, extra: Partial<AnimalPublicado> = {}): AnimalPublicado => ({
@@ -119,7 +119,7 @@ describe("lo que se muestra de cada animal", () => {
     expect(sinPuntaje[0]).toMatchObject({ valor: 100, texto: "Alta" });
     expect(sinPuntaje[1]).toMatchObject({ valor: 0, texto: "No" });
     const conPuntaje = estadisticas(recomendado(1, "gato", 72));
-    expect(conPuntaje.at(-1)).toEqual({ etiqueta: "Compatibilidad", valor: 72, texto: "72 %" });
+    expect(conPuntaje[conPuntaje.length - 1]).toEqual({ etiqueta: "Compatibilidad", valor: 72, texto: "72 %" });
     const etiquetas = conPuntaje.map((e) => e.etiqueta.toLowerCase()).join(" ");
     expect(etiquetas).not.toMatch(/cariño|juego/);
   });
@@ -127,6 +127,11 @@ describe("lo que se muestra de cada animal", () => {
   it("la razón corta es la más fuerte del servidor, en mayúscula", () => {
     expect(razonCorta(recomendado(1, "gato", 80))).toBe("No exige experiencia previa.");
     expect(razonCorta({ ...recomendado(1, "gato", 80), razones: [] })).toBe("");
+  });
+
+  it("resume especie, edad y tamaño en una línea", () => {
+    expect(resumenCorto(animal(1, "gato", { edad_meses: 30, tamano: "pequeno" })))
+      .toBe("Gatito · 2 años · tamaño pequeño");
   });
 
   it("edad y franja «Hoy → De adulto»", () => {
@@ -159,5 +164,14 @@ describe("solicitudes", () => {
     expect(solicitudDe(mias, 5)?.id).toBe(2);
     expect(solicitudDe(mias, 6)?.id).toBe(4);
     expect(solicitudDe(mias, 7)).toBeUndefined();
+  });
+});
+
+describe("insignias", () => {
+  it("solo dicen lo que registró el refugio", () => {
+    expect(insignias(animal(1, "perro", { energia: "alta", apto_ninos: true, apto_otros_animales: false,
+      necesita_patio: true }))).toEqual(["Energía alta", "Convive con niños", "Necesita patio"]);
+    expect(insignias(animal(2, "gato", { apto_ninos: false, apto_otros_animales: true })))
+      .toEqual(["Energía media", "Convive con otros animales", "Sin patio está bien"]);
   });
 });

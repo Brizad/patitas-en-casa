@@ -46,7 +46,9 @@ describe("administrador y adoptante (#178)", () => {
   it("el estado de cuentas y solicitudes se ve como insignia", () => {
     expect(fuentes).toContain("ds-insignia ds-insignia--baja\">Activa");
     expect(fuentes).toContain("Compatibilidad");
-    expect(fuentes).toMatch(/ds-insignia[^"]*">\{a\.puntaje\}/);
+    // #420: el puntaje del servidor se ve con su barra; el estado de la solicitud, como insignia.
+    expect(pantallas["./AdoptantePantallas.tsx"]).toContain("{a.puntaje}%");
+    expect(pantallas["./AdoptantePantallas.tsx"]).toContain("estado estado--${s.estado}");
   });
 });
 
@@ -100,10 +102,30 @@ describe("panel del rescatista (#303)", () => {
   });
 });
 
-describe("adoptante (#306)", () => {
-  it("el catálogo es una rejilla de tarjetas y el nombre de cada animal es un encabezado", () => {
-    expect(pantallas["./Adoptante.tsx"]).toContain('className="catalogo"');
-    expect(pantallas["./Adoptante.tsx"]).toContain("<h3>{a.nombre}</h3>");
+describe("adoptante «Elige a tu compañero» (#306, #420)", () => {
+  const vista = pantallas["./AdoptantePantallas.tsx"] as string;
+  it("un animal sin foto (o con la foto rota) se ve como ilustración con su inicial", () => {
+    expect(pantallas["./Ilustraciones.tsx"]).toContain("onError={() => setFallo(true)}");
+    expect(pantallas["./Ilustraciones.tsx"]).toContain("nombre.charAt(0).toUpperCase()");
+    expect(vista).not.toMatch(/<img /);
+  });
+  it("las alertas y restricciones del servidor se muestran tal cual", () => {
+    expect(vista).toContain("a.alertas.join(");
+    expect(vista).toContain("animal.alertas.join(");
+    expect(vista).toContain("animal.restricciones.join(");
+  });
+  it("las estadísticas no inventan datos (sin cariño ni juego)", () => {
+    expect(vista).toContain("estadisticas(animal)");
+    expect(vista.toLowerCase()).not.toMatch(/cariño|«juego»/);
+  });
+  it("los botones de solo ícono llevan nombre para el lector de pantalla", () => {
+    for (const nombre of ['aria-label="Atrás"', 'aria-label="Anterior"', 'aria-label="Siguiente"',
+      "aria-label={`Ver a ${a.nombre}`}"]) {
+      expect(vista, nombre).toContain(nombre);
+    }
+    for (const nombre of ['aria-label="Música"', 'aria-label="Sonidos al tocar"', 'aria-label="Movimiento"']) {
+      expect(pantallas["./Adoptante.tsx"], nombre).toContain(nombre);
+    }
   });
 });
 

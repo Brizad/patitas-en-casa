@@ -143,8 +143,15 @@ export function estadisticas(a: AnimalPublicado | Recomendado): Estadistica[] {
   return filas;
 }
 
+/** Una línea para la tarjeta: «Gatito · 2 años · tamaño pequeño». */
+export const resumenCorto = (a: AnimalPublicado) =>
+  `${especieTexto(a.especie)} · ${edadTexto(a.edad_meses)} · tamaño ${TAMANO[a.tamano] ?? a.tamano}`;
+
+/** Insignias con lo que dice la publicación (la especie y el tamaño ya están en el resumen). */
 export function insignias(a: AnimalPublicado): string[] {
-  return [especieTexto(a.especie), `Tamaño ${TAMANO[a.tamano] ?? a.tamano}`, `Energía ${a.energia}`];
+  return [`Energía ${a.energia}`, a.apto_ninos ? "Convive con niños" : "",
+          a.apto_otros_animales ? "Convive con otros animales" : "",
+          a.necesita_patio ? "Necesita patio" : "Sin patio está bien"].filter(Boolean);
 }
 
 // ---------- solicitudes ----------
