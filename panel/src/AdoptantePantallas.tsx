@@ -42,9 +42,10 @@ function NotaOcultos({ ocultos, alRevisar }: { ocultos: number; alRevisar: () =>
 
 // ---------- 1 · Bienvenida ----------
 
-export function Bienvenida({ catalogo, cargando, mias, alEmpezar, alVerTodos, alVerSolicitudes }: {
-  catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[];
-  alEmpezar: () => void; alVerTodos: () => void; alVerSolicitudes: () => void;
+export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alVerCompaneros, alVerTodos,
+  alVerSolicitudes }: {
+  catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
+  alEmpezar: () => void; alVerCompaneros: () => void; alVerTodos: () => void; alVerSolicitudes: () => void;
 }) {
   // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage.
   const orden = [...catalogo].sort((x, y) => Number(!!y.foto) - Number(!!x.foto));
@@ -63,6 +64,9 @@ export function Bienvenida({ catalogo, cargando, mias, alEmpezar, alVerTodos, al
             <span className="h">¡Empezar!</span>
             <span className="adop-boton-punta"><Icono d={FLECHA.adelante} /></span>
           </button>
+          {conPerfil && (
+            <button className="adop-boton adop-boton--claro" onClick={alVerCompaneros}>
+              <span className="h">Ver mis compañeros con mis respuestas guardadas</span></button>)}
           <button className="adop-enlace" onClick={alVerTodos}>
             {cargando ? "Ver a todos" : `Ver a todos (${total})`}
           </button>
@@ -95,7 +99,9 @@ export function Encuesta({ paso, respuestas, catalogo, alResponder, alAtras }: {
 }) {
   const p = PREGUNTAS[paso];
   const marcada = opcionElegida(p, respuestas);
-  const guia = catalogo.length ? catalogo[paso % catalogo.length] : null;
+  // La burbuja lleva la FOTO real de un animal publicado; sin ninguno con foto, una huella.
+  const conFoto = catalogo.filter((a) => a.foto);
+  const guia = conFoto.length ? conFoto[paso % conFoto.length] : null;
   return (
     <div className="encuesta">
       <div className="encuesta-cabeza">
@@ -125,7 +131,6 @@ export function Encuesta({ paso, respuestas, catalogo, alResponder, alAtras }: {
               <span className="h opcion-titulo">{o.titulo}</span>
               <span className="opcion-sub">{o.sub}</span>
             </span>
-            {i === marcada && <span className="opcion-marca">Tu respuesta</span>}
           </button>))}
       </div>
     </div>
@@ -375,6 +380,41 @@ export function MisSolicitudes({ mias, animalDe, alVer, alDescargar, alAtras, al
             </li>);
         })}
       </ul>
+    </div>
+  );
+}
+
+// ---------- Mi hogar (arreglos, parte C) ----------
+
+export function MiHogar({ resumen, alCambiar, alEmpezar, alVerCompaneros, alAtras }: {
+  resumen: { pregunta: string; respuesta: string }[];
+  alCambiar: () => void; alEmpezar: () => void; alVerCompaneros: () => void; alAtras: () => void;
+}) {
+  return (
+    <div className="hogar">
+      <div className="elegir-cabeza">
+        <BotonAtras alTocar={alAtras} />
+        <h1 className="h elegir-titulo" tabIndex={-1} data-titulo>Mi hogar</h1>
+        <span className="adop-contador" />
+      </div>
+      {resumen.length === 0 ? (
+        <div className="hogar-vacio">
+          <p className="adop-sub">Aún no nos has contado cómo es tu hogar. Son {PREGUNTAS.length} preguntas rápidas.</p>
+          <button className="adop-boton" onClick={alEmpezar}><span className="h">¡Empezar!</span>
+            <span className="adop-boton-punta"><Icono d={FLECHA.adelante} /></span></button>
+        </div>
+      ) : (<>
+        <p className="adop-sub">Esto es lo que guardamos de tu hogar. Con esto te recomendamos compañeros.</p>
+        <dl className="hogar-resumen">
+          {resumen.map((r) => (
+            <div key={r.pregunta} className="hogar-fila"><dt>{r.pregunta}</dt><dd className="h">{r.respuesta}</dd></div>))}
+        </dl>
+        <div className="hogar-botones">
+          <button className="adop-boton" onClick={alCambiar}><span className="h">Cambiar mis respuestas</span>
+            <span className="adop-boton-punta"><Icono d={FLECHA.adelante} /></span></button>
+          <button className="adop-enlace" onClick={alVerCompaneros}>Ver mis compañeros</button>
+        </div>
+      </>)}
     </div>
   );
 }

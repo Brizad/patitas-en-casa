@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PERFIL_VACIO, Perfil } from "./apiAdopcion";
 import {
-  PREGUNTAS, Respuestas, opcionElegida, perfilDesdeRespuestas, responder, respuestasDesdePerfil,
+  PREGUNTAS, Respuestas, opcionElegida, perfilDesdeRespuestas, responder, respuestasDesdePerfil, resumenHogar,
 } from "./encuesta";
 
 const pregunta = (clave: string) => PREGUNTAS.find((p) => p.clave === clave)!;
@@ -78,5 +78,17 @@ describe("encuesta con un perfil ya guardado", () => {
       expect(opcionElegida(pregunta("horas_solo_al_dia"), { horas_solo_al_dia: h }), `${h} h`)
         .toBeGreaterThanOrEqual(0);
     }
+  });
+});
+
+
+describe("«Mi hogar» (arreglos, parte C)", () => {
+  it("resume en palabras las 7 respuestas guardadas; sin perfil, nada", () => {
+    const r = resumenHogar({ vivienda: "apartamento", tiene_patio: false, hay_ninos: true,
+      otros_animales: false, horas_solo_al_dia: 4, experiencia: true, acepta_seguimiento: true });
+    expect(r).toHaveLength(7);
+    expect(r[0]).toEqual({ pregunta: "¿Dónde vivirá tu nuevo amigo?", respuesta: "Apartamento" });
+    expect(r.find((x) => x.pregunta.includes("horas"))?.respuesta).toBe("Medio día (4 h)");
+    expect(resumenHogar(null)).toEqual([]);
   });
 });
