@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Patitas en Casa · Adopción</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2336D}a:hover{color:#8E1F4E}
+.pc *{box-sizing:border-box}
+.pc button{font-family:inherit;cursor:pointer}
+.pc button:focus-visible{outline:3px solid #7A5AF8;outline-offset:3px}
+.h{font-family:'Fredoka',system-ui,sans-serif}
+.btn3d{transition:transform .12s ease, box-shadow .12s ease}
+.btn3d:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #2B2340 !important}
+.btn3d:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2B2340 !important}
+.noscroll::-webkit-scrollbar{display:none}.noscroll{scrollbar-width:none}
+
+/* ---------- layout: celular por defecto ---------- */
+.top{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:6}
+.scr{position:absolute;left:0;right:0;top:58px;bottom:0;display:flex;flex-direction:column}
+.only-desk{display:none !important}
+.ini{padding:4px 22px 22px}
+.ini-h1{font-size:40px}
+.collage{position:relative;height:300px;margin-top:10px}
+.collage-in{position:absolute;left:50%;top:0;width:340px;height:300px;margin-left:-170px}
+.ini-cta{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.lane{position:absolute;left:0;right:0;bottom:122px;height:64px;pointer-events:none}
+.qwrap{padding:4px 20px 20px;display:flex;flex-direction:column;flex-grow:1}
+.q-h2{font-size:29px;margin:18px 0 16px}
+.ops{display:flex;flex-direction:column;gap:12px}
+.op{min-height:72px;flex-direction:row;align-items:center}
+.mwrap{padding:4px 20px 18px}
+.m-h2{font-size:32px}
+.mlist{display:flex;flex-direction:column;gap:14px}
+.mcard{flex-direction:row;align-items:center}
+.mphoto{width:96px;height:104px}
+.el{padding:2px 16px 14px;display:flex;flex-direction:column;gap:9px}
+.el-card{height:214px}
+.blob{width:172px;height:180px}
+.el-info{display:flex;flex-direction:column;gap:9px}
+.el-thumbs{display:flex;gap:10px;overflow-x:auto;padding:6px 4px 8px}
+.th{width:54px;height:54px;flex-shrink:0}
+.th.on{width:62px;height:62px}
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.lwrap{padding:14px 22px 22px}
+.l-photo{width:200px;height:200px}
+
+/* ---------- layout: computador ---------- */
+.desk .top{height:76px;padding:0 48px}
+.desk .scr{top:76px}
+.desk .only-desk{display:flex !important}
+.desk .only-phone{display:none !important}
+.desk .ini{padding:10px 80px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);column-gap:48px;align-items:center;align-content:center}
+.desk .ini-h1{font-size:68px}
+.desk .collage{height:520px;margin-top:0}
+.desk .collage-in{transform:scale(1.55);transform-origin:50% 0;top:30px}
+.desk .ini-cta{margin-top:30px;width:380px}
+.desk .lane{bottom:18px}
+.desk .qwrap{width:920px;margin:0 auto;padding:10px 0 30px}
+.desk .q-h2{font-size:46px;margin:26px 0 28px}
+.desk .ops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.desk .op{min-height:170px;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:20px !important}
+.desk .mwrap{width:1000px;margin:0 auto;padding:16px 0 30px}
+.desk .m-h2{font-size:48px}
+.desk .mlist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.desk .mcard{flex-direction:column;align-items:stretch}
+.desk .mphoto{width:100%;height:250px}
+.desk .el{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-areas:"head head" "chips info" "card info" "thumbs info";column-gap:44px;row-gap:14px;padding:6px 64px 30px;align-content:start}
+.desk .el-head{grid-area:head}.desk .el-chips{grid-area:chips}.desk .el-card{grid-area:card;height:320px}.desk .el-info{grid-area:info;gap:16px;align-self:start}.desk .el-thumbs{grid-area:thumbs;flex-wrap:wrap;overflow:visible;padding:4px 0 0}
+.desk .blob{width:260px;height:272px}
+.desk .th,.desk .th.on{width:52px;height:52px}
+.desk .lwrap{width:520px;margin:0 auto}
+.desk .l-photo{width:240px;height:240px}
+
+/* ---------- movimiento ---------- */
+.mov .bob{animation:bob 2.6s ease-in-out infinite}
+.mov .bob2{animation:bob 3.2s ease-in-out .4s infinite}
+.mov .bob3{animation:bob 2.2s ease-in-out .9s infinite}
+.mov .float{animation:float 7s ease-in-out infinite}
+.mov .float.d1{animation-delay:-2s;animation-duration:8s}
+.mov .float.d2{animation-delay:-4s;animation-duration:9s}
+.mov .float.d3{animation-delay:-1s;animation-duration:6.5s}
+.mov .walker{animation:walk 10s linear infinite}
+.mov .walker.cat{animation:walk 13s linear -5s infinite}
+.mov .walker.pup{animation:walk 8s linear -2.5s infinite}
+.mov .leg-a{animation:leg .45s ease-in-out infinite alternate;transform-origin:50% 0}
+.mov .leg-b{animation:leg .45s ease-in-out -.45s infinite alternate;transform-origin:50% 0}
+.mov .tail{animation:wag .35s ease-in-out infinite alternate;transform-origin:0% 100%}
+.mov .pop{animation:pop .55s cubic-bezier(.2,1.6,.4,1) both}
+.mov .pop.d1{animation-delay:.08s}.mov .pop.d2{animation-delay:.16s}.mov .pop.d3{animation-delay:.24s}.mov .pop.d4{animation-delay:.32s}.mov .pop.d5{animation-delay:.4s}.mov .pop.d6{animation-delay:.48s}
+.mov .grow{animation:grow .9s cubic-bezier(.2,.9,.3,1) .15s both}
+.mov .wiggle{animation:wiggle 2.4s ease-in-out infinite}
+.mov .ring{animation:ring 1.6s ease-out infinite}
+.mov .conf{animation:fall 3.2s linear infinite}
+.mov .heart{animation:beat 1.1s ease-in-out infinite}
+.mov .eq span{animation:eq .8s ease-in-out infinite alternate}
+.mov .eq span:nth-child(2){animation-delay:-.3s}.mov .eq span:nth-child(3){animation-delay:-.6s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes float{0%,100%{transform:translate(0,0) rotate(-12deg)}50%{transform:translate(8px,-18px) rotate(12deg)}}
+@keyframes walk{from{transform:translateX(-140px)}to{transform:translateX(var(--w))}}
+@keyframes leg{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
+@keyframes wag{from{transform:rotate(-18deg)}to{transform:rotate(20deg)}}
+@keyframes pop{from{opacity:0;transform:scale(.6) translateY(24px)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(232,80,138,.55)}100%{box-shadow:0 0 0 14px rgba(232,80,138,0)}}
+@keyframes fall{0%{transform:translateY(-40px) rotate(0)}100%{transform:translateY(900px) rotate(540deg)}}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@keyframes eq{from{height:4px}to{height:14px}}
+@media (prefers-reduced-motion: reduce){.mov *{animation:none !important}}
+</style>
+</helmet>
+<div class="pc {{movClass}} {{deskClass}}" style="width: {{ancho}}px; height: {{alto}}px; --w: {{anchoW}}px; position: relative; overflow: hidden; background: #FFF8EE; color: #2B2340; font-family: 'Nunito', system-ui, sans-serif;">
+
+<!-- fondo -->
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none;">
+<div style="position: absolute; width: 280px; height: 240px; left: -90px; top: -60px; background: #FBD9E3; border-radius: 58% 42% 55% 45% / 50% 60% 40% 50%;"></div>
+<div style="position: absolute; width: 240px; height: 220px; right: -80px; top: 200px; background: #E4DDFB; border-radius: 45% 55% 40% 60% / 55% 45% 55% 45%;"></div>
+<div style="position: absolute; width: 260px; height: 220px; left: -60px; bottom: -80px; background: #D7F0DC; border-radius: 50% 50% 45% 55% / 60% 40% 60% 40%;"></div>
+<div style="position: absolute; width: 220px; height: 200px; right: 18%; bottom: -90px; background: #FFE9A6; border-radius: 55% 45% 50% 50% / 50% 55% 45% 50%;"></div>
+<svg class="float" width="26" height="26" viewBox="0 0 24 24" fill="#F2B8CB" style="position: absolute; right: 70px; top: 90px;"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+<svg class="float d1" width="20" height="20" viewBox="0 0 24 24" fill="#C9BDF5" style="position: absolute; left: 30px; top: 46%;"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+<svg class="float d2" width="22" height="22" viewBox="0 0 24 24" fill="#F7D77A" style="position: absolute; right: 40px; top: 66%;"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+<svg class="float d3" width="18" height="18" viewBox="0 0 24 24" fill="#A9DDB6" style="position: absolute; left: 48%; top: 64px;"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+</div>
+
+<!-- barra superior: logo + música + efectos -->
+<div class="top">
+<div style="display: flex; align-items: center; gap: 8px;">
+<svg class="wiggle" width="28" height="28" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"></ellipse><circle cx="6" cy="9.5" r="2.2"></circle><circle cx="10" cy="6" r="2.2"></circle><circle cx="14" cy="6" r="2.2"></circle><circle cx="18" cy="9.5" r="2.2"></circle></svg>
+<span class="h" style="font-weight: 700; font-size: 20px;">Patitas en Casa</span>
+</div>
+<div class="only-desk" style="gap: 28px; font-weight: 800; font-size: 15px; color: #5B5070;">
+<span>Adoptar</span><span>Reportar un animal</span><span>Cómo funciona</span>
+</div>
+<div style="display: flex; gap: 8px;">
+<button class="btn3d" onClick="{{toggleMusica}}" aria-label="Música" aria-pressed="{{musicaOn}}" style="height: 40px; min-width: 40px; padding: 0 10px; border-radius: 999px; border: 2px solid #2B2340; background: {{musicaBg}}; display: flex; align-items: center; gap: 6px; box-shadow: 2px 2px 0 #2B2340; color: #2B2340;">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+<sc-if value="{{musicaSonando}}" hint-placeholder-val="{{ false }}"><span class="eq" style="display: flex; align-items: flex-end; gap: 2px; height: 14px;"><span style="width: 3px; height: 8px; background: #E8508A; border-radius: 2px;"></span><span style="width: 3px; height: 12px; background: #7A5AF8; border-radius: 2px;"></span><span style="width: 3px; height: 6px; background: #3FA66B; border-radius: 2px;"></span></span></sc-if>
+<sc-if value="{{musicaMuda}}" hint-placeholder-val="{{ true }}"><span style="font-size: 12px; font-weight: 800;">{{musicaTxt}}</span></sc-if>
+</button>
+<button class="btn3d" onClick="{{toggleEfectos}}" aria-label="Sonidos al tocar" aria-pressed="{{efectosOn}}" style="width: 40px; height: 40px; border-radius: 999px; border: 2px solid #2B2340; background: {{efectosBg}}; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0 #2B2340;">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="{{efectosIcono}}"></path></svg>
+</button>
+</div>
+</div>
+
+<!-- ============ 1 · BIENVENIDA ============ -->
+<sc-if value="{{isInicio}}" hint-placeholder-val="{{ true }}">
+<div class="scr ini">
+<div style="display: flex; flex-direction: column;">
+<div class="pop only-desk" style="align-self: flex-start; background: #FFE9A6; border: 2px solid #2B2340; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 14px; box-shadow: 3px 3px 0 #2B2340; margin-bottom: 18px;">Refugios de Cúcuta y el área metropolitana</div>
+<h1 class="h pop ini-h1" style="margin: 0; line-height: 1.02; font-weight: 700; letter-spacing: -0.5px;">Encuentra a tu compañero peludo</h1>
+<p class="pop d1" style="margin: 10px 0 0; font-size: 16px; font-weight: 700; color: #5B5070;">Responde 6 preguntas y te mostramos quién combina contigo.</p>
+<div class="ini-cta only-desk" style="flex-direction: column; gap: 10px;">
+<button class="btn3d" onClick="{{irQuiz}}" style="height: 62px; border: 2.5px solid #2B2340; border-radius: 999px; background: #2B2340; color: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 26px; box-shadow: 4px 4px 0 #E8508A;">
+<span class="h" style="font-size: 20px; font-weight: 600;">¡Empezar la encuesta!</span>
+<span style="width: 46px; height: 46px; border-radius: 999px; background: #FFE9A6; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</button>
+<button onClick="{{irElegir}}" style="height: 44px; border: none; background: transparent; color: #5B5070; font-size: 16px; font-weight: 800; text-decoration: underline; align-self: flex-start;">Ver a los {{total}} sin encuesta</button>
+</div>
+</div>
+
+<div class="collage">
+<div class="collage-in">
+<div class="pop d1" style="position: absolute; left: 0px; top: 28px; width: 160px; height: 200px; background: #FFE9A6; border: 2.5px solid #2B2340; border-radius: 26px; box-shadow: 5px 5px 0 #2B2340; overflow: hidden; transform: rotate(-6deg);"><img src="{{fotos.toby}}" alt="Toby" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="pop d2" style="position: absolute; right: 0px; top: 0px; width: 150px; height: 176px; background: #D7F0DC; border: 2.5px solid #2B2340; border-radius: 26px; box-shadow: 5px 5px 0 #2B2340; overflow: hidden; transform: rotate(5deg);"><img src="{{fotos.copo}}" alt="Copo" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="pop d3" style="position: absolute; right: 34px; top: 166px; width: 120px; height: 128px; background: #E4DDFB; border: 2.5px solid #2B2340; border-radius: 22px; box-shadow: 5px 5px 0 #2B2340; overflow: hidden; transform: rotate(-3deg);"><img src="{{fotos.luna}}" alt="Luna" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="bob2 pop d4" style="position: absolute; left: 140px; top: -8px; width: 54px; height: 54px; border-radius: 999px; border: 2.5px solid #2B2340; overflow: hidden; box-shadow: 3px 3px 0 #2B2340;"><img src="{{fotos.pecas}}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="bob3 pop d5" style="position: absolute; left: 160px; top: 186px; width: 48px; height: 48px; border-radius: 999px; border: 2.5px solid #2B2340; overflow: hidden; box-shadow: 3px 3px 0 #2B2340;"><img src="{{fotos.pancho}}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="bob pop d6" style="position: absolute; left: 10px; top: 236px; width: 50px; height: 50px; border-radius: 999px; border: 2.5px solid #2B2340; overflow: hidden; box-shadow: 3px 3px 0 #2B2340;"><img src="{{fotos.max}}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div class="bob" style="position: absolute; left: 68px; top: 248px; background: #FFFFFF; border: 2px solid #2B2340; border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 13px; box-shadow: 3px 3px 0 #2B2340; display: flex; align-items: center; gap: 6px;">
+<svg class="heart" width="14" height="14" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"></path></svg>
+{{total}} te esperan
+</div>
+</div>
+</div>
+
+<!-- animalitos caminando -->
+<div class="lane" aria-hidden="true">
+<svg class="walker" width="96" height="64" viewBox="0 0 96 64" style="position: absolute; left: 0; bottom: 0;">
+<path class="tail" d="M20 26 q-10 -10 -14 -2" stroke="#C98A4B" stroke-width="5" fill="none" stroke-linecap="round" style="transform-box: fill-box;"></path>
+<rect class="leg-a" x="26" y="36" width="7" height="18" rx="3.5" fill="#B9773D" style="transform-box: fill-box;"></rect>
+<rect class="leg-b" x="36" y="36" width="7" height="18" rx="3.5" fill="#C98A4B" style="transform-box: fill-box;"></rect>
+<rect class="leg-b" x="54" y="36" width="7" height="18" rx="3.5" fill="#B9773D" style="transform-box: fill-box;"></rect>
+<rect class="leg-a" x="63" y="36" width="7" height="18" rx="3.5" fill="#C98A4B" style="transform-box: fill-box;"></rect>
+<ellipse cx="46" cy="32" rx="27" ry="13" fill="#E3A866" stroke="#2B2340" stroke-width="2"></ellipse>
+<circle cx="74" cy="20" r="13" fill="#E3A866" stroke="#2B2340" stroke-width="2"></circle>
+<ellipse cx="68" cy="13" rx="5" ry="9" fill="#8A5428" transform="rotate(-25 68 13)"></ellipse>
+<circle cx="78" cy="18" r="2.2" fill="#2B2340"></circle>
+<ellipse cx="86" cy="23" rx="3" ry="2.4" fill="#2B2340"></ellipse>
+<path d="M80 27 q4 3 7 0" stroke="#2B2340" stroke-width="1.6" fill="none"></path>
+</svg>
+<svg class="walker cat" width="80" height="56" viewBox="0 0 80 56" style="position: absolute; left: 0; bottom: 0;">
+<path class="tail" d="M14 24 q-12 -18 2 -20" stroke="#8C8FA3" stroke-width="5" fill="none" stroke-linecap="round" style="transform-box: fill-box;"></path>
+<rect class="leg-a" x="20" y="32" width="6" height="16" rx="3" fill="#6F7287" style="transform-box: fill-box;"></rect>
+<rect class="leg-b" x="29" y="32" width="6" height="16" rx="3" fill="#8C8FA3" style="transform-box: fill-box;"></rect>
+<rect class="leg-b" x="44" y="32" width="6" height="16" rx="3" fill="#6F7287" style="transform-box: fill-box;"></rect>
+<rect class="leg-a" x="52" y="32" width="6" height="16" rx="3" fill="#8C8FA3" style="transform-box: fill-box;"></rect>
+<ellipse cx="38" cy="29" rx="23" ry="10" fill="#A4A7B8" stroke="#2B2340" stroke-width="2"></ellipse>
+<circle cx="62" cy="19" r="11" fill="#A4A7B8" stroke="#2B2340" stroke-width="2"></circle>
+<path d="M54 12 l2 -10 l6 7 z M64 9 l6 -7 l2 10 z" fill="#A4A7B8" stroke="#2B2340" stroke-width="2" stroke-linejoin="round"></path>
+<circle cx="66" cy="18" r="2" fill="#2B2340"></circle>
+<circle cx="72" cy="22" r="1.6" fill="#E8508A"></circle>
+</svg>
+<svg class="walker pup" width="64" height="46" viewBox="0 0 64 46" style="position: absolute; left: 0; bottom: 0;">
+<path class="tail" d="M12 18 q-8 -10 -10 -1" stroke="#2B2340" stroke-width="4" fill="none" stroke-linecap="round" style="transform-box: fill-box;"></path>
+<rect class="leg-a" x="16" y="26" width="5" height="13" rx="2.5" fill="#3A3350" style="transform-box: fill-box;"></rect>
+<rect class="leg-b" x="23" y="26" width="5" height="13" rx="2.5" fill="#FFFFFF" stroke="#2B2340" stroke-width="1" style="transform-box: fill-box;"></rect>
+<rect class="leg-b" x="35" y="26" width="5" height="13" rx="2.5" fill="#3A3350" style="transform-box: fill-box;"></rect>
+<rect class="leg-a" x="41" y="26" width="5" height="13" rx="2.5" fill="#FFFFFF" stroke="#2B2340" stroke-width="1" style="transform-box: fill-box;"></rect>
+<ellipse cx="30" cy="23" rx="18" ry="9" fill="#FFFFFF" stroke="#2B2340" stroke-width="2"></ellipse>
+<ellipse cx="26" cy="21" rx="6" ry="4" fill="#3A3350"></ellipse>
+<circle cx="49" cy="15" r="9" fill="#FFFFFF" stroke="#2B2340" stroke-width="2"></circle>
+<ellipse cx="45" cy="9" rx="3.5" ry="6" fill="#3A3350" transform="rotate(-30 45 9)"></ellipse>
+<circle cx="52" cy="13" r="1.7" fill="#2B2340"></circle>
+<ellipse cx="57.5" cy="17" rx="2.2" ry="1.8" fill="#2B2340"></ellipse>
+</svg>
+<div style="position: absolute; left: 0; right: 0; bottom: -4px; height: 3px; background: repeating-linear-gradient(90deg, #2B2340 0 10px, transparent 10px 18px); opacity: .25;"></div>
+</div>
+
+<div class="ini-cta only-phone">
+<button class="btn3d" onClick="{{irQuiz}}" style="height: 60px; border: 2.5px solid #2B2340; border-radius: 999px; background: #2B2340; color: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 26px; box-shadow: 4px 4px 0 #E8508A;">
+<span class="h" style="font-size: 19px; font-weight: 600;">¡Empezar!</span>
+<span style="width: 44px; height: 44px; border-radius: 999px; background: #FFE9A6; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</button>
+<button onClick="{{irElegir}}" style="height: 44px; border: none; background: transparent; color: #5B5070; font-size: 15px; font-weight: 800; text-decoration: underline;">Ver a los {{total}} sin encuesta</button>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ 2 · MINI ENCUESTA ============ -->
+<sc-if value="{{isQuiz}}" hint-placeholder-val="{{ false }}">
+<div class="scr">
+<div class="qwrap">
+<div style="display: flex; align-items: center; justify-content: space-between;">
+<button onClick="{{atrasQuiz}}" aria-label="Atrás" style="width: 44px; height: 44px; border-radius: 999px; border: 2px solid #2B2340; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #2B2340;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<div style="display: flex; gap: 6px;">
+<sc-for list="{{puntos}}" as="p" hint-placeholder-count="6">
+<div style="width: {{p.w}}px; height: 12px; border-radius: 999px; border: 2px solid #2B2340; background: {{p.bg}}; transition: width .3s ease;"></div>
+</sc-for>
+</div>
+<span style="min-width: 44px; text-align: right; font-weight: 800; font-size: 14px; color: #5B5070;">{{pasoTxt}}</span>
+</div>
+
+<sc-for list="{{preguntas}}" as="pr" hint-placeholder-count="1">
+<sc-if value="{{pr.activa}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column;">
+<div class="pop" style="margin-top: 22px; display: flex; align-items: center; gap: 14px;">
+<div class="wiggle" style="width: 68px; height: 68px; border-radius: 22px; border: 2.5px solid #2B2340; overflow: hidden; background: {{pr.bg}}; box-shadow: 4px 4px 0 #2B2340; flex-shrink: 0;"><img src="{{pr.foto}}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<div style="background: #FFFFFF; border: 2px solid #2B2340; border-radius: 18px 18px 18px 4px; padding: 10px 14px; font-weight: 800; font-size: 14px; color: #5B5070;">{{pr.burbuja}}</div>
+</div>
+<h2 class="h pop d1 q-h2" style="line-height: 1.08; font-weight: 700;">{{pr.texto}}</h2>
+<div class="ops">
+<sc-for list="{{pr.opciones}}" as="op" hint-placeholder-count="3">
+<button class="btn3d pop op {{op.d}}" onClick="{{op.pick}}" style="display: flex; gap: 14px; padding: 12px 16px; border: 2.5px solid #2B2340; border-radius: 22px; background: {{op.bg}}; box-shadow: 4px 4px 0 #2B2340; text-align: left; color: #2B2340;">
+<span style="width: 48px; height: 48px; border-radius: 16px; background: #FFFFFF; border: 2px solid #2B2340; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{op.icono}}"></path></svg></span>
+<span style="display: flex; flex-direction: column; gap: 2px;">
+<span class="h" style="font-size: 19px; font-weight: 600;">{{op.titulo}}</span>
+<span style="font-size: 13px; font-weight: 700; color: #5B5070;">{{op.sub}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ 3 · MEJORES COMPAÑEROS ============ -->
+<sc-if value="{{isMatch}}" hint-placeholder-val="{{ false }}">
+<div class="scr">
+<div class="mwrap" style="display: flex; flex-direction: column; flex-grow: 1;">
+<div class="pop" style="align-self: flex-start; background: #FFE9A6; border: 2px solid #2B2340; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 13px; box-shadow: 3px 3px 0 #2B2340;">Según tus 6 respuestas</div>
+<h2 class="h pop d1 m-h2" style="margin: 14px 0 4px; line-height: 1.05; font-weight: 700;">¡Ellos combinan contigo!</h2>
+<p style="margin: 0 0 16px; font-size: 15px; font-weight: 700; color: #5B5070;">Toca uno para conocerlo de cerca.</p>
+<div class="mlist">
+<sc-for list="{{ranking}}" as="r" hint-placeholder-count="3">
+<button class="btn3d pop mcard {{r.d}}" onClick="{{r.ver}}" style="position: relative; display: flex; gap: 14px; padding: 12px; border: 2.5px solid #2B2340; border-radius: 26px; background: #FFFFFF; box-shadow: 5px 5px 0 #2B2340; text-align: left; color: #2B2340;">
+<span class="mphoto" style="border-radius: 20px; overflow: hidden; background: {{r.bg}}; border: 2px solid #2B2340; flex-shrink: 0; display: block;"><img src="{{r.foto}}" alt="{{r.nombre}}" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span>
+<span style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1;">
+<span style="display: flex; align-items: center; justify-content: space-between; gap: 6px;"><span class="h" style="font-size: 24px; font-weight: 700;">{{r.nombre}}</span><sc-if value="{{r.top}}" hint-placeholder-val="{{ false }}"><span style="background: #C2336D; color: #FFFFFF; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 800;">Mejor match</span></sc-if></span>
+<span style="font-size: 13px; font-weight: 700; color: #5B5070;">{{r.resumen}}</span>
+<span style="display: flex; align-items: center; gap: 8px;">
+<span style="flex-grow: 1; height: 12px; border-radius: 999px; background: #F1ECF6; border: 2px solid #2B2340; overflow: hidden;"><span class="grow" style="display: block; height: 100%; width: {{r.pct}}%; background: {{r.barra}};"></span></span>
+<span class="h" style="font-size: 18px; font-weight: 700;">{{r.pct}}%</span>
+</span>
+</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top: auto; display: flex; justify-content: center; gap: 18px; padding-top: 12px;">
+<button onClick="{{irElegir}}" style="height: 44px; border: none; background: transparent; color: #2B2340; font-size: 15px; font-weight: 800; text-decoration: underline;">Ver a los {{total}}</button>
+<button onClick="{{irQuiz}}" style="height: 44px; border: none; background: transparent; color: #5B5070; font-size: 15px; font-weight: 800; text-decoration: underline;">Repetir encuesta</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ 4 · ELIGE A TU COMPAÑERO ============ -->
+<sc-if value="{{isElegir}}" hint-placeholder-val="{{ false }}">
+<div class="scr el">
+<div class="el-head" style="display: flex; align-items: center; justify-content: space-between;">
+<button onClick="{{atrasElegir}}" aria-label="Atrás" style="width: 44px; height: 44px; border-radius: 999px; border: 2px solid #2B2340; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #2B2340;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<span class="h" style="font-size: 21px; font-weight: 700;">Elige a tu compañero</span>
+<span style="min-width: 44px; text-align: right; font-weight: 800; font-size: 14px; color: #5B5070;">{{contador}}</span>
+</div>
+
+<div class="el-chips" style="display: flex; gap: 8px;">
+<sc-for list="{{chips}}" as="ch" hint-placeholder-count="3">
+<button onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="height: 38px; padding: 0 14px; border-radius: 999px; border: 2px solid #2B2340; background: {{ch.bg}}; color: {{ch.color}}; font-size: 14px; font-weight: 800; box-shadow: {{ch.sombra}};">{{ch.txt}}</button>
+</sc-for>
+</div>
+
+<sc-for list="{{animales}}" as="a" hint-placeholder-count="1">
+<sc-if value="{{a.activo}}" hint-placeholder-val="{{ true }}">
+<div class="pop el-card" style="position: relative; border: 2.5px solid #2B2340; border-radius: 30px; background: {{a.bg}}; box-shadow: 5px 5px 0 #2B2340; display: flex; align-items: center; justify-content: center;">
+<div class="bob blob" style="border-radius: 46% 54% 50% 50% / 50% 46% 54% 50%; overflow: hidden; border: 3px solid #2B2340; margin-top: -14px;"><img src="{{a.foto}}" alt="{{a.nombre}}" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+<div style="position: absolute; left: 0; right: 0; bottom: -16px; display: flex; justify-content: center; align-items: center;">
+<span style="width: 18px; height: 30px; background: #7A5AF8; border: 2px solid #2B2340; border-right: none; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%);"></span>
+<span class="h" style="background: #9B83FA; color: #FFFFFF; border: 2px solid #2B2340; padding: 4px 22px; font-size: 24px; font-weight: 700; letter-spacing: .5px;">{{a.nombre}}</span>
+<span style="width: 18px; height: 30px; background: #7A5AF8; border: 2px solid #2B2340; border-left: none; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%);"></span>
+</div>
+<button onClick="{{prev}}" aria-label="Anterior" class="btn3d" style="position: absolute; left: 10px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 999px; border: 2px solid #2B2340; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0 #2B2340;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button onClick="{{next}}" aria-label="Siguiente" class="btn3d" style="position: absolute; right: 10px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 999px; border: 2px solid #2B2340; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0 #2B2340;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B2340" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+<span style="position: absolute; right: 12px; top: 12px; background: #FFFFFF; border: 2px solid #2B2340; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 800;">{{a.especieTxt}}</span>
+</div>
+
+<div class="el-info">
+<div class="only-desk" style="flex-direction: column; gap: 4px;">
+<span class="h pop" style="font-size: 52px; font-weight: 700; line-height: 1;">{{a.nombre}}</span>
+<span style="font-size: 16px; font-weight: 800; color: #5B5070;">{{a.resumen}}</span>
+</div>
+<div class="tags" style="display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+<sc-for list="{{a.tags}}" as="t" hint-placeholder-count="3">
+<span style="background: {{t.bg}}; border: 2px solid #2B2340; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 800;">{{t.txt}}</span>
+</sc-for>
+</div>
+<p class="only-desk" style="margin: 0; font-size: 16px; font-weight: 700; color: #5B5070; line-height: 1.45;">{{a.desc}}</p>
+<div class="stats" style="background: #FFFFFF; border: 2.5px solid #2B2340; border-radius: 22px; box-shadow: 4px 4px 0 #2B2340; padding: 11px 14px; display: grid; column-gap: 16px; row-gap: 7px;">
+<sc-for list="{{a.stats}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 3px;">
+<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800;"><span>{{s.label}}</span><span style="color: #5B5070;">{{s.pct}}</span></div>
+<div style="height: 11px; border-radius: 999px; background: #F1ECF6; border: 2px solid #2B2340; overflow: hidden;"><div class="grow" style="height: 100%; width: {{s.pct}}%; background: {{s.color}}; border-radius: 999px;"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; background: #FFF1C9; border: 2px dashed #2B2340; border-radius: 20px; padding: 7px 12px;">
+<span style="width: 38px; height: 38px; border-radius: 999px; overflow: hidden; border: 2px solid #2B2340; flex-shrink: 0;"><img src="{{a.foto}}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></span>
+<span style="display: flex; flex-direction: column; font-size: 12px; font-weight: 800; line-height: 1.25;"><span>Hoy</span><span style="color: #5B5070;">{{a.hoy}}</span></span>
+<svg width="34" height="16" viewBox="0 0 34 16" fill="none" stroke="#2B2340" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8h28M24 2l6 6-6 6"></path></svg>
+<span style="width: 50px; height: 50px; border-radius: 999px; overflow: hidden; border: 2px dashed #2B2340; flex-shrink: 0; opacity: .8;"><img src="{{a.foto}}" alt="" style="width: 100%; height: 100%; object-fit: cover; filter: grayscale(.4);"></span>
+<span style="display: flex; flex-direction: column; font-size: 12px; font-weight: 800; line-height: 1.25;"><span>De adulto</span><span style="color: #5B5070;">{{a.adulto}}</span></span>
+</div>
+<button class="btn3d" onClick="{{elegir}}" style="height: 56px; border: 2.5px solid #2B2340; border-radius: 999px; background: #2B2340; color: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 7px 0 24px; box-shadow: 4px 4px 0 #E8508A;">
+<span class="h" style="font-size: 19px; font-weight: 600;">¡Te elijo, {{a.nombre}}!</span>
+<span class="ring" style="width: 42px; height: 42px; border-radius: 999px; background: #FBD9E3; display: flex; align-items: center; justify-content: center;"><svg class="heart" width="20" height="20" viewBox="0 0 24 24" fill="#E8508A" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"></path></svg></span>
+</button>
+</div>
+</sc-if>
+</sc-for>
+
+<div class="el-thumbs noscroll">
+<sc-for list="{{miniaturas}}" as="m" hint-placeholder-count="8">
+<button onClick="{{m.pick}}" aria-label="Ver a {{m.nombre}}" class="th {{m.cls}}" style="padding: 0; border-radius: 18px; overflow: hidden; border: 3px solid {{m.borde}}; background: {{m.bg}}; opacity: {{m.op}}; transition: all .25s ease;"><img src="{{m.foto}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ 5 · ¡LO ELEGISTE! ============ -->
+<sc-if value="{{isListo}}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none;">
+<sc-for list="{{confeti}}" as="c" hint-placeholder-count="18">
+<div class="conf" style="position: absolute; top: -20px; left: {{c.x}}%; width: {{c.w}}px; height: {{c.h}}px; background: {{c.color}}; border-radius: {{c.r}}; animation-delay: {{c.delay}}s; animation-duration: {{c.dur}}s;"></div>
+</sc-for>
+</div>
+<sc-for list="{{animales}}" as="a" hint-placeholder-count="1">
+<sc-if value="{{a.activo}}" hint-placeholder-val="{{ true }}">
+<div class="scr">
+<div class="lwrap" style="display: flex; flex-direction: column; align-items: center; text-align: center; flex-grow: 1;">
+<div class="pop" style="background: #FFE9A6; border: 2px solid #2B2340; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 13px; box-shadow: 3px 3px 0 #2B2340;">¡Nuevo compañero!</div>
+<div class="pop d1 l-photo" style="position: relative; margin-top: 22px;">
+<div class="ring" style="position: absolute; inset: 0; border-radius: 999px; background: {{a.bg}}; border: 3px solid #2B2340;"></div>
+<div class="bob" style="position: absolute; inset: 12px; border-radius: 999px; overflow: hidden; border: 3px solid #2B2340;"><img src="{{a.foto}}" alt="{{a.nombre}}" style="width: 100%; height: 100%; object-fit: cover;"></div>
+<svg class="heart" width="44" height="44" viewBox="0 0 24 24" fill="#E8508A" stroke="#2B2340" stroke-width="1.4" aria-hidden="true" style="position: absolute; right: -6px; top: 6px;"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"></path></svg>
+</div>
+<h2 class="h pop d2" style="margin: 22px 0 8px; font-size: 34px; line-height: 1.05; font-weight: 700;">¡{{a.nombre}} y tú, gran equipo!</h2>
+<p class="pop d3" style="margin: 0; font-size: 15px; font-weight: 700; color: #5B5070; max-width: 320px;">Enviamos tu solicitud al refugio. Te avisaremos por correo cuando la revisen.</p>
+<div style="margin-top: 20px; width: 100%; background: #FFFFFF; border: 2.5px solid #2B2340; border-radius: 22px; box-shadow: 4px 4px 0 #2B2340; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; text-align: left;">
+<sc-for list="{{pasos}}" as="p" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 12px;">
+<span class="h" style="width: 34px; height: 34px; border-radius: 999px; border: 2px solid #2B2340; background: {{p.bg}}; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">{{p.n}}</span>
+<span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 15px;">{{p.t}}</span><span style="font-size: 12px; font-weight: 700; color: #5B5070;">{{p.s}}</span></span>
+</div>
+</sc-for>
+</div>
+<button class="btn3d" onClick="{{reiniciar}}" style="margin-top: auto; width: 100%; height: 56px; border: 2.5px solid #2B2340; border-radius: 999px; background: #FFFFFF; color: #2B2340; box-shadow: 4px 4px 0 #2B2340;"><span class="h" style="font-size: 17px; font-weight: 600;">Volver al inicio</span></button>
+</div>
+</div>
+</sc-if>
+</sc-for>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"start":{"editor":"enum","options":["inicio","quiz","match","elegir","listo"],"default":"inicio"},"movimiento":{"editor":"boolean","default":true},"ancho":{"editor":"int","default":390,"min":360,"max":1600},"alto":{"editor":"int","default":844,"min":600,"max":1200},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: null, q: 0, resp: {}, selId: 'toby', filtro: 'todos', musica: true, efectos: true, sonando: false };
+  }
+  componentWillUnmount() {
+    this.stopMusic();
+    try { if (this.ctx) this.ctx.close(); } catch (e) {}
+  }
+  /* ---------- sonido (Web Audio, sin archivos) ---------- */
+  audio() {
+    if (!this.ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.9;
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  }
+  tone(f, t, d, type, vol, dest, fTo, fEnd) {
+    var c = this.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t);
+    if (fTo) o.frequency.exponentialRampToValueAtTime(fTo, t + d * 0.45);
+    if (fEnd) o.frequency.exponentialRampToValueAtTime(fEnd, t + d);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(dest || this.master);
+    o.start(t); o.stop(t + d + 0.05);
+  }
+  sfx(kind) {
+    if (!this.state.efectos || !kind) return;
+    var c = this.audio(); if (!c) return;
+    var t = c.currentTime + 0.01, s = this;
+    var arp = function (notas, paso, dur, tipo, vol) { notas.forEach(function (f, i) { s.tone(f, t + i * paso, dur, tipo, vol); }); };
+    if (kind === 'pop') this.tone(560, t, 0.14, 'sine', 0.3, null, 1100);
+    else if (kind === 'next') arp([523, 784], 0.07, 0.15, 'triangle', 0.22);
+    else if (kind === 'back') arp([659, 440], 0.07, 0.15, 'triangle', 0.2);
+    else if (kind === 'swipe') this.tone(300, t, 0.16, 'sine', 0.22, null, 900);
+    else if (kind === 'pick') arp([523, 659, 784, 1047], 0.06, 0.18, 'triangle', 0.2);
+    else if (kind === 'guau') { this.tone(430, t, 0.13, 'sawtooth', 0.12, null, 300, 180); this.tone(470, t + 0.17, 0.13, 'sawtooth', 0.12, null, 320, 190); }
+    else if (kind === 'miau') this.tone(620, t, 0.42, 'sine', 0.22, null, 940, 520);
+    else if (kind === 'fanfarria') arp([523, 659, 784, 1047, 784, 1047, 1319], 0.1, 0.24, 'triangle', 0.22);
+  }
+  startMusic() {
+    if (this.timer) return;
+    var c = this.audio(); if (!c) return;
+    var self = this;
+    this.mg = c.createGain(); this.mg.gain.value = 0.07; this.mg.connect(this.master);
+    this.step = 0; this.nextT = c.currentTime + 0.08;
+    var MEL = [72,76,79,76, 77,81,79,0, 76,79,84,79, 81,79,76,0, 74,77,81,77, 79,76,72,0, 74,76,77,74, 72,0,79,0];
+    var BAJO = [48,53,48,55, 50,55,53,48];
+    var mtof = function (m) { return 440 * Math.pow(2, (m - 69) / 12); };
+    this.timer = setInterval(function () {
+      if (!self.mg) return;
+      while (self.nextT < c.currentTime + 0.3) {
+        var i = self.step % 32, m = MEL[i];
+        if (m) self.tone(mtof(m), self.nextT, 0.24, 'triangle', 0.55, self.mg);
+        if (i % 4 === 0) self.tone(mtof(BAJO[(i / 4) | 0]), self.nextT, 0.5, 'sine', 0.7, self.mg);
+        if (i % 2 === 1) self.tone(1800, self.nextT, 0.03, 'square', 0.04, self.mg);
+        self.nextT += 0.19; self.step++;
+      }
+    }, 80);
+    this.setState({ sonando: true });
+  }
+  stopMusic() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+    if (this.mg && this.ctx) { try { this.mg.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.08); } catch (e) {} }
+    this.mg = null;
+  }
+  wake() {
+    if (this.woke) return;
+    this.woke = true;
+    if (this.state.musica) this.startMusic();
+  }
+  act(kind, fn) {
+    var self = this;
+    return function () { self.wake(); self.sfx(kind); if (fn) fn(); };
+  }
+  go(screen, extra) { this.setState(Object.assign({ screen: screen }, extra || {})); }
+
+  renderVals() {
+    var self = this;
+    var ancho = this.props.ancho ?? 390, alto = this.props.alto ?? 844;
+    var screen = this.state.screen || this.props.start || 'inicio';
+    var F = {
+      toby: '/_blob/143b32de0f848cc57378a674b6bcba00', luna: '/_blob/7b9123c9b0520bd3775b1f3d7177fc53', copo: '/_blob/da1328c1ec6083af353807ed44cc7c21',
+      max: '/_blob/1f10a932541874c1a21638576abbd176', nube: '/_blob/1eb4e076d4b697264c96fad2ea8cad2e', chispa: '/_blob/693e7a1534bb09f5d1aa67ea9eaa2191',
+      bruno: '/_blob/f064cdeb6fde729686c532533556b622', pancho: '/_blob/1f2635686611f51d743edbb50aca52e8', lola: '/_blob/3fe5250d5fec5d43932008d743590e50',
+      rocky: '/_blob/95bf74df03c9e7f0b9bd35ddd81f9e20', sombra: '/_blob/87e095b5f37e751231530dbdaa85ca7e', humo: '/_blob/4100af651cae72232455fe951ed3182a',
+      pecas: '/_blob/6abaf280d6242a5704c01e8b78edd5ad', tigre: '/_blob/b1df5276b4b5acaf064e23370a06c3ca', algodon: '/_blob/20825091d89921a0e34775d1947761e8',
+      lupe: '/_blob/0a435a82c433fbc0b2ed886bfba29733', winny: '/_blob/bc4c2a72b414f9a40e3aa7889fe25a03', pinina: '/_blob/414b15a1b8e03d0e6bb18801563223ef',
+      bombon: '/_blob/eeda7ceee455b80736c632fd61ff61cb', cascabel: '/_blob/39d571489b652d084b4f70cd8fc385b2', mochi: '/_blob/7dc6f49d137ba9b348affe12f8ef0630', nieve: '/_blob/6a8c5b55269d82d37af2120ec7f296b6'
+    };
+    var BG = ['#FFE9A6', '#E4DDFB', '#D7F0DC', '#FBD9E3', '#D6ECFB', '#FFDCC2'];
+    var BAR = { '#FFE9A6': '#F2A93B', '#E4DDFB': '#7A5AF8', '#D7F0DC': '#3FA66B', '#FBD9E3': '#E8508A', '#D6ECFB': '#3B82C4', '#FFDCC2': '#E07B39' };
+    var TAGBG = ['#FBD9E3', '#D6ECFB', '#D7F0DC'];
+    /* id, nombre, especie, etiqueta, tamaño, resumen, tags, [cariño, energía, juego, calma], hoy, adulto, niños, sociable, guardián, descripción */
+    var D = [
+      ['toby','Toby','perro','Perro','grande','Pastor alemán · 3 meses · Macho',['Juguetón','Guardián','Vacunado'],[95,92,90,38],'3 meses · 8 kg','Grande · ~35 kg',1,1,1,'Aprende rápido y no suelta sus juguetes.'],
+      ['lupe','Lupe','perro','Perra','pequeno','Mestiza consentida · Adulta',['Dormilona','Cariñosa','Tranquila'],[94,45,55,95],'Adulta · ~7 kg','Ya es adulta',1,1,0,'Le gusta muchísimo dormir. Su lugar favorito: cualquier cobija.'],
+      ['winny','Winny','perro','Perra','pequeno','Pinscher mestiza · Adulta',['Atenta','Leal','Guardiana'],[90,60,58,72],'Adulta · ~5 kg','Ya es adulta',1,0,1,'Siempre pendiente de quién llega a la casa.'],
+      ['pinina','Pinina','perro','Perra','mediano','Mestiza terrier · Adulta',['Alegre','Sonriente','Sociable'],[96,70,80,75],'Adulta · ~10 kg','Ya es adulta',1,1,0,'Siempre sonriendo y lista para una caricia.'],
+      ['luna','Luna','gato','Gata','pequeno','Gata elegante · 1 año · Hembra',['Elegante','Tranquila','Esterilizada'],[72,55,60,90],'1 año · 3,5 kg','Pequeña · ~4,5 kg',1,0,0,'Siempre bien vestida para la ocasión. Ama las siestas al sol.'],
+      ['copo','Copo','perro','Perra','mediano','Mestiza aventurera · 2 años',['Aventurera','Sociable','Vacunada'],[90,74,82,70],'2 años · 14 kg','Ya es adulta · ~16 kg',1,1,0,'Le encantan las flores y los paseos largos.'],
+      ['max','Max','perro','Perro','grande','Labrador · 4 años · Macho',['Sonriente','Familiar','Vacunado'],[98,80,88,72],'4 años · 30 kg','Ya es adulto · ~32 kg',1,1,0,'Sonríe todo el día y adora a los niños.'],
+      ['nube','Nube','perro','Perra','grande','Husky mestiza · 2 años',['Energética','Cantante','Vacunada'],[85,97,92,35],'2 años · 20 kg','Ya es adulta · ~22 kg',1,1,0,'Aúlla cuando está feliz. Necesita correr mucho.'],
+      ['chispa','Chispa','perro','Perra','pequeno','Chihuahua · 5 años',['Valiente','Faldera','Esterilizada'],[88,70,65,60],'5 años · 2,5 kg','Ya es adulta · ~3 kg',0,0,1,'Pequeña pero valiente: te avisa de todo.'],
+      ['bruno','Bruno','perro','Perro','mediano','Beagle · 3 años · Macho',['Olfateador','Juguetón','Vacunado'],[90,88,93,50],'3 años · 12 kg','Ya es adulto · ~13 kg',1,1,0,'Su nariz lo guía a todas partes.'],
+      ['pancho','Pancho','perro','Perro','pequeno','Pug cachorro · 6 meses',['Dormilón','Payaso','Vacunado'],[96,60,78,80],'6 meses · 5 kg','Pequeño · ~8 kg',1,1,0,'Ronca un poquito y hace reír a todos.'],
+      ['lola','Lola','perro','Perra','pequeno','Shih tzu · 3 años',['Mimosa','Tranquila','Esterilizada'],[94,55,70,85],'3 años · 6 kg','Ya es adulta · ~6 kg',1,1,0,'Ideal para apartamento. Le encanta que la cepillen.'],
+      ['rocky','Rocky','perro','Perro','mediano','Mestizo peludo · 1 año',['Curioso','Noble','Vacunado'],[92,78,85,65],'1 año · 15 kg','Mediano · ~18 kg',1,1,1,'Peludo, noble y muy curioso.'],
+      ['sombra','Sombra','gato','Gato','pequeno','Gato negro · 2 años · Macho',['Misterioso','Cazador','Esterilizado'],[70,75,80,70],'2 años · 4 kg','Ya es adulto · ~4,5 kg',0,0,0,'Aparece cuando menos lo esperas.'],
+      ['humo','Humo','gato','Gato','pequeno','Gato gris · 3 años · Macho',['Sereno','Casero','Esterilizado'],[80,45,50,95],'3 años · 5 kg','Ya es adulto · ~5 kg',1,1,0,'Tranquilo, perfecto para quien llega en la noche.'],
+      ['pecas','Pecas','gato','Gata','pequeno','Gatita tricolor · 3 meses',['Traviesa','Juguetona','Vacunada'],[85,95,98,30],'3 meses · 1 kg','Pequeña · ~4 kg',1,1,0,'Persigue todo lo que se mueve.'],
+      ['tigre','Tigre','gato','Gato','pequeno','Gato atigrado · 1 año · Macho',['Explorador','Sociable','Vacunado'],[82,80,85,60],'1 año · 3,8 kg','Pequeño · ~5 kg',1,1,0,'Explora cada rincón y luego pide caricias.'],
+      ['algodon','Algodón','gato','Gata','pequeno','Gatita blanca · 4 meses',['Dulce','Tímida','Vacunada'],[90,60,70,80],'4 meses · 1,5 kg','Pequeña · ~4 kg',1,0,0,'Al principio es tímida; luego no se despega.'],
+      ['bombon','Bombón','perro','Perro','pequeno','Maltés mestizo · 2 años · Macho',['Payaso','Mimoso','Vacunado'],[97,72,85,68],'2 años · 4 kg','Ya es adulto · ~4 kg',1,1,0,'Saca la lengua para todas las fotos.'],
+      ['cascabel','Cascabel','gato','Gata','pequeno','Gatita siamesa · 2 meses',['Curiosa','Juguetona','Vacunada'],[88,85,92,45],'2 meses · 0,8 kg','Pequeña · ~4 kg',1,1,0,'La oyes antes de verla: no se quita su cascabel.'],
+      ['mochi','Mochi','gato','Gato','pequeno','Gatito ragdoll · 3 meses · Macho',['Peluche','Dulce','Vacunado'],[95,55,70,82],'3 meses · 1,2 kg','Mediano · ~6 kg',1,1,0,'Se deja cargar como un peluche.'],
+      ['nieve','Nieve','gato','Gata','pequeno','Gatita blanca peluda · 2 meses',['Esponjosa','Tímida','Vacunada'],[86,62,72,78],'2 meses · 0,9 kg','Pequeña · ~4 kg',1,0,0,'Una bolita de algodón con bigotes.']
+    ];
+    var COL = ['#E8508A', '#F2A93B', '#7A5AF8', '#3FA66B'];
+    var LAB = ['Cariño', 'Energía', 'Juego', 'Calma'];
+    var base = D.map(function (r, i) {
+      var bg = BG[i % BG.length];
+      return { id: r[0], nombre: r[1], especie: r[2], especieTxt: r[3], tam: r[4], resumen: r[5], foto: F[r[0]], bg: bg, barra: BAR[bg],
+        tags: r[6].map(function (t, k) { return { txt: t, bg: TAGBG[k] }; }),
+        st: r[7], stats: r[7].map(function (v, k) { return { label: LAB[k], pct: v, color: COL[k] }; }),
+        hoy: r[8], adulto: r[9], ninos: !!r[10], sociable: !!r[11], guardian: !!r[12], desc: r[13] };
+    });
+    var byId = {}; base.forEach(function (a) { byId[a.id] = a; });
+    var filtro = this.state.filtro;
+    var lista = base.filter(function (a) { return filtro === 'todos' || a.especie === filtro; });
+    var selId = byId[this.state.selId] && lista.indexOf(byId[this.state.selId]) >= 0 ? this.state.selId : lista[0].id;
+    var idx = lista.indexOf(byId[selId]);
+    var sonidoDe = function (a) { return a.especie === 'gato' ? 'miau' : 'guau'; };
+
+    /* ---------- encuesta ---------- */
+    var resp = this.state.resp;
+    var puntaje = function (a) {
+      var s = 0, r = resp, tamN = { pequeno: 0, mediano: 1, grande: 2 }[a.tam];
+      if (r.especie) s += r.especie === 'igual' ? 2 : (r.especie === a.especie ? 5 : -8);
+      if (r.vivienda === 'apto') s += a.tam === 'pequeno' ? 3 : (a.tam === 'mediano' ? 1 : -2);
+      if (r.vivienda === 'casa') s += a.tam === 'grande' ? 3 : 2;
+      if (r.vivienda === 'finca') s += a.especie === 'perro' && a.tam !== 'pequeno' ? 3 : 1;
+      if (r.tiempo === 'mucho') s += a.st[1] >= 80 ? 3 : 1;
+      if (r.tiempo === 'medio') s += 2;
+      if (r.tiempo === 'poco') s += a.especie === 'gato' ? 3 : (a.st[3] >= 70 ? 1 : -2);
+      if (r.tamano) { var want = { pequeno: 0, mediano: 1, grande: 2 }[r.tamano]; var dif = Math.abs(want - tamN); s += dif === 0 ? 3 : (dif === 1 ? 1 : -1); }
+      if (r.hogar === 'ninos') s += a.ninos ? 3 : -3;
+      if (r.hogar === 'mascotas') s += a.sociable ? 3 : -2;
+      if (r.hogar === 'adultos') s += 2;
+      if (r.busca === 'juego') s += a.st[2] >= 80 ? 3 : 0;
+      if (r.busca === 'calma') s += a.st[3] >= 75 ? 3 : -1;
+      if (r.busca === 'guardian') s += a.guardian ? 4 : 0;
+      return s;
+    };
+    var ranking = base.map(function (a) {
+      return { a: a, pct: Math.max(40, Math.min(99, Math.round(58 + puntaje(a) * 2.2))) };
+    }).sort(function (x, y) { return y.pct - x.pct; }).slice(0, 3).map(function (r, k) {
+      return { nombre: r.a.nombre, foto: r.a.foto, bg: r.a.bg, barra: r.a.barra, resumen: r.a.resumen, pct: r.pct, top: k === 0, d: 'd' + (k + 1),
+        ver: self.act(sonidoDe(r.a), function () { self.go('elegir', { selId: r.a.id, filtro: 'todos' }); }) };
+    });
+
+    var ICON = {
+      perro: 'M5 9c-2 0-3-3-2-5 2 0 4 1 5 3M19 9c2 0 3-3 2-5-2 0-4 1-5 3M7 8c1-2 3-3 5-3s4 1 5 3c1 3 1 7-1 9-1 1-2 2-4 2s-3-1-4-2c-2-2-2-6-1-9zM10 12h.01M14 12h.01M11 15.5c.6.5 1.4.5 2 0',
+      gato: 'M5 4l3 4M19 4l-3 4M5 4c-1 4-1 8 1 11 1.5 2.5 3.5 4 6 4s4.5-1.5 6-4c2-3 2-7 1-11M10 12h.01M14 12h.01M12 14.5l-1 1h2zM3 14l4-.5M3 17l4-1.5M21 14l-4-.5M21 17l-4-1.5',
+      igual: 'M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z',
+      casa: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',
+      apto: 'M5 21V4h10v17M15 9h4v12M8 8h2M8 12h2M8 16h2M3 21h18',
+      finca: 'M3 20h18M5 20v-7l5-4 5 4v7M14 9l3-5 4 6M17 20v-6',
+      mucho: 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8z',
+      medio: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z',
+      poco: 'M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z',
+      pequeno: 'M12 14a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM4 21h16',
+      mediano: 'M12 10a5 5 0 1 0 0 10a5 5 0 1 0 0-10zM4 21h16',
+      grande: 'M12 5a7.5 7.5 0 1 0 0 15a7.5 7.5 0 1 0 0-15zM4 21h16',
+      ninos: 'M9 7a2.5 2.5 0 1 0 0-5a2.5 2.5 0 1 0 0 5zM17 10a2 2 0 1 0 0-4a2 2 0 1 0 0 4zM5 21v-6l-1-4h10l-1 4v6M15 21v-4l-1-3h6l-1 3v4',
+      mascotas: 'M12 15c-2.5 0-4.5 1.6-4.5 3.4 0 1.3 1 2.1 2.3 2.1.9 0 1.5-.4 2.2-.4s1.3.4 2.2.4c1.3 0 2.3-.8 2.3-2.1 0-1.8-2-3.4-4.5-3.4zM6 12a2 2 0 1 0 0-4a2 2 0 1 0 0 4zM10 8a2 2 0 1 0 0-4a2 2 0 1 0 0 4zM14 8a2 2 0 1 0 0-4a2 2 0 1 0 0 4zM18 12a2 2 0 1 0 0-4a2 2 0 1 0 0 4z',
+      adultos: 'M8 8a3 3 0 1 0 0-6a3 3 0 1 0 0 6zM16 8a3 3 0 1 0 0-6a3 3 0 1 0 0 6zM3 21v-5a5 5 0 0 1 10 0M11 21v-5a5 5 0 0 1 10 0',
+      juego: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3.5 9c4 1 13 1 17 0M3.5 15c4-1 13-1 17 0',
+      calma: 'M4 15c2-3 4-3 6 0s4 3 6 0 4-3 4-3M4 9c2-3 4-3 6 0s4 3 6 0 4-3 4-3',
+      guardian: 'M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z'
+    };
+    var P = [
+      { k: 'especie', texto: '¿Perrito o gatito?', burbuja: '¡Hola! Te ayudo a encontrar tu match.', foto: F.toby, bg: '#FFE9A6',
+        ops: [['perro', 'Perrito', 'Guau, paseos y pelota', '#FFE9A6'], ['gato', 'Gatito', 'Miau, ronroneos y siestas', '#E4DDFB'], ['igual', '¡Me da igual!', 'Quiero conocerlos a todos', '#FBD9E3']] },
+      { k: 'vivienda', texto: '¿Dónde vivirá tu nuevo amigo?', burbuja: 'Cada uno necesita su espacio.', foto: F.copo, bg: '#D7F0DC',
+        ops: [['casa', 'Casa con patio', 'Espacio para correr', '#FFE9A6'], ['apto', 'Apartamento', 'Cómodo y acogedor', '#E4DDFB'], ['finca', 'Finca o campo', 'Mucho aire libre', '#D7F0DC']] },
+      { k: 'tiempo', texto: '¿Cuánto tiempo pasas en casa?', burbuja: 'Así sé cuánta compañía necesitas.', foto: F.luna, bg: '#E4DDFB',
+        ops: [['mucho', 'Casi todo el día', 'Trabajo o estudio en casa', '#FBD9E3'], ['medio', 'Medio día', 'Salgo unas horas', '#D6ECFB'], ['poco', 'Poco tiempo', 'Llego en la noche', '#E4DDFB']] },
+      { k: 'tamano', texto: '¿De qué tamaño lo imaginas?', burbuja: 'Piensa en cómo será de adulto.', foto: F.pancho, bg: '#FBD9E3',
+        ops: [['pequeno', 'Pequeño', 'Cabe en tus brazos', '#D7F0DC'], ['mediano', 'Mediano', 'Ni muy muy, ni tan tan', '#FFE9A6'], ['grande', 'Grande', 'Más amor por kilo', '#D6ECFB']] },
+      { k: 'hogar', texto: '¿Quién más vive contigo?', burbuja: 'Algunos se llevan mejor con niños.', foto: F.max, bg: '#D6ECFB',
+        ops: [['ninos', 'Niños', 'Hay pequeños en casa', '#FFE9A6'], ['mascotas', 'Otras mascotas', 'Ya tengo un peludo', '#D7F0DC'], ['adultos', 'Solo adultos', 'Una casa tranquila', '#E4DDFB']] },
+      { k: 'busca', texto: '¿Qué buscas en un compañero?', burbuja: '¡Última pregunta, ya casi!', foto: F.pecas, bg: '#FFDCC2',
+        ops: [['juego', 'Compañero de juegos', 'Paseos y diversión', '#FFE9A6'], ['calma', 'Alguien tranquilo', 'Siestas y mimos', '#D7F0DC'], ['guardian', 'Un guardián', 'Que cuide la casa', '#D6ECFB']] }
+    ];
+    var q = Math.min(this.state.q, P.length - 1);
+    var preguntas = P.map(function (p, i) {
+      return { activa: i === q, texto: p.texto, burbuja: p.burbuja, foto: p.foto, bg: p.bg,
+        opciones: p.ops.map(function (o, j) {
+          var snd = o[0] === 'perro' ? 'guau' : (o[0] === 'gato' ? 'miau' : (i < P.length - 1 ? 'next' : 'pick'));
+          return { titulo: o[1], sub: o[2], bg: o[3], icono: ICON[o[0]], d: 'd' + (j + 1),
+            pick: self.act(snd, function () {
+              var r = Object.assign({}, self.state.resp); r[p.k] = o[0];
+              if (i < P.length - 1) self.setState({ resp: r, q: i + 1, screen: 'quiz' });
+              else self.setState({ resp: r, screen: 'match' });
+            }) };
+        }) };
+    });
+    var puntos = P.map(function (p, i) { return { w: i === q ? 28 : 10, bg: i < q ? '#3FA66B' : (i === q ? '#E8508A' : '#FFFFFF') }; });
+
+    /* ---------- selección ---------- */
+    var animales = base.map(function (a) { return Object.assign({}, a, { activo: a.id === selId }); });
+    var miniaturas = lista.map(function (a) {
+      var on = a.id === selId;
+      return { nombre: a.nombre, foto: a.foto, bg: a.bg, borde: on ? '#E8508A' : '#2B2340', op: on ? 1 : 0.8, cls: on ? 'on ring' : '',
+        pick: self.act(sonidoDe(a), function () { self.setState({ selId: a.id }); }) };
+    });
+    var nPerros = base.filter(function (a) { return a.especie === 'perro'; }).length;
+    var chips = [['todos', 'Todos (' + base.length + ')'], ['perro', 'Perritos (' + nPerros + ')'], ['gato', 'Gatitos (' + (base.length - nPerros) + ')']].map(function (c) {
+      var on = c[0] === filtro;
+      return { txt: c[1], on: on, bg: on ? '#2B2340' : '#FFFFFF', color: on ? '#FFFFFF' : '#2B2340', sombra: on ? '2px 2px 0 #E8508A' : '2px 2px 0 #2B2340',
+        pick: self.act('pop', function () { self.setState({ filtro: c[0] }); }) };
+    });
+
+    var COLORS = ['#E8508A', '#F2A93B', '#7A5AF8', '#3FA66B', '#FFE9A6', '#9B83FA', '#FBD9E3'];
+    var confeti = [];
+    for (var c = 0; c < 26; c++) {
+      confeti.push({ x: (c * 37) % 100, w: 8 + (c % 3) * 3, h: 12 + (c % 4) * 3, color: COLORS[c % COLORS.length],
+        r: c % 3 === 0 ? '999px' : '3px', delay: ((c * 0.29) % 3).toFixed(2), dur: (2.6 + (c % 5) * 0.35).toFixed(2) });
+    }
+    var musicaOn = this.state.musica, sonando = !!this.timer;
+
+    return {
+      ancho: ancho, alto: alto, anchoW: ancho + 20,
+      movClass: (this.props.movimiento ?? true) ? 'mov' : '',
+      deskClass: ancho >= 900 ? 'desk' : '',
+      isInicio: screen === 'inicio', isQuiz: screen === 'quiz', isMatch: screen === 'match', isElegir: screen === 'elegir', isListo: screen === 'listo',
+      fotos: F, total: base.length,
+      preguntas: preguntas, puntos: puntos, pasoTxt: (q + 1) + ' de ' + P.length,
+      ranking: ranking, animales: animales, miniaturas: miniaturas, chips: chips, confeti: confeti,
+      contador: (idx + 1) + '/' + lista.length,
+      pasos: [
+        { n: '1', t: 'Solicitud enviada', s: 'Hoy', bg: '#D7F0DC' },
+        { n: '2', t: 'Visita y charla con el refugio', s: 'Te contactan para agendarla', bg: '#FFE9A6' },
+        { n: '3', t: '¡A casa!', s: 'Con su carné de vacunas', bg: '#FBD9E3' }
+      ],
+      musicaOn: musicaOn ? 'true' : 'false', musicaBg: musicaOn ? '#FFE9A6' : '#FFFFFF',
+      musicaSonando: sonando, musicaMuda: !sonando, musicaTxt: musicaOn ? 'Música' : 'Sin música',
+      efectosOn: this.state.efectos ? 'true' : 'false', efectosBg: this.state.efectos ? '#D7F0DC' : '#FFFFFF',
+      efectosIcono: this.state.efectos ? 'M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14' : 'M16 9l6 6M22 9l-6 6',
+      toggleMusica: function () {
+        if (!self.woke) { self.woke = true; self.setState({ musica: true }); self.startMusic(); return; }
+        if (self.state.musica) { self.stopMusic(); self.setState({ musica: false, sonando: false }); }
+        else { self.setState({ musica: true }); self.startMusic(); }
+      },
+      toggleEfectos: function () { self.wake(); var on = !self.state.efectos; self.setState({ efectos: on }, function () { if (on) self.sfx('pop'); }); },
+      irQuiz: this.act('next', function () { self.go('quiz', { q: 0, resp: {} }); }),
+      irElegir: this.act('next', function () { self.go('elegir', { filtro: 'todos' }); }),
+      atrasQuiz: this.act('back', function () { if (self.state.q > 0) self.setState({ q: self.state.q - 1, screen: 'quiz' }); else self.go('inicio'); }),
+      atrasElegir: this.act('back', function () { self.go(Object.keys(self.state.resp).length ? 'match' : 'inicio'); }),
+      prev: this.act('swipe', function () { self.setState({ selId: lista[(idx + lista.length - 1) % lista.length].id }); }),
+      next: this.act('swipe', function () { self.setState({ selId: lista[(idx + 1) % lista.length].id }); }),
+      elegir: this.act('fanfarria', function () { self.go('listo', { selId: selId }); }),
+      reiniciar: this.act('back', function () { self.go('inicio', { q: 0, resp: {}, selId: 'toby', filtro: 'todos' }); })
+    };
+  }
+}
+</script>
+</body>
+</html>
