@@ -79,7 +79,7 @@ def test_secciones_en_orden_como_el_prototipo():
     assert html.count('<li class="rol rol-') == 8 and "¿Eres del equipo?" in html
     assert "Diseñado y desarrollado por" in html and "Brayan David Amado Ramírez" in html
     assert "© 2026 Patitas en Casa · Cúcuta, Colombia" in html and "por Brayan Amado" in html
-    assert "Ingeniería de Sistemas · Universidad de Pamplona" in html
+    assert ">Plataforma</p>" in html and "Para refugios y su equipo" in html  # cambio 2: producto
 
 
 def test_ilustraciones_del_repo_optimizadas_y_con_texto_alternativo(c):

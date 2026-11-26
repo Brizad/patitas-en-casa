@@ -25,6 +25,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
   - «Consultar» no muestra mapa.
 
 ### Cambiado
+- Presentación de producto (#464): sin menciones académicas en lo público. El pie tiene la columna «Plataforma» (Para refugios y su equipo, Instalar la app, Documentación de la API). La documentación pública de la API (/docs, /openapi.json) trae una descripción del producto y no cita requisitos ni issues. La app ciudadana ofrece «Instalar la app» en /app/#instalar.
 - Página de inicio (#459): sin enlace ni mención del repositorio de GitHub. La columna «Proyecto» del pie queda con la universidad, la materia y la documentación de la API. Una prueba vigila que ninguna página pública vuelva a mencionarlo.
 - Música del adoptante (#457): arranca sola al entrar a su vista (con fundido de 1,5 s si ya hubo un gesto, como tocar «Entrar»; si no, con el primer toque o tecla en cualquier parte), salvo que la persona la haya apagado. Se detiene al salir.
 - Página de inicio v3 (#448): igual al prototipo nuevo. Paleta del adoptante (sin naranja), nav amarilla, hero lila con burbujas en las «o» (cifras reales y la foto de Lupe) y cápsula con ilustración, bloques con borde y sombra dura, «Esperan un hogar» centrado, un solo bloque «Ayúdalos» con «Cómo funciona», 8 roles en tarjetas de colores y pie nuevo con la firma del autor. Las 4 ilustraciones van optimizadas en `app/inicio/img/`.

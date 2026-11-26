@@ -41,6 +41,7 @@ from app.api.armado import (
     cargar_demo_al_arrancar,
 )
 from app.api.comun import Contexto, ip_del_cliente
+from app.api.documentacion import documentar_como_producto
 from app.api.middlewares import ciclo_de_vida, instalar_despertador, instalar_middlewares
 from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
@@ -269,6 +270,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     # en celulares con datos limitados (RNF-07).
     app.add_middleware(GZipMiddleware, minimum_size=1000)
     instrumentar(app)  # FPI-29: no hace nada salvo con PATITAS_OBSERVABILIDAD=1
+    documentar_como_producto(app)  # /docs y /openapi.json sin citas internas (#464)
     app.state.procesador_avisos = procesador  # las pruebas lo ejecutan a mano
     app.state.bitacora = repositorio_bitacora
     app.state.usuarios = repositorio_usuarios  # las pruebas agregan cuentas
