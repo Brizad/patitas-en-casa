@@ -451,3 +451,16 @@ Plan del autor: tarea 1 (página de inicio igual al prototipo nuevo `inicio-pagi
   - **Sin activación:** como el token vive solo en memoria, en la práctica siempre se entra con un clic en «Entrar». El caso «sin activación» (primer toque o tecla) está cubierto por vitest.
 - **Tarea 6 (PR #460):** publicada. No queda ninguna mención del repositorio en `/`, `/app/`, el manifest, `/panel/`, `/docs` ni `/openapi.json` (revisado en producción). `tests/test_sin_repositorio.py` lo vigila.
 - **Cómo se verificaron las vistas con sesión:** la contraseña del adoptante de demostración en producción no la conozco y no se crearon cuentas reales. Por eso la verificación usó la interfaz y el catálogo publicados, con la sesión servida por el servidor local en memoria.
+
+## 13. Menú fijo y presentación de producto (25-nov, noche)
+
+Capturas de producción en `docs/revision-visual/producto/` (`c1-` y `c2-`, a 1440 y 390 px).
+
+- **Cambio 1 (PR #463):** publicado.
+  - **Verificado en producción:** la barra se queda arriba al bajar y pasa de 76 a 64 px con sombra; «Cómo funciona» llega visible debajo de ella; en el celular, el botón de tres rayas abre y cierra el menú.
+  - **Pruebas:** `e2e/menu.spec.mjs` lo comprueba a 1440 y 390 px.
+- **Cambio 2 (PR #465):** publicado.
+  - **Verificado en producción:** no queda ninguna mención académica en `/`, `/app/`, el manifest, `/panel/`, `/docs` ni `/openapi.json`, y la documentación de la API no cita RF, RN ni issues (se limpian solo en el documento publicado).
+  - **Pie:** columna «Plataforma» con «Para refugios y su equipo», «Instalar la app» y «Documentación de la API».
+  - **«Instalar la app»** abre `/app/#instalar`: en Chrome, Edge o Android ofrece el botón del navegador; en los demás explica cómo agregarla.
+- **Pendiente de Brayan:** el panel del **administrador** conserva la pantalla «Modo piloto» (pruebas con usuarios y cuestionario SUS). No la ve el público. Si se quiere un nombre más de producto, la propuesta es «Pruebas con usuarios»; no se cambió para no tocar esa función.
