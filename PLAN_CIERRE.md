@@ -464,3 +464,8 @@ Capturas de producción en `docs/revision-visual/producto/` (`c1-` y `c2-`, a 14
   - **Pie:** columna «Plataforma» con «Para refugios y su equipo», «Instalar la app» y «Documentación de la API».
   - **«Instalar la app»** abre `/app/#instalar`: en Chrome, Edge o Android ofrece el botón del navegador; en los demás explica cómo agregarla.
 - **Pendiente de Brayan:** el panel del **administrador** conserva la pantalla «Modo piloto» (pruebas con usuarios y cuestionario SUS). No la ve el público. Si se quiere un nombre más de producto, la propuesta es «Pruebas con usuarios»; no se cambió para no tocar esa función.
+- **Animaciones Lottie (PR #468):** publicadas.
+  - **Uso:** `perro-caminando` (portada y bienvenida del adoptante; el gato sigue en SVG porque no hay `gato-caminando`), `perrito-saltando` (bienvenida), `gatos-jugando` («¡Lo elegiste!») y `huellas-cargando` (carga del panel y «Consultar» de la app). Ninguna se descartó.
+  - **Peso:** de 4 a 48 KB comprimidas en producción. La CSP no cambió.
+  - **Capturas:** `docs/revision-visual/producto/lottie-*`.
+  - **Pendiente de Brayan:** completar el autor y el enlace de cada animación en `docs/CREDITOS-ANIMACIONES.md` (los JSON no los traen).
