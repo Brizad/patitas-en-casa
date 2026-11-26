@@ -1,0 +1,22 @@
+/* Animaciones Lottie (#467): el lienzo va encima; el respaldo (SVG o círculo) se ve mientras
+   carga, sin animación o con movimiento reducido (incluido el botón «Movimiento» del adoptante). */
+.lottie { position: relative; display: inline-block; flex: none; }
+.lottie-lienzo { position: absolute; inset: 0; pointer-events: none; }
+.lottie-lienzo > svg { display: block; }
+.lottie-activa > .lottie-respaldo { display: none; }
+.adop--quieto .lottie-activa > .lottie-respaldo { display: contents; }
+.adop--quieto .lottie-activa:has(> .lottie-respaldo) > .lottie-lienzo { display: none; }
+.lottie-respaldo { display: contents; }
+
+/* Perro salchicha que camina (Animalitos). */
+.paseante--perro.lottie { width: 96px; height: 64px; }
+.paseante--perro .paseante-svg { display: block; width: 96px; height: 64px; }
+.paseante--perro .lottie-lienzo { inset: auto; left: -26px; bottom: -32px; width: 150px; height: 150px; }
+
+/* Huellitas de carga. */
+.cargando-huellas { width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center; }
+.cargando-huellas .lottie-lienzo { inset: -26px; }  /* las huellas ocupan poco de su lienzo: se agranda */
+
+/* Cachorro que salta junto al collage y gatitos junto a la foto de «¡Lo elegiste!». */
+.ini-perrito { position: absolute; z-index: 2; right: -4%; bottom: -4%; width: 30%; aspect-ratio: 1; }
+.listo-gatos { position: absolute; z-index: 2; left: -58px; bottom: -18px; width: 110px; height: 110px; }

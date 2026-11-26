@@ -192,6 +192,7 @@
 
   async function consultar(codigo) {
     boton.disabled = true;
+    $('consultando').hidden = false;
     const yaRespondio = avisarSiTarda(() => avisar(DESPERTANDO));
     try {
       const respuesta = await fetch('/reportes/' + encodeURIComponent(codigo) + '/seguimiento', {
@@ -208,6 +209,7 @@
       avisar('Sin conexión. Intenta cuando vuelva la señal.', true);
     } finally {
       yaRespondio();
+      $('consultando').hidden = true;
       boton.disabled = false;
     }
   }

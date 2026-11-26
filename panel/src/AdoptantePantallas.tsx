@@ -4,6 +4,7 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import type { AnimalPublicado, MiSolicitud, Recomendado } from "./apiAdopcion";
 import Animalitos from "./Animalitos";
 import Cargando from "./Cargando";
+import Lottie from "./Lottie";
 import { PREGUNTAS, Respuestas, opcionElegida } from "./encuesta";
 import {
   ESTADO_SOLICITUD, Filtro, abierta, convivencia, edadTexto, especieTexto, estadisticas, fondoDe, hoyYAdulto,
@@ -85,6 +86,8 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
         {collage.map((a, i) => (
           <FotoAnimal key={i} a={a} alt={i < 3 ? `Foto de ${a.nombre}` : ""}
             className={`collage-${i + 1} aparece d${i + 1}`} />))}
+        {/* Lottie (#467): cachorro blanco que salta junto al collage. */}
+        <Lottie nombre="perrito-saltando" className="ini-perrito" quieto="cuadro" cuadro={0.25} />
         {!cargando && (
           <span className="collage-globo flota">
             <Corazon tam={14} className="late" />
@@ -381,6 +384,8 @@ export function Listo({ animal, solicitud, recien, alDescargar, alInicio, alSoli
         <span className="listo-anillo anillo" style={{ backgroundColor: fondoDe(animal.animal_id) }} />
         <span className="listo-burbuja rebota"><FotoAnimal a={animal} alt={`Foto de ${animal.nombre}`} /></span>
         {festeja && <Corazon tam={44} className="listo-corazon late" />}
+        {/* Lottie (#467): dos gatitos jugando junto a la foto, con el confeti. */}
+        {festeja && <Lottie nombre="gatos-jugando" className="listo-gatos" quieto="cuadro" cuadro={0.5} />}
       </div>
       <h1 className="h listo-titulo aparece d2" tabIndex={-1} data-titulo>
         {festeja ? `¡${animal.nombre} y tú, gran equipo!` : `Tu solicitud por ${animal.nombre}`}
