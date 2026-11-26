@@ -26,6 +26,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
   - «Consultar» no muestra mapa.
 
 ### Cambiado
+- Documentación de la API (#470): ya no se enlaza en la página; la columna «Plataforma» del pie trae «Cómo funciona». /docs, /redoc y /openapi.json quedan cerradas salvo PATITAS_DOCS_PUBLICAS=true (en producción, por defecto, cerradas).
 - Presentación de producto (#464): sin menciones académicas en lo público. El pie tiene la columna «Plataforma» (Para refugios y su equipo, Instalar la app, Documentación de la API). La documentación pública de la API (/docs, /openapi.json) trae una descripción del producto y no cita requisitos ni issues. La app ciudadana ofrece «Instalar la app» en /app/#instalar.
 - Página de inicio (#459): sin enlace ni mención del repositorio de GitHub. La columna «Proyecto» del pie queda con la universidad, la materia y la documentación de la API. Una prueba vigila que ninguna página pública vuelva a mencionarlo.
 - Música del adoptante (#457): arranca sola al entrar a su vista (con fundido de 1,5 s si ya hubo un gesto, como tocar «Entrar»; si no, con el primer toque o tecla en cualquier parte), salvo que la persona la haya apagado. Se detiene al salir.

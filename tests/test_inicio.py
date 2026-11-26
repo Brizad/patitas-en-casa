@@ -136,7 +136,7 @@ def test_los_enlaces_llevan_a_las_partes_reales(c):
     html = c.get("/").text
     assert html.count('href="/app/#reportar"') >= 4
     assert 'href="/app/#estado"' in html and 'href="/panel/#adoptar"' in html
-    assert 'href="/panel/#personal"' in html and 'href="/docs"' in html
+    assert 'href="/panel/#personal"' in html and 'href="/docs"' not in html  # #470
     assert '<button class="btn btn--blanco" type="button" id="compartir"' in html
 
 
