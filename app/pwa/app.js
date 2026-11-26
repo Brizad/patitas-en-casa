@@ -57,6 +57,9 @@
       const ultimo = leer(ULTIMO_CODIGO);
       if (normalizar($('codigo-grande').textContent) !== ultimo) pintarCodigo(ultimo);
       mostrarPantalla('codigo');
+    } else if (nombre === 'instalar') {
+      mostrarPantalla('reportar');
+      mostrarInstalar();
     } else {
       // Un solo inicio (#452): la portada es la página principal (/); /app/ (y el #inicio de
       // los enlaces viejos) abre directo en «Reportar».
@@ -64,6 +67,43 @@
     }
     window.scrollTo(0, 0);
   }
+
+  // --- Instalar la app (#464) --------------------------------------------------------
+  // Chrome, Edge y Android avisan con «beforeinstallprompt» que la app se puede instalar: se
+  // guarda y se ofrece un botón. Donde no existe (Safari en iPhone), se explica cómo hacerlo.
+  let pedidoInstalar = null;
+  window.addEventListener('beforeinstallprompt', (evento) => {
+    evento.preventDefault();
+    pedidoInstalar = evento;
+    if (location.hash === '#instalar') mostrarInstalar();
+  });
+
+  function mostrarInstalar() {
+    const texto = $('instalar-texto');
+    const boton = $('instalar-boton');
+    $('aviso-instalar').hidden = false;
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      texto.textContent = 'Ya tienes Patitas en Casa instalada en este equipo.';
+      boton.hidden = true;
+    } else if (pedidoInstalar) {
+      texto.textContent = 'Instala Patitas en Casa para reportar más rápido, incluso con mala señal.';
+      boton.hidden = false;
+    } else {
+      texto.textContent = 'Para instalarla, abre el menú del navegador y elige «Instalar app» o «Agregar a pantalla de inicio».';
+      boton.hidden = true;
+    }
+  }
+
+  $('instalar-boton').addEventListener('click', async () => {
+    if (!pedidoInstalar) return;
+    pedidoInstalar.prompt();
+    const { outcome } = await pedidoInstalar.userChoice;
+    pedidoInstalar = null;
+    $('instalar-boton').hidden = true;
+    $('instalar-texto').textContent = outcome === 'accepted'
+      ? '¡Listo! Encontrarás Patitas en Casa con las demás apps.'
+      : 'Puedes instalarla cuando quieras desde el menú del navegador.';
+  });
 
   // --- Código de seguimiento (P-02) --------------------------------------------------
 
