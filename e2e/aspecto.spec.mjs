@@ -44,7 +44,9 @@ const ROLES = [
 
 for (const ancho of ANCHOS) {
   test.describe(`${ancho} px`, () => {
-    test.use({ viewport: { width: ancho, height: 900 }, colorScheme: "light" });
+    // #470: con «reducir movimiento», las animaciones Lottie muestran su dibujo de siempre o un
+    // cuadro quieto; si no, cada captura las toma en un cuadro distinto y la comparación falla al azar.
+    test.use({ viewport: { width: ancho, height: 900 }, colorScheme: "light", reducedMotion: "reduce" });
 
     test("página de inicio", async ({ page }) => {
       await page.goto("/");
