@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import mimetypes
+import os
 from pathlib import Path
 
 from fastapi import (
@@ -168,6 +169,14 @@ def armar_tareas(rescates: ServicioRescates, procesador: ProcesadorAvisos,
     return tareas
 
 
+def _docs_publicas(pedido: bool | None) -> bool:
+    """#470: el parámetro de crear_app gana; si no hay, PATITAS_DOCS_PUBLICAS (apagada). Sin la
+    variable, /docs, /redoc y /openapi.json responden 404; app.openapi() sigue funcionando."""
+    if pedido is not None:
+        return pedido
+    return os.getenv("PATITAS_DOCS_PUBLICAS", "").strip().lower() in {"1", "true", "si", "sí"}
+
+
 def _tareas_activas(pedido: bool | None) -> bool:
     """#388: el parámetro de crear_app gana; si no hay, PATITAS_TAREAS_DE_FONDO (encendidas)."""
     activas = cargar_ajustes_tareas().tareas_de_fondo if pedido is None else pedido
@@ -200,14 +209,17 @@ def crear_app(repositorio: RepositorioReportes | None = None,
               token_video: str | None = None,
               directorio_videos: str | None = None,
               revisar_videos_cada_s: float | None = config.REVISION_VIDEOS_SEGUNDOS,
-              tareas_de_fondo: bool | None = None) -> FastAPI:
+              tareas_de_fondo: bool | None = None,
+              docs_publicas: bool | None = None) -> FastAPI:
     """Sin argumentos usa PostgreSQL, la clave JWT y el SMTP del .env; las pruebas inyectan
     dobles. Si se inyectan los tres repositorios y no el límite de intentos, los intentos
     fallidos se cuentan en memoria. Mientras la app corre se revisan los rescates sin aceptar
     cada «revisar_escalamientos_cada_s» segundos (None: no se revisan) y se envían los avisos
     pendientes cada «procesar_avisos_cada_s» (#63; None: solo a mano, como en las pruebas).
     Con «tareas_de_fondo» falso (o PATITAS_TAREAS_DE_FONDO=0 si no se pasa) no arranca ninguna
-    (#388): los avisos quedan pendientes en la base y salen al encenderlas."""
+    (#388): los avisos quedan pendientes en la base y salen al encenderlas. La documentación
+    interactiva (/docs, /redoc, /openapi.json) solo se publica con «docs_publicas» verdadero o
+    PATITAS_DOCS_PUBLICAS=true (#470): por defecto, también en producción, no está abierta."""
     emisor_tokens = emisor_tokens or emisor_desde_entorno()
     notificador = notificador or crear_notificador(cargar_ajustes_correo())
     # #282: lo inyectado se usa tal cual; lo que falta sale de PostgreSQL (o de memoria).
@@ -263,8 +275,11 @@ def crear_app(repositorio: RepositorioReportes | None = None,
                              escalamientos_s=revisar_escalamientos_cada_s,
                              avisos_s=procesar_avisos_cada_s, videos_s=revisar_videos_cada_s)
                 if _tareas_activas(tareas_de_fondo) else [])
+    docs = _docs_publicas(docs_publicas)
     app = FastAPI(title="Patitas en Casa", version="1.3.0",
-                  lifespan=ciclo_de_vida(de_fondo, motor))
+                  lifespan=ciclo_de_vida(de_fondo, motor),
+                  docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
+                  openapi_url="/openapi.json" if docs else None)
     app.state.tareas_de_fondo = de_fondo
     # Comprime con gzip lo que pase de 1 KB (el JS del panel baja de ~60 KB a ~20 KB): importa
     # en celulares con datos limitados (RNF-07).

@@ -68,8 +68,8 @@ def test_la_pwa_tiene_una_politica_de_contenido_estricta(c):
 
 
 def test_la_api_no_lleva_la_politica_de_la_pwa(c):
-    """La CSP es de la PWA; /docs (Swagger) necesita sus propios scripts."""
-    assert "content-security-policy" not in c.get("/docs").headers
+    """La CSP es de la PWA; la API (y /docs, cuando se publica) no la llevan."""
+    assert "content-security-policy" not in c.get("/adopciones/animales").headers
 
 
 def test_la_pwa_no_carga_recursos_externos():
