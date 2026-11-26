@@ -21,6 +21,7 @@
 <!-- #430: mapa opcional (Leaflet local + teselas de OpenStreetMap). -->
 <script src="vendor/leaflet/leaflet.js" defer></script>
 <script src="mapa.js" defer></script>
+<script src="/diseno/animaciones.js" defer></script>
 </head>
 <!-- #428: PWA ciudadana igual al prototipo docs/prototipo/ciudadano-portada-y-reportar.dc.html.
      Los ids de siempre se conservan: reportar.js, app.js, video.js y piloto.js no cambian su
@@ -262,6 +263,8 @@
       </div>
       <p class="pequeno mute">Son 8 letras o números.</p>
     </form>
+    <!-- Lottie (#467): huellitas mientras se consulta; con movimiento reducido, solo el texto. -->
+    <p id="consultando" class="consultando" role="status" hidden><span class="consultando-huellas" data-lottie="huellas-cargando" aria-hidden="true"></span>Consultando tu reporte…</p>
     <div id="mensaje" class="aviso" role="status" aria-live="polite" hidden></div>
     <section id="resultado" class="resultado" aria-live="polite" aria-label="Resultado" hidden>
       <p class="mono resultado-codigo" id="res-codigo"></p>

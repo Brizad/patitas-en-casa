@@ -1,14 +1,12 @@
-// Animalitos que caminan por la parte de abajo de la bienvenida (#420): un perro, un gato y un
-// cachorro en SVG, movidos solo con CSS (adoptante.css: .paseante, .pata-a, .pata-b, .cola-mueve).
-//
-// PENDIENTE (Lottie): cuando lleguen los archivos JSON de LottieFiles, se cambia solo el
-// contenido de <Animalitos>: el carril (.carril) ya tiene su alto, es decorativo (aria-hidden),
-// no recibe toques y se detiene con «Movimiento» apagado o prefers-reduced-motion. Lo único
-// que hay que respetar es pausar la animación cuando el contenedor .adop lleva .adop--quieto.
+// Animalitos que caminan por la parte de abajo de la bienvenida (#420), movidos con CSS
+// (adoptante.css: .paseante, .pata-a, .pata-b, .cola-mueve). El perro es el salchicha de Lottie
+// (#467) con su SVG de respaldo: sin animación, con «Movimiento» apagado o con
+// prefers-reduced-motion se ve el SVG. No hay gato-caminando.json: el gato sigue en SVG.
+import Lottie from "./Lottie";
 
-function Perro() {
+function PerroSvg() {
   return (
-    <svg className="paseante paseante--perro" width="96" height="64" viewBox="0 0 96 64">
+    <svg className="paseante-svg" width="96" height="64" viewBox="0 0 96 64">
       <path className="cola-mueve" d="M20 26 q-10 -10 -14 -2" stroke="#C98A4B" strokeWidth="5" fill="none" strokeLinecap="round" />
       <rect className="pata-a" x="26" y="36" width="7" height="18" rx="3.5" fill="#B9773D" />
       <rect className="pata-b" x="36" y="36" width="7" height="18" rx="3.5" fill="#C98A4B" />
@@ -62,7 +60,8 @@ function Cachorro() {
 export default function Animalitos() {
   return (
     <div className="carril" aria-hidden="true">
-      <Perro /><Gato /><Cachorro />
+      <Lottie nombre="perro-caminando" className="paseante paseante--perro" respaldo={<PerroSvg />} />
+      <Gato /><Cachorro />
       <span className="carril-suelo" />
     </div>
   );

@@ -235,6 +235,12 @@ main { overflow: hidden; }
 .pata-b { animation: pata .45s ease-in-out -.45s infinite alternate; }
 .cola { animation: cola .35s ease-in-out infinite alternate; }
 .carril-suelo { display: none; }
+/* Lottie (#467): el perro salchicha camina encima de su SVG; sin animación (o con movimiento
+   reducido) se queda el SVG de siempre. */
+.paseante > .paseante-svg { display: block; width: 100%; height: 100%; }
+.lottie-activa > .paseante-svg { display: none; }
+.paseante--perro .lottie-lienzo { position: absolute; left: -26px; bottom: -32px; width: 150px; height: 150px; }
+.lottie-lienzo > svg { display: block; }
 
 /* ---------- pie ---------- */
 .pie { background: var(--oscuro); color: #FFFFFF; }

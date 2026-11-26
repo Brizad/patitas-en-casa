@@ -275,3 +275,10 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
   .sintomas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .comunas { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
+
+/* Lottie (#467): huellitas mientras se consulta un reporte. */
+.consultando { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 0; font-weight: 800; color: var(--p-suave); }
+.consultando[hidden] { display: none; }
+.consultando-huellas { position: relative; width: 64px; height: 64px; flex: none; }
+.consultando-huellas .lottie-lienzo { position: absolute; inset: -26px; }
+.lottie-lienzo > svg { display: block; }
