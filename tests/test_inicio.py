@@ -166,3 +166,18 @@ def test_celular_en_una_columna_y_objetivos_de_44_px():
     for selector in (".nav-enlaces a", ".btn", ".pie-enlaces a"):
         bloque = re.search(re.escape(selector) + r" \{[^}]*\}", css).group(0)
         assert re.search(r"min-height: (44|46)px", bloque), selector
+
+
+def test_menu_fijo_compacto_al_bajar_y_boton_de_menu_en_el_celular():
+    html, css, js = _html(), _css(), _js()
+    assert re.search(r"\.nav \{ position: sticky; top: 0; z-index: 100;", css)
+    assert ".nav.compacta .nav-fila { min-height: 64px; }" in css and "min-height: 76px" in css
+    assert "scroll-margin-top: 84px" in css and "scroll-behavior: smooth" in css
+    suave = "@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }"
+    assert suave in css
+    boton = re.search(r'<button class="nav-menu"[^>]*>', html).group(0)
+    assert 'aria-label="Abrir el menú"' in boton and 'aria-expanded="false"' in boton
+    assert 'aria-controls="menu-principal"' in boton
+    assert '<nav class="nav-enlaces" id="menu-principal"' in html
+    assert 'barra.classList.toggle("compacta", window.scrollY > 20)' in js
+    assert 'if (e.target.closest("a")) abrir(false)' in js  # se cierra al tocar un enlace

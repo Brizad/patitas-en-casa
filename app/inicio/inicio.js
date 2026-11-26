@@ -165,6 +165,29 @@
     });
   }
 
+  /** Menú fijo (#462): compacto al bajar más de 20 px; en el celular, botón de tres rayas que
+   *  despliega los enlaces debajo de la barra y se cierra al tocar uno (o con Escape). */
+  function menu() {
+    const barra = document.querySelector(".nav");
+    const boton = document.querySelector(".nav-menu");
+    const enlaces = document.getElementById("menu-principal");
+    const alBajar = () => barra.classList.toggle("compacta", window.scrollY > 20);
+    window.addEventListener("scroll", alBajar, { passive: true });
+    alBajar();
+    const abrir = (si) => {
+      enlaces.classList.toggle("abierto", si);
+      boton.setAttribute("aria-expanded", String(si));
+      boton.setAttribute("aria-label", si ? "Cerrar el menú" : "Abrir el menú");
+    };
+    boton.hidden = false;
+    boton.addEventListener("click", () => abrir(boton.getAttribute("aria-expanded") !== "true"));
+    enlaces.addEventListener("click", (e) => { if (e.target.closest("a")) abrir(false); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && boton.getAttribute("aria-expanded") === "true") { abrir(false); boton.focus(); }
+    });
+  }
+
+  menu();
   compartir();
   void animales();
   void cifras();
