@@ -23,8 +23,8 @@ for (const ancho of [1440, 390]) {
       await expect(detalle.getByRole("button", { name: `¡Te elijo, ${await nombre(primera)}!` })).toBeVisible();
       await expect(detalle.getByRole("button", { name: "Ver en Elige a tu compañero" })).toBeVisible();
       await expect(detalle.locator(".convive-icono")).toHaveCount(3);
-      const a = await caja(primera);
-      expect((await caja(detalle)).y).toBeGreaterThan(a.y + a.height);
+      const arriba = await caja(primera);
+      expect((await caja(detalle)).y).toBeGreaterThan(arriba.y + arriba.height);
 
       await segunda.click(); // misma fila: cambia de animal
       await expect(detalle.getByRole("heading", { name: await nombre(segunda) })).toBeVisible();
@@ -43,7 +43,8 @@ for (const ancho of [1440, 390]) {
 
       if (ancho >= 560) return;
       // Celular: 2 columnas; el detalle a todo el ancho debajo de la fila tocada y la foto arriba.
-      const [b, c] = [await caja(segunda), await caja(tarjetas.nth(2))];
+      await page.mouse.move(0, 0); // sin el «hover», que sube la tarjeta 2 px
+      const [a, b, c] = [await caja(primera), await caja(segunda), await caja(tarjetas.nth(2))];
       expect(Math.abs(a.y - b.y)).toBeLessThan(2);
       expect(c.y).toBeGreaterThan(a.y + a.height);
       await primera.click();
