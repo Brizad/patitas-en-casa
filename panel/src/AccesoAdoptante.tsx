@@ -6,8 +6,8 @@ import { Cuenta, iniciarSesion, miCuenta } from "./api";
 import { problemaContrasena } from "./apiAdmin";
 import { AnimalPublicado, catalogo, registrarAdoptante } from "./apiAdopcion";
 import Cargando from "./Cargando";
-import { convivencia, resumenCorto } from "./flujoAdopcion";
-import { FLECHA, FotoAnimal, Huella, Icono } from "./Ilustraciones";
+import CatalogoEnFilas from "./CatalogoEnFilas";
+import { FLECHA, Huella, Icono } from "./Ilustraciones";
 import { textoError } from "./mensajes";
 
 export type VistaAcceso = "inicio" | "entrar" | "crear" | "animales";
@@ -160,7 +160,8 @@ function Crear({ alCambiar, alEntrar }: { alCambiar: (v: VistaAcceso) => void; a
   );
 }
 
-/** Catálogo público (sin cuenta): se puede mirar; para solicitar hace falta la cuenta. */
+/** Catálogo público (sin cuenta): se puede mirar; para solicitar hace falta la cuenta (#477: tarjetas
+ *  de foto y nombre con el detalle debajo de la fila). */
 function SinCuenta({ alCambiar }: { alCambiar: (v: VistaAcceso) => void }) {
   const [animales, setAnimales] = useState<AnimalPublicado[] | null>(null);
   const [error, setError] = useState("");
@@ -175,15 +176,9 @@ function SinCuenta({ alCambiar }: { alCambiar: (v: VistaAcceso) => void }) {
       {error && <p className="adop-mensaje adop-mensaje--error" role="alert">{error}</p>}
       {!animales && !error && <Cargando que="los animales" />}
       {animales && animales.length === 0 && <p className="adop-vacio">No hay animales publicados ahora. Vuelve pronto.</p>}
-      <ul className="acceso-lista">
-        {(animales ?? []).map((a) => (
-          <li key={a.animal_id} className="acceso-animal">
-            <FotoAnimal a={a} alt={`Foto de ${a.nombre}`} className="acceso-foto" />
-            <span className="h acceso-nombre">{a.nombre}</span>
-            <span className="mejor-resumen">{resumenCorto(a)}</span>
-            <span className="acceso-convive">{convivencia(a).join(" · ")}</span>
-          </li>))}
-      </ul>
+      {/* #477: sin cuenta, elegir o ver en «Elige a tu compañero» pasa primero por la cuenta. */}
+      {animales && animales.length > 0 && (
+        <CatalogoEnFilas animales={animales} alElegir={() => alCambiar("crear")} alVerEnElegir={() => alCambiar("entrar")} />)}
       <div className="acceso-llamado">
         <p className="adop-sub">¿Te enamoraste de alguno? Crea tu cuenta para ver quién combina con tu hogar y solicitarlo.</p>
         <button className="adop-boton acceso-boton" onClick={() => alCambiar("crear")}>

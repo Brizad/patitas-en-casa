@@ -21,7 +21,7 @@ function BotonAtras({ alTocar }: { alTocar: () => void }) {
 }
 
 /** Barra decorativa: el valor ya está escrito al lado (lo lee el lector de pantalla). */
-function Barra({ valor, color }: { valor: number; color?: string }) {
+export function Barra({ valor, color }: { valor: number; color?: string }) {
   return (
     <span className="barra" aria-hidden="true">
       {valor > 0 && <span className="barra-relleno crece" style={{ ...pct(valor), backgroundColor: color }} />}
@@ -354,7 +354,7 @@ export function Elegir({ lista, animal, filtro, conteo, ocultos, cargando, conPe
   );
 }
 
-function HoyYAdulto({ a }: { a: AnimalPublicado }) {
+export function HoyYAdulto({ a }: { a: AnimalPublicado }) {
   const { hoy, adulto } = hoyYAdulto(a);
   return (
     <div className="hoy-adulto">
