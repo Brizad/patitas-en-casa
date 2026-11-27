@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v18" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #496
+    assert "patitas-pwa-v19" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #498
 
 
 
@@ -375,10 +375,33 @@ def test_el_mapa_usa_los_mismos_campos_y_nunca_bloquea_el_envio():
 
 
 def test_consultar_es_publico_y_no_muestra_mapa_ni_direccion(c):
+    """#498 (decisión del autor): el mapa SOLO aparece mientras el rescatista va en camino (lo
+    pinta seguimiento-mapa.js con lo que manda el servidor); la dirección nunca."""
     estado = _seccion(c.get("/app/").text, "pantalla-estado")
-    assert "mapa" not in estado.lower() and "direccion" not in estado.lower()
+    assert "direccion" not in estado.lower()
+    assert 'id="estado-mapa" role="region" aria-label="Mapa del rescate en camino" hidden' in estado
     js = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
-    assert "leaflet" not in js.lower() and "L.map" not in js
+    assert "leaflet" not in js.lower() and "L.map" not in js  # el mapa vive en su propio archivo
+    assert "datos.rescatista && seguimiento && seguimiento.mostrar(datos.rescatista)" in js
+
+
+def test_mapa_del_rescate_en_marco_con_franja_y_sin_animacion_si_se_reduce():
+    """#498: marco (3 px, 28 px, sombra dura), franja con «aprox.», «¡Está llegando!» a menos de
+    300 m, demostración marcada y las teselas de mapa.js (la única con la URL de OSM)."""
+    css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
+    marco = re.search(r"\.estado-mapa \{[^}]*\}", css).group(0)
+    assert "border: 3px solid #2B2340" in marco and "border-radius: 28px" in marco
+    assert "box-shadow: 5px 5px 0 #2B2340" in marco and "height: 260px" in marco
+    assert "width: 420px; height: 520px;" in css
+    js = (CARPETA_PWA / "seguimiento-mapa.js").read_text(encoding="utf-8")
+    assert "' · llega en unos ' + r.minutos + ' min (aprox.)'" in js
+    assert "const LLEGANDO_M = 300;" in js and "'¡Está llegando!'" in js
+    assert "sinMovimiento.matches" in js and "window.PatitasTeselas" in js
+    assert "dashArray" in js and "Recorrido de demostración" in c_html()
+
+
+def c_html():
+    return (CARPETA_PWA / "index.html").read_text(encoding="utf-8")
 
 
 def test_reportar_en_computador_tiene_panel_de_ayuda_que_el_telefono_oculta(c):
@@ -435,7 +458,9 @@ def test_la_ilustracion_es_decorativa_y_no_toca_la_linea_de_tiempo(c):
     for etiqueta in ["Recibimos tu reporte", "Un veterinario lo revisó", "El rescate va en camino",
                      "¡Caso cerrado!"]:
         assert etiqueta in app
-    assert "if (esError) mostrarEtapa('espera')" in app  # error o código inexistente: la de espera
+    # Error o código inexistente: la de espera y sin mapa.
+    assert "if (esError) {  // código que no existe" in app
+    assert "mostrarEtapa('espera');\n      mostrarMapa(null);" in app
 
 
 def test_las_fotos_webp_se_sirven_como_image_webp(c):

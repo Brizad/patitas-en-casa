@@ -23,7 +23,9 @@ from app.reportes import orden
 from app.rescates.servicio import (
     PasoInvalido,
     RescateNoOfrecido,
+    SinPermiso,
 )
+from app.rescates.simulacion import Simulaciones
 
 Comuna = Annotated[int, Field(ge=1, le=10)]
 
@@ -40,6 +42,13 @@ class DisponibilidadEntrada(BaseModel):
 
 class ResultadoEntrada(BaseModel):
     resultado: ResultadoRescate
+
+
+class UbicacionEntrada(BaseModel):
+    """#498: posición del rescatista en camino (la envía watchPosition cada 10–15 s)."""
+
+    latitud: float = Field(ge=-90, le=90)
+    longitud: float = Field(ge=-180, le=180)
 
 
 def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
@@ -97,6 +106,8 @@ def _paso(accion, *args):
         raise HTTPException(status_code=404, detail=str(error)) from error
     except PasoInvalido as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+    except SinPermiso as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
 
 
 def _registrar_resultado(ctx: Contexto, codigo: str, datos: ResultadoEntrada,
@@ -113,7 +124,36 @@ def crear_rutas_rescates(ctx: Contexto) -> APIRouter:
     rutas = APIRouter()
     _rutas_del_rescatista(rutas, ctx)
     _rutas_de_los_pasos(rutas, ctx)
+    _rutas_de_la_ubicacion(rutas, ctx)
     return rutas
+
+
+def _rutas_de_la_ubicacion(rutas: APIRouter, ctx: Contexto) -> None:
+    """#498: seguimiento del rescatista en el mapa del ciudadano y recorrido de demostración."""
+    rescates = ctx.rescates
+    rescatista_actual = ctx.rescatista_actual
+    simulaciones = Simulaciones(rescates, ctx.repositorio)
+
+    @rutas.put("/rescates/{codigo}/ubicacion")
+    def compartir_mi_ubicacion(codigo: str, datos: UbicacionEntrada,
+                               rescatista: Usuario = rescatista_actual):
+        """Solo el rescatista asignado y solo mientras va en camino (403 / 409). Se guarda SOLO
+        la última posición; se borra sola al llegar, atender o liberar el caso."""
+        _paso(rescates.compartir_ubicacion, rescatista, codigo.upper(), datos.latitud,
+              datos.longitud)
+        return {"codigo": codigo.upper(), "compartiendo": True}
+
+    @rutas.delete("/rescates/{codigo}/ubicacion")
+    def dejar_de_compartir(codigo: str, rescatista: Usuario = rescatista_actual):
+        _paso(rescates.dejar_de_compartir, rescatista, codigo.upper())
+        return {"codigo": codigo.upper(), "compartiendo": False}
+
+    @rutas.post("/rescates/{codigo}/simulacion", status_code=202)
+    def simular_recorrido(codigo: str, rescatista: Usuario = rescatista_actual):
+        """Solo cuentas de demostración (403 para las demás): el servidor mueve la posición
+        ~1,5 km hasta el animal y luego marca el caso atendido."""
+        segundos = _paso(simulaciones.iniciar, rescatista, codigo.upper())
+        return {"codigo": codigo.upper(), "segundos": segundos}
 
 
 def _rutas_del_rescatista(rutas: APIRouter, ctx: Contexto) -> None:

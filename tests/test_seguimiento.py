@@ -129,18 +129,32 @@ def test_liberado_vuelve_a_buscar_rescatista(c):
 def test_rn14_no_muestra_datos_personales_ni_detalles_del_caso(c):
     codigo = reportar(c)
     confirmar(c, codigo)
-    ana = rescatista(c)
-    c.post(f"/rescates/{codigo}/aceptar", headers=ana)
     texto = json.dumps(seguimiento(c, codigo), ensure_ascii=False)
     for dato in ["atropellado", DIRECCION, "Calle 8", "-72.5", "critica",
                  "vet@patitas.co", "ana@rescate.co", "confianza"]:
         assert dato not in texto
     # La latitud no debe aparecer, pero «7.89» también cabe en una hora («…:07.891Z»): se busca
     # solo cuando no está pegada a otros dígitos (antes fallaba al azar según el reloj).
-    assert not re.search(r"(?<![\d:])7\.89(?!\d)", texto)
+    assert not re.search(r"(?<![\d:])7\.89", texto)
     # #496 (decisión del autor): después del triaje, el nivel (nunca la prioridad interna).
     assert set(seguimiento(c, codigo)) == {"codigo", "ultimo_cambio", "pasos", "nivel"}
     assert seguimiento(c, codigo)["nivel"] == "urgente"
+
+
+def test_rn14_en_camino_solo_el_mapa_sin_datos_personales(c):
+    """#498 (decisión del autor): mientras va en camino, el ciudadano ve el mapa con su animal y
+    el nombre de pila del rescatista; nunca correos, teléfonos, dirección ni descripción."""
+    codigo = reportar(c)
+    confirmar(c, codigo)
+    c.post(f"/rescates/{codigo}/aceptar", headers=rescatista(c))
+    datos = seguimiento(c, codigo)
+    texto = json.dumps(datos, ensure_ascii=False)
+    for dato in ["atropellado", DIRECCION, "Calle 8", "critica", "vet@patitas.co",
+                 "ana@rescate.co", "confianza", "@"]:
+        assert dato not in texto
+    assert datos["rescatista"]["nombre"] == "Persona"
+    assert set(datos["rescatista"]) == {"nombre", "ubicacion", "simulada", "distancia_m",
+                                        "minutos", "animal"}
 
 
 def test_codigo_inexistente_404_y_formato_flexible(c):

@@ -8,8 +8,10 @@ import {
 } from "./bandejas";
 import {
   EstadoRescatista, MiRescate, NOMBRE_RESULTADO, Oferta, Resultado, cambiarDisponibilidad,
-  cambiarZona, miEstado, miRescate, nombreComunas, ofertas, paso, registrarResultado,
+  cambiarZona, esCuentaDemo, miEstado, miRescate, nombreComunas, ofertas, paso, registrarResultado,
+  simularRecorrido,
 } from "./apiRescatista";
+import CompartirUbicacion from "./CompartirUbicacion";
 
 const COMUNAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 type Pestana = "disponibles" | "mio" | "atrasados";
@@ -25,7 +27,7 @@ function guardarDecision(valor: "si" | "no") {
 
 /** HU-06 en el panel (RF-15, RF-21, RF-22): disponibilidad y zona, ofertas y mi rescate. #496:
  *  pestañas, tarjetas con nivel, tiempo y distancia, y el mapa de los casos. */
-export default function Rescatista({ token }: { token: string }) {
+export default function Rescatista({ token, correo = "" }: { token: string; correo?: string }) {
   const [estado, setEstado] = useState<EstadoRescatista | null>(null);
   const [lista, setLista] = useState<Oferta[]>([]);
   const [actual, setActual] = useState<MiRescate | null>(null);
@@ -36,6 +38,7 @@ export default function Rescatista({ token }: { token: string }) {
   const [yo, setYo] = useState<Punto | null>(null);
   const [decision, setDecision] = useState<string | null>(leerDecision);
   const [mapaAbierto, setMapaAbierto] = useState(false);
+  const [simulando, setSimulando] = useState(false);
 
   const recargar = useCallback(async () => {
     try {
@@ -51,6 +54,15 @@ export default function Rescatista({ token }: { token: string }) {
   }, [token]);
 
   useEffect(() => { void recargar(); }, [recargar]);
+
+  // #498: mientras corre el recorrido de demostración, se relee el rescate para ver el cambio de
+  // estado (llegada y atendido) sin tocar nada.
+  useEffect(() => {
+    if (!simulando) return;
+    const reloj = setInterval(() => { void recargar(); }, 5000);
+    return () => clearInterval(reloj);
+  }, [simulando, recargar]);
+  useEffect(() => { if (!actual) setSimulando(false); }, [actual]);
 
   // Solo con permiso: la ubicación se usa aquí para medir la distancia y no se envía.
   useEffect(() => {
@@ -118,7 +130,10 @@ export default function Rescatista({ token }: { token: string }) {
               {nombre}<span className={`contador${id === "atrasados" && n > 0 ? " contador--rojo" : ""}`}>{n}</span>
             </button>))}
         </div>
-        {pestana === "mio" ? (actual ? <RescateActual token={token} rescate={actual} hacer={hacer} />
+        {pestana === "mio" ? (actual ? <RescateActual token={token} rescate={actual} hacer={hacer}
+          demo={esCuentaDemo(correo)} simulando={simulando}
+          alSimular={() => void hacer(async () => { await simularRecorrido(token, actual.codigo); setSimulando(true); },
+            `Recorrido de demostración en marcha (unos 90 s). Abre la consulta del ciudadano con el código ${actual.codigo} para verlo moverse.`)} />
           : <p className="ds-vacio"><strong>No tienes un rescate en curso.</strong> Acepta uno en «Disponibles».</p>) : (
           <>
             {decision === null && "geolocation" in navigator && (
@@ -191,9 +206,10 @@ function TarjetaOferta({ o, yo, elegida, puedeAceptar, alElegir, alAceptar }: {
   );
 }
 
-function RescateActual({ token, rescate, hacer }: {
+function RescateActual({ token, rescate, hacer, demo, simulando, alSimular }: {
   token: string; rescate: MiRescate;
   hacer: (accion: () => Promise<unknown>, exito: string) => Promise<void>;
+  demo: boolean; simulando: boolean; alSimular: () => void;
 }) {
   const [resultado, setResultado] = useState<Resultado>("trasladado");
   const u = rescate.ubicacion;
@@ -207,6 +223,15 @@ function RescateActual({ token, rescate, hacer }: {
       <p>{rescate.descripcion}</p>
       <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}</p>
       <Lugar u={u} />
+      {/* #498: solo mientras va en camino; al llegar se desmonta y deja de compartir. */}
+      {rescate.estado === "en_camino" && !simulando && <CompartirUbicacion token={token} codigo={rescate.codigo} />}
+      {rescate.estado === "en_camino" && demo && (
+        <div className="simulacion">
+          <p className="ds-suave">Solo en las cuentas de demostración: el servidor mueve tu posición
+            desde 1,5 km hasta el animal en unos 90 s y luego marca el caso atendido.</p>
+          <button onClick={alSimular} disabled={simulando}>
+            {simulando ? "Recorrido en marcha…" : "Simular recorrido"}</button>
+        </div>)}
       <div className="acciones">
         {rescate.estado === "en_camino" && (
           <button className="principal" onClick={() => void hacer(

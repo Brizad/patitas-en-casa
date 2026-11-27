@@ -204,7 +204,10 @@
     mensaje.classList.toggle('ds-msg--error', Boolean(esError));
     mensaje.hidden = false;
     resultado.hidden = true;
-    if (esError) mostrarEtapa('espera');  // código que no existe, sin señal o servidor con fallas
+    if (esError) {  // código que no existe, sin señal o servidor con fallas
+      mostrarEtapa('espera');
+      mostrarMapa(null);
+    }
   }
 
   function linea(texto, clase) {
@@ -262,6 +265,32 @@
     $('res-pasos').replaceChildren(...pasos);
     resultado.hidden = false;
     mostrarEtapa(etapaDelReporte(datos));
+    mostrarMapa(datos);
+  }
+
+  // #498: mientras el rescatista va en camino, el mapa en marco reemplaza la ilustración y la
+  // consulta se repite sola cada 12 s. Al pasar a «Atendido» vuelve la ilustración.
+  const SONDEO_MS = 12000;
+  let sondeo = null;
+
+  function mostrarMapa(datos) {
+    const seguimiento = window.PatitasSeguimiento;
+    const conMapa = Boolean(datos && datos.rescatista && seguimiento && seguimiento.mostrar(datos.rescatista));
+    if (!conMapa && seguimiento) seguimiento.ocultar();
+    $('estado-ilu').hidden = conMapa;
+    clearTimeout(sondeo);
+    if (datos && datos.rescatista) sondeo = setTimeout(() => refrescar(datos.codigo), SONDEO_MS);
+  }
+
+  async function refrescar(codigo) {
+    if (!location.hash.startsWith('#estado') || normalizar(entrada.value) !== codigo) return;
+    try {
+      const respuesta = await fetch('/reportes/' + encodeURIComponent(codigo) + '/seguimiento', {
+        headers: { Accept: 'application/json' },
+      });
+      if (respuesta.ok) { mostrar(await respuesta.json()); return; }
+    } catch (error) { /* sin señal: se intenta otra vez */ }
+    sondeo = setTimeout(() => refrescar(codigo), SONDEO_MS);
   }
 
   // Render gratis se duerme: la primera petición puede tardar hasta un minuto. Si pasan 4 s

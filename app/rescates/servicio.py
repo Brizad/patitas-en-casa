@@ -21,6 +21,7 @@ from app.dominio.modelos import (
     Reporte,
     Rescate,
     ResultadoRescate,
+    UbicacionRescatista,
     Usuario,
 )
 from app.reportes.orden import ordenar
@@ -56,6 +57,10 @@ class RescateNoOfrecido(LookupError):
 
 class PasoInvalido(Exception):
     """El paso no corresponde al estado del rescate; el mensaje se muestra tal cual."""
+
+
+class SinPermiso(PermissionError):
+    """#498: el caso no es de este rescatista (o la acción no es para su cuenta)."""
 
 
 class ServicioRescates:
@@ -238,6 +243,34 @@ class ServicioRescates:
         avisos += [AvisoNuevo(correo, mensaje)
                    for correo in self._libres_para_avisar(lambda zona: not en_zona(reporte, zona))]
         return avisos
+
+    # --- #498: ubicación mientras va en camino ----------------------------------------------
+
+    def exigir_en_camino(self, rescatista: Usuario, codigo: str) -> Rescate:
+        rescate = self._rescates.vigente(codigo)
+        if rescate is None or rescate.rescatista != rescatista.correo:
+            raise SinPermiso(
+                "Solo el rescatista asignado a este caso puede compartir su ubicación.")
+        if rescate.estado != EstadoRescate.EN_CAMINO:
+            raise PasoInvalido("La ubicación solo se comparte mientras vas en camino.")
+        return rescate
+
+    def compartir_ubicacion(self, rescatista: Usuario, codigo: str, latitud: float,
+                            longitud: float, simulada: bool = False) -> UbicacionRescatista:
+        """Guarda SOLO la última posición; el repositorio vuelve a comprobar, en la misma
+        operación, que el rescate sea suyo y siga en camino."""
+        self.exigir_en_camino(rescatista, codigo)
+        ubicacion = UbicacionRescatista(codigo, latitud, longitud, self._reloj(), simulada)
+        if not self._rescates.guardar_ubicacion(ubicacion, rescatista.correo):
+            raise PasoInvalido("La ubicación solo se comparte mientras vas en camino.")
+        return ubicacion
+
+    def dejar_de_compartir(self, rescatista: Usuario, codigo: str) -> None:
+        rescate = self._rescates.vigente(codigo)
+        if rescate is None or rescate.rescatista != rescatista.correo:
+            raise SinPermiso(
+                "Solo el rescatista asignado a este caso puede dejar de compartir.")
+        self._rescates.borrar_ubicacion(codigo)
 
     def mio(self, rescatista: Usuario) -> tuple[Rescate, Reporte] | None:
         rescate = self._rescates.activo_de(rescatista.correo)

@@ -6,7 +6,7 @@ from dataclasses import replace
 from datetime import datetime
 from typing import Protocol
 
-from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate
+from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate, UbicacionRescatista
 
 ACTIVOS = (EstadoRescate.EN_CAMINO, EstadoRescate.EN_SITIO)
 
@@ -62,8 +62,18 @@ class RepositorioRescates(Protocol):
     def avanzar(self, codigo: str, rescatista: str, desde: EstadoRescate,
                 hasta: EstadoRescate, momento: datetime,
                 resultado: ResultadoRescate | None = None) -> bool:
-        """Cambia de estado solo si el rescate es de ese rescatista y está en «desde»."""
+        """Cambia de estado solo si el rescate es de ese rescatista y está en «desde». #498: si
+        sale de «en camino», borra su ubicación en la misma operación."""
         ...
+
+    def guardar_ubicacion(self, ubicacion: UbicacionRescatista, rescatista: str) -> bool:
+        """#498: reemplaza la última posición SOLO si el rescate del código es de ese rescatista
+        y sigue en camino (en una sola operación). False si no."""
+        ...
+
+    def ubicacion(self, codigo: str) -> UbicacionRescatista | None: ...
+
+    def borrar_ubicacion(self, codigo: str) -> None: ...
 
 
 class RepositorioRescatesEnMemoria:
@@ -72,6 +82,7 @@ class RepositorioRescatesEnMemoria:
         self._zonas: dict[str, frozenset[int]] = {}
         self._escalados: dict[str, datetime] = {}
         self._vigentes: dict[str, Rescate] = {}  # código -> rescate no liberado
+        self._ubicaciones: dict[str, UbicacionRescatista] = {}  # #498: solo la última
         self._candado = threading.Lock()
 
     def poner_disponible(self, rescatista: str, disponible: bool) -> None:
@@ -140,6 +151,8 @@ class RepositorioRescatesEnMemoria:
             rescate = self._vigentes.get(codigo)
             if rescate is None or rescate.rescatista != rescatista or rescate.estado != desde:
                 return False
+            if hasta != EstadoRescate.EN_CAMINO:
+                self._ubicaciones.pop(codigo, None)  # #498
             if hasta == EstadoRescate.LIBERADO:
                 del self._vigentes[codigo]
                 return True
@@ -147,3 +160,19 @@ class RepositorioRescatesEnMemoria:
             if hasta == EstadoRescate.EN_SITIO:
                 rescate.llegada_en = momento
             return True
+
+    def guardar_ubicacion(self, ubicacion: UbicacionRescatista, rescatista: str) -> bool:
+        with self._candado:
+            rescate = self._vigentes.get(ubicacion.codigo)
+            if (rescate is None or rescate.rescatista != rescatista
+                    or rescate.estado != EstadoRescate.EN_CAMINO):
+                return False
+            self._ubicaciones[ubicacion.codigo] = ubicacion
+            return True
+
+    def ubicacion(self, codigo: str) -> UbicacionRescatista | None:
+        return self._ubicaciones.get(codigo)
+
+    def borrar_ubicacion(self, codigo: str) -> None:
+        with self._candado:
+            self._ubicaciones.pop(codigo, None)

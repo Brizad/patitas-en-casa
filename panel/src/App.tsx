@@ -73,7 +73,7 @@ export default function App() {
         </header>
       {pantalla === "cola" && <Cola token={token} cuenta={cuenta} />}
       {pantalla === "historial" && <Historial token={token} />}
-      {pantalla === "rescates" && <Rescatista token={token} />}
+      {pantalla === "rescates" && <Rescatista token={token} correo={cuenta.correo} />}
       {pantalla === "mis_rescates" && <MisRescates token={token} />}
       {pantalla === "refugio" && <Refugio token={token} rol={cuenta.rol} />}
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}

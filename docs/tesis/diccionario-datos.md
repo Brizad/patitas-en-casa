@@ -2,7 +2,7 @@
 
 # Diccionario de datos
 
-22 tablas, leídas de `app/bd/esquema.py` (la misma definición que usan las migraciones de Alembic). La descripción es el comentario del código; «—» quiere decir que el código no tiene comentario para esa columna.
+23 tablas, leídas de `app/bd/esquema.py` (la misma definición que usan las migraciones de Alembic). La descripción es el comentario del código; «—» quiere decir que el código no tiene comentario para esa columna.
 
 ## `bitacora`
 
@@ -219,7 +219,7 @@ D-02 (#75): bitácora de reportes descartados (uno por reporte).
 | `justificacion` | TEXT | no | — | — | — |
 | `descartado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
 
-Restricciones e índices: `ck_descartes_justificacion`: `char_length(btrim(justificacion)) >= 10`; `ck_descartes_motivo`: `motivo IN ('falso', 'duplicado')`; `ix_descartes_veterinario`: índice (veterinario, descartado_en).
+Restricciones e índices: `ck_descartes_justificacion`: `char_length(btrim(justificacion)) >= 10`; `ck_descartes_motivo`: `motivo IN ('falso', 'duplicado', 'archivado')`; `ix_descartes_veterinario`: índice (veterinario, descartado_en).
 
 ## `escalamientos`
 
@@ -244,6 +244,20 @@ HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a 
 | `llegada_en` | TIMESTAMP WITH TIME ZONE | sí | — | — | — |
 
 Restricciones e índices: `ck_rescates_estado`: `estado IN ('en_camino', 'en_sitio', 'atendido', 'liberado')`; `ck_rescates_resultado`: `resultado IN ('trasladado', 'atendido_en_sitio', 'no_encontrado', 'fallecido')`; `ck_rescates_resultado_al_atender`: `(estado = 'atendido') = (resultado IS NOT NULL)`; `ix_rescates_rescatista`: índice (rescatista, aceptado_en); `uq_rescates_reporte_vigente`: índice único (reporte_codigo) donde `estado <> 'liberado'`; `uq_rescates_rescatista_activo`: índice único (rescatista) donde `estado IN ('en_camino', 'en_sitio')`.
+
+## `ubicaciones_rescate`
+
+498: última posición del rescatista en camino, una por reporte (no un historial). Se borra en la misma transacción en que el rescate sale de «en camino».
+
+| Columna | Tipo | Nulo | Clave | Por defecto | Descripción |
+|---|---|---|---|---|---|
+| `reporte_codigo` | VARCHAR(8) | no | PK FK → reportes.codigo | — | — |
+| `latitud` | DOUBLE PRECISION | no | — | — | — |
+| `longitud` | DOUBLE PRECISION | no | — | — | — |
+| `simulada` | BOOLEAN | no | — | `false` | — |
+| `actualizada_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
+
+Restricciones e índices: `ck_ubicaciones_rescate_rango`: `latitud BETWEEN -90 AND 90 AND longitud BETWEEN -180 AND 180`.
 
 ## `usuarios`
 

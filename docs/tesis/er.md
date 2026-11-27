@@ -152,6 +152,13 @@ erDiagram
     timestamp_with_time_zone actualizado_en
     timestamp_with_time_zone llegada_en
   }
+  ubicaciones_rescate {
+    varchar reporte_codigo PK,FK
+    double_precision latitud
+    double_precision longitud
+    boolean simulada
+    timestamp_with_time_zone actualizada_en
+  }
   usuarios {
     integer id PK
     text correo
@@ -235,6 +242,7 @@ erDiagram
   reportes ||--o| descartes : "reporte_codigo"
   reportes ||--o| escalamientos : "reporte_codigo"
   reportes ||--o{ rescates : "reporte_codigo"
+  reportes ||--o| ubicaciones_rescate : "reporte_codigo"
   refugios ||--o{ usuarios : "refugio_id"
   animales ||--o| fotos_animales : "animal_id"
   animales ||--o{ historial_clinico : "animal_id"

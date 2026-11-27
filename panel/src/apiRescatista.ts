@@ -53,3 +53,24 @@ export const registrarResultado = (t: string, codigo: string, resultado: Resulta
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ resultado }),
   }, t);
+
+// --- #498: ubicación mientras va en camino y recorrido de demostración -------------------------
+
+/** Cada cuánto se envía la posición (watchPosition da muchas; se manda una cada 12 s). */
+export const INTERVALO_UBICACION_MS = 12_000;
+
+export const compartirUbicacion = (t: string, codigo: string, latitud: number, longitud: number) =>
+  pedir(`/rescates/${codigo}/ubicacion`, json({ latitud, longitud }), t);
+
+export const dejarDeCompartir = (t: string, codigo: string) =>
+  pedir(`/rescates/${codigo}/ubicacion`, { method: "DELETE" }, t);
+
+/** Solo las cuentas de demostración (el servidor responde 403 a cualquier otra). */
+export const simularRecorrido = (t: string, codigo: string) =>
+  pedir<{ segundos: number }>(`/rescates/${codigo}/simulacion`, { method: "POST" }, t);
+
+export const esCuentaDemo = (correo: string) => correo.endsWith("@demo.patitas.co");
+
+/** true si ya pasó el intervalo desde el último envío (o nunca se envió). */
+export const tocaEnviar = (ultimo: number | null, ahora: number) =>
+  ultimo === null || ahora - ultimo >= INTERVALO_UBICACION_MS;
