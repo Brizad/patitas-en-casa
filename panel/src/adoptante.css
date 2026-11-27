@@ -406,12 +406,46 @@
 .acceso-casilla input { width: 24px; height: 24px; flex: none; margin: 0; accent-color: var(--vino); }
 .acceso-pie { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; }
 .acceso-catalogo { width: min(1000px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+/* #477: tarjetas de solo foto y nombre; el detalle se abre debajo de la fila, a todo el ancho. */
 .acceso-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-.acceso-animal { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 16px; background: #FFFFFF;
-  border: 2.5px solid var(--tinta); border-radius: 22px; box-shadow: 4px 4px 0 var(--tinta); }
+.ds .adop .acceso-animal { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%;
+  height: 100%; padding: 16px 10px; text-align: center; --fondo-b: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 22px;
+  box-shadow: 4px 4px 0 var(--tinta); transition: translate .12s ease, border-color .2s; }
+@media (hover: hover) { .ds .adop .acceso-animal:hover { translate: -2px -2px; } } /* en el celular se quedaba pegado */
+.ds .adop .acceso-animal--activa { border-color: var(--a-acento); box-shadow: 4px 4px 0 var(--a-acento); }
+.acceso-animal--activa::after { content: ""; position: absolute; left: 50%; bottom: -21px; translate: -50% 0;
+  border: 10px solid transparent; border-top-color: var(--a-acento); } /* la flechita hacia el detalle */
 .acceso-foto { width: 104px; height: 104px; border-radius: 999px; border: 2.5px solid var(--tinta); }
 .acceso-nombre { font-size: 22px; font-weight: 700; }
-.acceso-convive { font-size: 12px; font-weight: 700; color: var(--suave); }
+.detalle-celda { grid-column: 1 / -1; }
+.detalle { display: grid; grid-template-rows: 1fr; background: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 26px;
+  box-shadow: 6px 6px 0 var(--a-acento); }
+.adop--mov .detalle { animation: despliega .3s ease-out both; }
+.detalle-dentro { position: relative; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 18px; }
+.detalle-foto { align-self: center; width: min(240px, 70%); aspect-ratio: 1; border-radius: 999px; border: 3px solid var(--tinta);
+  background: var(--rosa); }
+.detalle-info { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ds .adop .detalle-nombre { font-size: 36px; outline-offset: 4px; }
+.detalle-resumen { margin: 0; font-size: 15px; font-weight: 800; color: var(--suave); }
+.detalle-info .insignias { justify-content: flex-start; }
+.convive-iconos { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; }
+.convive-icono { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  background: var(--menta); border: 2px solid var(--tinta); border-radius: 14px; }
+.convive-icono--no { background: var(--riel); color: var(--suave); }
+.convive-icono--ojo { background: var(--amarillo); }
+.convive-marca { position: absolute; right: -7px; bottom: -7px; width: 20px; height: 20px; display: flex; align-items: center;
+  justify-content: center; background: var(--verde); color: #FFFFFF; border: 2px solid var(--tinta); border-radius: 999px; }
+.convive-icono--no .convive-marca { background: var(--suave); }
+.convive-icono--ojo .convive-marca { background: #F2A93B; color: var(--tinta); }
+.detalle-botones { display: grid; gap: 12px; }
+.ds .adop .detalle-cerrar { position: absolute; top: 12px; right: 12px; }
+@keyframes despliega { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+@media (max-width: 560px) { .acceso-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+@media (min-width: 760px) {
+  .detalle-dentro { flex-direction: row; align-items: flex-start; gap: 28px; padding: 26px 70px 26px 26px; }
+  .detalle-foto { flex: none; width: 300px; }
+  .detalle-botones { grid-template-columns: auto auto; justify-content: start; }
+}
 .acceso-llamado { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 18px; background: #FFFFFF;
   border: 2.5px dashed var(--tinta); border-radius: 22px; }
 .ds .adop .acceso-boton { width: auto; }

@@ -159,6 +159,21 @@ export function convivencia(a: AnimalPublicado): string[] {
           a.necesita_patio ? "Necesita patio" : "Sin patio está bien"];
 }
 
+/** #477: la convivencia como íconos pequeños (sí, no u «ojo»: necesita patio), con su texto. */
+export interface IconoConvivencia { clave: "ninos" | "animales" | "patio"; marca: "si" | "no" | "ojo"; texto: string }
+export function convivenciaIconos(a: AnimalPublicado): IconoConvivencia[] {
+  const [ninos, animales, patio] = convivencia(a);
+  return [{ clave: "ninos", marca: a.apto_ninos ? "si" : "no", texto: ninos },
+          { clave: "animales", marca: a.apto_otros_animales ? "si" : "no", texto: animales },
+          { clave: "patio", marca: a.necesita_patio ? "ojo" : "si", texto: patio }];
+}
+
+/** #477: índice de la última tarjeta de la fila donde está `i`; el detalle se abre después de ella. */
+export function finDeFila(i: number, columnas: number, total: number): number {
+  const c = Math.max(1, columnas);
+  return Math.min(total - 1, Math.floor(i / c) * c + c - 1);
+}
+
 /** Barras del recuadro: la ficha del refugio (si la hay) y el puntaje del servidor (si lo hay).
  *  Nada se inventa: sin datos, no hay barra. */
 export function estadisticas(a: AnimalPublicado | Recomendado): Estadistica[] {
