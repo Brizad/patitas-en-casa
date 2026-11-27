@@ -145,11 +145,70 @@
 
   // --- Consulta del estado (P-03) ----------------------------------------------------
 
+  // #490: ilustración según el estado real que devuelve el servidor. Solo adorno: no cambia los pasos.
+  const ETAPAS = {
+    espera: ['consultar-0-espera', 736, 414, ''],
+    recibido: ['consultar-1-recibido', 736, 736, 'Recibimos tu reporte'],
+    revisado: ['consultar-2-revisado', 736, 983, 'Un veterinario lo revisó'],
+    rescate: ['consultar-3-rescate', 680, 1024, 'El rescate va en camino'],
+    cerrado: ['consultar-4-cerrado', 735, 456, '¡Caso cerrado!'],
+  };
+  const ORDEN = Object.keys(ETAPAS);
+  let cambioDeEtapa = 0;
+
+  function etapaDelReporte(datos) {
+    const pasos = (datos && datos.pasos) || [];
+    const actual = pasos.find((paso) => paso.estado === 'actual');
+    if (!actual) {
+      // Todo hecho: atendido y cerrado. Un descartado (sin «Cerrado») ya lo revisó el veterinario.
+      if (pasos.some((paso) => paso.nombre === 'Cerrado')) return 'cerrado';
+      return pasos.length ? 'revisado' : 'espera';
+    }
+    if (actual.nombre === 'Revisado por el veterinario') return 'recibido';
+    if (actual.nombre.startsWith('Atendido')) return 'rescate';  // el rescatista ya está en el sitio
+    if (actual.nombre === 'Rescatista en camino' && !actual.detalle) return 'rescate';
+    return 'revisado';  // «Buscando rescatista disponible» o atención programada por el refugio
+  }
+
+  function ponerFoto(capa, etapa) {
+    const [archivo, ancho, alto] = ETAPAS[etapa];
+    for (const fuente of capa.querySelectorAll('source')) fuente.srcset = 'fotos/' + archivo + '.webp';
+    for (const img of capa.querySelectorAll('img')) img.src = 'fotos/' + archivo + '.jpg';
+    const foto = capa.querySelector('.estado-foto');
+    foto.width = ancho;
+    foto.height = alto;
+    return foto;
+  }
+
+  function mostrarEtapa(etapa) {
+    const marco = $('estado-marco');
+    if (marco.dataset.etapa === etapa) return;
+    marco.dataset.etapa = etapa;
+    const etiqueta = $('estado-etiqueta');
+    etiqueta.textContent = ETAPAS[etapa][3];
+    etiqueta.hidden = !ETAPAS[etapa][3];
+    const activa = marco.querySelector('.estado-capa.activa');
+    const otra = marco.querySelector('.estado-capa:not(.activa)');
+    const foto = ponerFoto(otra, etapa);
+    const turno = ++cambioDeEtapa;
+    const cambiar = () => {
+      if (turno !== cambioDeEtapa) return;  // llegó otra consulta mientras cargaba esta foto
+      otra.classList.add('activa');
+      activa.classList.remove('activa');
+    };
+    // Se cambia cuando la foto ya está lista, para que el fundido no muestre un hueco.
+    if (foto.decode) foto.decode().then(cambiar, cambiar);
+    else cambiar();
+    const siguiente = ORDEN[ORDEN.indexOf(etapa) + 1];
+    if (siguiente) new Image().src = 'fotos/' + ETAPAS[siguiente][0] + '.webp';  // solo la siguiente
+  }
+
   function avisar(texto, esError) {
     mensaje.textContent = texto;
     mensaje.classList.toggle('ds-msg--error', Boolean(esError));
     mensaje.hidden = false;
     resultado.hidden = true;
+    if (esError) mostrarEtapa('espera');  // código que no existe, sin señal o servidor con fallas
   }
 
   function linea(texto, clase) {
@@ -178,6 +237,7 @@
     });
     $('res-pasos').replaceChildren(...pasos);
     resultado.hidden = false;
+    mostrarEtapa(etapaDelReporte(datos));
   }
 
   // Render gratis se duerme: la primera petición puede tardar hasta un minuto. Si pasan 4 s
