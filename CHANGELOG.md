@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Estáticos (#492): las imágenes `.webp` se sirven como `image/webp` (en producción salían como `application/octet-stream`).
 - Seguridad (#486): cada inicio de sesión deja entrar solo a su rol. `POST /auth/token` recibe `portal` (adoptante | personal); con la contraseña correcta en la puerta equivocada responde 403 sin token ni registro de acceso, con un mensaje y un enlace a la puerta correcta. Con la contraseña mala sigue el 401 genérico. Sin `portal` (Swagger, scripts) no se restringe: los permisos de cada ruta los da el rol.
 - Entrada del adoptante (#484): la foto de los gatitos ya no se ve borrosa ni cortada. Es la nueva en alta (1200 × 675, webp de calidad 90 con respaldo jpg), nunca escalada de más, completa en 16/9, centrada y pegada abajo, de ancho min(100 %, 1200 px, 52vh × 16/9), con los bordes de arriba y de los lados fundidos en el crema. En el celular, a todo el ancho. Si no cabe, baja: nunca tapa el contenido.
 - Un solo inicio (#452): se quita la portada vieja de `/app/`. «Inicio» y el logo de la app llevan a `/`, y la app (también instalada) abre en «Reportar». Las fotos fijas del diseño son estáticas del repo, y las del catálogo se reintentan mientras Render despierta: la huella sale solo si de verdad no hay foto.

@@ -435,3 +435,10 @@ def test_la_ilustracion_es_decorativa_y_no_toca_la_linea_de_tiempo(c):
                      "¡Caso cerrado!"]:
         assert etiqueta in app
     assert "if (esError) mostrarEtapa('espera')" in app  # error o código inexistente: la de espera
+
+
+def test_las_fotos_webp_se_sirven_como_image_webp(c):
+    """#492: sin el tipo registrado, la imagen del servidor de Linux salía como octet-stream."""
+    respuesta = c.get("/app/fotos/consultar-0-espera.webp")
+    assert respuesta.status_code == 200
+    assert respuesta.headers["content-type"] == "image/webp"
