@@ -173,6 +173,19 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
 .resultado { margin-top: 6px; background: #FFFFFF; border: 2.5px solid var(--p-tinta); border-radius: 24px; box-shadow: 5px 5px 0 var(--p-tinta);
   padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
 .resultado-codigo { font-size: 18px; letter-spacing: 2px; }
+/* #490: ilustración del estado. La foto se ve completa (contain) y la misma, en cover, difuminada y algo
+   oscurecida, rellena el resto del marco: ni recortes ni bandas vacías. Fundido de .4 s entre capas. */
+.estado-marco { margin: 0; height: 220px; display: flex; flex-direction: column; overflow: hidden; background: #FFFFFF;
+  border: 3px solid #2B2340; border-radius: 28px; box-shadow: 5px 5px 0 #2B2340; }
+.estado-ilustracion { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--p-amarillo); }
+.estado-capa { position: absolute; inset: 0; opacity: 0; transition: opacity .4s ease; }
+.estado-capa.activa { opacity: 1; }
+.estado-capa picture { display: contents; }
+.estado-fondo, .estado-foto { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.estado-fondo { object-fit: cover; filter: blur(18px) brightness(.82); transform: scale(1.15); }
+.estado-foto { object-fit: contain; }
+.estado-etiqueta { flex: none; align-self: center; margin: 8px 12px; padding: 4px 14px; border: 2px solid #2B2340;
+  border-radius: 999px; background: var(--p-amarillo); font-size: 13px; font-weight: 800; }
 .tl { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
 .tl li { position: relative; display: flex; gap: 12px; padding-bottom: 14px; color: #5B5070; }
 .tl li::before { content: ""; width: 28px; height: 28px; flex: none; border-radius: 999px; border: 2px solid var(--p-tinta); background: #FFFFFF;
@@ -250,6 +263,15 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
   .tarjeta-ayuda-icono { width: 36px; height: 36px; flex: none; border-radius: 12px; background: var(--p-rosa);
     display: flex; align-items: center; justify-content: center; }
   .tarjeta-ayuda-icono svg { width: 20px; height: 20px; fill: none; stroke: var(--p-tinta); stroke-width: 2.5; stroke-linecap: round; }
+}
+
+/* #490: en computador, «Estado del reporte» en dos columnas: lo de siempre a la izquierda y el marco
+   (420 × 520) a la derecha. La última fila (1fr) absorbe el alto del marco: la izquierda no se estira. */
+@media (min-width: 1024px) {
+  .estado { width: min(1100px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 420px;
+    grid-template-rows: repeat(7, auto) 1fr; column-gap: 48px; row-gap: 12px; align-items: start; }
+  .estado > * { grid-column: 1; }
+  .estado > .estado-marco { grid-column: 2; grid-row: 1 / -1; height: 520px; }
 }
 
 /* ---------- movimiento ---------- */

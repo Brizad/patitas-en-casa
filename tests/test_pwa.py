@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v15" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #467
+    assert "patitas-pwa-v16" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #490
 
 
 
@@ -394,3 +394,44 @@ def test_reportar_en_computador_tiene_panel_de_ayuda_que_el_telefono_oculta(c):
     tres = css[css.index("@media (min-width: 1024px)"):]
     assert '"titulo cuerpo ayuda"' in tres and "max-width: 1280px" in tres
     assert "grid-template-rows: auto 1fr" in css  # sin el hueco entre el título y los pasos
+
+
+# --- #490: ilustración según el estado en «Estado del reporte» ---
+
+ETAPAS_490 = ["0-espera", "1-recibido", "2-revisado", "3-rescate", "4-cerrado"]
+
+
+def _tamano_jpg(ruta: Path) -> tuple[int, int]:
+    """Ancho y alto del marcador SOF del JPEG (sin Pillow, que no está en las dependencias)."""
+    datos, i = ruta.read_bytes(), 2
+    while datos[i] == 0xFF:
+        marcador, largo = datos[i + 1], int.from_bytes(datos[i + 2:i + 4], "big")
+        if marcador in (0xC0, 0xC2):
+            alto, ancho = (int.from_bytes(datos[j:j + 2], "big") for j in (i + 5, i + 7))
+            return ancho, alto
+        i += 2 + largo
+    raise AssertionError(f"{ruta.name} no es un JPEG")
+
+
+def test_cada_estado_tiene_su_imagen_en_webp_con_respaldo_jpg_sin_agrandar():
+    app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    for etapa in ETAPAS_490:
+        webp, jpg = (CARPETA_PWA / "fotos" / f"consultar-{etapa}.{ext}" for ext in ("webp", "jpg"))
+        assert webp.read_bytes()[8:12] == b"WEBP"
+        ancho, alto = _tamano_jpg(jpg)
+        assert ancho <= 736  # su tamaño real: las originales miden 736 px o menos de ancho
+        assert f"'consultar-{etapa}', {ancho}, {alto}" in app  # lo que declara el <img>
+
+
+def test_la_ilustracion_es_decorativa_y_no_toca_la_linea_de_tiempo(c):
+    marco = _seccion(c.get("/app/").text, "pantalla-estado")
+    figura = marco[marco.index('<figure class="estado-marco"'):marco.index("</figure>")]
+    assert 'aria-hidden="true"' in figura
+    assert figura.count("<img ") == figura.count('alt=""') == figura.count('loading="lazy"') == 4
+    assert figura.count('type="image/webp"') == 4
+    assert '<ol class="tl" id="res-pasos"></ol>' in marco
+    app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
+    for etiqueta in ["Recibimos tu reporte", "Un veterinario lo revisó", "El rescate va en camino",
+                     "¡Caso cerrado!"]:
+        assert etiqueta in app
+    assert "if (esError) mostrarEtapa('espera')" in app  # error o código inexistente: la de espera
