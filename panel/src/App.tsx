@@ -7,7 +7,7 @@ import Adoptante from "./Adoptante";
 import Cola from "./Cola";
 import Historial from "./Historial";
 import Indicadores from "./Indicadores";
-import { textoError } from "./mensajes";
+import { esOtroPortal, textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
 import MisRescates from "./MisRescates";
@@ -108,17 +108,20 @@ function EntrarPersonal({ alEntrar, alAdoptar }: {
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
+  const [otroPortal, setOtroPortal] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   async function entrar(evento: React.FormEvent) {
     evento.preventDefault();
     setEnviando(true);
     setError("");
+    setOtroPortal(false);
     try {
-      const token = await iniciarSesion(correo.trim(), clave);
+      const token = await iniciarSesion(correo.trim(), clave, "personal");
       alEntrar(token, await miCuenta(token));
     } catch (e) {
-      setError(textoError(e));
+      setOtroPortal(esOtroPortal(e));
+      setError(esOtroPortal(e) ? e.detalle : textoError(e));
     } finally {
       setEnviando(false);
     }
@@ -135,7 +138,9 @@ function EntrarPersonal({ alEntrar, alAdoptar }: {
           onChange={(e) => setCorreo(e.target.value)} /></label>
         <label>Contraseña<input type="password" value={clave} required
           autoComplete="current-password" onChange={(e) => setClave(e.target.value)} /></label>
-        {error && <p className="ds-msg ds-msg--error" role="alert">{error}</p>}
+        {error && <p className="ds-msg ds-msg--error" role="alert">{error}
+          {otroPortal && <> <button type="button" className="enlace" onClick={alAdoptar}>
+            Ir a «Adoptar»</button></>}</p>}
         <button className="principal" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
         <p><button type="button" className="enlace" onClick={alAdoptar}>
           ¿Quieres adoptar? Entra por la zona de adopción</button></p>
