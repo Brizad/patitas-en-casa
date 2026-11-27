@@ -275,6 +275,11 @@
 
   function mostrarMapa(datos) {
     const seguimiento = window.PatitasSeguimiento;
+    // #500: la consulta puede responder antes de que carguen los scripts diferidos del mapa
+    // (scripts diferidos): entonces el mapa se pinta en cuanto termine de cargar la página.
+    if (datos && datos.rescatista && !seguimiento && document.readyState !== 'complete') {
+      window.addEventListener('load', () => mostrarMapa(datos), { once: true });
+    }
     const conMapa = Boolean(datos && datos.rescatista && seguimiento && seguimiento.mostrar(datos.rescatista));
     if (!conMapa && seguimiento) seguimiento.ocultar();
     $('estado-ilu').hidden = conMapa;

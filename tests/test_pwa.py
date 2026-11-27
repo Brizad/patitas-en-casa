@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v19" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #498
+    assert "patitas-pwa-v20" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #500
 
 
 
@@ -383,6 +383,8 @@ def test_consultar_es_publico_y_no_muestra_mapa_ni_direccion(c):
     js = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
     assert "leaflet" not in js.lower() and "L.map" not in js  # el mapa vive en su propio archivo
     assert "datos.rescatista && seguimiento && seguimiento.mostrar(datos.rescatista)" in js
+    # #500: si la respuesta llega antes que los scripts del mapa, se pinta al cargar la página.
+    assert "window.addEventListener('load', () => mostrarMapa(datos), { once: true });" in js
 
 
 def test_mapa_del_rescate_en_marco_con_franja_y_sin_animacion_si_se_reduce():
