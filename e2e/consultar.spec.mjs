@@ -96,3 +96,22 @@ test("con «reducir movimiento» la imagen cambia sin fundido", async ({ page })
   const transicion = await page.locator("#estado-ilu img").evaluate((e) => getComputedStyle(e).transitionDuration);
   expect(transicion).toBe("0s");
 });
+
+// #500: si la consulta responde antes de que cargue Leaflet (scripts diferidos), el mapa del
+// rescate aparece igual al terminar de cargar la página, sin esperar el sondeo de 12 s.
+test("el mapa del rescate aparece aunque Leaflet cargue después de la respuesta", async ({ page }) => {
+  const pasos = ["Recibido", "Revisado por el veterinario", "Rescatista en camino", "Atendido", "Cerrado"]
+    .map((nombre, j) => ({ nombre, estado: j < 2 ? "hecho" : j === 2 ? "actual" : "pendiente", detalle: null,
+      fecha: j < 2 ? "2026-11-27T20:00:00Z" : null }));
+  await page.route("**/reportes/*/seguimiento", (r) => r.fulfill({ json: { codigo: "EEEE5555",
+    ultimo_cambio: "2026-11-27T20:10:00Z", nivel: "urgente", pasos, rescatista: { nombre: "Rita", simulada: false,
+      animal: { latitud: 7.8939, longitud: -72.5078 }, ubicacion: { latitud: 7.9047, longitud: -72.5078 },
+      distancia_m: 1200, minutos: 3 } } }));
+  await page.route("**/vendor/leaflet/leaflet.js", async (r) => {
+    await new Promise((listo) => setTimeout(listo, 2500));
+    await r.continue();
+  });
+  await page.goto("/app/#estado/EEEE5555");
+  await expect(page.locator("#mapa-franja")).toHaveText("A 1,2 km · llega en unos 3 min (aprox.)");
+  await expect(page.locator("#estado-ilu")).toBeHidden();
+});
