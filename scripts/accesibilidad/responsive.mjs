@@ -87,7 +87,10 @@ async function revisar(pagina, pantalla, ancho, tema) {
 }
 
 async function entrar(pagina, usuario) {
-  await pagina.goto(`${BASE}/panel/`);
+  // #486: el adoptante entra por su propia puerta. about:blank antes: si solo cambiara el #,
+  // la página no se recargaría y seguiría abierta la sesión anterior.
+  await pagina.goto("about:blank");
+  await pagina.goto(`${BASE}/panel/${usuario === "adoptante" ? "#adoptar/entrar" : ""}`);
   await pagina.getByLabel("Correo").fill(`${usuario}@demo.patitas.co`);
   await pagina.getByLabel("Contraseña").fill(CLAVE);
   await pagina.getByRole("button", { name: "Entrar" }).click();

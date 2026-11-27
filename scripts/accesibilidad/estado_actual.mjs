@@ -26,7 +26,9 @@ async function capturar(pagina, prefijo, nombre) {
 }
 
 async function entrar(pagina, usuario) {
-  // #486: el adoptante entra por su propia puerta.
+  // #486: el adoptante entra por su propia puerta. about:blank antes: si solo cambiara el #,
+  // la página no se recargaría y seguiría abierta la sesión anterior.
+  await pagina.goto("about:blank");
   await pagina.goto(`${BASE}/panel/${usuario === "adoptante" ? "#adoptar/entrar" : ""}`);
   await pagina.getByLabel("Correo").fill(`${usuario}@demo.patitas.co`);
   await pagina.getByLabel("Contraseña").fill(CLAVE);
