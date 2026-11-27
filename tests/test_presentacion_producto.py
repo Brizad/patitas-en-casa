@@ -81,7 +81,7 @@ def test_pie_con_la_columna_plataforma(c):  # noqa: F811
     pie = html[html.index('<footer class="pie">'):]
     assert ">Plataforma</p>" in pie and ">Proyecto</p>" not in pie and ">Navegación</p>" in pie
     assert '<a href="/panel/#personal">Para refugios y su equipo</a>' in pie
-    assert '<a href="/app/#instalar">Instalar la app</a>' in pie
+    assert '<a href="/app/#instalar" data-instalar>Instalar la app</a>' in pie  # #479
     assert '<a href="#como">Cómo funciona</a>' in pie and "/docs" not in pie  # #470
     assert "Diseñado y desarrollado por" in pie and "Brayan David Amado Ramírez" in pie
     assert "© 2026 Patitas en Casa · Cúcuta, Colombia" in pie and "por Brayan Amado" in pie
