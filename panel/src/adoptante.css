@@ -398,6 +398,30 @@
 .ds .adop .acceso-opcion { --fondo-b: var(--amarillo); min-height: 96px; }
 .ds .adop .acceso-opcion--rosa { --fondo-b: var(--rosa); }
 .entrada-adop .adop-enlace { align-self: flex-start; }
+/* Fondo de la entrada (#482): hojas arriba, detrás de todo, y la franja de gatitos abajo, en el flujo.
+   La franja toma el espacio libre hasta 46vh; si el contenido no deja, se encoge hasta 300 px y, si ni
+   así cabe, baja. Nunca tapa el contenido. Reemplaza las manchas solo en esta pantalla. */
+.acceso-adop--paisaje .adop-fondo { display: none; }
+.paisaje { pointer-events: none; user-select: none; }
+.paisaje picture { display: contents; }
+.paisaje-arriba { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.paisaje-hojas { position: absolute; top: 0; width: 520px; height: auto; }
+.paisaje-hojas--izq { left: 0; }
+.paisaje-hojas--der { right: 0; }
+.paisaje-franja { --x: 50%; position: relative; z-index: 0; flex: 1000 0 300px; max-height: max(300px, 46vh); overflow: hidden;
+  container-type: size; }
+.paisaje-franja img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
+/* Con cualquier alto, los ojos de los gatitos (mitad de la foto) quedan al 70 % de la franja, bajo el degradado. */
+@supports (container-type: size) {
+  .paisaje-franja img { object-position: var(--x) clamp(min(0px, 100cqh - 56.25cqw), 70cqh - 27.84cqw, 0px); }
+}
+.paisaje-franja::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, var(--crema), rgba(255, 248, 238, 0) 38%); }
+@media (max-width: 600px) {
+  .paisaje-franja { --x: 54%; flex-basis: 240px; max-height: max(240px, 34vh); } /* las dos caras al centro */
+  .paisaje-franja img { object-position: 54% 30%; }
+  .paisaje-hojas { width: 220px; }
+}
 .acceso-form .adop-boton { margin-top: 8px; }
 .acceso-campo { display: flex; flex-direction: column; gap: 6px; font-weight: 800; font-size: 15px; }
 .ds .adop .acceso-campo input { min-height: 50px; padding: 0 14px; border: 2.5px solid var(--tinta); border-radius: 16px;
