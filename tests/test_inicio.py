@@ -93,9 +93,9 @@ def test_ilustraciones_del_repo_optimizadas_y_con_texto_alternativo(c):
         assert r.status_code == 200 and r.headers["content-type"] == "image/jpeg", nombre
 
 
-def test_sin_rastro_de_huellas_ni_pausa_ni_nota_de_cifras():
+def test_sin_pausa_ni_nota_de_cifras():
     html, css = _html(), _css()
-    assert 'class="rastro"' not in html and "huella-perro" not in html
+    assert "huella-perro" not in html
     assert "Pausar animaciones" not in html and "pausa" not in css
     assert "Cifras en vivo" not in html and "aún sin dato" not in html
     assert "@media (prefers-reduced-motion: reduce)" in css  # el movimiento se apaga por CSS
@@ -144,8 +144,7 @@ def test_misma_csp_estricta_sin_scripts_ni_estilos_en_linea(c):
     raiz = c.get("/")
     assert "script-src 'self'" in raiz.headers["content-security-policy"]
     html = _html()
-    assert re.findall(r"<script[^>]*>", html) == ['<script src="/inicio/inicio.js" defer>',
-                                                   '<script src="/diseno/animaciones.js" defer>']
+    assert re.findall(r"<script[^>]*>", html) == ['<script src="/inicio/inicio.js" defer>']
     assert not re.search(r"<[^>]*\son\w+=", html) and "style=" not in html
     assert not re.search(r'(?:src|href)="(?!/|#)', html)  # nada externo (tarea 6: ni GitHub)
     rutas = ("/inicio/inicio.css", "/inicio/inicio.js", "/diseno/patitas.css",
@@ -182,3 +181,38 @@ def test_menu_fijo_compacto_al_bajar_y_boton_de_menu_en_el_celular():
     assert '<nav class="nav-enlaces" id="menu-principal"' in html
     assert 'barra.classList.toggle("compacta", window.scrollY > 20)' in js
     assert 'if (e.target.closest("a")) abrir(false)' in js  # se cierra al tocar un enlace
+
+
+def test_cuatro_caminantes_kawaii_en_svg_sin_lottie_y_sin_cortarse():
+    """#474: perro dorado, cachorro blanco, gato gris y gatito negro de ojos amarillos."""
+    html, css = _html(), _css()
+    carril = html[html.index('<div class="carril" aria-hidden="true">'):html.index("</main>")]
+    nombres = re.findall(r'<span class="caminante caminante--(\w+)">', carril)
+    assert nombres == ["dorado", "blanco", "gris", "negro"]
+    assert "data-lottie" not in html and "paseante" not in html  # ni perro salchicha ni Lottie
+    assert carril.count('class="pata-a"') == 8 and carril.count('class="cola"') == 4
+    assert carril.count('class="cachete"') == 8 and 'fill="#FFE9A6"' in carril  # ojos amarillos
+    assert "stroke: #6B4A3A" in css and "height: 120px" in css and "translateX(100cqw)" in css
+    duraciones = re.findall(r"\.caminante--\w+ \{[^}]*animation-duration: (\d+)s", css)
+    assert len(set(duraciones)) == 3  # el dorado usa la de .caminante (19 s): cada uno a su ritmo
+
+
+def test_caminitos_de_huellas_detras_y_quietos_con_movimiento_reducido():
+    """#474: 4 rastros en bucle (2 en el hero, adopción y roles) y 3 caminitos al bajar."""
+    html, css, js = _html(), _css(), _js()
+    assert html.count('<symbol id="huella"') == 1
+    patron = r'<svg class="rastro rastro--(\w)" viewBox="0 0 360 220" aria-hidden="true">'
+    rastros = re.findall(patron, html)
+    assert rastros == ["a", "b", "c", "d"]
+    hero = html[html.index('<section class="hero"'):html.index('<div class="cinta"')]
+    assert "rastro--a" in hero and "rastro--b" in hero
+    assert html.count('<div class="sendero sendero--') == 3
+    assert html.count('aria-hidden="true"><svg class="paso"') == 3
+    assert re.search(r"\.rastro \{[^}]*z-index: -1;[^}]*pointer-events: none;", css)
+    assert ".hero, .adopcion, #roles { isolation: isolate; }" in css
+    assert "animation-timeline: --sendero" in css
+    assert "@supports (animation-timeline: view())" in css
+    assert "new IntersectionObserver" in js
+    assert 'CSS.supports("animation-timeline: view()")' in js  # respaldo solo si hace falta
+    reducido = css.split("@media (prefers-reduced-motion: reduce)")[-1]
+    assert ".rastro use, .paso { opacity: .15; }" in reducido
