@@ -272,6 +272,23 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
   .tarjeta-ayuda-icono svg { width: 20px; height: 20px; fill: none; stroke: var(--p-tinta); stroke-width: 2.5; stroke-linecap: round; }
 }
 
+/* #498: mapa del rescate en camino, en marco (las ilustraciones siguen sin marco). */
+.estado-mapa { position: relative; height: 260px; overflow: hidden; background: var(--p-crema);
+  border: 3px solid #2B2340; border-radius: 28px; box-shadow: 5px 5px 0 #2B2340; }
+.mapa-lienzo { position: absolute; inset: 0; z-index: 0; }
+.mapa-franja { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; margin: 0; padding: 8px 12px;
+  background: #FFFFFF; border: 2px solid #2B2340; border-radius: 14px; box-shadow: 3px 3px 0 #2B2340;
+  font-size: 14px; font-weight: 800; text-align: center; }
+.mapa-franja.llegando { background: #FFD23F; animation: rebote .5s cubic-bezier(.2, 1.8, .4, 1) 3; }
+.mapa-demo { position: absolute; left: 10px; bottom: 10px; z-index: 1000; padding: 3px 10px; border-radius: 999px;
+  background: #2B2340; color: #FFFFFF; font-size: 12px; font-weight: 800; }
+.marca-mapa { display: flex; align-items: center; justify-content: center; border: 2.5px solid #2B2340; border-radius: 999px; }
+.marca-mapa svg { width: 18px; height: 18px; fill: #FFFFFF; }
+.marca-animal { background: #E8508A; }
+.marca-rescatista { background: #7A5AF8; }
+.nombre-rescatista { font-weight: 800; }
+@keyframes rebote { 50% { transform: translateY(-6px); } }
+
 /* #490 / #494: en computador, «Estado del reporte» en dos columnas (como el prototipo): lo de siempre a la
    izquierda y la ilustración centrada a la derecha. La última fila (1fr) absorbe su alto: la izquierda no se estira. */
 @media (min-width: 1024px) {
@@ -280,6 +297,7 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
   .estado > * { grid-column: 1; }
   .estado > .estado-ilu { grid-column: 2; grid-row: 1 / -1; order: 0; margin: 0; min-height: 560px; }
   .estado-foto { max-height: 540px; }
+  .estado > .estado-mapa { grid-column: 2; grid-row: 1 / -1; justify-self: center; width: 420px; height: 520px; }
   .estado-etiqueta { margin-top: -14px; font-size: 15px; }
 }
 

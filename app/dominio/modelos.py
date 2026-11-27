@@ -186,6 +186,18 @@ class Rescate:
     llegada_en: datetime | None = None  # cuando el rescatista pulsó «Llegué» (#221)
 
 
+@dataclass(frozen=True)
+class UbicacionRescatista:
+    """#498: la ÚLTIMA posición del rescatista en camino (no un historial). Se borra al salir
+    de «en camino». «simulada»: la mueve el recorrido de demostración."""
+
+    codigo: str
+    latitud: float
+    longitud: float
+    actualizada_en: datetime
+    simulada: bool = False
+
+
 @dataclass
 class Usuario:
     correo: str

@@ -61,6 +61,12 @@ ESCALAMIENTO_MINUTOS = {"critica": 15, "alta": 30}
 # #496: un caso con más de estas horas sin avanzar de estado sale de la lista principal de las
 # bandejas y va en «Atrasados» (también deja de contar en la posición del ciudadano).
 HORAS_ATRASO = 72
+
+# #498: recorrido de demostración (solo cuentas de demostración): duración, cada cuánto se mueve
+# y cuánto espera en el sitio («¡Está llegando!») antes de marcar el caso atendido.
+SIMULACION_SEGUNDOS = 90
+SIMULACION_INTERVALO_S = 3
+SIMULACION_ESPERA_LLEGADA_S = 8
 # #390: ya no es la frecuencia (la tarea espera justo hasta que vence el próximo rescate): es la
 # primera espera tras un error de la base, que se duplica hasta 30 min. Lo mismo para videos.
 REVISION_ESCALAMIENTOS_SEGUNDOS = 60

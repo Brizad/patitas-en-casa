@@ -8,12 +8,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Engine, RowMapping, insert, select, update
+from sqlalchemy import Engine, RowMapping, delete, exists, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 from sqlalchemy.exc import IntegrityError
 
-from app.bd.esquema import escalamientos, rescates, rescatistas
-from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate
+from app.bd.esquema import escalamientos, rescates, rescatistas, ubicaciones_rescate
+from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate, UbicacionRescatista
 from app.rescates.repositorio import ACTIVOS, RescateTomado, RescatistaOcupado
 
 ERRORES_POR_INDICE = {"uq_rescates_reporte_vigente": RescateTomado,
@@ -134,7 +134,44 @@ class RepositorioRescatesPostgres:
                 .values(estado=hasta.value, actualizado_en=momento,
                         resultado=resultado.value if resultado else None,
                         **({"llegada_en": momento} if hasta == EstadoRescate.EN_SITIO else {})))
+            if cambio.rowcount == 1 and hasta != EstadoRescate.EN_CAMINO:
+                # #498: fuera de «en camino» no queda ninguna posición guardada.
+                conexion.execute(delete(ubicaciones_rescate)
+                                 .where(ubicaciones_rescate.c.reporte_codigo == codigo))
         return cambio.rowcount == 1
+
+    def guardar_ubicacion(self, ubicacion: UbicacionRescatista, rescatista: str) -> bool:
+        """INSERT ... SELECT con la condición: solo entra si el rescate es suyo y va en camino."""
+        u = ubicaciones_rescate.c
+        es_suyo = exists().where(rescates.c.reporte_codigo == ubicacion.codigo,
+                                 rescates.c.rescatista == rescatista,
+                                 rescates.c.estado == EstadoRescate.EN_CAMINO.value)
+        fuente = select(literal(ubicacion.codigo), literal(ubicacion.latitud),
+                        literal(ubicacion.longitud), literal(ubicacion.simulada),
+                        literal(ubicacion.actualizada_en)).where(es_suyo)
+        sentencia = insertar_o_actualizar(ubicaciones_rescate).from_select(
+            [u.reporte_codigo, u.latitud, u.longitud, u.simulada, u.actualizada_en], fuente)
+        sentencia = sentencia.on_conflict_do_update(
+            index_elements=[u.reporte_codigo],
+            set_={"latitud": sentencia.excluded.latitud, "longitud": sentencia.excluded.longitud,
+                  "simulada": sentencia.excluded.simulada,
+                  "actualizada_en": sentencia.excluded.actualizada_en})
+        with self._motor.begin() as conexion:
+            return conexion.execute(sentencia).rowcount == 1
+
+    def ubicacion(self, codigo: str) -> UbicacionRescatista | None:
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(select(ubicaciones_rescate).where(
+                ubicaciones_rescate.c.reporte_codigo == codigo)).mappings().first()
+        if fila is None:
+            return None
+        return UbicacionRescatista(fila["reporte_codigo"], fila["latitud"], fila["longitud"],
+                                   fila["actualizada_en"], fila["simulada"])
+
+    def borrar_ubicacion(self, codigo: str) -> None:
+        with self._motor.begin() as conexion:
+            conexion.execute(delete(ubicaciones_rescate)
+                             .where(ubicaciones_rescate.c.reporte_codigo == codigo))
 
 
 def _a_rescate(fila: RowMapping) -> Rescate:

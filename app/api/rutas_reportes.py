@@ -23,6 +23,7 @@ from app.api.comun import Contexto, fecha_utc
 from app.dominio.modelos import (
     DECIDIDOS,
     EstadoReporte,
+    EstadoRescate,
     MotivoDescarte,
     Ubicacion,
 )
@@ -30,6 +31,7 @@ from app.observabilidad import evento, tracer
 from app.reportes import orden
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido
+from app.rescates.distancia import haversine_m, minutos_aprox, redondear
 from app.usuarios.intentos import (
     clave_reporte,
 )
@@ -89,17 +91,42 @@ def _antes_en_la_cola(repositorio, reporte) -> int:
                              lambda r: r.creado_en, lambda r: r.creado_en, datetime.now(UTC))
 
 
-def seguimiento_publico(repositorio, repositorio_rescates, codigo: str) -> dict:
+def _rescatista_en_camino(reporte, rescate, repositorio_rescates, repositorio_usuarios) -> dict:
+    """#498 (decisión del autor): para el mapa del ciudadano mientras el rescatista va en camino.
+    Solo el nombre de pila (nunca correo ni teléfono) y posiciones redondeadas a ~50 m; la
+    distancia y los minutos se calculan con las posiciones exactas."""
+    cuenta = repositorio_usuarios.buscar_por_correo(rescate.rescatista)
+    nombre = cuenta.nombre.split()[0] if cuenta and cuenta.nombre.split() else "El rescatista"
+    lat, lon = reporte.ubicacion.latitud, reporte.ubicacion.longitud
+    con_punto = lat is not None and lon is not None
+    animal = {"latitud": redondear(lat), "longitud": redondear(lon)} if con_punto else None
+    datos = {"nombre": nombre, "ubicacion": None, "simulada": False, "distancia_m": None,
+             "minutos": None, "animal": animal}
+    actual = repositorio_rescates.ubicacion(reporte.codigo)
+    if actual is not None:
+        datos.update(ubicacion={"latitud": redondear(actual.latitud),
+                                "longitud": redondear(actual.longitud)},
+                     simulada=actual.simulada)
+        if con_punto:
+            metros = haversine_m(actual.latitud, actual.longitud, lat, lon)
+            datos.update(distancia_m=round(metros), minutos=minutos_aprox(metros))
+    return datos
+
+
+def seguimiento_publico(repositorio, repositorio_rescates, codigo: str,
+                        repositorio_usuarios=None) -> dict:
     """HU-08: código, pasos y fechas; nunca datos personales ni detalles (RN-14). #496 (decisión
     del autor): mientras espera al veterinario, cuántos casos van antes; después del triaje, el
-    nivel de prioridad (urgente, alta o normal), nunca la prioridad interna ni la confianza."""
+    nivel de prioridad (urgente, alta o normal), nunca la prioridad interna ni la confianza.
+    #498: mientras el rescatista va en camino, lo necesario para el mapa (_rescatista_en_camino)."""
     reporte = repositorio.buscar(codigo)
     if reporte is None:
         raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
     decisiones = repositorio.decisiones(codigo)
     descarte = repositorio.descarte(codigo)
+    rescate = repositorio_rescates.vigente(codigo)
     pasos, ultimo_cambio = linea_de_tiempo(
-        reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo),
+        reporte, decisiones[-1] if decisiones else None, rescate,
         descarte.descartado_en if descarte else None,
         archivado=bool(descarte and descarte.motivo == MotivoDescarte.ARCHIVADO))
     datos = {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
@@ -109,6 +136,10 @@ def seguimiento_publico(repositorio, repositorio_rescates, codigo: str) -> dict:
         datos["cola"] = {"antes": _antes_en_la_cola(repositorio, reporte)}
     elif reporte.estado == EstadoReporte.CONFIRMADO:
         datos["nivel"] = orden.nivel(reporte.prioridad)
+    if (rescate is not None and rescate.estado == EstadoRescate.EN_CAMINO
+            and repositorio_usuarios is not None):
+        datos["rescatista"] = _rescatista_en_camino(reporte, rescate, repositorio_rescates,
+                                                    repositorio_usuarios)
     return datos
 
 
@@ -191,6 +222,7 @@ def crear_rutas_reportes(ctx: Contexto) -> APIRouter:
     @rutas.get("/reportes/{codigo}/seguimiento")
     def seguimiento_del_reporte(codigo: str):
         """HU-08 (público): línea de tiempo sin datos personales (RN-14)."""
-        return seguimiento_publico(repositorio, repositorio_rescates, normalizar_codigo(codigo))
+        return seguimiento_publico(repositorio, repositorio_rescates, normalizar_codigo(codigo),
+                                   ctx.repositorio_usuarios)
 
     return rutas

@@ -79,7 +79,12 @@ veterinarios y control de cupos del refugio.
 - **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
   código, los pasos y sus fechas; nunca descripción, ubicación, prioridad interna ni correos.
   Desde #496 (decisión del autor) también cuántos casos van antes en la cola y, después del
-  triaje, el nivel (urgente, alta o normal).
+  triaje, el nivel (urgente, alta o normal). Desde #498, mientras el rescatista va en camino,
+  el mapa con el punto del animal y del rescatista redondeados a ~50 m, solo su nombre de pila,
+  la distancia y los minutos aproximados; nunca correo ni teléfono.
+- **Ubicación del rescatista (#498)**: solo la última posición (`ubicaciones_rescate`), solo del
+  rescatista asignado y en camino; se borra al salir de «en camino». «Simular recorrido» solo
+  para cuentas `@demo.patitas.co` (403 para las demás).
 - **Orden de las bandejas (#496)**: una sola regla en `app/reportes/orden.py` (nivel y luego el
   más antiguo; más de 72 h sin avanzar → «Atrasados»). Archivar un atrasado es un descarte con
   motivo `archivado`.

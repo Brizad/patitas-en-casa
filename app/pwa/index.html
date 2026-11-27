@@ -21,6 +21,7 @@
 <!-- #430: mapa opcional (Leaflet local + teselas de OpenStreetMap). -->
 <script src="vendor/leaflet/leaflet.js" defer></script>
 <script src="mapa.js" defer></script>
+<script src="seguimiento-mapa.js" defer></script>
 <script src="/diseno/animaciones.js" defer></script>
 </head>
 <!-- #428: PWA ciudadana igual al prototipo docs/prototipo/ciudadano-portada-y-reportar.dc.html.
@@ -272,6 +273,12 @@
       <picture><source srcset="fotos/consultar-0-espera.webp" type="image/webp"><img class="estado-foto" src="fotos/consultar-0-espera.jpg" width="736" height="414" alt="" loading="lazy" decoding="async"></picture>
       <figcaption class="estado-etiqueta" id="estado-etiqueta" hidden></figcaption>
     </figure>
+    <!-- #498: mientras el rescatista va en camino, este mapa en marco reemplaza la ilustración. -->
+    <div class="estado-mapa" id="estado-mapa" role="region" aria-label="Mapa del rescate en camino" hidden>
+      <p class="mapa-franja" id="mapa-franja" aria-live="polite"></p>
+      <span class="mapa-demo" id="mapa-demo" hidden>Recorrido de demostración</span>
+      <div class="mapa-lienzo" id="mapa-lienzo"></div>
+    </div>
     <section id="resultado" class="resultado" aria-live="polite" aria-label="Resultado" hidden>
       <p class="mono resultado-codigo" id="res-codigo"></p>
       <p class="pequeno mute" id="res-ultimo"></p>

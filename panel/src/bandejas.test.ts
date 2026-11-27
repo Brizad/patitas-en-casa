@@ -52,3 +52,18 @@ describe("bandejas (#496)", () => {
     expect(esDeHoy("2026-11-27T04:00:00Z", Date.parse("2026-11-27T22:00:00Z"))).toBe(false);
   });
 });
+
+describe("ubicación del rescatista en camino (#498)", async () => {
+  const { esCuentaDemo, tocaEnviar, INTERVALO_UBICACION_MS } = await import("./apiRescatista");
+  it("se envía una posición cada 12 s, no cada lectura del GPS", () => {
+    expect(INTERVALO_UBICACION_MS).toBe(12_000);
+    expect(tocaEnviar(null, 1000)).toBe(true);
+    expect(tocaEnviar(1000, 1000 + 11_999)).toBe(false);
+    expect(tocaEnviar(1000, 1000 + 12_000)).toBe(true);
+  });
+  it("«Simular recorrido» solo para las cuentas de demostración", () => {
+    expect(esCuentaDemo("rescatista@demo.patitas.co")).toBe(true);
+    expect(esCuentaDemo("ana@rescate.co")).toBe(false);
+    expect(esCuentaDemo("demo.patitas.co@otro.co")).toBe(false);
+  });
+});

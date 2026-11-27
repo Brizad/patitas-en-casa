@@ -11,6 +11,7 @@ from app.dominio.modelos import (
     Reporte,
     ResultadoRescate,
     Ubicacion,
+    UbicacionRescatista,
 )
 from app.reportes.repositorio_postgres import RepositorioPostgres
 from app.rescates.repositorio import (
@@ -146,3 +147,37 @@ def test_historial_del_rescatista_del_mas_reciente_al_mas_viejo_sin_liberados(re
     # Liberar lo devuelve a las ofertas: ya no es un rescate de Ana.
     repositorio.avanzar("BBBB0002", ANA, EstadoRescate.EN_CAMINO, EstadoRescate.LIBERADO, MOMENTO)
     assert [r.codigo for r in repositorio.historial_de(ANA)] == ["AAAA0001"]
+
+
+# --- #498: solo la última ubicación, solo del asignado en camino y se borra al salir ---------
+
+def _ubicacion(lat=7.9, simulada=False):
+    return UbicacionRescatista("AAAA0001", lat, -72.5, MOMENTO, simulada)
+
+
+def test_ubicacion_solo_del_rescatista_asignado_y_en_camino(repositorio):
+    assert repositorio.guardar_ubicacion(_ubicacion(), ANA) is False  # sin rescate
+    repositorio.aceptar("AAAA0001", ANA, MOMENTO)
+    assert repositorio.guardar_ubicacion(_ubicacion(), LUIS) is False  # no es el asignado
+    assert repositorio.guardar_ubicacion(_ubicacion(7.9), ANA) is True
+    assert repositorio.guardar_ubicacion(_ubicacion(7.91, simulada=True), ANA) is True
+    guardada = repositorio.ubicacion("AAAA0001")
+    assert (guardada.latitud, guardada.simulada) == (7.91, True)  # solo la última
+
+
+CAMINO, SITIO = EstadoRescate.EN_CAMINO, EstadoRescate.EN_SITIO
+
+
+@pytest.mark.parametrize("pasos", [
+    [(CAMINO, SITIO)],
+    [(CAMINO, SITIO), (SITIO, EstadoRescate.ATENDIDO)],
+    [(CAMINO, EstadoRescate.LIBERADO)],
+])
+def test_la_ubicacion_se_borra_al_salir_de_en_camino(repositorio, pasos):
+    repositorio.aceptar("AAAA0001", ANA, MOMENTO)
+    repositorio.guardar_ubicacion(_ubicacion(), ANA)
+    for desde, hasta in pasos:
+        resultado = ResultadoRescate.ATENDIDO_EN_SITIO if hasta == EstadoRescate.ATENDIDO else None
+        assert repositorio.avanzar("AAAA0001", ANA, desde, hasta, MOMENTO, resultado)
+        assert repositorio.ubicacion("AAAA0001") is None
+    assert repositorio.guardar_ubicacion(_ubicacion(), ANA) is False  # ya no va en camino

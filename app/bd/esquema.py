@@ -371,6 +371,20 @@ Index("ix_rescates_rescatista", rescates.c.rescatista, rescates.c.aceptado_en)
 Index("uq_rescates_rescatista_activo", rescates.c.rescatista, unique=True,
       postgresql_where=text("estado IN ('en_camino', 'en_sitio')"))
 
+# #498: última posición del rescatista en camino, una por reporte (no un historial). Se borra en
+# la misma transacción en que el rescate sale de «en camino».
+ubicaciones_rescate = Table(
+    "ubicaciones_rescate",
+    metadata,
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), primary_key=True),
+    Column("latitud", Double, nullable=False),
+    Column("longitud", Double, nullable=False),
+    Column("simulada", Boolean, nullable=False, server_default=false()),
+    Column("actualizada_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint("latitud BETWEEN -90 AND 90 AND longitud BETWEEN -180 AND 180",
+                    name="ck_ubicaciones_rescate_rango"),
+)
+
 # HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a tiempo. La
 # llave primaria garantiza un solo aviso aunque varios procesos revisen a la vez.
 escalamientos = Table(

@@ -11,6 +11,9 @@
   const CUCUTA = [7.8939, -72.5078];
   const TESELAS = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   const ATRIBUCION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  // #498: el mapa del seguimiento (seguimiento-mapa.js) usa la misma capa y las mismas opciones.
+  window.PatitasTeselas = { url: TESELAS, opciones: { maxZoom: 19, attribution: ATRIBUCION,
+    referrerPolicy: 'strict-origin-when-cross-origin' } };
   const caja = document.getElementById('mapa-caja');
   const aviso = document.getElementById('mapa-aviso');
   let mapa = null;
