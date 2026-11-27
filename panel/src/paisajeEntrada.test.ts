@@ -24,9 +24,11 @@ describe("entrada del adoptante: gatitos en el muro y hojas (#482)", () => {
     for (const atributo of [/alt=""/g, /loading="lazy"/g, /type="image\/webp"/g]) expect(vista.match(atributo)).toHaveLength(imgs!);
   });
 
-  it("solo en la pantalla de entrada, sin tocar sus textos ni tarjetas", () => {
+  it("en la entrada, «Entrar» y «Crear» (#488), no en el catálogo; sin tocar sus textos ni tarjetas", () => {
     const acceso = fuentes["./AccesoAdoptante.tsx"];
-    expect(acceso).toContain('{vista === "inicio" && <PaisajeEntrada />}');
+    expect(acceso).toContain('const conPaisaje = vista !== "animales";');
+    expect(acceso).toContain("{conPaisaje && <PaisajeEntrada />}");
+    expect(acceso.match(/<PaisajeEntrada \/>/g)).toHaveLength(1); // un solo lugar: no se vuelve a montar
     expect(acceso).toContain("¡Vamos a encontrar a tu compañero!");
     expect(acceso).toContain('onClick={() => alCambiar("entrar")}');
   });

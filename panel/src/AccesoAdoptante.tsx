@@ -27,8 +27,13 @@ type AlEntrar = (token: string, cuenta: Cuenta) => void;
 export default function AccesoAdoptante({ vista, alCambiar, alEntrar }: {
   vista: VistaAcceso; alCambiar: (v: VistaAcceso | "personal") => void; alEntrar: AlEntrar;
 }) {
+  // #488: la entrada, «Entrar» y «Crear» comparten el fondo de hojas y gatitos. Va en el mismo lugar
+  // del árbol en las tres: React no lo vuelve a montar y la imagen no se recarga al cambiar de pantalla.
+  const conPaisaje = vista !== "animales";
+  const formulario = vista === "entrar" || vista === "crear";
   return (
-    <div className={`adop adop--mov acceso-adop${vista === "inicio" ? " acceso-adop--paisaje" : ""}`}>
+    <div className={`adop adop--mov acceso-adop${conPaisaje ? " acceso-adop--paisaje" : ""}${
+      formulario ? " acceso-adop--form" : ""}`}>
       <div className="adop-fondo" aria-hidden="true">
         <span className="mancha mancha--rosa" /><span className="mancha mancha--lila" />
         <span className="mancha mancha--menta" /><span className="mancha mancha--amarillo" />
@@ -45,7 +50,7 @@ export default function AccesoAdoptante({ vista, alCambiar, alEntrar }: {
         {vista === "crear" && <Crear alCambiar={alCambiar} alEntrar={alEntrar} />}
         {vista === "animales" && <SinCuenta alCambiar={alCambiar} />}
       </main>
-      {vista === "inicio" && <PaisajeEntrada />}
+      {conPaisaje && <PaisajeEntrada />}
     </div>
   );
 }
