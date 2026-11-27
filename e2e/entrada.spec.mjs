@@ -31,3 +31,31 @@ for (const [ancho, alto, hojas] of [[1440, 900, 520], [1920, 950, 520], [390, 84
     }
   });
 }
+
+// #488: «Entrar como adoptante» y «Crear mi cuenta de adoptante» mantienen el mismo fondo (sin manchas):
+// la misma foto, que no se recarga al cambiar de pantalla, y siempre debajo del formulario.
+for (const [ancho, alto] of [[1440, 900], [390, 844]]) {
+  test(`${ancho}×${alto}: «Entrar» y «Crear» con el mismo fondo, sin recargar la foto`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: alto });
+    await page.goto("/panel/#adoptar");
+    const foto = page.locator(".paisaje-franja img");
+    await expect.poll(() => foto.evaluate((img) => img.complete && img.naturalWidth)).toBe(1200);
+    await foto.evaluate((img) => { img.dataset.misma = "si"; }); // marca: si se vuelve a montar, se pierde
+    for (const [boton, titulo, ultimo] of [
+      ["Ya tengo cuenta", "Entrar como adoptante", "Volver"],
+      ["Soy nuevo: crear cuenta", "Crear mi cuenta de adoptante", "Volver"]]) {
+      await page.getByRole("button", { name: boton }).click();
+      await expect(page.getByRole("heading", { name: titulo })).toBeVisible();
+      await expect(foto).toHaveAttribute("data-misma", "si");
+      await expect(page.locator(".adop-fondo")).toBeHidden(); // sin las manchas de colores
+      await expect(page.locator(".paisaje-hojas--izq")).toBeVisible();
+      const f = await caja(foto);
+      const fin = await caja(page.getByRole("button", { name: ultimo }));
+      expect(f.y).toBeGreaterThanOrEqual(fin.y + fin.height); // la foto nunca tapa el formulario
+      expect(Math.abs(f.height - (f.width * 9) / 16)).toBeLessThan(1.5); // completa
+      expect(f.width).toBeLessThanOrEqual(1200);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+    }
+    await expect(page.getByText("Ley 1581 de 2012")).toBeVisible();
+  });
+}
