@@ -9,6 +9,7 @@ import Cargando from "./Cargando";
 import CatalogoEnFilas from "./CatalogoEnFilas";
 import { FLECHA, Huella, Icono } from "./Ilustraciones";
 import { textoError } from "./mensajes";
+import PaisajeEntrada from "./PaisajeEntrada";
 
 export type VistaAcceso = "inicio" | "entrar" | "crear" | "animales";
 
@@ -27,7 +28,7 @@ export default function AccesoAdoptante({ vista, alCambiar, alEntrar }: {
   vista: VistaAcceso; alCambiar: (v: VistaAcceso | "personal") => void; alEntrar: AlEntrar;
 }) {
   return (
-    <div className="adop adop--mov acceso-adop">
+    <div className={`adop adop--mov acceso-adop${vista === "inicio" ? " acceso-adop--paisaje" : ""}`}>
       <div className="adop-fondo" aria-hidden="true">
         <span className="mancha mancha--rosa" /><span className="mancha mancha--lila" />
         <span className="mancha mancha--menta" /><span className="mancha mancha--amarillo" />
@@ -44,6 +45,7 @@ export default function AccesoAdoptante({ vista, alCambiar, alEntrar }: {
         {vista === "crear" && <Crear alCambiar={alCambiar} alEntrar={alEntrar} />}
         {vista === "animales" && <SinCuenta alCambiar={alCambiar} />}
       </main>
+      {vista === "inicio" && <PaisajeEntrada />}
     </div>
   );
 }
