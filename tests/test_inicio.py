@@ -216,3 +216,29 @@ def test_caminitos_de_huellas_detras_y_quietos_con_movimiento_reducido():
     assert 'CSS.supports("animation-timeline: view()")' in js  # respaldo solo si hace falta
     reducido = css.split("@media (prefers-reduced-motion: reduce)")[-1]
     assert ".rastro use, .paso { opacity: .15; }" in reducido
+
+
+def test_franja_instalar_la_app_encima_del_pie_con_qr_y_el_perrito_al_lado(c):
+    """#479: franja lila antes de las columnas; el perrito a su derecha; QR estático del repo."""
+    html, css, js = _html(), _css(), _js()
+    pie = html[html.index('<footer class="pie">'):]
+    columnas = pie.index('class="envoltura pie-fila"')
+    assert pie.index('class="franja-app"') < columnas and pie.index('class="pie-perro"') < columnas
+    assert "Lleva Patitas en tu celular" in pie and "Sin tienda de apps · Android y iPhone." in pie
+    assert pie.count('href="/app/#instalar" data-instalar') == 2  # la franja y «Plataforma»
+    assert re.search(r'<img src="/inicio/img/qr-app\.svg"[^>]*alt="Código QR [^"]+"', pie)
+    qr = (CARPETA / "img" / "qr-app.svg").read_text(encoding="utf-8")
+    assert qr.startswith('<svg xmlns="http://www.w3.org/2000/svg" viewBox=')
+    assert qr.count("http") == 1  # solo el espacio de nombres: nada externo
+    assert c.get("/inicio/img/qr-app.svg").status_code == 200
+    franja = re.search(r"\.franja-app \{[^}]*\}", css).group(0)
+    for regla in ("background: var(--lila)", "border: 3px solid #FFFFFF", "border-radius: 26px",
+                  "box-shadow: 6px 6px 0 var(--rosa)"):
+        assert regla in franja, regla
+    celular = css.split("@media (max-width: 760px)", 1)[1]
+    assert ".franja-qr { display: none; }" in celular  # sin QR ni perrito en el celular
+    assert ".franja-boton { flex: 1 1 100%; }" in celular
+    # Instalar de verdad: Chrome/Android, pasos de Safari en iPhone y, si no, el enlace a /app/.
+    assert '<link rel="manifest" href="/app/manifest.webmanifest">' in html
+    assert '"beforeinstallprompt"' in js and ".prompt()" in js and "showModal()" in js
+    assert 'id="instalar-iphone"' in html and "Agregar a pantalla de inicio" in html
