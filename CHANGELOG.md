@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- «Estado del reporte» (#494), como el prototipo `consultar-imagen-fundida.html`: la ilustración va sin marco (sin borde, esquinas, sombra, fondo ni copia difuminada). Se ve completa con su proporción real (hasta 540 px de alto en computador y 300 px en el celular, sin agrandarla), centrada en la columna derecha y con los 4 bordes fundidos en el crema. La etiqueta amarilla se monta sobre su borde de abajo. En el celular va arriba de todo. Mismo fundido de 0,4 s.
 - Estáticos (#492): las imágenes `.webp` se sirven como `image/webp` (en producción salían como `application/octet-stream`).
 - Seguridad (#486): cada inicio de sesión deja entrar solo a su rol. `POST /auth/token` recibe `portal` (adoptante | personal); con la contraseña correcta en la puerta equivocada responde 403 sin token ni registro de acceso, con un mensaje y un enlace a la puerta correcta. Con la contraseña mala sigue el 401 genérico. Sin `portal` (Swagger, scripts) no se restringe: los permisos de cada ruta los da el rol.
 - Entrada del adoptante (#484): la foto de los gatitos ya no se ve borrosa ni cortada. Es la nueva en alta (1200 × 675, webp de calidad 90 con respaldo jpg), nunca escalada de más, completa en 16/9, centrada y pegada abajo, de ancho min(100 %, 1200 px, 52vh × 16/9), con los bordes de arriba y de los lados fundidos en el crema. En el celular, a todo el ancho. Si no cabe, baja: nunca tapa el contenido.
