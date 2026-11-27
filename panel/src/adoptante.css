@@ -411,7 +411,8 @@
 .ds .adop .acceso-animal { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%;
   height: 100%; padding: 16px 10px; text-align: center; --fondo-b: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 22px;
   box-shadow: 4px 4px 0 var(--tinta); transition: translate .12s ease, border-color .2s; }
-.ds .adop .acceso-animal:hover { translate: -2px -2px; }
+/* Solo con ratón: en el celular el toque deja el «hover» pegado y la tarjeta quedaba 2 px más arriba. */
+@media (hover: hover) { .ds .adop .acceso-animal:hover { translate: -2px -2px; } }
 .ds .adop .acceso-animal--activa { border-color: var(--a-acento); box-shadow: 4px 4px 0 var(--a-acento); }
 .acceso-animal--activa::after { content: ""; position: absolute; left: 50%; bottom: -21px; translate: -50% 0;
   border: 10px solid transparent; border-top-color: var(--a-acento); } /* la flechita hacia el detalle */

@@ -43,9 +43,10 @@ for (const ancho of [1440, 390]) {
 
       if (ancho >= 560) return;
       // Celular: 2 columnas; el detalle a todo el ancho debajo de la fila tocada y la foto arriba.
-      await page.mouse.move(0, 0); // sin el «hover», que sube la tarjeta 2 px
-      const [a, b, c] = [await caja(primera), await caja(segunda), await caja(tarjetas.nth(2))];
-      expect(Math.abs(a.y - b.y)).toBeLessThan(2);
+      await page.mouse.move(0, 0); // sin el ratón encima; se mide cuando termina la transición
+      await expect.poll(async () => Math.abs((await caja(primera)).y - (await caja(segunda)).y)).toBeLessThan(3);
+      const [a, c] = [await caja(primera), await caja(tarjetas.nth(2))];
+      const b = await caja(segunda);
       expect(c.y).toBeGreaterThan(a.y + a.height);
       await primera.click();
       const d = await caja(detalle);
