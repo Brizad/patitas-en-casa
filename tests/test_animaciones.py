@@ -1,7 +1,6 @@
 """Animaciones Lottie decorativas (#467): archivos livianos servidos desde el propio sitio, carga
 perezosa, respaldo con movimiento reducido, CSP sin cambios y créditos documentados."""
 import json
-import re
 from pathlib import Path
 
 import pytest
@@ -44,10 +43,7 @@ def test_carga_perezosa_con_respaldo_y_movimiento_reducido():
     assert "new IntersectionObserver" in js and "anim.pause()" in js
     assert "prefers-reduced-motion: reduce" in js and "if (!reducido.matches) vigia.observe" in js
     inicio = (RAIZ / "app" / "inicio" / "index.html").read_text(encoding="utf-8")
-    perro = re.search(r'<span class="paseante paseante--perro" data-lottie="perro-caminando">'
-                      r'<svg class="paseante-svg"', inicio)
-    assert perro  # el SVG de siempre queda adentro como respaldo
-    assert re.search(r'<div class="carril" aria-hidden="true">', inicio)
+    assert "data-lottie" not in inicio and "animaciones.js" not in inicio  # #474: caminantes en SVG
     pwa = (RAIZ / "app" / "pwa" / "index.html").read_text(encoding="utf-8")
     huellas = '<span class="consultando-huellas" data-lottie="huellas-cargando" aria-hidden="true">'
     assert huellas in pwa

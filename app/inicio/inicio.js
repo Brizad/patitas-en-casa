@@ -187,7 +187,25 @@
     });
   }
 
+  /** Caminitos entre secciones (#474): si el navegador no liga la animación al scroll (CSS
+   *  animation-timeline), las huellas salen en fila cuando el caminito se ve. Con movimiento
+   *  reducido no se hace nada: se quedan quietas. */
+  function senderos() {
+    const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducido || !("IntersectionObserver" in window) || CSS.supports("animation-timeline: view()")) return;
+    const vigia = new IntersectionObserver((entradas) => {
+      for (const e of entradas) {
+        if (e.isIntersecting) { e.target.classList.add("visto"); vigia.unobserve(e.target); }
+      }
+    }, { threshold: 0.6 });
+    for (const el of document.querySelectorAll(".sendero")) {
+      el.classList.add("vigilado");
+      vigia.observe(el);
+    }
+  }
+
   menu();
+  senderos();
   compartir();
   void animales();
   void cifras();

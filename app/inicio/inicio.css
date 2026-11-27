@@ -225,22 +225,76 @@ main { overflow: hidden; }
 .final-texto h2 { font-size: 40px; line-height: 1.02; font-weight: 700; }
 .final-texto p { font-size: 19px; font-weight: 800; color: #FFFFFF; }
 
-/* ---------- perro y gato caminando ---------- */
-.carril { position: relative; height: 76px; overflow: hidden; pointer-events: none; }
-.paseante { position: absolute; bottom: 0; width: 96px; height: 64px; left: 12%; animation: caminar 16s linear infinite; }
-.paseante--gato { width: 80px; height: 56px; left: 62%; animation-duration: 21s; animation-delay: -9s; }
+/* ---------- caminantes kawaii (#474, SVG propio, sin Lottie) ----------
+   Cuatro animalitos cabezones cruzan de izquierda a derecha, cada uno a su ritmo. La franja mide
+   120 px para que ninguno se corte (orejas, cola y saltito incluidos). */
+.carril { position: relative; height: 120px; overflow: hidden; pointer-events: none; container-type: inline-size; }
+.caminante { position: absolute; left: 0; bottom: 6px; animation: caminar 19s linear infinite; }
+.caminante--dorado { width: 104px; height: 83px; }
+.caminante--blanco { width: 82px; height: 66px; animation-duration: 15s; animation-delay: -6s; }
+.caminante--gris { width: 92px; height: 74px; animation-duration: 23s; animation-delay: -11s; }
+.caminante--negro { width: 76px; height: 61px; animation-duration: 17s; animation-delay: -3s; }
+.caminante-svg { display: block; width: 100%; height: 100%; overflow: visible; animation: saltito .45s ease-in-out infinite; }
+.caminante-svg rect, .caminante-svg .borde { stroke: #6B4A3A; stroke-width: 2.5; }
+.caminante-svg .cola path { fill: none; stroke-linecap: round; }
+.caminante-svg .cachete { fill: #F7A8B8; opacity: .9; }
+.caminante-svg .boca { fill: none; stroke-width: 1.6; stroke-linecap: round; }
 .pata-a, .pata-b { transform-box: fill-box; transform-origin: 50% 0; }
-.cola { transform-box: fill-box; transform-origin: 0 100%; }
+.cola { transform-box: fill-box; transform-origin: 100% 100%; } /* gira desde donde nace */
 .pata-a { animation: pata .45s ease-in-out infinite alternate; }
 .pata-b { animation: pata .45s ease-in-out -.45s infinite alternate; }
 .cola { animation: cola .35s ease-in-out infinite alternate; }
-.carril-suelo { display: none; }
-/* Lottie (#467): el perro salchicha camina encima de su SVG; sin animación (o con movimiento
-   reducido) se queda el SVG de siempre. */
-.paseante > .paseante-svg { display: block; width: 100%; height: 100%; }
-.lottie-activa > .paseante-svg { display: none; }
-.paseante--perro .lottie-lienzo { position: absolute; left: -26px; bottom: -32px; width: 150px; height: 150px; }
-.lottie-lienzo > svg { display: block; }
+.carril-suelo { position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; opacity: .18;
+  background: repeating-linear-gradient(90deg, var(--oscuro) 0 10px, transparent 10px 18px); }
+
+/* ---------- caminitos de huellas (#474) ----------
+   Decorativos: siempre detrás del contenido (z-index -1 dentro de una sección aislada), sin
+   recibir clics. Los rastros de las esquinas aparecen paso a paso y se desvanecen en bucle. */
+.simbolos { position: absolute; width: 0; height: 0; overflow: hidden; }
+.hero, .adopcion, #roles { isolation: isolate; }
+.adopcion, #roles { position: relative; }
+.adopcion { overflow: hidden; }
+.rastro { --o: 0s; position: absolute; z-index: -1; width: 360px; height: 220px; fill: var(--oscuro); pointer-events: none; }
+.rastro--a { left: 4%; bottom: 40px; }
+.rastro--b { --o: 1s; right: 3%; top: 30px; }
+.rastro--c { left: 2%; top: 40px; }
+.rastro--d { --o: .5s; right: 0; top: 10px; }
+.rastro use { opacity: 0; transform-box: fill-box; transform-origin: center; animation: huella 7s ease-in-out var(--o) infinite; }
+.rastro use:nth-child(2) { animation-delay: calc(var(--o) + .5s); }
+.rastro use:nth-child(3) { animation-delay: calc(var(--o) + 1s); }
+.rastro use:nth-child(4) { animation-delay: calc(var(--o) + 1.5s); }
+.rastro use:nth-child(5) { animation-delay: calc(var(--o) + 2s); }
+.rastro use:nth-child(6) { animation-delay: calc(var(--o) + 2.5s); }
+.rastro use:nth-child(7) { animation-delay: calc(var(--o) + 3s); }
+.rastro use:nth-child(8) { animation-delay: calc(var(--o) + 3.5s); }
+/* Entre secciones: un caminito que va apareciendo al bajar. Ocupa el hueco que antes dejaba la
+   sección siguiente (por eso ella pierde ese espacio arriba). Sin JavaScript se ve quieto. */
+.sendero { position: relative; max-width: 1200px; height: 80px; margin: 0 auto; pointer-events: none; }
+.sendero--final { height: 60px; }
+.sendero + .adopcion { margin-top: 0; }
+.sendero + .seccion { padding-top: 0; }
+.paso { position: absolute; top: calc(50% - 22px); width: 22px; height: 22px; fill: var(--oscuro); opacity: .2; rotate: 90deg; }
+.paso:nth-child(even) { top: 50%; }
+.paso:nth-child(1) { left: 3%; --r: cover 8% cover 14%; transition-delay: 0s; }
+.paso:nth-child(2) { left: 13%; --r: cover 11% cover 17%; transition-delay: .12s; }
+.paso:nth-child(3) { left: 23%; --r: cover 14% cover 20%; transition-delay: .24s; }
+.paso:nth-child(4) { left: 33%; --r: cover 17% cover 23%; transition-delay: .36s; }
+.paso:nth-child(5) { left: 43%; --r: cover 20% cover 26%; transition-delay: .48s; }
+.paso:nth-child(6) { left: 53%; --r: cover 23% cover 29%; transition-delay: .6s; }
+.paso:nth-child(7) { left: 63%; --r: cover 26% cover 32%; transition-delay: .72s; }
+.paso:nth-child(8) { left: 73%; --r: cover 29% cover 35%; transition-delay: .84s; }
+.paso:nth-child(9) { left: 83%; --r: cover 32% cover 38%; transition-delay: .96s; }
+.paso:nth-child(10) { left: 93%; --r: cover 35% cover 41%; transition-delay: 1.08s; }
+@media (prefers-reduced-motion: no-preference) {
+  /* Navegadores con animaciones ligadas al scroll: cada huella aparece según cuánto se ha bajado. */
+  @supports (animation-timeline: view()) {
+    .sendero { view-timeline: --sendero block; }
+    .paso { animation: paso linear both; animation-timeline: --sendero; animation-range: var(--r); }
+  }
+  /* Los demás: inicio.js marca el caminito al verse (IntersectionObserver) y las huellas salen en fila. */
+  .sendero.vigilado .paso { opacity: 0; scale: .5; transition-property: opacity, scale; transition-duration: .35s; }
+  .sendero.vigilado.visto .paso { opacity: .2; scale: 1; }
+}
 
 /* ---------- pie ---------- */
 .pie { background: var(--oscuro); color: #FFFFFF; }
@@ -277,7 +331,10 @@ main { overflow: hidden; }
 @keyframes titilar { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.25) rotate(18deg); } }
 @keyframes latir { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 @keyframes cinta { to { transform: translateX(-50%); } }
-@keyframes caminar { from { left: -140px; } to { left: 100%; } }
+@keyframes caminar { from { transform: translateX(-140px); } to { transform: translateX(100cqw); } }
+@keyframes saltito { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes huella { 0% { opacity: 0; scale: .5; } 8%, 55% { opacity: .2; scale: 1; } 75%, 100% { opacity: 0; scale: 1; } }
+@keyframes paso { from { opacity: 0; scale: .5; } to { opacity: .2; scale: 1; } }
 @keyframes pata { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
 @keyframes cola { from { transform: rotate(-18deg); } to { transform: rotate(20deg); } }
 
@@ -340,6 +397,14 @@ main { overflow: hidden; }
   .final-foto--2 { left: 120px; top: 40px; width: 140px; height: 140px; }
   .final-estrella { left: 262px; }
   .pie-fila { gap: 24px; padding-top: 40px; }
+  .rastro { width: 220px; height: 134px; }
+  .sendero--adopcion { height: 56px; }
+  .paso { width: 18px; height: 18px; top: calc(50% - 18px); }
+  .carril { height: 96px; }
+  .caminante--dorado { width: 75px; height: 60px; }
+  .caminante--blanco { width: 59px; height: 48px; }
+  .caminante--gris { width: 66px; height: 53px; }
+  .caminante--negro { width: 55px; height: 44px; }
 }
 
 @media (max-width: 400px) {
@@ -355,4 +420,9 @@ main { overflow: hidden; }
 /* Movimiento reducido: todo quieto (la cinta se queda en su sitio). */
 @media (prefers-reduced-motion: reduce) {
   .p *, .p *::before { animation: none !important; transition: none !important; }
+  .rastro use, .paso { opacity: .15; } /* huellas quietas y tenues */
+  .caminante--dorado { left: 8%; }
+  .caminante--blanco { left: 34%; }
+  .caminante--gris { left: 58%; }
+  .caminante--negro { left: 82%; }
 }

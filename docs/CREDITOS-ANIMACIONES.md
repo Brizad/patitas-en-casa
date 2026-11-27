@@ -9,7 +9,7 @@ el autor del proyecto los complete desde la página de cada animación en Lottie
 
 | Animación | Archivo | Dónde se usa | Fuente y licencia | Autor | Enlace |
 |---|---|---|---|---|---|
-| Perrito salchicha caminando (*long dog*) | `perro-caminando.json` | Perro que camina en la página de inicio y en la bienvenida del adoptante | LottieFiles · licencia gratuita | pendiente | pendiente |
+| Perrito salchicha caminando (*long dog*) | `perro-caminando.json` | Perro que camina en la bienvenida del adoptante (la página de inicio usa caminantes SVG propios desde #474) | LottieFiles · licencia gratuita | pendiente | pendiente |
 | Cachorro blanco saltando | `perrito-saltando.json` | Bienvenida del adoptante, junto al collage | LottieFiles · licencia gratuita | pendiente | pendiente |
 | Dos gatitos jugando (*kicking cats*) | `gatos-jugando.json` | «¡Lo elegiste!» del adoptante, junto a la foto | LottieFiles · licencia gratuita | pendiente | pendiente |
 | Huellitas que aparecen (*paws pet*) | `huellas-cargando.json` | Indicador de carga del panel y de «Consultar» en la app | LottieFiles · licencia gratuita | pendiente | pendiente |
