@@ -315,7 +315,27 @@ main { overflow: hidden; }
 .pie-enlaces a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .pie-enlaces a:hover { text-decoration: underline; }
 .pie-dato { padding: 6px 0; font-weight: 700; color: var(--gris-claro); }
-.pie-perro { align-self: start; margin: -150px 0 0; padding: 10px; background: #FFFFFF; border: 4px solid var(--amarillo); border-radius: 30px;
+/* «Instalar la app» (#479): franja lila encima de las columnas. En computador, la tarjeta del
+   perrito va en la columna de la derecha (la misma de antes) y sobresale por encima del pie. */
+.pie-app { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 40px; padding-top: 44px; }
+.franja-app { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding: 18px 22px; background: var(--lila);
+  border: 3px solid #FFFFFF; border-radius: 26px; box-shadow: 6px 6px 0 var(--rosa); }
+.franja-icono { display: flex; align-items: center; justify-content: center; width: 58px; height: 58px; flex: none;
+  background: var(--amarillo); border: 2.5px solid var(--oscuro); border-radius: 18px; animation: menear 3s ease-in-out infinite; }
+.franja-icono svg { width: 30px; height: 30px; fill: none; stroke: var(--oscuro); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.franja-texto { display: flex; flex-direction: column; gap: 2px; flex: 1 1 260px; font-size: 14px; font-weight: 700; }
+.franja-titulo { font-size: 24px; font-weight: 700; }
+.franja-boton { --s: 3px; min-height: 52px; padding: 0 22px; font-size: 16px; }
+.franja-boton svg { width: 20px; height: 20px; fill: none; stroke: var(--oscuro); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.franja-qr { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; font-size: 11px; font-weight: 900; line-height: 1.2;
+  color: var(--oscuro); background: #FFFFFF; border: 2.5px solid var(--oscuro); border-radius: 16px; }
+.franja-qr img { display: block; width: 66px; height: 66px; } /* 2 px por módulo: nítido */
+.pasos-iphone { max-width: 360px; padding: 24px; color: var(--oscuro); background: #FFFFFF; border: 3px solid var(--oscuro);
+  border-radius: 26px; box-shadow: 6px 6px 0 var(--rosa); }
+.pasos-iphone::backdrop { background: rgba(43, 35, 64, .6); }
+.pasos-iphone-titulo { margin-bottom: 10px; font-size: 22px; font-weight: 700; }
+.pasos-iphone ol { margin: 0 0 18px; padding-left: 22px; font-size: 15px; font-weight: 700; line-height: 1.5; }
+.pie-perro { grid-column: 2; align-self: start; margin: -138px 0 -160px; position: relative; z-index: 2; padding: 10px; background: #FFFFFF; border: 4px solid var(--amarillo); border-radius: 30px;
   box-shadow: 8px 8px 0 var(--rosa); rotate: 3deg; }
 .pie-perro img { display: block; width: 100%; height: auto; aspect-ratio: 389 / 520; object-fit: cover; object-position: 50% 40%;
   border: 3px solid var(--oscuro); border-radius: 22px; }
@@ -346,6 +366,7 @@ main { overflow: hidden; }
   .roles, .tarjetas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pie-fila { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); }
   .pie-perro { display: none; }
+  .pie-app { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---------- celular: todo en una columna ---------- */
@@ -397,6 +418,12 @@ main { overflow: hidden; }
   .final-foto--2 { left: 120px; top: 40px; width: 140px; height: 140px; }
   .final-estrella { left: 262px; }
   .pie-fila { gap: 24px; padding-top: 40px; }
+  .pie-app { padding-top: 32px; }
+  .franja-app { gap: 14px; padding: 16px; }
+  .franja-texto { flex: 1 1 0; min-width: 0; }
+  .franja-titulo { font-size: 20px; }
+  .franja-boton { flex: 1 1 100%; }
+  .franja-qr { display: none; }
   .rastro { width: 220px; height: 134px; }
   .sendero--adopcion { height: 56px; }
   .paso { width: 18px; height: 18px; top: calc(50% - 18px); }

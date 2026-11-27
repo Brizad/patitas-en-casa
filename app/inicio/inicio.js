@@ -204,7 +204,34 @@
     }
   }
 
+  /** «Instalar la app» (#479), en la franja del pie y en «Plataforma». Chrome y Android avisan con
+   *  «beforeinstallprompt» que la app se puede instalar: el clic abre su ventana de instalar.
+   *  Safari en iPhone no lo permite: se muestran los pasos (Compartir → «Agregar a pantalla de
+   *  inicio»). Si no hay ni lo uno ni lo otro (ya instalada o navegador sin soporte), el enlace
+   *  sigue a /app/#instalar, que explica qué hacer. */
+  function instalar() {
+    let pedido = null;
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); pedido = e; });
+    window.addEventListener("appinstalled", () => { pedido = null; });
+    const iphone = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const pasos = document.getElementById("instalar-iphone");
+    for (const enlace of document.querySelectorAll("[data-instalar]")) {
+      enlace.addEventListener("click", (e) => {
+        if (pedido) {
+          e.preventDefault();
+          pedido.prompt(); // el aviso solo se puede usar una vez
+          pedido = null;
+        } else if (iphone && !navigator.standalone && pasos && pasos.showModal) {
+          e.preventDefault();
+          pasos.showModal();
+        }
+      });
+    }
+  }
+
   menu();
+  instalar();
   senderos();
   compartir();
   void animales();
