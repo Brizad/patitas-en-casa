@@ -8,7 +8,7 @@ import { AnimalPublicado, catalogo, registrarAdoptante } from "./apiAdopcion";
 import Cargando from "./Cargando";
 import CatalogoEnFilas from "./CatalogoEnFilas";
 import { FLECHA, Huella, Icono } from "./Ilustraciones";
-import { textoError } from "./mensajes";
+import { esOtroPortal, textoError } from "./mensajes";
 import PaisajeEntrada from "./PaisajeEntrada";
 
 export type VistaAcceso = "inicio" | "entrar" | "crear" | "animales";
@@ -27,8 +27,13 @@ type AlEntrar = (token: string, cuenta: Cuenta) => void;
 export default function AccesoAdoptante({ vista, alCambiar, alEntrar }: {
   vista: VistaAcceso; alCambiar: (v: VistaAcceso | "personal") => void; alEntrar: AlEntrar;
 }) {
+  // #488: la entrada, «Entrar» y «Crear» comparten el fondo de hojas y gatitos. Va en el mismo lugar
+  // del árbol en las tres: React no lo vuelve a montar y la imagen no se recarga al cambiar de pantalla.
+  const conPaisaje = vista !== "animales";
+  const formulario = vista === "entrar" || vista === "crear";
   return (
-    <div className={`adop adop--mov acceso-adop${vista === "inicio" ? " acceso-adop--paisaje" : ""}`}>
+    <div className={`adop adop--mov acceso-adop${conPaisaje ? " acceso-adop--paisaje" : ""}${
+      formulario ? " acceso-adop--form" : ""}`}>
       <div className="adop-fondo" aria-hidden="true">
         <span className="mancha mancha--rosa" /><span className="mancha mancha--lila" />
         <span className="mancha mancha--menta" /><span className="mancha mancha--amarillo" />
@@ -45,7 +50,7 @@ export default function AccesoAdoptante({ vista, alCambiar, alEntrar }: {
         {vista === "crear" && <Crear alCambiar={alCambiar} alEntrar={alEntrar} />}
         {vista === "animales" && <SinCuenta alCambiar={alCambiar} />}
       </main>
-      {vista === "inicio" && <PaisajeEntrada />}
+      {conPaisaje && <PaisajeEntrada />}
     </div>
   );
 }
@@ -73,20 +78,25 @@ function Opciones({ alCambiar }: { alCambiar: (v: VistaAcceso) => void }) {
   );
 }
 
-function Entrar({ alCambiar, alEntrar }: { alCambiar: (v: VistaAcceso) => void; alEntrar: AlEntrar }) {
+function Entrar({ alCambiar, alEntrar }: {
+  alCambiar: (v: VistaAcceso | "personal") => void; alEntrar: AlEntrar;
+}) {
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
+  const [otroPortal, setOtroPortal] = useState(false);
   const [enviando, setEnviando] = useState(false);
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setEnviando(true);
     setError("");
+    setOtroPortal(false);
     try {
-      const token = await iniciarSesion(correo.trim(), clave);
+      const token = await iniciarSesion(correo.trim(), clave, "adoptante");
       alEntrar(token, await miCuenta(token));
     } catch (err) {
-      setError(textoError(err));
+      setOtroPortal(esOtroPortal(err));
+      setError(esOtroPortal(err) ? err.detalle : textoError(err));
     } finally {
       setEnviando(false);
     }
@@ -99,7 +109,9 @@ function Entrar({ alCambiar, alEntrar }: { alCambiar: (v: VistaAcceso) => void; 
         onChange={(e) => setCorreo(e.target.value)} /></label>
       <label className="acceso-campo">Contraseña<input type="password" required autoComplete="current-password"
         value={clave} onChange={(e) => setClave(e.target.value)} /></label>
-      {error && <p className="adop-mensaje adop-mensaje--error" role="alert">{error}</p>}
+      {error && <p className="adop-mensaje adop-mensaje--error" role="alert">{error}
+        {otroPortal && <> <button type="button" className="adop-enlace" onClick={() => alCambiar("personal")}>
+          Ir a «¿Trabajas en el refugio?»</button></>}</p>}
       <button className="adop-boton" disabled={enviando}><span className="h">{enviando ? "Entrando…" : "Entrar"}</span>
         <span className="adop-boton-punta"><Icono d={FLECHA.adelante} /></span></button>
       <p className="acceso-pie"><button type="button" className="adop-enlace" onClick={() => alCambiar("crear")}>
@@ -128,7 +140,7 @@ function Crear({ alCambiar, alEntrar }: { alCambiar: (v: VistaAcceso) => void; a
       // Entra directo a su bienvenida. DT-09: si el correo ya tenía cuenta, el servidor responde
       // igual; entonces solo funciona su contraseña de siempre y se le dice sin revelar nada.
       try {
-        const token = await iniciarSesion(correo.trim(), clave);
+        const token = await iniciarSesion(correo.trim(), clave, "adoptante");
         alEntrar(token, await miCuenta(token));
       } catch {
         setError("Si este correo ya tenía cuenta, entra con tu contraseña de siempre en «Ya tengo cuenta».");

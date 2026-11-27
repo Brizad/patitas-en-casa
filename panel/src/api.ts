@@ -90,8 +90,12 @@ export function mensajeDeError(estado: number, cuerpo: unknown): string {
   return typeof detalle === "string" ? detalle : "Datos no válidos.";
 }
 
-export async function iniciarSesion(correo: string, clave: string): Promise<string> {
-  const formulario = new URLSearchParams({ username: correo, password: clave });
+/** #486: la puerta por la que se entra. El servidor responde 403 (sin token) si el rol de la
+ *  cuenta no es de esa puerta: el adoptante entra por «Adoptar» y el personal por la suya. */
+export type Portal = "adoptante" | "personal";
+
+export async function iniciarSesion(correo: string, clave: string, portal: Portal): Promise<string> {
+  const formulario = new URLSearchParams({ username: correo, password: clave, portal });
   const datos = await pedir<{ access_token: string }>("/auth/token", {
     method: "POST",
     body: formulario,

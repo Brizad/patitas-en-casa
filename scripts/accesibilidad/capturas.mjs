@@ -39,7 +39,10 @@ async function foto(p, nombre, { completa = false } = {}) {
 }
 
 async function entrar(p, usuario) {
-  await p.goto(`${BASE}/panel/`);
+  // #486: el adoptante entra por su propia puerta. about:blank antes: si solo cambiara el #,
+  // la página no se recargaría y seguiría abierta la sesión anterior.
+  await p.goto("about:blank");
+  await p.goto(`${BASE}/panel/${usuario === "adoptante" ? "#adoptar/entrar" : ""}`);
   await p.getByLabel("Correo").fill(`${usuario}@demo.patitas.co`);
   await p.getByLabel("Contraseña").fill(CLAVE);
   await p.getByRole("button", { name: "Entrar" }).click();

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { vistaDesdeHash } from "./AccesoAdoptante";
+import { ErrorApi } from "./api";
+import { esOtroPortal, textoError } from "./mensajes";
 
 const pantallas = import.meta.glob("./*.tsx", { query: "?raw", import: "default", eager: true });
 
@@ -32,6 +34,28 @@ describe("entrada del adoptante (arreglos, parte B)", () => {
     const crear = acceso.slice(acceso.indexOf("function Crear("));
     expect(crear.indexOf("registrarAdoptante(")).toBeLessThan(crear.indexOf("iniciarSesion("));
     expect(crear).toContain("alEntrar(token, await miCuenta(token))");
+  });
+});
+
+describe("cada puerta deja entrar solo a su rol (#486)", () => {
+  it("la entrada del adoptante pide portal adoptante y la del personal, portal personal", () => {
+    const acceso = pantallas["./AccesoAdoptante.tsx"] as string;
+    const app = pantallas["./App.tsx"] as string;
+    expect(acceso.match(/iniciarSesion\(correo\.trim\(\), clave[^)]*\)/g)).toEqual([
+      'iniciarSesion(correo.trim(), clave, "adoptante")', 'iniciarSesion(correo.trim(), clave, "adoptante")']);
+    expect(app).toContain('iniciarSesion(correo.trim(), clave, "personal")');
+  });
+
+  it("con la cuenta en la puerta equivocada, enlaza a la correcta", () => {
+    expect(pantallas["./AccesoAdoptante.tsx"]).toContain("Ir a «¿Trabajas en el refugio?»");
+    expect(pantallas["./App.tsx"]).toContain("Ir a «Adoptar»");
+  });
+
+  it("solo el 403 del inicio de sesión es «otra puerta»; el 401 sigue siendo el genérico", () => {
+    expect(esOtroPortal(new ErrorApi(403, "Esta cuenta es de adoptante."))).toBe(true);
+    expect(esOtroPortal(new ErrorApi(401, "x"))).toBe(false);
+    expect(esOtroPortal(new Error("sin red"))).toBe(false);
+    expect(textoError(new ErrorApi(401, "x"))).toBe("Correo o contraseña incorrectos.");
   });
 });
 

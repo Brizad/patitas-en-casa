@@ -3,11 +3,12 @@ RF-16) (DT-13, #267)."""
 from __future__ import annotations
 
 import logging
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import (
     APIRouter,
     Depends,
+    Form,
     HTTPException,
     Request,
     status,
@@ -101,8 +102,25 @@ def _cuenta(usuario: Usuario) -> dict:
             "activo": usuario.activo, "refugio_id": usuario.refugio_id}
 
 
+Portal = Literal["adoptante", "personal"]
+
+# #486: el mensaje solo sale con la contraseña correcta; con una incorrecta, el 401 genérico.
+OTRO_PORTAL = {
+    "adoptante": "Esta cuenta es del personal del refugio. Entra por «¿Trabajas en el refugio?».",
+    "personal": "Esta cuenta es de adoptante. Entra por «Adoptar».",
+}
+
+
+def _portal_ajeno(portal: Portal | None, usuario: Usuario) -> bool:
+    """El adoptante solo entra por «Adoptar» y el personal solo por «¿Trabajas en el refugio?».
+    Sin portal (clientes de la API, Swagger) no se restringe: los permisos los da el rol."""
+    if portal is None:
+        return False
+    return (usuario.rol == Rol.ADOPTANTE) != (portal == "adoptante")
+
+
 def _iniciar_sesion(ctx: Contexto, formulario: OAuth2PasswordRequestForm,
-                    peticion: Request) -> dict:
+                    peticion: Request, portal: Portal | None = None) -> dict:
     limite_intentos = ctx.limite_intentos
     # A-04 (#278): la IP sale de ip_del_cliente (por defecto, la de la conexión).
     ip = ctx.ip_de(peticion)
@@ -121,6 +139,9 @@ def _iniciar_sesion(ctx: Contexto, formulario: OAuth2PasswordRequestForm,
         limite_intentos.registrar_fallo(claves)
         # Mismo mensaje exista o no el correo: no se revela qué cuentas existen.
         raise no_autenticado("Correo o contraseña incorrectos.")
+    if _portal_ajeno(portal, usuario):
+        # #486: sin token ni registro de acceso; no es un fallo de contraseña, no se cuenta.
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=OTRO_PORTAL[portal])
     limite_intentos.registrar_exito(claves[0])
     # RF-16: historial de acceso de la cuenta (en la bitácora, también inmutable).
     ctx.repositorio_bitacora.registrar(Evento(usuario.correo, "inicio de sesión", {}, 200))
@@ -196,13 +217,16 @@ def _rutas_de_sesion(rutas: APIRouter, ctx: Contexto) -> None:
 
     @rutas.post("/auth/token")
     def iniciar_sesion(formulario: Annotated[OAuth2PasswordRequestForm, Depends()],
-                       peticion: Request):
-        """Inicio de sesión del personal: username = correo (DT-02).
+                       peticion: Request, portal: Annotated[Portal | None, Form()] = None):
+        """Inicio de sesión: username = correo (DT-02).
 
         DT-06: con demasiados fallos recientes del correo o de la IP responde 429 sin mirar
         la contraseña, ni siquiera la correcta: así el atacante no sabe si acertó.
+
+        #486: `portal` (adoptante | personal) es la puerta por la que se entra; si el rol no
+        es de esa puerta, 403 sin token.
         """
-        return _iniciar_sesion(ctx, formulario, peticion)
+        return _iniciar_sesion(ctx, formulario, peticion, portal)
 
     @rutas.get("/auth/yo")
     def mi_cuenta(usuario: Usuario = usuario_actual):

@@ -419,6 +419,9 @@
 @media (max-width: 600px) {
   .paisaje-franja img { --borde-lados: linear-gradient(#000, #000); } /* a todo el ancho: solo arriba */
   .paisaje-hojas { width: 220px; }
+  /* #488: debajo de los formularios, en el celular, más pequeña y con los lados fundidos otra vez. */
+  .acceso-adop--form .paisaje-franja img { width: min(78%, 320px);
+    --borde-lados: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent); }
 }
 .acceso-form .adop-boton { margin-top: 8px; }
 .acceso-campo { display: flex; flex-direction: column; gap: 6px; font-weight: 800; font-size: 15px; }
