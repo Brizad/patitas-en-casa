@@ -421,8 +421,8 @@ main { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .p *, .p *::before { animation: none !important; transition: none !important; }
   .rastro use, .paso { opacity: .15; } /* huellas quietas y tenues */
-  .caminante--dorado { left: 8%; }
-  .caminante--blanco { left: 34%; }
-  .caminante--gris { left: 58%; }
-  .caminante--negro { left: 82%; }
+  .caminante--dorado { left: 4%; } /* todos a la vista, antes de la tarjeta del pie */
+  .caminante--blanco { left: 25%; }
+  .caminante--gris { left: 45%; }
+  .caminante--negro { left: 65%; }
 }
