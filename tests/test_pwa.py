@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v16" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #490
+    assert "patitas-pwa-v17" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #494
 
 
 
@@ -425,10 +425,11 @@ def test_cada_estado_tiene_su_imagen_en_webp_con_respaldo_jpg_sin_agrandar():
 
 def test_la_ilustracion_es_decorativa_y_no_toca_la_linea_de_tiempo(c):
     marco = _seccion(c.get("/app/").text, "pantalla-estado")
-    figura = marco[marco.index('<figure class="estado-marco"'):marco.index("</figure>")]
+    figura = marco[marco.index('<figure class="estado-ilu"'):marco.index("</figure>")]
     assert 'aria-hidden="true"' in figura
-    assert figura.count("<img ") == figura.count('alt=""') == figura.count('loading="lazy"') == 4
-    assert figura.count('type="image/webp"') == 4
+    # #494: una sola foto, sin marco ni copia difuminada detrás.
+    assert figura.count("<img ") == figura.count('alt=""') == figura.count('loading="lazy"') == 1
+    assert figura.count('type="image/webp"') == 1
     assert '<ol class="tl" id="res-pasos"></ol>' in marco
     app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
     for etiqueta in ["Recibimos tu reporte", "Un veterinario lo revisó", "El rescate va en camino",
@@ -442,3 +443,21 @@ def test_las_fotos_webp_se_sirven_como_image_webp(c):
     respuesta = c.get("/app/fotos/consultar-0-espera.webp")
     assert respuesta.status_code == 200
     assert respuesta.headers["content-type"] == "image/webp"
+
+
+def test_la_ilustracion_va_sin_marco_y_con_los_bordes_fundidos():
+    """#494: como docs/prototipo/consultar-imagen-fundida.html."""
+    css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
+    ilu = re.search(r"\.estado-ilu \{[^}]*\}", css).group(0)
+    foto = re.search(r"\.estado-foto \{[^}]*\}", css).group(0)
+    for prohibido in ("border", "box-shadow", "background", "blur"):
+        assert prohibido not in ilu and prohibido not in foto
+    assert "max-width: 100%; max-height: 300px; width: auto; height: auto" in foto
+    assert "mask-composite: intersect" in foto and "-webkit-mask-composite: source-in" in foto
+    assert "#000 16%, #000 84%" in foto and "#000 14%, #000 82%" in foto
+    assert "transition: opacity .4s ease" in foto
+    assert ".estado-foto { max-height: 540px; }" in css  # en computador
+    etiqueta = re.search(r"\.estado-etiqueta \{[^}]*\}", css).group(0)
+    assert "#FFD23F" in etiqueta and "2.5px solid #2B2340" in etiqueta
+    assert "3px 3px 0 #2B2340" in etiqueta
+    assert "margin-top: -22px" in etiqueta  # montada sobre el borde de abajo de la foto

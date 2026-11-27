@@ -170,35 +170,30 @@
     return 'revisado';  // «Buscando rescatista disponible» o atención programada por el refugio
   }
 
-  function ponerFoto(capa, etapa) {
-    const [archivo, ancho, alto] = ETAPAS[etapa];
-    for (const fuente of capa.querySelectorAll('source')) fuente.srcset = 'fotos/' + archivo + '.webp';
-    for (const img of capa.querySelectorAll('img')) img.src = 'fotos/' + archivo + '.jpg';
-    const foto = capa.querySelector('.estado-foto');
-    foto.width = ancho;
-    foto.height = alto;
-    return foto;
-  }
+  const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function mostrarEtapa(etapa) {
-    const marco = $('estado-marco');
-    if (marco.dataset.etapa === etapa) return;
-    marco.dataset.etapa = etapa;
+    const ilu = $('estado-ilu');
+    if (ilu.dataset.etapa === etapa) return;
+    ilu.dataset.etapa = etapa;
+    const [archivo, ancho, alto, texto] = ETAPAS[etapa];
     const etiqueta = $('estado-etiqueta');
-    etiqueta.textContent = ETAPAS[etapa][3];
-    etiqueta.hidden = !ETAPAS[etapa][3];
-    const activa = marco.querySelector('.estado-capa.activa');
-    const otra = marco.querySelector('.estado-capa:not(.activa)');
-    const foto = ponerFoto(otra, etapa);
+    etiqueta.textContent = texto;
+    etiqueta.hidden = !texto;
+    const foto = ilu.querySelector('img');
     const turno = ++cambioDeEtapa;
-    const cambiar = () => {
-      if (turno !== cambioDeEtapa) return;  // llegó otra consulta mientras cargaba esta foto
-      otra.classList.add('activa');
-      activa.classList.remove('activa');
-    };
-    // Se cambia cuando la foto ya está lista, para que el fundido no muestre un hueco.
-    if (foto.decode) foto.decode().then(cambiar, cambiar);
-    else cambiar();
+    foto.classList.add('fuera');  // fundido de salida (.4 s); sin movimiento, el cambio es directo
+    setTimeout(() => {
+      if (turno !== cambioDeEtapa) return;  // llegó otra consulta mientras tanto
+      ilu.querySelector('source').srcset = 'fotos/' + archivo + '.webp';
+      foto.src = 'fotos/' + archivo + '.jpg';
+      foto.width = ancho;
+      foto.height = alto;
+      const entrar = () => { if (turno === cambioDeEtapa) foto.classList.remove('fuera'); };
+      // Entra cuando la foto ya está lista, para que el fundido no muestre un hueco.
+      if (foto.decode) foto.decode().then(entrar, entrar);
+      else entrar();
+    }, sinMovimiento.matches ? 0 : 200);
     const siguiente = ORDEN[ORDEN.indexOf(etapa) + 1];
     if (siguiente) new Image().src = 'fotos/' + ETAPAS[siguiente][0] + '.webp';  // solo la siguiente
   }

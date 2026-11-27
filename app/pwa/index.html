@@ -266,19 +266,10 @@
     <!-- Lottie (#467): huellitas mientras se consulta; con movimiento reducido, solo el texto. -->
     <p id="consultando" class="consultando" role="status" hidden><span class="consultando-huellas" data-lottie="huellas-cargando" aria-hidden="true"></span>Consultando tu reporte…</p>
     <div id="mensaje" class="aviso" role="status" aria-live="polite" hidden></div>
-    <!-- #490: ilustración según el estado real del reporte (decorativa). app.js la cambia con un fundido
-         entre las dos capas; detrás, la misma foto en cover y difuminada rellena el marco. -->
-    <figure class="estado-marco" id="estado-marco" data-etapa="espera" aria-hidden="true">
-      <div class="estado-ilustracion">
-      <div class="estado-capa activa">
-        <picture><source srcset="fotos/consultar-0-espera.webp" type="image/webp"><img class="estado-fondo" src="fotos/consultar-0-espera.jpg" alt="" loading="lazy" decoding="async"></picture>
-        <picture><source srcset="fotos/consultar-0-espera.webp" type="image/webp"><img class="estado-foto" src="fotos/consultar-0-espera.jpg" width="736" height="414" alt="" loading="lazy" decoding="async"></picture>
-      </div>
-      <div class="estado-capa">
-        <picture><source type="image/webp"><img class="estado-fondo" alt="" loading="lazy" decoding="async"></picture>
-        <picture><source type="image/webp"><img class="estado-foto" alt="" loading="lazy" decoding="async"></picture>
-      </div>
-      </div>
+    <!-- #490 / #494: ilustración según el estado real del reporte (decorativa), sin marco: la foto completa
+         con los bordes fundidos en el crema. app.js la cambia con un fundido de .4 s. -->
+    <figure class="estado-ilu" id="estado-ilu" data-etapa="espera" aria-hidden="true">
+      <picture><source srcset="fotos/consultar-0-espera.webp" type="image/webp"><img class="estado-foto" src="fotos/consultar-0-espera.jpg" width="736" height="414" alt="" loading="lazy" decoding="async"></picture>
       <figcaption class="estado-etiqueta" id="estado-etiqueta" hidden></figcaption>
     </figure>
     <section id="resultado" class="resultado" aria-live="polite" aria-label="Resultado" hidden>

@@ -29,14 +29,14 @@ async function consultar(page, codigo) {
   await page.locator("#consulta button").click();
 }
 
-const visible = (page) => page.locator("#estado-marco .estado-capa.activa .estado-foto");
+const visible = (page) => page.locator("#estado-ilu img");
 
 for (const [ancho, alto] of [[1440, 900], [390, 844]]) {
   test(`${ancho} px: la imagen sigue el estado real y vuelve a la de espera si el código no existe`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: alto });
     await simular(page);
     await page.goto("/app/#estado");
-    const marco = page.locator("#estado-marco");
+    const marco = page.locator("#estado-ilu");
     await expect(marco).toHaveAttribute("aria-hidden", "true");
     await expect(marco).toHaveAttribute("data-etapa", "espera");
     await expect(page.locator("#estado-etiqueta")).toBeHidden();
@@ -53,29 +53,37 @@ for (const [ancho, alto] of [[1440, 900], [390, 844]]) {
     await expect(page.locator("#mensaje")).toContainText("No encontramos el código ZZZZ9999");
     await expect(marco).toHaveAttribute("data-etapa", "espera");
 
-    // La foto se ve completa (contain) sobre la misma en cover y difuminada.
-    const estilos = await page.evaluate(() => ["estado-foto", "estado-fondo"].map((c) => {
-      const e = getComputedStyle(document.querySelector(`.estado-capa.activa .${c}`));
-      return [e.objectFit, e.filter];
-    }));
-    expect(estilos[0][0]).toBe("contain");
-    expect(estilos[1][0]).toBe("cover");
-    expect(estilos[1][1]).toContain("blur(18px)");
+    // #494: sin marco; la foto completa con su proporción real y los 4 bordes fundidos en el crema.
+    const estilo = await visible(page).evaluate((i) => {
+      const e = getComputedStyle(i);
+      const f = getComputedStyle(i.closest("figure"));
+      return { mascara: e.maskImage || e.webkitMaskImage, borde: f.borderTopWidth, sombra: f.boxShadow,
+        fondo: f.backgroundColor, proporcion: i.width / i.height, real: i.naturalWidth / i.naturalHeight,
+        ancho: i.width, natural: i.naturalWidth };
+    });
+    expect(estilo.mascara.match(/linear-gradient/g)).toHaveLength(2);
+    expect([estilo.borde, estilo.sombra, estilo.fondo]).toEqual(["0px", "none", "rgba(0, 0, 0, 0)"]);
+    expect(Math.abs(estilo.proporcion - estilo.real)).toBeLessThan(0.01); // completa, sin recortes
+    expect(estilo.ancho).toBeLessThanOrEqual(estilo.natural); // nunca agrandada
 
-    const m = await marco.boundingBox();
-    const campo = await page.locator("#codigo").boundingBox();
-    if (ancho >= 1024) { // dos columnas: el marco a la derecha, de 420 × 520
-      expect(Math.round(m.width)).toBe(420);
-      expect(Math.round(m.height)).toBe(520);
-      expect(m.x).toBeGreaterThan(campo.x + campo.width);
-    } else { // celular: arriba de la tarjeta, a todo el ancho y de 220 px
-      await consultar(page, "AAAA1111");
-      await expect(page.locator("#resultado")).toBeVisible();
-      const tarjeta = await page.locator("#resultado").boundingBox();
-      const arriba = await marco.boundingBox();
-      expect(Math.round(m.height)).toBe(220);
-      expect(Math.abs(m.width - tarjeta.width)).toBeLessThan(2); // a todo el ancho, como la tarjeta
-      expect(arriba.y + arriba.height).toBeLessThanOrEqual(tarjeta.y);
+    await consultar(page, "DDDD4444"); // la más alta (680 × 1024)
+    await expect.poll(() => visible(page).evaluate((i) => i.complete && i.currentSrc)).toMatch("-rescate.webp");
+    await expect(visible(page)).not.toHaveClass(/fuera/);
+    const f = await visible(page).boundingBox();
+    const etq = await page.locator("#estado-etiqueta").boundingBox();
+    expect(Math.round(f.height)).toBe(ancho >= 1024 ? 540 : 300);
+    expect(etq.y).toBeLessThan(f.y + f.height); // montada sobre el borde de abajo de la foto
+    expect(Math.abs(etq.x + etq.width / 2 - (f.x + f.width / 2))).toBeLessThan(2); // centrada
+    if (ancho >= 1024) { // a la derecha del formulario, centrada en su columna de 520 px
+      const campo = await page.locator("#codigo").boundingBox();
+      const columna = await marco.boundingBox();
+      expect(Math.round(columna.width)).toBe(520);
+      expect(f.x).toBeGreaterThan(campo.x + campo.width);
+      expect(Math.abs(f.x + f.width / 2 - (columna.x + columna.width / 2))).toBeLessThan(2);
+    } else { // celular: arriba de todo, centrada
+      const titulo = await page.getByRole("heading", { name: "Estado del reporte" }).boundingBox();
+      expect(etq.y + etq.height).toBeLessThanOrEqual(titulo.y);
+      expect(Math.abs(f.x + f.width / 2 - ancho / 2)).toBeLessThan(2);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
   });
@@ -85,6 +93,6 @@ test("con «reducir movimiento» la imagen cambia sin fundido", async ({ page })
   await page.emulateMedia({ reducedMotion: "reduce" });
   await simular(page);
   await page.goto("/app/#estado");
-  const transicion = await page.locator(".estado-capa").first().evaluate((e) => getComputedStyle(e).transitionDuration);
+  const transicion = await page.locator("#estado-ilu img").evaluate((e) => getComputedStyle(e).transitionDuration);
   expect(transicion).toBe("0s");
 });
