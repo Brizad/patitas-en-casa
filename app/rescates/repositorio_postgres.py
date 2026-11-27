@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Engine, RowMapping, delete, exists, insert, literal, select, update
+from sqlalchemy import Engine, RowMapping, delete, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 from sqlalchemy.exc import IntegrityError
 
@@ -141,23 +141,25 @@ class RepositorioRescatesPostgres:
         return cambio.rowcount == 1
 
     def guardar_ubicacion(self, ubicacion: UbicacionRescatista, rescatista: str) -> bool:
-        """INSERT ... SELECT con la condición: solo entra si el rescate es suyo y va en camino."""
+        """En una transacción: bloquea la fila del rescate (FOR UPDATE) y solo si es suyo y va en
+        camino reemplaza la última posición. Un «avanzar» a la vez espera a que esto termine y
+        luego borra la posición; si avanzó antes, aquí ya no encuentra el rescate en camino."""
         u = ubicaciones_rescate.c
-        es_suyo = exists().where(rescates.c.reporte_codigo == ubicacion.codigo,
-                                 rescates.c.rescatista == rescatista,
-                                 rescates.c.estado == EstadoRescate.EN_CAMINO.value)
-        fuente = select(literal(ubicacion.codigo), literal(ubicacion.latitud),
-                        literal(ubicacion.longitud), literal(ubicacion.simulada),
-                        literal(ubicacion.actualizada_en)).where(es_suyo)
-        sentencia = insertar_o_actualizar(ubicaciones_rescate).from_select(
-            [u.reporte_codigo, u.latitud, u.longitud, u.simulada, u.actualizada_en], fuente)
-        sentencia = sentencia.on_conflict_do_update(
-            index_elements=[u.reporte_codigo],
-            set_={"latitud": sentencia.excluded.latitud, "longitud": sentencia.excluded.longitud,
-                  "simulada": sentencia.excluded.simulada,
-                  "actualizada_en": sentencia.excluded.actualizada_en})
+        datos = {"latitud": ubicacion.latitud, "longitud": ubicacion.longitud,
+                 "simulada": ubicacion.simulada, "actualizada_en": ubicacion.actualizada_en}
+        sentencia = insertar_o_actualizar(ubicaciones_rescate).values(
+            reporte_codigo=ubicacion.codigo, **datos)
+        sentencia = sentencia.on_conflict_do_update(index_elements=[u.reporte_codigo], set_=datos)
         with self._motor.begin() as conexion:
-            return conexion.execute(sentencia).rowcount == 1
+            suyo = conexion.execute(
+                select(rescates.c.id).where(rescates.c.reporte_codigo == ubicacion.codigo,
+                                            rescates.c.rescatista == rescatista,
+                                            rescates.c.estado == EstadoRescate.EN_CAMINO.value)
+                .with_for_update()).first()
+            if suyo is None:
+                return False
+            conexion.execute(sentencia)
+        return True
 
     def ubicacion(self, codigo: str) -> UbicacionRescatista | None:
         with self._motor.connect() as conexion:
