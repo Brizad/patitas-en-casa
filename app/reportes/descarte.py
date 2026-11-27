@@ -15,6 +15,7 @@ from app.reportes.confirmacion import (
     ReporteYaConfirmado,
     validar_justificacion,
 )
+from app.reportes.orden import atrasado
 from app.reportes.repositorio import RepositorioReportes
 
 
@@ -32,8 +33,11 @@ class ServicioDescarte:
                   justificacion: str | None, duplicado_de: str | None = None) -> Descarte:
         if veterinario.rol != Rol.VETERINARIO:
             raise PermissionError("Solo el veterinario descarta reportes (D-02).")
-        if self._repositorio.buscar(codigo) is None:
+        reporte = self._repositorio.buscar(codigo)
+        if reporte is None:
             raise ReporteNoEncontrado(f"No existe el reporte {codigo}.")
+        if motivo == MotivoDescarte.ARCHIVADO and not atrasado(reporte.creado_en, self._reloj()):
+            raise DescarteInvalido("Solo se archivan casos con más de 3 días sin avanzar.")
         justificacion = (justificacion or "").strip()
         validar_justificacion(justificacion, DescarteInvalido)
         if duplicado_de is not None:

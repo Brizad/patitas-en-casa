@@ -7,6 +7,7 @@ describe("historial del veterinario", () => {
     expect(fechaLocal("2026-10-03T03:00:00+00:00", "America/Bogota")).toContain("02/10/2026");
   });
   it("cada acción tiene un nombre legible", () => {
-    expect(Object.values(NOMBRE_ACCION)).toEqual(["Confirmado", "Ajustado", "Descartado"]);
+    expect(Object.values(NOMBRE_ACCION)).toEqual(["Confirmado", "Ajustado", "Descartado",
+      "Archivado: no se pudo verificar"]); // #496
   });
 });

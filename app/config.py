@@ -57,6 +57,10 @@ COMUNAS_CUCUTA = tuple(range(1, 11))
 # coordinador y ofrecer el caso en toda la ciudad. Crítico 15 (decisión del autor); alto 30
 # (tabla de configuración del prototipo).
 ESCALAMIENTO_MINUTOS = {"critica": 15, "alta": 30}
+
+# #496: un caso con más de estas horas sin avanzar de estado sale de la lista principal de las
+# bandejas y va en «Atrasados» (también deja de contar en la posición del ciudadano).
+HORAS_ATRASO = 72
 # #390: ya no es la frecuencia (la tarea espera justo hasta que vence el próximo rescate): es la
 # primera espera tras un error de la base, que se duplica hasta 30 min. Lo mismo para videos.
 REVISION_ESCALAMIENTOS_SEGUNDOS = 60

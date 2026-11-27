@@ -39,14 +39,16 @@ def test_falla_del_clasificador_aplica_falla_segura():
     assert r.prioridad == Prioridad.ALTA
 
 
-def test_cola_ubica_revision_sobre_media_y_critico_primero():
+def test_cola_critico_primero_y_en_el_mismo_nivel_el_mas_antiguo():
+    """#496 (decisión del autor): nivel y luego orden de llegada. Media, baja y «requiere
+    revisión» son el mismo nivel (normal): van por llegada (antes, revisión iba sobre media)."""
     media = nuevo_reporte(minutos=0)
     media.prioridad, media.estado = Prioridad.MEDIA, EstadoReporte.CLASIFICADO
     revision = nuevo_reporte(minutos=1)
     revision.prioridad, revision.estado = Prioridad.BAJA, EstadoReporte.REQUIERE_REVISION
     critica = nuevo_reporte(minutos=5)
     critica.prioridad, critica.estado = Prioridad.CRITICA, EstadoReporte.CLASIFICADO
-    assert ordenar_cola([media, revision, critica]) == [critica, revision, media]
+    assert ordenar_cola([revision, media, critica]) == [critica, media, revision]
 
 
 def test_confianza_baja_con_prioridad_critica_no_se_degrada():

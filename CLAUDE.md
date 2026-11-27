@@ -77,7 +77,12 @@ veterinarios y control de cupos del refugio.
   seguimiento de un descartado no muestra el motivo. Las fechas de la API van en UTC
   (`fecha_utc`). El historial clínico solo se inserta; el egreso libera el cupo una sola vez.
 - **RN-14** (HU-08): la consulta por código (`/reportes/{codigo}/seguimiento`) muestra solo el
-  código, los pasos y sus fechas; nunca descripción, ubicación, prioridad ni correos.
+  código, los pasos y sus fechas; nunca descripción, ubicación, prioridad interna ni correos.
+  Desde #496 (decisión del autor) también cuántos casos van antes en la cola y, después del
+  triaje, el nivel (urgente, alta o normal).
+- **Orden de las bandejas (#496)**: una sola regla en `app/reportes/orden.py` (nivel y luego el
+  más antiguo; más de 72 h sin avanzar → «Atrasados»). Archivar un atrasado es un descarte con
+  motivo `archivado`.
 
 Fuente de las reglas que no están en el código: `docs/prototipo/interaccion.js` (encabezado y
 acciones). Ese prototipo es un entregable calificado: se lee, no se modifica.

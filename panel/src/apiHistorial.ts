@@ -2,7 +2,7 @@
 // pantalla para poder probarlas con vitest.
 import { pedir, Prioridad } from "./api";
 
-export type Accion = "confirmado" | "ajustado" | "descartado";
+export type Accion = "confirmado" | "ajustado" | "descartado" | "archivado";
 
 export interface FilaHistorial {
   codigo: string; accion: Accion; fecha: string; // UTC (D-06)
@@ -12,6 +12,7 @@ export interface FilaHistorial {
 
 export const NOMBRE_ACCION: Record<Accion, string> = {
   confirmado: "Confirmado", ajustado: "Ajustado", descartado: "Descartado",
+  archivado: "Archivado: no se pudo verificar", // #496
 };
 
 /** Estado actual del reporte: solo los dos que deja una decisión del veterinario. */

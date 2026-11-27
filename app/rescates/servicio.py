@@ -23,6 +23,7 @@ from app.dominio.modelos import (
     ResultadoRescate,
     Usuario,
 )
+from app.reportes.orden import ordenar
 from app.reportes.repositorio import RepositorioReportes
 from app.rescates.repositorio import (
     ACTIVOS,
@@ -98,8 +99,7 @@ class ServicioRescates:
         libres = [r for r in self._reportes.confirmados_de_rescate()
                   if self.se_ofrece(r) and r.codigo not in tomados
                   and (r.codigo in escalados or en_zona(r, zona))]
-        return sorted(libres, key=lambda r: (PRIORIDADES_DE_RESCATE.index(r.prioridad),
-                                             r.creado_en))
+        return ordenar(libres, lambda r: r.prioridad, lambda r: r.creado_en)  # #496
 
     def aceptar(self, rescatista: Usuario, codigo: str) -> tuple[Rescate, Reporte]:
         reporte = self._reportes.buscar(codigo)
