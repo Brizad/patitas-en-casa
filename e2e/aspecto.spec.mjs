@@ -35,9 +35,10 @@ async function entrar(page, usuario) {
 
 // Pantalla de inicio de cada rol y lo que en ella cambia entre corridas.
 const ROLES = [
-  ["veterinaria", "veterinario-cola", ["code", ".item > .ds-suave"]],
+  // #496: la espera («hace N min») y el mapa (teselas de la red) cambian entre corridas.
+  ["veterinaria", "veterinario-cola", ["code", ".espera"]],
   ["coordinador", "coordinador-refugio", []],
-  ["rescatista", "rescatista-ofertas", ["code"]],
+  ["rescatista", "rescatista-ofertas", ["code", ".oferta-datos", ".mapa-casos"]],
   ["adoptante", "adoptante-catalogo", []],
   ["admin", "administrador-cuentas", []],
   ["alcaldia", "alcaldia-indicadores", [".kpi dd", "h3 + .lista-simple"]],

@@ -117,7 +117,7 @@
 .resumen-cola { margin: 4px 0 10px; font-size: 14px; font-weight: 700; color: #5B5070; }
 .resumen-cola b { color: #2B2340; }
 .pestanas-bandeja { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
-.ds .pestanas-bandeja button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; background: #FFFFFF;
+.ds .pestanas-bandeja button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; background: #FFFFFF;
   box-shadow: none; }
 .ds .pestanas-bandeja button[aria-selected="true"] { background: #2B2340; color: #FFFFFF; }
 .contador { min-width: 22px; padding: 0 6px; border-radius: 999px; background: #F1ECFF; color: #2B2340; font-size: 12px; text-align: center; }
@@ -127,7 +127,14 @@
 .nivel { display: inline-block; padding: 2px 10px; border: 2px solid #2B2340; border-radius: 999px; font-size: 12px; font-weight: 800;
   color: #2B2340; white-space: nowrap; }
 .nivel--urgente { background: #E8508A; color: #FFFFFF; } .nivel--alta { background: #FFD23F; } .nivel--normal { background: #D7F0DC; }
-.ds .tarjeta-caso { grid-template-columns: auto 44px minmax(0, 1fr) auto; align-items: start; }
+/* Dos filas: arriba el nivel y la espera; abajo la miniatura y los datos (la lista es angosta). */
+.ds .tarjeta-caso { grid-template-columns: 44px minmax(0, 1fr) auto; grid-template-areas: "nivel nivel espera" "mini datos datos";
+  align-items: start; }
+.tarjeta-caso .nivel { grid-area: nivel; justify-self: start; }
+.tarjeta-caso .espera { grid-area: espera; }
+.tarjeta-caso .miniatura { grid-area: mini; }
+.tarjeta-caso .caso-datos { grid-area: datos; }
+.tarjeta-caso > .ds-insignia--info { grid-column: 1 / -1; }
 .miniatura { width: 44px; height: 44px; border-radius: 12px; border: 2px solid #2B2340; background: #F1ECFF; display: flex;
   align-items: center; justify-content: center; font-weight: 800; color: #5B5070; }
 .miniatura svg { width: 20px; height: 20px; fill: #2B2340; }
@@ -137,10 +144,7 @@
 .espera::before { content: ""; width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid #2B2340; }
 .espera--verde::before { background: #3FA36B; } .espera--amarillo::before { background: #FFD23F; } .espera--rojo::before { background: #D93B3B; }
 .acciones-atrasado { margin: 6px 0 4px; }
-@media (max-width: 520px) {
-  .ds .tarjeta-caso { grid-template-columns: 44px minmax(0, 1fr); }
-  .tarjeta-caso .nivel, .tarjeta-caso .espera { grid-column: 1 / -1; justify-self: start; }
-}
+
 /* Rescatista: lista a la izquierda y mapa a la derecha en computador; en celular, «Ver en mapa». */
 .permiso-ubicacion { margin: 0 0 12px; padding: 12px 14px; background: #F1ECFF; border: 2px solid #2B2340; border-radius: 16px; }
 .permiso-ubicacion p { margin: 0; }
