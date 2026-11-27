@@ -15,10 +15,10 @@ test.describe("1440 px", () => {
     await expect(franja.getByText("Lleva Patitas en tu celular")).toBeVisible();
     await expect(franja.locator(".franja-qr img")).toBeVisible();
     const [f, perro, pie, columnas] = [await caja(franja), await caja(page.locator(".pie-perro")),
-      await caja(page.locator(".pie")), await caja(page.locator(".pie-fila"))];
+      await caja(page.locator(".pie")), await caja(page.locator(".pie-marca"))];
     expect(perro.y).toBeLessThan(pie.y - 40); // sobresale por encima del borde del pie
     expect(f.x + f.width).toBeLessThan(perro.x); // la franja no lo tapa
-    expect(f.y + f.height).toBeLessThanOrEqual(columnas.y); // y va encima de las columnas
+    expect(f.y + f.height).toBeLessThan(columnas.y); // y va encima de las columnas (sin redondeos)
   });
 
   test("con beforeinstallprompt, el clic abre la ventana de instalar", async ({ page }) => {
