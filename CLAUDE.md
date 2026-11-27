@@ -103,7 +103,7 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
 ## Seguridad (DT-02)
 
 - Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01),
-  `POST /auth/token`, `POST /adoptantes` (siempre crea el rol adoptante, exige
+  `POST /auth/token` (#486: con `portal` adoptante | personal, 403 sin token si el rol no es de esa puerta), `POST /adoptantes` (siempre crea el rol adoptante, exige
   `autoriza_datos`; DT-09: 5 por IP cada 15 min y la misma respuesta si el correo ya existe) y `GET /adopciones/animales`. `POST /piloto/reportes` y `POST /piloto/resultados` (#258) no piden sesión sino el token de un solo uso del participante en `X-Piloto` y nunca guardan reportes. Todo lo demás exige `Authorization: Bearer` de personal
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.

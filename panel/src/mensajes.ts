@@ -11,6 +11,12 @@ export function textoError(error: unknown): string {
   }
 }
 
+/** #486: al iniciar sesión, el 403 significa «la contraseña es correcta pero esta no es tu
+ *  puerta»; el texto lo da el servidor y la pantalla añade el enlace a la puerta correcta. */
+export function esOtroPortal(error: unknown): error is ErrorApi {
+  return error instanceof ErrorApi && error.estado === 403;
+}
+
 export const NOMBRE_PRIORIDAD: Record<string, string> = {
   critica: "Crítica", alta: "Alta", media: "Media", baja: "Baja",
 };

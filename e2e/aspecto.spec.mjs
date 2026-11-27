@@ -25,7 +25,8 @@ async function comparar(page, nombre, mascaras = []) {
 }
 
 async function entrar(page, usuario) {
-  await page.goto("/panel/");
+  // #486: el adoptante entra por su propia puerta.
+  await page.goto(`/panel/${usuario === "adoptante" ? "#adoptar/entrar" : ""}`);
   await page.getByLabel("Correo").fill(`${usuario}@demo.patitas.co`);
   await page.getByLabel("Contraseña").fill(CLAVE);
   await page.getByRole("button", { name: "Entrar" }).click();
