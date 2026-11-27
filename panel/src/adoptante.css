@@ -398,9 +398,8 @@
 .ds .adop .acceso-opcion { --fondo-b: var(--amarillo); min-height: 96px; }
 .ds .adop .acceso-opcion--rosa { --fondo-b: var(--rosa); }
 .entrada-adop .adop-enlace { align-self: flex-start; }
-/* Fondo de la entrada (#482): hojas arriba, detrás de todo, y la franja de gatitos abajo, en el flujo.
-   La franja toma el espacio libre hasta 46vh; si el contenido no deja, se encoge hasta 300 px y, si ni
-   así cabe, baja. Nunca tapa el contenido. Reemplaza las manchas solo en esta pantalla. */
+/* Fondo de la entrada (#482, #484): hojas arriba, detrás de todo, y la foto de los gatitos abajo, en el
+   flujo: si el contenido no deja espacio, la foto baja (nunca lo tapa). Reemplaza las manchas aquí. */
 .acceso-adop--paisaje .adop-fondo { display: none; }
 .paisaje { pointer-events: none; user-select: none; }
 .paisaje picture { display: contents; }
@@ -408,18 +407,17 @@
 .paisaje-hojas { position: absolute; top: 0; width: 520px; height: auto; }
 .paisaje-hojas--izq { left: 0; }
 .paisaje-hojas--der { right: 0; }
-.paisaje-franja { --x: 50%; position: relative; z-index: 0; flex: 1000 0 300px; max-height: max(300px, 46vh); overflow: hidden;
-  container-type: size; }
-.paisaje-franja img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
-/* Con cualquier alto, los ojos de los gatitos (mitad de la foto) quedan al 70 % de la franja, bajo el degradado. */
-@supports (container-type: size) {
-  .paisaje-franja img { object-position: var(--x) clamp(min(0px, 100cqh - 56.25cqw), 70cqh - 27.84cqw, 0px); }
-}
-.paisaje-franja::after { content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, var(--crema), rgba(255, 248, 238, 0) 38%); }
+.paisaje-franja { position: relative; z-index: 0; flex: none; display: flex; justify-content: center;
+  margin-top: -40px; } /* el borde difuminado sube al margen vacío del contenido (sus 40 px de abajo), sin tapar nada */
+/* La foto completa (16/9), nunca más grande que su tamaño real (1200 px). Los bordes de arriba y de los
+   lados se funden con el crema: dos degradados en la máscara que se cruzan (intersect). */
+.paisaje-franja img { display: block; width: min(100%, 1200px, calc(52vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9;
+  --borde-arriba: linear-gradient(to bottom, transparent, #000 34%);
+  --borde-lados: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  -webkit-mask-image: var(--borde-arriba), var(--borde-lados); -webkit-mask-composite: source-in;
+  mask-image: var(--borde-arriba), var(--borde-lados); mask-composite: intersect; }
 @media (max-width: 600px) {
-  .paisaje-franja { --x: 54%; flex-basis: 240px; max-height: max(240px, 34vh); } /* las dos caras al centro */
-  .paisaje-franja img { object-position: 54% 30%; }
+  .paisaje-franja img { --borde-lados: linear-gradient(#000, #000); } /* a todo el ancho: solo arriba */
   .paisaje-hojas { width: 220px; }
 }
 .acceso-form .adop-boton { margin-top: 8px; }

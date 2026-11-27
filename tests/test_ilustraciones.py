@@ -102,17 +102,18 @@ def test_las_formas_de_prioridad_se_sirven_como_svg(c):
 
 
 def test_fondo_de_la_entrada_del_adoptante_decorativo_y_que_no_tapa():
-    """#482: franja de gatitos abajo (hasta 46vh, mínimo 300 px) que se funde con el crema y hojas
-    arriba; en el celular 34vh y hojas de 220 px. Sin eventos; reemplaza las manchas."""
+    """#482 y #484: foto de los gatitos completa (16/9, sin recortes ni escalarla de más), pegada
+    abajo, centrada y con los bordes de arriba y los lados difuminados; hojas arriba."""
     css = (RAIZ / "panel" / "src" / "adoptante.css").read_text(encoding="utf-8")
     assert re.search(r"\.paisaje \{[^}]*pointer-events: none;", css)
     assert ".acceso-adop--paisaje .adop-fondo { display: none; }" in css
     franja = re.search(r"\.paisaje-franja \{[^}]*\}", css).group(0)
-    assert "flex: 1000 0 300px" in franja  # en el flujo: se encoge hasta 300 px y luego baja
-    assert "max-height: max(300px, 46vh)" in franja
-    assert "object-position: 50% 28%" in css
-    assert "linear-gradient(to bottom, var(--crema), rgba(255, 248, 238, 0) 38%)" in css
+    assert "flex: none" in franja and "justify-content: center" in franja  # en el flujo: baja
+    foto = re.search(r"\.paisaje-franja img \{[^}]*\}", css).group(0)
+    assert "width: min(100%, 1200px, calc(52vh * 16 / 9))" in foto
+    assert "aspect-ratio: 16 / 9" in foto
+    assert "object-fit: cover" not in foto and "background" not in franja  # completa, sin recortes
+    assert "mask-composite: intersect" in foto  # arriba, izquierda y derecha se funden con el crema
     assert re.search(r"\.paisaje-hojas \{[^}]*width: 520px;", css)
     celular = css.split("@media (max-width: 600px)", 1)[1]
-    assert "flex-basis: 240px; max-height: max(240px, 34vh);" in celular
     assert ".paisaje-hojas { width: 220px; }" in celular

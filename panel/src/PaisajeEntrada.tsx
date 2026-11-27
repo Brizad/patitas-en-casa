@@ -1,11 +1,9 @@
 // Fondo de la entrada del adoptante (#482), como docs/prototipo/referencias/vista-previa-adoptar-fondo.png:
-// hojas en las esquinas de arriba (detrás de todo) y, abajo, una franja con dos gatitos asomados al
-// muro que se funde con el crema. Solo adorno: oculto al lector, sin texto alternativo, sin eventos y
+// hojas en las esquinas de arriba (detrás de todo) y, abajo, la foto completa de dos gatitos asomados
+// al muro (#484: nítida, sin recortes), con los bordes fundidos en el crema. Solo adorno: oculto al lector, sin texto alternativo, sin eventos y
 // con carga diferida. La franja va en el flujo, después del contenido: si la pantalla es bajita, baja.
-import gatos960 from "./img/entrada/gatos-muro-960.jpg";
-import gatos960w from "./img/entrada/gatos-muro-960.webp";
-import gatos1920 from "./img/entrada/gatos-muro-1920.jpg";
-import gatos1920w from "./img/entrada/gatos-muro-1920.webp";
+import gatos from "./img/entrada/gatos-muro.jpg";
+import gatosW from "./img/entrada/gatos-muro.webp";
 import hojasDer from "./img/entrada/hojas-der.png";
 import hojasDerW from "./img/entrada/hojas-der.webp";
 import hojasIzq from "./img/entrada/hojas-izq.png";
@@ -23,9 +21,8 @@ export default function PaisajeEntrada() {
               loading="lazy" decoding="async" /></picture>))}
       </div>
       <div className="paisaje paisaje-franja" aria-hidden="true">
-        <picture><source srcSet={`${gatos960w} 960w, ${gatos1920w} 1920w`} sizes="100vw" type="image/webp" />
-          <img src={gatos1920} srcSet={`${gatos960} 960w, ${gatos1920} 1920w`} sizes="100vw" alt="" width={1920}
-            height={1080} loading="lazy" decoding="async" /></picture>
+        <picture><source srcSet={gatosW} type="image/webp" />
+          <img src={gatos} alt="" width={1200} height={675} loading="lazy" decoding="async" /></picture>
       </div>
     </>
   );

@@ -7,10 +7,9 @@ const imagenes = Object.keys(import.meta.glob("./img/entrada/*"));
 
 describe("entrada del adoptante: gatitos en el muro y hojas (#482)", () => {
   it("cada imagen en webp con respaldo jpg o png", () => {
-    for (const nombre of ["gatos-muro-960", "gatos-muro-1920"]) {
-      expect(imagenes).toContain(`./img/entrada/${nombre}.webp`);
-      expect(imagenes).toContain(`./img/entrada/${nombre}.jpg`);
-    }
+    // #484: una sola foto de los gatitos, en su tamaño real (1200 × 675), sin las versiones escaladas.
+    expect(imagenes.filter((i) => i.includes("gatos-muro")).sort())
+      .toEqual(["./img/entrada/gatos-muro.jpg", "./img/entrada/gatos-muro.webp"]);
     for (const lado of ["izq", "der"]) {
       expect(imagenes).toContain(`./img/entrada/hojas-${lado}.webp`);
       expect(imagenes).toContain(`./img/entrada/hojas-${lado}.png`);
