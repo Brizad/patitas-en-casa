@@ -2,6 +2,7 @@
 (HU-06, RN-08, RF-05, RF-15, RF-21, RF-22) (DT-13, #267)."""
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import (
@@ -18,6 +19,7 @@ from app.dominio.modelos import (
     ResultadoRescate,
     Usuario,
 )
+from app.reportes import orden
 from app.rescates.servicio import (
     PasoInvalido,
     RescateNoOfrecido,
@@ -53,13 +55,30 @@ def _rescate(rescate: Rescate, reporte: Reporte | None = None) -> dict:
     return datos
 
 
+def _aproximada(valor: float | None) -> float | None:
+    """#496: unos 110 m de precisión, para el mapa y la distancia antes de aceptar (la
+    dirección y el punto exacto siguen siendo solo para quien acepta)."""
+    return None if valor is None else round(valor, 3)
+
+
 def _ofertas(ctx: Contexto, rescatista: Usuario) -> list[dict]:
     escalados = ctx.rescates.escalados()
-    return [{"codigo": r.codigo, "prioridad": r.prioridad.value,
-             "descripcion": r.descripcion, "comuna": r.ubicacion.comuna,
-             "escalado": r.codigo in escalados,
-             "esperando_desde": fecha_utc(r.creado_en)}
-            for r in ctx.rescates.ofertas(rescatista)]
+    ahora = datetime.now(UTC)
+    filas = []
+    for r in ctx.rescates.ofertas(rescatista):  # ya en el orden único (#496)
+        decisiones = ctx.repositorio.decisiones(r.codigo)
+        # Último avance: la confirmación del veterinario (desde ahí espera rescatista).
+        avance = decisiones[-1].decidido_en if decisiones else r.creado_en
+        filas.append({
+            "codigo": r.codigo, "prioridad": r.prioridad.value, "nivel": orden.nivel(r.prioridad),
+            "descripcion": r.descripcion, "comuna": r.ubicacion.comuna,
+            "escalado": r.codigo in escalados, "esperando_desde": fecha_utc(r.creado_en),
+            "atrasado": orden.atrasado(avance, ahora),
+            "especie": orden.especie_mencionada(r.descripcion),
+            "estado_animal": orden.estado_del_animal(r.evidencias, r.descripcion),
+            "latitud": _aproximada(r.ubicacion.latitud),
+            "longitud": _aproximada(r.ubicacion.longitud)})
+    return filas
 
 
 def _historial(ctx: Contexto, rescatista: Usuario) -> list[dict]:

@@ -173,6 +173,12 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
 .resultado { margin-top: 6px; background: #FFFFFF; border: 2.5px solid var(--p-tinta); border-radius: 24px; box-shadow: 5px 5px 0 var(--p-tinta);
   padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
 .resultado-codigo { font-size: 18px; letter-spacing: 2px; }
+/* #496: posición en la cola y nivel (Urgente rosa, Alta amarillo, Normal menta). */
+.cola-ciudadano { margin: 2px 0; padding: 8px 12px; background: var(--p-lila); border-radius: 14px; font-size: 14px; font-weight: 700; }
+.nivel-ciudadano { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0; font-size: 14px; font-weight: 700; }
+.etq-nivel { padding: 3px 12px; border: 2px solid #2B2340; border-radius: 999px; font-weight: 800; background: #D7F0DC; }
+.nivel-ciudadano[data-nivel="urgente"] .etq-nivel { background: #E8508A; color: #FFFFFF; }
+.nivel-ciudadano[data-nivel="alta"] .etq-nivel { background: #FFD23F; }
 /* #494: ilustración del estado sin marco (docs/prototipo/consultar-imagen-fundida.html). La foto completa con su
    proporción real, nunca agrandada, y los 4 bordes fundidos en el crema: dos degradados que se cruzan
    (intersect), como los gatitos de la entrada del adoptante. La etiqueta se monta sobre su borde de abajo. */

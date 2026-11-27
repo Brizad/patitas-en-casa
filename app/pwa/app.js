@@ -16,8 +16,9 @@
   // Igual que el servidor: acepta minúsculas y espacios ("f2hw 5rtb").
   const normalizar = (texto) => texto.replace(/[\s-]/g, '').toUpperCase();
 
+  // #496: siempre la hora de Colombia, aunque el teléfono tenga otra zona horaria.
   const fecha = (iso) => new Date(iso).toLocaleString('es-CO', {
-    day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+    day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Bogota',
   });
 
   // localStorage puede fallar (modo privado, almacenamiento lleno): la app sigue sin él.
@@ -213,10 +214,37 @@
     return span;
   }
 
+  // #496: nivel después del triaje, con su color y una frase sencilla.
+  const NIVELES = {
+    urgente: ['Urgente', 'Lo atenderemos primero.'],
+    alta: ['Alta', 'Está en los primeros de la lista.'],
+    normal: ['Normal', 'Lo atenderemos en orden.'],
+  };
+
+  function textoCola(antes) {
+    if (antes === 0) return 'Eres el siguiente en la cola.';
+    return 'Tu reporte está en la cola del veterinario. Hay ' + antes
+      + (antes === 1 ? ' caso antes que el tuyo.' : ' casos antes que el tuyo.');
+  }
+
+  function mostrarColaYNivel(datos) {
+    const cola = $('res-cola');
+    cola.hidden = !datos.cola;
+    if (datos.cola) cola.textContent = textoCola(datos.cola.antes);
+    const nivel = $('res-nivel');
+    const [nombre, frase] = NIVELES[datos.nivel] || [];
+    nivel.hidden = !nombre;
+    if (!nombre) return;
+    nivel.dataset.nivel = datos.nivel;
+    $('res-nivel-etq').textContent = nombre;
+    $('res-nivel-frase').textContent = frase;
+  }
+
   function mostrar(datos) {
     mensaje.hidden = true;
     $('res-codigo').textContent = datos.codigo;
     $('res-ultimo').textContent = 'Último cambio: ' + fecha(datos.ultimo_cambio);
+    mostrarColaYNivel(datos);
     const pasos = datos.pasos.map((paso) => {
       const item = document.createElement('li');
       if (paso.estado === 'hecho' || paso.estado === 'actual') item.className = paso.estado;
@@ -226,7 +254,8 @@
       nombre.textContent = paso.nombre;
       cuerpo.append(nombre);
       if (paso.estado === 'actual' && paso.detalle) cuerpo.append(linea(paso.detalle, 'mute detalle'));
-      if (paso.estado === 'hecho' && paso.fecha) cuerpo.append(linea(fecha(paso.fecha), 'mute detalle'));
+      // #496: la hora real de cada paso hecho; si no quedó registrada, «—».
+      if (paso.estado === 'hecho') cuerpo.append(linea(paso.fecha ? fecha(paso.fecha) : '—', 'mute detalle'));
       item.append(cuerpo);
       return item;
     });

@@ -16,6 +16,11 @@ export interface ReporteEnCola {
   descripcion: string; // lo que escribió el ciudadano
   creado_en: string; // UTC (D-06)
   video_segundos: number | null; // null: el reporte no trae video
+  // #496: nivel (urgente, alta o normal), más de 72 h sin avanzar y lo que dice el reporte.
+  nivel: "urgente" | "alta" | "normal";
+  atrasado: boolean;
+  especie: string | null;
+  estado_animal: string | null;
   ubicacion: { latitud: number | null; longitud: number | null; direccion: string | null;
                comuna: number | null };
 }
@@ -117,7 +122,7 @@ export function confirmar(token: string, codigo: string, prioridad?: Prioridad,
 }
 
 /** D-02: falso o duplicado (con el original, opcional). 409 si ya se decidió. */
-export function descartar(token: string, codigo: string, motivo: "falso" | "duplicado",
+export function descartar(token: string, codigo: string, motivo: "falso" | "duplicado" | "archivado",
                           justificacion: string, duplicado_de?: string) {
   return pedir(`/reportes/${codigo}/descarte`, {
     method: "POST",

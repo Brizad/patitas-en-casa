@@ -275,6 +275,9 @@
     <section id="resultado" class="resultado" aria-live="polite" aria-label="Resultado" hidden>
       <p class="mono resultado-codigo" id="res-codigo"></p>
       <p class="pequeno mute" id="res-ultimo"></p>
+      <!-- #496: posición en la cola antes del triaje; después, el nivel con su color y una frase. -->
+      <p class="cola-ciudadano" id="res-cola" hidden></p>
+      <p class="nivel-ciudadano" id="res-nivel" hidden><span class="etq-nivel" id="res-nivel-etq"></span><span id="res-nivel-frase"></span></p>
       <ol class="tl" id="res-pasos"></ol>
     </section>
     <p class="pequeno mute centro privacidad">Por privacidad no se muestran la dirección exacta ni datos de otras personas.</p>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import re
 import time
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import (
@@ -20,9 +21,13 @@ from pydantic import BaseModel, Field
 from app import config
 from app.api.comun import Contexto, fecha_utc
 from app.dominio.modelos import (
+    DECIDIDOS,
+    EstadoReporte,
+    MotivoDescarte,
     Ubicacion,
 )
 from app.observabilidad import evento, tracer
+from app.reportes import orden
 from app.reportes.seguimiento import linea_de_tiempo, normalizar_codigo
 from app.reportes.servicio import ReporteInvalido
 from app.usuarios.intentos import (
@@ -77,8 +82,17 @@ def contacto_cifrado(datos: ReporteEntrada, cifrador) -> str | None:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 
+def _antes_en_la_cola(repositorio, reporte) -> int:
+    """#496: cuántos casos de la cola del veterinario van antes, con la regla única de orden
+    (los atrasados no cuentan)."""
+    return orden.casos_antes(reporte, repositorio.pendientes(), lambda r: r.prioridad,
+                             lambda r: r.creado_en, lambda r: r.creado_en, datetime.now(UTC))
+
+
 def seguimiento_publico(repositorio, repositorio_rescates, codigo: str) -> dict:
-    """HU-08: solo código, pasos y fechas; nunca datos personales ni detalles (RN-14)."""
+    """HU-08: código, pasos y fechas; nunca datos personales ni detalles (RN-14). #496 (decisión
+    del autor): mientras espera al veterinario, cuántos casos van antes; después del triaje, el
+    nivel de prioridad (urgente, alta o normal), nunca la prioridad interna ni la confianza."""
     reporte = repositorio.buscar(codigo)
     if reporte is None:
         raise HTTPException(status_code=404, detail="Código de seguimiento no encontrado.")
@@ -86,10 +100,16 @@ def seguimiento_publico(repositorio, repositorio_rescates, codigo: str) -> dict:
     descarte = repositorio.descarte(codigo)
     pasos, ultimo_cambio = linea_de_tiempo(
         reporte, decisiones[-1] if decisiones else None, repositorio_rescates.vigente(codigo),
-        descarte.descartado_en if descarte else None)
-    return {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
-            "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
-                       "fecha": fecha_utc(p.fecha)} for p in pasos]}
+        descarte.descartado_en if descarte else None,
+        archivado=bool(descarte and descarte.motivo == MotivoDescarte.ARCHIVADO))
+    datos = {"codigo": codigo, "ultimo_cambio": fecha_utc(ultimo_cambio),
+             "pasos": [{"nombre": p.nombre, "estado": p.estado, "detalle": p.detalle,
+                        "fecha": fecha_utc(p.fecha)} for p in pasos]}
+    if reporte.estado not in DECIDIDOS:
+        datos["cola"] = {"antes": _antes_en_la_cola(repositorio, reporte)}
+    elif reporte.estado == EstadoReporte.CONFIRMADO:
+        datos["nivel"] = orden.nivel(reporte.prioridad)
+    return datos
 
 
 def contar_reporte_por_ip(limite_intentos, ip: str) -> None:

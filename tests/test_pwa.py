@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v17" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #494
+    assert "patitas-pwa-v18" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #496
 
 
 

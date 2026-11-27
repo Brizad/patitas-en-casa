@@ -2,7 +2,7 @@
 (HU-02, RN-06, RN-16, RF-04, RF-17) (DT-13, #267)."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 from fastapi import (
     APIRouter,
@@ -21,6 +21,7 @@ from app.dominio.modelos import (
     Prioridad,
     Usuario,
 )
+from app.reportes import orden
 from app.reportes.confirmacion import (
     AjusteSinJustificacion,
     ReporteNoEncontrado,
@@ -56,8 +57,13 @@ def _cola(ctx: Contexto) -> list[dict]:
     todos = ctx.repositorio.creados_desde(
         min(r.creado_en for r in pendientes) - timedelta(hours=config.DUPLICADO_HORAS)
     ) if pendientes else []
+    ahora = datetime.now(UTC)
     return [
         {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
+         # #496: nivel, atrasado (más de 72 h sin avanzar) y lo que dice el propio reporte.
+         "nivel": orden.nivel(r.prioridad), "atrasado": orden.atrasado(r.creado_en, ahora),
+         "especie": orden.especie_mencionada(r.descripcion),
+         "estado_animal": orden.estado_del_animal(r.evidencias, r.descripcion),
          "confianza": r.confianza, "evidencias": r.evidencias,
          "version_modelo": r.version_modelo,
          # Detalle para decidir de un vistazo: qué pasó, dónde y cuándo. Nunca el contacto.
@@ -139,7 +145,8 @@ def _historial(ctx: Contexto, veterinario: Usuario) -> list[dict]:
         reporte = reportes_.get(x.codigo)
         sugerida = reporte.prioridad if reporte else None
         filas.append((x.descartado_en, {
-            "codigo": x.codigo, "accion": "descartado",
+            "codigo": x.codigo,
+            "accion": "archivado" if x.motivo == MotivoDescarte.ARCHIVADO else "descartado",
             "prioridad_sugerida": sugerida.value if sugerida else None,
             "prioridad_final": None, "justificacion": x.justificacion}))
     resultado = []

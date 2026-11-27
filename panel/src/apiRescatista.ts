@@ -16,6 +16,9 @@ export interface EstadoRescatista { disponible: boolean; comunas: number[] }
 export interface Oferta {
   codigo: string; prioridad: Prioridad; descripcion: string; comuna: number | null;
   escalado: boolean; esperando_desde: string;
+  // #496: nivel, más de 72 h sin rescatista, lo que dice el reporte y punto aproximado (~110 m).
+  nivel: "urgente" | "alta" | "normal"; atrasado: boolean; especie: string | null;
+  estado_animal: string | null; latitud: number | null; longitud: number | null;
 }
 
 export interface MiRescate {

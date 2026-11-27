@@ -66,8 +66,13 @@ def test_ofertas_solo_de_confirmados_criticos_o_altos(c):
     c.post("/reportes", json={"descripcion": CRITICO, "direccion": "Calle 1"})  # pendiente
     ofertas = c.get("/rescates/ofertas", headers=disponible(c)).json()
     assert [o["codigo"] for o in ofertas] == [critico, alto]
+    # #496: nivel, atraso, animal y punto aproximado (3 decimales, ~110 m); nunca la dirección.
     assert set(ofertas[0]) == {"codigo", "prioridad", "descripcion", "comuna", "escalado",
-                               "esperando_desde"}
+                               "esperando_desde", "nivel", "atrasado", "especie",
+                               "estado_animal", "latitud", "longitud"}
+    for o in ofertas:
+        for eje in ("latitud", "longitud"):
+            assert o[eje] is None or round(o[eje], 3) == o[eje]
 
 
 def test_ciclo_completo_aceptar_llegue_resultado(c):

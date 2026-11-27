@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as TiempoAgotado
 
 from app.dominio.modelos import EstadoReporte, Prioridad, Reporte
+from app.reportes.orden import ordenar
 from app.triaje.clasificador import VERSION, Resultado, clasificar, estado_automatico
 
 Clasificador = Callable[[str], Resultado]
@@ -65,23 +66,7 @@ class ServicioTriaje:
         return reporte
 
 
-RANGO_COLA = {
-    Prioridad.CRITICA: 0,
-    Prioridad.ALTA: 1,
-    "revision": 2,
-    Prioridad.MEDIA: 3,
-    Prioridad.BAJA: 4,
-}
-
-
 def ordenar_cola(reportes: list[Reporte]) -> list[Reporte]:
-    """Ordena por gravedad; los reportes en revisión van sobre la prioridad media (HU-02)."""
-
-    def clave(r: Reporte):
-        if r.estado == EstadoReporte.REQUIERE_REVISION:
-            rango = RANGO_COLA["revision"]
-        else:
-            rango = RANGO_COLA[r.prioridad]
-        return (rango, r.creado_en)
-
-    return sorted(reportes, key=clave)
+    """#496: la regla única de las bandejas (app/reportes/orden.py): nivel y luego el más
+    antiguo. Reemplaza el orden anterior, que ponía «requiere revisión» sobre media."""
+    return ordenar(reportes, lambda r: r.prioridad, lambda r: r.creado_en)

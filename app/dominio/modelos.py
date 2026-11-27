@@ -36,6 +36,9 @@ DECIDIDOS = frozenset({EstadoReporte.CONFIRMADO, EstadoReporte.DESCARTADO})
 class MotivoDescarte(StrEnum):
     FALSO = "falso"
     DUPLICADO = "duplicado"
+    # #496: caso atrasado (más de 72 h sin avanzar) que no se pudo verificar. El ciudadano lo
+    # ve «Cerrado» con «No pudimos verificar el reporte».
+    ARCHIVADO = "archivado"
 
 
 @dataclass

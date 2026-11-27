@@ -41,7 +41,13 @@ def normalizar_codigo(codigo: str) -> str:
 
 def linea_de_tiempo(reporte: Reporte, decision: DecisionTriaje | None,
                     rescate: Rescate | None,
-                    descartado_en: datetime | None = None) -> tuple[list[Paso], datetime]:
+                    descartado_en: datetime | None = None,
+                    archivado: bool = False) -> tuple[list[Paso], datetime]:
+    if reporte.estado == EstadoReporte.DESCARTADO and descartado_en is not None and archivado:
+        # #496: atrasado que no se pudo verificar; el ciudadano lo ve cerrado, sin el motivo.
+        return ([Paso("Recibido", "hecho", None, _utc(reporte.creado_en)),
+                 Paso("Cerrado", "hecho", "No pudimos verificar el reporte",
+                      _utc(descartado_en))], _utc(descartado_en))
     if reporte.estado == EstadoReporte.DESCARTADO and descartado_en is not None:
         # D-02: el ciudadano ve que se revisó y se cerró, sin el motivo ni el original del
         # duplicado (RN-14: nada que apunte a otro reporte ni a personas).

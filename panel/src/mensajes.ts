@@ -168,5 +168,6 @@ export function haceCuanto(fechaIso: string, ahora: number = Date.now()): string
   if (minutos < 1) return "hace un momento";
   if (minutos < 60) return `hace ${minutos} min`;
   if (minutos < 1440) return `hace ${Math.floor(minutos / 60)} h`;
-  return `hace ${Math.floor(minutos / 1440)} días`;
+  const dias = Math.floor(minutos / 1440);
+  return `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 }
