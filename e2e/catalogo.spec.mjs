@@ -11,10 +11,9 @@ for (const ancho of [1440, 390]) {
 
     test("abrir, cambiar de animal y cerrar con Esc, la X o la misma tarjeta", async ({ page }) => {
       await page.goto("/panel/#adoptar/animales");
-      const tarjetas = page.locator(".acceso-animal");
+      const [tarjetas, detalle] = [page.locator(".acceso-animal"), page.locator("#detalle-animal")];
       await expect(tarjetas.nth(2)).toBeVisible({ timeout: 30_000 });
       const [primera, segunda] = [tarjetas.nth(0), tarjetas.nth(1)];
-      const detalle = page.locator("#detalle-animal");
       const nombre = async (t) => (await t.locator(".acceso-nombre").textContent()).trim();
       await primera.click();
       await expect(primera).toHaveAttribute("aria-expanded", "true");
@@ -45,8 +44,7 @@ for (const ancho of [1440, 390]) {
       // Celular: 2 columnas; el detalle a todo el ancho debajo de la fila tocada y la foto arriba.
       await page.mouse.move(0, 0); // sin el ratón encima; se mide cuando termina la transición
       await expect.poll(async () => Math.abs((await caja(primera)).y - (await caja(segunda)).y)).toBeLessThan(3);
-      const [a, c] = [await caja(primera), await caja(tarjetas.nth(2))];
-      const b = await caja(segunda);
+      const [a, b, c] = [await caja(primera), await caja(segunda), await caja(tarjetas.nth(2))];
       expect(c.y).toBeGreaterThan(a.y + a.height);
       await primera.click();
       const d = await caja(detalle);
