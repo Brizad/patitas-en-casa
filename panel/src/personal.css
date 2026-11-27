@@ -126,7 +126,8 @@
 /* Nivel con su color: Urgente rosa, Alta amarillo, Normal menta. */
 .nivel { display: inline-block; padding: 2px 10px; border: 2px solid #2B2340; border-radius: 999px; font-size: 12px; font-weight: 800;
   color: #2B2340; white-space: nowrap; }
-.nivel--urgente { background: #E8508A; color: #FFFFFF; } .nivel--alta { background: #FFD23F; } .nivel--normal { background: #D7F0DC; }
+/* Texto casi negro: blanco sobre #E8508A no llega a 4,5:1 (axe); así da 5,2:1. */
+.nivel--urgente { background: #E8508A; color: #1A1028; } .nivel--alta { background: #FFD23F; } .nivel--normal { background: #D7F0DC; }
 /* Dos filas: arriba el nivel y la espera; abajo la miniatura y los datos (la lista es angosta). */
 .ds .tarjeta-caso { grid-template-columns: 44px minmax(0, 1fr) auto; grid-template-areas: "nivel nivel espera" "mini datos datos";
   align-items: start; }
