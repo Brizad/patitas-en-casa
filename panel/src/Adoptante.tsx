@@ -7,6 +7,7 @@ import {
 import {
   Bienvenida, Combinan, Elegir, Encuesta, Listo, MiHogar, MisSolicitudes,
 } from "./AdoptantePantallas";
+import Acompanar from "./Acompanar";
 import ColeccionAnimales from "./ColeccionAnimales";
 import CuidadosYPasos from "./CuidadosYPasos";
 import Despertando from "./Despertando";
@@ -100,10 +101,28 @@ export default function Adoptante({ token, nombre, alSalir }: {
   // Arreglos, parte C: «¡Empezar!» arranca sin marcar; «Cambiar mis respuestas» precarga.
   const empezar = () => ir("siguiente", { tipo: "empezar", perfil: datos.perfil });
   const cambiarRespuestas = () => ir("siguiente", { tipo: "empezar", perfil: datos.perfil, precargar: true });
-  const verCompaneros = () => ir("siguiente", { tipo: "irA", pantalla: "combinan" });
+  // #516: sin el seguimiento aceptado no hay matches ni solicitudes (RN-10): se explica por qué.
+  const sinSeguimiento = datos.perfil !== null && !datos.perfil.acepta_seguimiento;
+  const verCompaneros = () => ir("siguiente", { tipo: "irA", pantalla: sinSeguimiento ? "acompanar" : "combinan" });
+  const [aceptando, setAceptando] = useState(false);
+  async function aceptarSeguimiento() {
+    if (!datos.perfil) return;
+    toque("elegir");
+    setAceptando(true);
+    try {
+      await guardarPerfil(token, { ...datos.perfil, acepta_seguimiento: true }); // «Sí, acepto»
+      await cargar();
+      despachar({ tipo: "irA", pantalla: "combinan" });
+    } catch (e) {
+      fallo(e);
+    } finally {
+      setAceptando(false);
+    }
+  }
   const miHogar = () => ir("pop", { tipo: "irA", pantalla: "hogar" });
 
   async function elegir(a: Animal) {
+    if (sinSeguimiento) { ir("pop", { tipo: "irA", pantalla: "acompanar" }); return; }
     if (!conPerfil) {
       ir("siguiente", { tipo: "empezar", perfil: null });
       setMensaje({ texto: "Antes de solicitar, cuéntanos de tu hogar.", error: false });
@@ -231,6 +250,10 @@ export default function Adoptante({ token, nombre, alSalir }: {
             recien={s.recien} alDescargar={(id) => void descargar(id)}
             alInicio={() => ir("atras", { tipo: "irA", pantalla: "inicio" })}
             alSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
+        {s.pantalla === "acompanar" && (
+          <Acompanar aceptando={aceptando || datos.cargando || s.guardar} alAceptar={() => void aceptarSeguimiento()}
+            alVerSinSolicitar={() => ir("siguiente", { tipo: "verTodos" })}
+            alInicio={() => ir("atras", { tipo: "irA", pantalla: "inicio" })} />)}
         {s.pantalla === "hogar" && (
           <MiHogar resumen={resumenHogar(datos.perfil)} alCambiar={cambiarRespuestas} alEmpezar={empezar}
             alVerCompaneros={verCompaneros} alAtras={() => ir("atras", { tipo: "atras" })} />)}

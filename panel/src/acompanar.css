@@ -1,0 +1,22 @@
+/* «Adoptar es para siempre» (#516). La ilustración fundida con el fondo, como en Consultar. */
+.acompanar { display: grid; gap: 10px; align-items: center; width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 18px 40px; }
+.acompanar-foto { display: block; width: auto; max-width: 100%; max-height: 260px; margin: 0 auto;
+  --lados: linear-gradient(to right, transparent 0, #000 18%, #000 82%, transparent 100%);
+  --arriba-abajo: linear-gradient(to bottom, transparent 0, #000 12%, #000 80%, transparent 100%);
+  -webkit-mask-image: var(--lados), var(--arriba-abajo); -webkit-mask-composite: source-in;
+  mask-image: var(--lados), var(--arriba-abajo); mask-composite: intersect; }
+.acompanar-etiqueta { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #A3245A; }
+.ds .adop .acompanar-titulo { margin: 10px 0 14px; font-size: 32px; line-height: 1.02; }
+.acompanar-texto { margin: 0 0 14px; font-size: 15px; line-height: 1.5; color: var(--suave); }
+.acompanar-dias { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 22px; padding: 0; }
+.acompanar-dias li { flex: 1; min-width: 96px; padding: 10px; text-align: center; border: 2.5px solid var(--tinta); border-radius: 18px;
+  box-shadow: 3px 3px 0 var(--tinta); }
+.acompanar-dias b { display: block; font-size: 26px; font-weight: 700; }
+.acompanar-dias span { font-size: 12.5px; font-weight: 800; color: var(--suave); }
+.acompanar-enlaces { display: flex; flex-wrap: wrap; gap: 18px; margin: 14px 0 0; }
+@media (min-width: 1024px) {
+  .acompanar { grid-template-columns: 1fr 1fr; gap: 40px; padding: 20px 48px 50px; }
+  .acompanar-foto { max-height: 480px; }
+  .ds .adop .acompanar-titulo { font-size: 46px; }
+  .acompanar-texto { font-size: 16.5px; }
+}
