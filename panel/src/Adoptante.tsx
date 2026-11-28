@@ -8,9 +8,10 @@ import {
   Bienvenida, Combinan, Elegir, Encuesta, Listo, MiHogar, MisSolicitudes,
 } from "./AdoptantePantallas";
 import Despertando from "./Despertando";
+import EligeCompanero from "./EligeCompanero";
 import { PREGUNTAS, perfilDesdeRespuestas, resumenHogar } from "./encuesta";
 import {
-  INICIAL, PantallaAdopcion, actual, contar, filtrar, flujo, solicitudDe,
+  INICIAL, PantallaAdopcion, actual, contar, filtrar, flujo, mejores, solicitudDe,
 } from "./flujoAdopcion";
 import { Huella, Icono } from "./Ilustraciones";
 import { textoError } from "./mensajes";
@@ -129,6 +130,11 @@ export default function Adoptante({ token, nombre, alSalir }: {
     }
   }
 
+  // #508: los 3 mejores matches reales (el mismo cálculo de «Combinan»); sin encuesta o sin el
+  // seguimiento aceptado (RN-10: no podría solicitar), las cartas van boca abajo.
+  const tresMejores = datos.perfil?.acepta_seguimiento && datos.recomendados
+    ? mejores(datos.recomendados, s.respuestas).lista : null;
+
   const nav: [PantallaAdopcion, string, () => void][] = [
     ["inicio", "Adoptar", () => ir("pop", { tipo: "irA", pantalla: "inicio" })],
     ["hogar", "Mi hogar", miHogar],
@@ -182,7 +188,11 @@ export default function Adoptante({ token, nombre, alSalir }: {
             conPerfil={conPerfil} alVerCompaneros={verCompaneros} alMiHogar={miHogar}
             alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
             destacados={fuente} alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
-            alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })} />)}
+            alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })}
+            elige={!datos.cargando && (
+              <EligeCompanero mejores={tresMejores} mias={datos.mias} enviando={enviando} alEmpezar={empezar}
+                alElegir={(a) => void elegir(a)}
+                alVerSolicitud={(a) => ir("pop", { tipo: "solicitado", animal: a.animal_id, recien: false })} />)} />)}
         {s.pantalla === "encuesta" && (
           <Encuesta paso={s.paso} respuestas={s.respuestas} catalogo={datos.catalogo}
             alAtras={() => ir("atras", { tipo: "atras" })}

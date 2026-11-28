@@ -1,6 +1,6 @@
 // Pantallas «Elige a tu compañero» del adoptante (#420). Solo dibujan: los datos y lo que pasa
 // con cada toque vienen de Adoptante.tsx (el flujo puro está en flujoAdopcion.ts).
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import type { AnimalPublicado, MiSolicitud, Recomendado } from "./apiAdopcion";
 import Cargando from "./Cargando";
 import Lottie from "./Lottie";
@@ -44,12 +44,14 @@ function NotaOcultos({ ocultos, alRevisar }: { ocultos: number; alRevisar: () =>
 // ---------- 1 · Bienvenida ----------
 
 export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alVerCompaneros, alVerTodos,
-  alVerSolicitudes, alMiHogar, alVer, destacados }: {
+  alVerSolicitudes, alMiHogar, alVer, destacados, elige }: {
   catalogo: AnimalPublicado[]; cargando: boolean; mias: MiSolicitud[]; conPerfil: boolean;
   alEmpezar: () => void; alVerCompaneros: () => void; alVerTodos: () => void; alVerSolicitudes: () => void;
   alMiHogar: () => void; alVer: (a: AnimalPublicado) => void;
   /** Los que se pueden abrir en «Elige» (con perfil, los compatibles; RN-05). */
   destacados: AnimalPublicado[];
+  /** #508: «¡Elige a tu compañero!», a todo el ancho justo debajo del hero. */
+  elige?: ReactNode;
 }) {
   // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage. #508: si
   // Lupe está publicada con foto, va abajo a la derecha (collage-3), como el prototipo.
@@ -60,6 +62,7 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
   const collage = base.length ? Array.from({ length: 6 }, (_, i) => base[i % base.length]) : [];
   const total = catalogo.length;
   return (
+    <>
     <div className="ini">
       <div className="ini-texto">
         <span className="adop-cinta solo-pc aparece">Refugios de Cúcuta y el área metropolitana</span>
@@ -107,9 +110,11 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
             {total === 0 ? "Pronto habrá nuevos amigos" : `${total} te esperan`}
           </span>)}
       </div>
-      <MasBienvenida catalogo={catalogo} destacados={destacados} cargando={cargando} mias={mias} conPerfil={conPerfil}
-        alVer={alVer} alVerTodos={alVerTodos} alMiHogar={alMiHogar} alVerSolicitudes={alVerSolicitudes} />
     </div>
+    {elige}
+    <MasBienvenida catalogo={catalogo} destacados={destacados} cargando={cargando} mias={mias} conPerfil={conPerfil}
+      alVer={alVer} alVerTodos={alVerTodos} alMiHogar={alMiHogar} alVerSolicitudes={alVerSolicitudes} />
+    </>
   );
 }
 
