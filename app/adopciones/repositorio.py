@@ -45,6 +45,11 @@ class RepositorioAdopciones(Protocol):
         """Catálogo público: publicaciones disponibles, la más antigua primero."""
         ...
 
+    def adoptadas(self) -> list[tuple[Publicacion, datetime]]:
+        """#508: publicaciones adoptadas con su adopción aprobada y la fecha en que se aprobó,
+        la más reciente primero. Una devuelta (RN-13) vuelve a disponible y ya no sale."""
+        ...
+
     def retirar_publicacion(self, animal_id: int) -> bool:
         """#450: disponible → retirada (sale del catálogo; el animal y su ficha siguen en el
         refugio y no se borra nada). False si no estaba disponible o tiene solicitudes
@@ -136,6 +141,12 @@ class RepositorioAdopcionesEnMemoria:
         return sorted((replace(p) for p in self._publicaciones.values()
                        if p.estado == EstadoPublicacion.DISPONIBLE),
                       key=lambda p: p.publicado_en)
+
+    def adoptadas(self) -> list[tuple[Publicacion, datetime]]:
+        pares = [(replace(self._publicaciones[s.animal_id]), s.decidida_en)
+                 for s in self._solicitudes if s.estado == EstadoSolicitud.APROBADA
+                 and self._publicaciones[s.animal_id].estado == EstadoPublicacion.ADOPTADO]
+        return sorted(pares, key=lambda par: par[1], reverse=True)
 
     def retirar_publicacion(self, animal_id: int) -> bool:
         actual = self._publicaciones.get(animal_id)

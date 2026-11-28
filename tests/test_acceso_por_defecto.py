@@ -14,6 +14,7 @@ PUBLICAS = {
     ("GET", "/adopciones/animales"), ("GET", "/adopciones/animales/{animal_id}/foto"),
     ("POST", "/piloto/reportes"), ("POST", "/piloto/resultados"),
     ("GET", "/indicadores/publicos"),  # #426: tres totales anónimos para la portada
+    ("GET", "/adopciones/coleccion"),  # #508: contador y adoptados, solo animales
 }
 # No piden sesión pero tampoco son abiertas: exigen la clave del reporte (403 sin ella).
 CON_CLAVE_PROPIA = {("POST", "/reportes/{codigo}/video"),

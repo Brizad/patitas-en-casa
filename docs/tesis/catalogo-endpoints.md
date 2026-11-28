@@ -2,7 +2,7 @@
 
 # Catálogo de endpoints
 
-86 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+90 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
@@ -37,6 +37,10 @@
 | GET | `/refugio/seguimientos` | coordinador | 200, 401, 403 | RF-10 |
 | POST | `/refugio/seguimientos/{seguimiento_id}` | coordinador | 200, 401, 403, 404, 409, 422 | — |
 | GET | `/adopciones/solicitudes/{solicitud_id}/compromiso.pdf` | adoptante, coordinador | 200, 401, 403, 404, 409, 422 | RF-29 |
+| GET | `/refugio/animales/{animal_id}/perfil-adopcion` | coordinador, veterinario | 200, 401, 403, 422 | — |
+| PUT | `/refugio/animales/{animal_id}/perfil-adopcion` | coordinador, veterinario | 200, 401, 403, 413, 415, 422 | — |
+| PUT | `/refugio/animales/{animal_id}/salud-adopcion` | veterinario | 200, 401, 403, 413, 415, 422 | — |
+| GET | `/adopciones/coleccion` | público | 200 | RN-14 |
 | POST | `/reportes/{codigo}/foto` | público | 201, 403, 409, 422 | — |
 | POST | `/reportes` | público | 201, 422, 429 | A-02, RF-01, RF-12 |
 | GET | `/reportes/{codigo}` | público | 200, 404, 422 | — |

@@ -119,13 +119,14 @@ en `crear_app()`, y obtienen el token con `POST /auth/token` (ver `sesion()` en
 
 - Públicos: `POST /reportes`, `GET /reportes/{codigo}` (ciudadano sin cuenta, RF-01),
   `POST /auth/token` (#486: con `portal` adoptante | personal, 403 sin token si el rol no es de esa puerta), `POST /adoptantes` (siempre crea el rol adoptante, exige
-  `autoriza_datos`; DT-09: 5 por IP cada 15 min y la misma respuesta si el correo ya existe) y `GET /adopciones/animales`. `POST /piloto/reportes` y `POST /piloto/resultados` (#258) no piden sesión sino el token de un solo uso del participante en `X-Piloto` y nunca guardan reportes. Todo lo demás exige `Authorization: Bearer` de personal
+  `autoriza_datos`; DT-09: 5 por IP cada 15 min y la misma respuesta si el correo ya existe) `GET /adopciones/animales` y `GET /adopciones/coleccion` (#508: contador y adoptados recientes, solo datos del animal). `POST /piloto/reportes` y `POST /piloto/resultados` (#258) no piden sesión sino el token de un solo uso del participante en `X-Piloto` y nunca guardan reportes. Todo lo demás exige `Authorization: Bearer` de personal
   (`exigir_rol` en `app/api/seguridad.py`). `X-Rol` ya no existe: no reintroducirlo.
 - Contraseñas solo como hash Argon2id; nunca registrar contraseñas ni tokens en logs.
 - `GET /indicadores/publicos` (#426) es público: solo tres totales anónimos (reportes,
   rescatados y adoptados) para la portada, recalculados como mucho cada 10 minutos.
 - `POST /refugio/ingresos` es solo del coordinador (`dependencies=[coordinacion]`, 403 para el
   veterinario; pantalla P-06 del prototipo). `GET /cola` y `GET /refugio/ocupacion` usan `personal`.
+- #508: `PUT /refugio/animales/{id}/perfil-adopcion` (coordinador o veterinario) y `PUT /refugio/animales/{id}/salud-adopcion` (solo veterinario, 403 para el coordinador).
 - Endpoint nuevo del personal → `dependencies=[personal]` (o `[coordinacion]`) y una prueba de
   401 sin sesión.
 - DT-06: `POST /auth/token` cuenta los fallos por correo y por IP (`LimiteIntentos` en
