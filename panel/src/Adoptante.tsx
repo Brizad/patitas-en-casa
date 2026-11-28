@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import "./adoptante.css";
 import {
-  AnimalPublicado, MiSolicitud, Perfil, Recomendado, catalogo, descargarCompromiso, guardarPerfil,
-  miPerfil, misSolicitudes, recomendaciones, solicitar,
+  AnimalPublicado, Coleccion, MiSolicitud, Perfil, Recomendado, catalogo, coleccion, descargarCompromiso,
+  guardarPerfil, miPerfil, misSolicitudes, recomendaciones, solicitar,
 } from "./apiAdopcion";
 import {
   Bienvenida, Combinan, Elegir, Encuesta, Listo, MiHogar, MisSolicitudes,
 } from "./AdoptantePantallas";
+import ColeccionAnimales from "./ColeccionAnimales";
 import Despertando from "./Despertando";
 import EligeCompanero from "./EligeCompanero";
 import { PREGUNTAS, perfilDesdeRespuestas, resumenHogar } from "./encuesta";
@@ -23,7 +24,7 @@ import {
 type Animal = AnimalPublicado | Recomendado;
 interface Datos {
   perfil: Perfil | null; catalogo: AnimalPublicado[]; recomendados: Recomendado[] | null;
-  mias: MiSolicitud[]; cargando: boolean;
+  mias: MiSolicitud[]; cargando: boolean; coleccion: Coleccion | null;
 }
 
 /** Adoptante (#420): «Elige a tu compañero». Perfil por encuesta (RF-08), recomendaciones con el
@@ -33,16 +34,18 @@ export default function Adoptante({ token, nombre, alSalir }: {
 }) {
   const [s, despachar] = useReducer(flujo, INICIAL);
   const [datos, setDatos] = useState<Datos>({ perfil: null, catalogo: [], recomendados: null,
-    mias: [], cargando: true });
+    mias: [], cargando: true, coleccion: null });
   const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const { prefs, sonando, toque, cambiar } = useSonido();
 
   const cargar = useCallback(async () => {
-    const [perfil, mias, cat] = await Promise.all([miPerfil(token), misSolicitudes(token), catalogo()]);
+    // #508: si la colección falla, la página sigue sin el contador ni los adoptados (nada inventado).
+    const [perfil, mias, cat, col] = await Promise.all([miPerfil(token), misSolicitudes(token), catalogo(),
+      coleccion().catch(() => null)]);
     // Con perfil, el servidor ordena por compatibilidad y deja fuera las restricciones duras.
     const recomendados = perfil ? await recomendaciones(token) : null;
-    setDatos({ perfil, mias, catalogo: cat, recomendados, cargando: false });
+    setDatos({ perfil, mias, catalogo: cat, recomendados, cargando: false, coleccion: col });
   }, [token]);
 
   const fallo = (e: unknown) => setMensaje({ texto: textoError(e), error: true });
@@ -186,13 +189,15 @@ export default function Adoptante({ token, nombre, alSalir }: {
         {s.pantalla === "inicio" && (
           <Bienvenida catalogo={datos.catalogo} cargando={datos.cargando} mias={datos.mias}
             conPerfil={conPerfil} alVerCompaneros={verCompaneros} alMiHogar={miHogar}
-            alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })}
-            destacados={fuente} alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
+            alEmpezar={empezar} alVerTodos={() => ir("siguiente", { tipo: "verTodos" })}
             alVerSolicitudes={() => ir("pop", { tipo: "irA", pantalla: "solicitudes" })}
-            elige={!datos.cargando && (
+            secciones={!datos.cargando && (<>
               <EligeCompanero mejores={tresMejores} mias={datos.mias} enviando={enviando} alEmpezar={empezar}
                 alElegir={(a) => void elegir(a)}
-                alVerSolicitud={(a) => ir("pop", { tipo: "solicitado", animal: a.animal_id, recien: false })} />)} />)}
+                alVerSolicitud={(a) => ir("pop", { tipo: "solicitado", animal: a.animal_id, recien: false })} />
+              <ColeccionAnimales disponibles={datos.catalogo} coleccion={datos.coleccion} abribles={fuente}
+                alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })} />
+            </>)} />)}
         {s.pantalla === "encuesta" && (
           <Encuesta paso={s.paso} respuestas={s.respuestas} catalogo={datos.catalogo}
             alAtras={() => ir("atras", { tipo: "atras" })}
