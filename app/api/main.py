@@ -48,6 +48,7 @@ from app.api.piloto import crear_rutas_piloto
 from app.api.rutas_admin import crear_rutas_admin
 from app.api.rutas_adopciones import crear_rutas_adopciones
 from app.api.rutas_indicadores import crear_rutas_indicadores
+from app.api.rutas_perfil_adopcion import crear_rutas_perfil_adopcion
 from app.api.rutas_refugio import crear_rutas_refugio
 from app.api.rutas_reportes import ReporteEntrada, crear_rutas_reportes
 from app.api.rutas_rescates import crear_rutas_rescates
@@ -325,6 +326,7 @@ def crear_app(repositorio: RepositorioReportes | None = None,
     app.include_router(crear_rutas_admin(ctx))  # DT-13 (#267)
 
     app.include_router(crear_rutas_adopciones(ctx))  # DT-13 (#267)
+    app.include_router(crear_rutas_perfil_adopcion(ctx))  # #508
 
     app.include_router(crear_rutas_reportes(ctx))  # DT-13 (#267)
 

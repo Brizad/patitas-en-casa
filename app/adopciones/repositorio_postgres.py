@@ -135,6 +135,16 @@ class RepositorioAdopcionesPostgres:
                 .order_by(publicaciones.c.publicado_en)).mappings()
             return [_publicacion(f) for f in filas]
 
+    def adoptadas(self) -> list[tuple[Publicacion, datetime]]:
+        consulta = _CONSULTA.add_columns(solicitudes.c.decidida_en).join(
+            solicitudes, solicitudes.c.animal_id == publicaciones.c.animal_id).where(
+            publicaciones.c.estado == EstadoPublicacion.ADOPTADO.value,
+            solicitudes.c.estado == EstadoSolicitud.APROBADA.value,
+        ).order_by(solicitudes.c.decidida_en.desc())
+        with self._motor.connect() as conexion:
+            return [(_publicacion(f), f["decidida_en"])
+                    for f in conexion.execute(consulta).mappings()]
+
     def retirar_publicacion(self, animal_id: int) -> bool:
         # Una sola sentencia: sin solicitudes abiertas en el mismo instante en que se retira.
         abiertas = select(solicitudes.c.id).where(
