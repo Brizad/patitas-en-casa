@@ -420,35 +420,3 @@ export function MisSolicitudes({ mias, animalDe, alVer, alDescargar, alAtras, al
 
 // ---------- Mi hogar (arreglos, parte C) ----------
 
-export function MiHogar({ resumen, alCambiar, alEmpezar, alVerCompaneros, alAtras }: {
-  resumen: { pregunta: string; respuesta: string }[];
-  alCambiar: () => void; alEmpezar: () => void; alVerCompaneros: () => void; alAtras: () => void;
-}) {
-  return (
-    <div className="hogar">
-      <div className="elegir-cabeza">
-        <BotonAtras alTocar={alAtras} />
-        <h1 className="h elegir-titulo" tabIndex={-1} data-titulo>Mi hogar</h1>
-        <span className="adop-contador" />
-      </div>
-      {resumen.length === 0 ? (
-        <div className="hogar-vacio">
-          <p className="adop-sub">Aún no nos has contado cómo es tu hogar. Son {PREGUNTAS.length} preguntas rápidas.</p>
-          <button className="adop-boton" onClick={alEmpezar}><span className="h">¡Empezar!</span>
-            <span className="adop-boton-punta"><Icono d={FLECHA.adelante} /></span></button>
-        </div>
-      ) : (<>
-        <p className="adop-sub">Esto es lo que guardamos de tu hogar. Con esto te recomendamos compañeros.</p>
-        <dl className="hogar-resumen">
-          {resumen.map((r) => (
-            <div key={r.pregunta} className="hogar-fila"><dt>{r.pregunta}</dt><dd className="h">{r.respuesta}</dd></div>))}
-        </dl>
-        <div className="hogar-botones">
-          <button className="adop-boton" onClick={alCambiar}><span className="h">Cambiar mis respuestas</span>
-            <span className="adop-boton-punta"><Icono d={FLECHA.adelante} /></span></button>
-          <button className="adop-enlace" onClick={alVerCompaneros}>Ver mis compañeros</button>
-        </div>
-      </>)}
-    </div>
-  );
-}

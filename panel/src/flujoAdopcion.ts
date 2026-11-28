@@ -22,7 +22,7 @@ export interface EstadoFlujo {
 export type Accion =
   // Arreglos, parte C: «¡Empezar!» arranca todo sin marcar; «Cambiar mis respuestas» (desde
   // «Mi hogar») precarga lo guardado.
-  | { tipo: "empezar"; perfil: Perfil | null; precargar?: boolean }
+  | { tipo: "empezar"; perfil: Perfil | null; precargar?: boolean; paso?: number } // #516: «Cambiar» abre esa pregunta
   | { tipo: "responder"; opcion: number }
   | { tipo: "guardado" }
   | { tipo: "atras" }
@@ -41,7 +41,7 @@ const filtroDe = (e?: PrefEspecie): Filtro => (e === "perro" || e === "gato" ? e
 export function flujo(s: EstadoFlujo, a: Accion): EstadoFlujo {
   switch (a.tipo) {
     case "empezar": // precargadas: las del perfil (servidor) y especie y tamaño de esta visita
-      return { ...s, pantalla: "encuesta", paso: 0, guardar: false,
+      return { ...s, pantalla: "encuesta", paso: a.paso ?? 0, guardar: false,
                desde: a.precargar ? "hogar" : "inicio",  // adónde vuelve «Atrás» en la 1.ª
                respuestas: a.precargar
                  ? { especie: s.respuestas.especie, tamano: s.respuestas.tamano,

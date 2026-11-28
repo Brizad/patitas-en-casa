@@ -133,12 +133,17 @@ export function responder(r: Respuestas, p: Pregunta, i: number): Respuestas {
 
 /** «Mi hogar» (arreglos, parte C): cada pregunta del perfil con la respuesta guardada, en
  *  palabras. Especie y tamaño no se guardan en el servidor: no aparecen. */
-export function resumenHogar(p: Perfil | null): { pregunta: string; respuesta: string }[] {
+export interface RespuestaHogar {
+  clave: Clave; pregunta: string; respuesta: string;
+  paso: number; // la pregunta de la encuesta donde se cambia (#516: «Cambiar» abre ahí)
+}
+export function resumenHogar(p: Perfil | null): RespuestaHogar[] {
   if (!p) return [];
   const r = respuestasDesdePerfil(p);
-  return PREGUNTAS.filter((q) => (CLAVES_DEL_PERFIL as string[]).includes(q.clave)).map((q) => {
+  return PREGUNTAS.flatMap((q, paso) => {
+    if (!(CLAVES_DEL_PERFIL as string[]).includes(q.clave)) return [];
     const i = opcionElegida(q, r);
-    const horas = q.clave === "horas_solo_al_dia" ? ` (${p.horas_solo_al_dia} h)` : "";
-    return { pregunta: q.texto, respuesta: i >= 0 ? q.opciones[i].titulo + horas : "—" };
+    const horas = q.clave === "horas_solo_al_dia" && p.horas_solo_al_dia != null ? ` (${p.horas_solo_al_dia} h)` : "";
+    return [{ clave: q.clave, pregunta: q.texto, respuesta: i >= 0 ? q.opciones[i].titulo + horas : "—", paso }];
   });
 }

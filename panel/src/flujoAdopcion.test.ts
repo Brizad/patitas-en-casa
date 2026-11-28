@@ -44,6 +44,12 @@ describe("navegación entre pantallas", () => {
     expect(s.guardar).toBe(true); // la respuesta se guarda igual en el perfil
   });
 
+  it("#516: «Cambiar» en Mi hogar abre la encuesta en esa pregunta con lo guardado", () => {
+    const s = flujo(INICIAL, { tipo: "empezar", perfil: PERFIL, precargar: true, paso: PREGUNTAS.length - 1 });
+    expect([s.pantalla, s.paso, s.desde]).toEqual(["encuesta", PREGUNTAS.length - 1, "hogar"]);
+    expect(s.respuestas.acepta_seguimiento).toBe(true);
+  });
+
   it("«Atrás» en la encuesta vuelve a la pregunta anterior y en la primera, a la bienvenida", () => {
     let s = flujo(INICIAL, { tipo: "empezar", perfil: null });
     s = flujo(s, { tipo: "responder", opcion: 1 });
