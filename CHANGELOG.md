@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- Mapa del rescate (#502): más margen arriba al encuadrar, para que la franja no tape el nombre del rescatista en el celular.
 - Mapa del rescate (#500): si la consulta responde antes de que carguen los scripts del mapa, el mapa aparece al terminar de cargar la página (antes esperaba al siguiente sondeo, 12 s).
 - Orden de la cola (#496, decisión del autor): «requiere revisión» ya no va por encima de media; media, baja y en revisión son el nivel Normal y van por orden de llegada.
 - «Estado del reporte» (#494), como el prototipo `consultar-imagen-fundida.html`: la ilustración va sin marco (sin borde, esquinas, sombra, fondo ni copia difuminada). Se ve completa con su proporción real (hasta 540 px de alto en computador y 300 px en el celular, sin agrandarla), centrada en la columna derecha y con los 4 bordes fundidos en el crema. La etiqueta amarilla se monta sobre su borde de abajo. En el celular va arriba de todo. Mismo fundido de 0,4 s.
