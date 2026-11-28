@@ -162,6 +162,10 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
 .secundario { min-height: 52px; display: flex; align-items: center; justify-content: center; border: 2.5px solid var(--p-tinta); border-radius: 999px;
   background: #FFFFFF; color: var(--p-tinta); font-size: 17px; font-weight: 600; text-decoration: none; --s: 3px; }
 
+/* #504: foto opcional del reporte, debajo del video. */
+.foto-reporte { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.foto-titulo { margin: 0; font-size: 18px; }
+
 /* ---------- consultar ---------- */
 .estado h1 { font-size: 32px; line-height: 1.05; margin-top: 6px; }
 #consulta { display: flex; flex-direction: column; gap: 6px; }

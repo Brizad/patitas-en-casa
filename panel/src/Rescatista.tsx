@@ -7,11 +7,13 @@ import {
   textoEspecie, textoZona,
 } from "./bandejas";
 import {
-  EstadoRescatista, MiRescate, NOMBRE_RESULTADO, Oferta, Resultado, cambiarDisponibilidad,
-  cambiarZona, esCuentaDemo, miEstado, miRescate, nombreComunas, ofertas, paso, registrarResultado,
-  simularRecorrido,
+  EstadoRescatista, MiRescate, Oferta, cambiarDisponibilidad,
+  cambiarZona, esCuentaDemo, miEstado, miRescate, nombreComunas, ofertas, paso, simularRecorrido,
 } from "./apiRescatista";
 import CompartirUbicacion from "./CompartirUbicacion";
+import InformeRescatista from "./InformeRescatista";
+
+const LLEGADA_M = 100; // #504: «Parece que ya llegaste»
 
 const COMUNAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 type Pestana = "disponibles" | "mio" | "atrasados";
@@ -62,7 +64,8 @@ export default function Rescatista({ token, correo = "" }: { token: string; corr
     const reloj = setInterval(() => { void recargar(); }, 5000);
     return () => clearInterval(reloj);
   }, [simulando, recargar]);
-  useEffect(() => { if (!actual) setSimulando(false); }, [actual]);
+  // #504: la simulación termina al llegar («En el sitio»): desde ahí el informe es a mano.
+  useEffect(() => { if (!actual || actual.estado !== "en_camino") setSimulando(false); }, [actual]);
 
   // Solo con permiso: la ubicación se usa aquí para medir la distancia y no se envía.
   useEffect(() => {
@@ -211,10 +214,16 @@ function RescateActual({ token, rescate, hacer, demo, simulando, alSimular }: {
   hacer: (accion: () => Promise<unknown>, exito: string) => Promise<void>;
   demo: boolean; simulando: boolean; alSimular: () => void;
 }) {
-  const [resultado, setResultado] = useState<Resultado>("trasladado");
+  const [cerca, setCerca] = useState(false);
   const u = rescate.ubicacion;
   // La dirección exacta solo la ve quien aceptó el rescate (el servidor la envía solo aquí).
   const donde = u.direccion ?? (u.latitud !== null ? `GPS ${u.latitud}, ${u.longitud}` : "sin dato");
+  // #504: con la ubicación compartida, a menos de 100 m se sugiere marcar la llegada (no cambia
+  // de estado solo: el rescatista decide).
+  const alMoverse = useCallback((yo: Punto) => {
+    const metros = distanciaA(yo, u);
+    setCerca(metros !== null && metros < LLEGADA_M);
+  }, [u]);
   return (
     <div className={`mi-rescate oferta--${rescate.prioridad}`}>
       <h2>Mi rescate <code>{rescate.codigo}</code></h2>
@@ -224,34 +233,28 @@ function RescateActual({ token, rescate, hacer, demo, simulando, alSimular }: {
       <p>Ubicación: {donde}{u.comuna ? ` (comuna ${u.comuna})` : ""}</p>
       <Lugar u={u} />
       {/* #498: solo mientras va en camino; al llegar se desmonta y deja de compartir. */}
-      {rescate.estado === "en_camino" && !simulando && <CompartirUbicacion token={token} codigo={rescate.codigo} />}
+      {rescate.estado === "en_camino" && !simulando && (
+        <CompartirUbicacion token={token} codigo={rescate.codigo} alMoverse={alMoverse} />)}
       {rescate.estado === "en_camino" && demo && (
         <div className="simulacion">
           <p className="ds-suave">Solo en las cuentas de demostración: el servidor mueve tu posición
-            desde 1,5 km hasta el animal en unos 90 s y luego marca el caso atendido.</p>
+            desde 1,5 km hasta el animal en unos 90 s y marca la llegada. Desde ahí, el informe es el mismo.</p>
           <button onClick={alSimular} disabled={simulando}>
             {simulando ? "Recorrido en marcha…" : "Simular recorrido"}</button>
         </div>)}
+      {rescate.estado === "en_camino" && cerca && (
+        <p className="ds-msg aviso-llegaste">Parece que ya llegaste. Si estás con el animal, toca «Ya estoy en el sitio».</p>)}
       <div className="acciones">
+        {/* #504: siempre disponible en «En camino»; al tocarlo deja de compartir y se borra la posición. */}
         {rescate.estado === "en_camino" && (
-          <button className="principal" onClick={() => void hacer(
-            () => paso(token, rescate.codigo, "llegue"), "Llegada registrada.")}>Llegué al sitio</button>)}
+          <button className={`principal${cerca ? " resaltado" : ""}`} onClick={() => void hacer(
+            () => paso(token, rescate.codigo, "llegue"), "Llegada registrada.")}>Ya estoy en el sitio</button>)}
         <button onClick={() => void hacer(() => paso(token, rescate.codigo, "liberar"),
           "Liberaste el rescate: vuelve a ofrecerse a otros rescatistas.")}>Liberar</button>
       </div>
       {rescate.estado === "en_sitio" && (
-        <form className="ajuste" onSubmit={(e) => {
-          e.preventDefault();
-          void hacer(() => registrarResultado(token, rescate.codigo, resultado),
-            `Resultado registrado: ${NOMBRE_RESULTADO[resultado].toLowerCase()}.`);
-        }}>
-          <label>Resultado
-            <select value={resultado} onChange={(e) => setResultado(e.target.value as Resultado)}>
-              {(Object.keys(NOMBRE_RESULTADO) as Resultado[]).map((r) => (
-                <option key={r} value={r}>{NOMBRE_RESULTADO[r]}</option>))}
-            </select></label>
-          <button className="principal">Registrar resultado</button>
-        </form>)}
+        <InformeRescatista token={token} codigo={rescate.codigo}
+          alEnviar={(texto) => void hacer(async () => undefined, texto)} />)}
     </div>
   );
 }

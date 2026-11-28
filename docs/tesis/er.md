@@ -142,6 +142,24 @@ erDiagram
     varchar reporte_codigo PK,FK
     timestamp_with_time_zone escalado_en
   }
+  fotos_evidencia {
+    integer id PK
+    varchar reporte_codigo FK
+    varchar origen
+    varchar tipo
+    bytea datos
+    timestamp_with_time_zone creada_en
+  }
+  informes_rescate {
+    varchar reporte_codigo PK,FK
+    text rescatista
+    varchar encontrado
+    varchar estados
+    varchar resultado
+    text motivo
+    text nota
+    timestamp_with_time_zone creado_en
+  }
   rescates {
     integer id PK
     varchar reporte_codigo FK
@@ -241,6 +259,8 @@ erDiagram
   reportes ||--o{ descartes : "duplicado_de"
   reportes ||--o| descartes : "reporte_codigo"
   reportes ||--o| escalamientos : "reporte_codigo"
+  reportes ||--o{ fotos_evidencia : "reporte_codigo"
+  reportes ||--o| informes_rescate : "reporte_codigo"
   reportes ||--o{ rescates : "reporte_codigo"
   reportes ||--o| ubicaciones_rescate : "reporte_codigo"
   refugios ||--o{ usuarios : "refugio_id"

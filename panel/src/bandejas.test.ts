@@ -67,3 +67,22 @@ describe("ubicación del rescatista en camino (#498)", async () => {
     expect(esCuentaDemo("demo.patitas.co@otro.co")).toBe(false);
   });
 });
+
+describe("informe de rescate (#504)", async () => {
+  const { faltaEnInforme } = await import("./apiRescatista");
+  const { medidaReducida } = await import("./fotos");
+  const base = { encontrado: "si" as const, estados: [], accion: "trasladado" as const, motivo: "", nota: "" };
+  it("las fotos se reducen a 1280 px sin agrandarse", () => {
+    expect(medidaReducida(4000, 3000)).toEqual([1280, 960]);
+    expect(medidaReducida(800, 600)).toEqual([800, 600]);
+  });
+  it("las mismas reglas que el servidor", () => {
+    expect(faltaEnInforme(base, 1)).toBeNull();
+    expect(faltaEnInforme(base, 0)).toBe("Adjunta al menos una foto de evidencia.");
+    expect(faltaEnInforme({ ...base, encontrado: "no_estaba", accion: null }, 0)).toBeNull();
+    expect(faltaEnInforme({ ...base, accion: null }, 1)).toBe("Elige qué se hizo con el animal.");
+    expect(faltaEnInforme({ ...base, accion: "no_rescatado" }, 1)).toMatch(/por qué no se pudo/);
+    expect(faltaEnInforme({ ...base, accion: "no_rescatado", motivo: "Se escapó al caño" }, 1)).toBeNull();
+    expect(faltaEnInforme({ ...base, nota: "x".repeat(501) }, 1)).toMatch(/500/);
+  });
+});

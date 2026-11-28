@@ -2,12 +2,15 @@
 // + panel compilado + PWA, con los datos de demostración (cuentas *@demo.patitas.co).
 // Ciudadano (390 px) → veterinario confirma crítica → rescatista acepta, llega y traslada →
 // coordinador registra el ingreso con el código → historial y «Mis rescates» → seguimiento.
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 const CLAVE = process.env.PATITAS_DEMO_CONTRASENA;
 const TELEFONO = { width: 390, height: 844 };
 const DESCRIPCION = "Perro atropellado convulsionando en la avenida, sangra mucho y no responde";
 const JUSTIFICACION = "Convulsiona y sangra: riesgo de muerte inmediato";
+// #504: una foto real para el informe (el navegador la decodifica y la reduce).
+const FOTO = fileURLToPath(new URL("../app/pwa/fotos/consultar-1-recibido.jpg", import.meta.url));
 
 test.describe.configure({ mode: "serial" }); // cada paso usa el código del anterior
 let codigo = "";
@@ -98,12 +101,15 @@ test("el rescatista acepta, llega y marca trasladado", async ({ page }) => {
   await expect(oferta).toBeVisible();
   await oferta.getByRole("button", { name: "Aceptar rescate" }).click();
   await expect(page.getByRole("heading", { name: `Mi rescate ${codigo}` })).toBeVisible();
-  await page.getByRole("button", { name: "Llegué al sitio" }).click();
+  await page.getByRole("button", { name: "Ya estoy en el sitio" }).click(); // #504
   await expect(page.getByRole("status")).toHaveText("Llegada registrada.");
-  await page.getByLabel("Resultado").selectOption("trasladado");
-  await page.getByRole("button", { name: "Registrar resultado" }).click();
+  await page.getByLabel("Herido").check();
+  await page.getByLabel("Trasladado al refugio").check();
+  await page.locator(".informe-form input[type=file]").setInputFiles(FOTO);
+  await expect(page.locator(".fotos-informe img")).toHaveCount(1);
+  await page.getByRole("button", { name: "Enviar informe" }).click();
   await expect(page.getByRole("status"))
-    .toHaveText("Resultado registrado: trasladado al refugio.");
+    .toHaveText("Informe enviado: lo trasladamos al refugio. El caso quedó atendido.");
 });
 
 test("el coordinador registra el ingreso con el código del reporte", async ({ page }) => {
@@ -130,10 +136,11 @@ test("el seguimiento por código muestra los pasos y nada privado (RN-14)", asyn
   await page.setViewportSize(TELEFONO);
   await page.goto(`/app/#estado/${codigo}`);
   const pasos = page.locator("#res-pasos li");
-  await expect(pasos).toHaveCount(5);
+  await expect(pasos).toHaveCount(6); // #504: con «El rescatista llegó al lugar»
   await expect(pasos.nth(0)).toContainText("Recibido");
-  await expect(pasos.nth(3)).toContainText("Atendido");
-  await expect(pasos.nth(4)).toContainText("Cerrado");
+  await expect(pasos.nth(3)).toContainText("El rescatista llegó al lugar");
+  await expect(pasos.nth(4)).toContainText("Atendido · Lo trasladamos al refugio");
+  await expect(pasos.nth(5)).toContainText("Cerrado");
   await expect(page.locator("body")).not.toContainText("convulsionando");
   await expect(page.locator("body")).not.toContainText("Libertadores");
   await sinScrollHorizontal(page);

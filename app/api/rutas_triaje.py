@@ -58,6 +58,7 @@ def _cola(ctx: Contexto) -> list[dict]:
         min(r.creado_en for r in pendientes) - timedelta(hours=config.DUPLICADO_HORAS)
     ) if pendientes else []
     ahora = datetime.now(UTC)
+    fotos = ctx.repositorio_rescates.fotos_de_reportes([r.codigo for r in pendientes])  # #504
     return [
         {"codigo": r.codigo, "prioridad": r.prioridad.value, "estado": r.estado.value,
          # #496: nivel, atrasado (más de 72 h sin avanzar) y lo que dice el propio reporte.
@@ -69,6 +70,7 @@ def _cola(ctx: Contexto) -> list[dict]:
          # Detalle para decidir de un vistazo: qué pasó, dónde y cuándo. Nunca el contacto.
          "descripcion": r.descripcion, "creado_en": fecha_utc(r.creado_en),
          "video_segundos": r.video_segundos,
+         "foto": f"/fotos/{fotos[r.codigo]}" if r.codigo in fotos else None,
          "ubicacion": {"latitud": r.ubicacion.latitud, "longitud": r.ubicacion.longitud,
                        "direccion": r.ubicacion.direccion, "comuna": r.ubicacion.comuna},
          # RF-17: se compara también con los ya confirmados (el original suele estarlo).

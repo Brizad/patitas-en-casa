@@ -12,8 +12,24 @@ from sqlalchemy import Engine, RowMapping, delete, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 from sqlalchemy.exc import IntegrityError
 
-from app.bd.esquema import escalamientos, rescates, rescatistas, ubicaciones_rescate
-from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate, UbicacionRescatista
+from app.bd.esquema import (
+    escalamientos,
+    fotos_evidencia,
+    informes_rescate,
+    rescates,
+    rescatistas,
+    ubicaciones_rescate,
+)
+from app.dominio.modelos import (
+    Encontrado,
+    EstadoAnimal,
+    EstadoRescate,
+    FotoEvidencia,
+    InformeRescate,
+    Rescate,
+    ResultadoRescate,
+    UbicacionRescatista,
+)
 from app.rescates.repositorio import ACTIVOS, RescateTomado, RescatistaOcupado
 
 ERRORES_POR_INDICE = {"uq_rescates_reporte_vigente": RescateTomado,
@@ -174,6 +190,92 @@ class RepositorioRescatesPostgres:
         with self._motor.begin() as conexion:
             conexion.execute(delete(ubicaciones_rescate)
                              .where(ubicaciones_rescate.c.reporte_codigo == codigo))
+
+
+    # --- #504: informe del rescate y fotos de evidencia ---------------------------------------
+
+    def atender_con_informe(self, informe: InformeRescate,
+                            fotos: list[tuple[str, bytes]]) -> bool:
+        with self._motor.begin() as conexion:
+            cambio = conexion.execute(
+                update(rescates)
+                .where(rescates.c.reporte_codigo == informe.codigo,
+                       rescates.c.rescatista == informe.rescatista,
+                       rescates.c.estado == EstadoRescate.EN_SITIO.value)
+                .values(estado=EstadoRescate.ATENDIDO.value, resultado=informe.resultado.value,
+                        actualizado_en=informe.creado_en))
+            if cambio.rowcount != 1:
+                return False
+            conexion.execute(insert(informes_rescate).values(
+                reporte_codigo=informe.codigo, rescatista=informe.rescatista,
+                encontrado=informe.encontrado.value, estados=[e.value for e in informe.estados],
+                resultado=informe.resultado.value, motivo=informe.motivo, nota=informe.nota,
+                creado_en=informe.creado_en))
+            for tipo, datos in fotos:
+                conexion.execute(insert(fotos_evidencia).values(
+                    reporte_codigo=informe.codigo, origen="rescate", tipo=tipo, datos=datos,
+                    creada_en=informe.creado_en))
+        return True
+
+    def informe(self, codigo: str) -> InformeRescate | None:
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(select(informes_rescate).where(
+                informes_rescate.c.reporte_codigo == codigo)).mappings().first()
+        return _a_informe(fila) if fila else None
+
+    def informes_recientes(self, limite: int) -> list[InformeRescate]:
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(informes_rescate)
+                                     .order_by(informes_rescate.c.creado_en.desc())
+                                     .limit(limite)).mappings().all()
+        return [_a_informe(f) for f in filas]
+
+    def guardar_foto_reporte(self, codigo: str, tipo: str, datos: bytes,
+                             momento: datetime) -> int | None:
+        sentencia = insertar_o_actualizar(fotos_evidencia).values(
+            reporte_codigo=codigo, origen="reporte", tipo=tipo, datos=datos, creada_en=momento
+        ).on_conflict_do_nothing(index_elements=[fotos_evidencia.c.reporte_codigo],
+                                 index_where=fotos_evidencia.c.origen == "reporte"
+                                 ).returning(fotos_evidencia.c.id)
+        with self._motor.begin() as conexion:
+            return conexion.execute(sentencia).scalar()
+
+    def fotos_de(self, codigo: str) -> list[FotoEvidencia]:
+        f = fotos_evidencia.c
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(f.id, f.reporte_codigo, f.origen, f.tipo, f.creada_en)
+                                     .where(f.reporte_codigo == codigo)
+                                     .order_by(f.id)).mappings().all()
+        return [_a_foto(fila) for fila in filas]
+
+    def foto(self, foto_id: int) -> tuple[FotoEvidencia, bytes] | None:
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(select(fotos_evidencia).where(
+                fotos_evidencia.c.id == foto_id)).mappings().first()
+        return (_a_foto(fila), bytes(fila["datos"])) if fila else None
+
+    def fotos_de_reportes(self, codigos: list[str]) -> dict[str, int]:
+        if not codigos:
+            return {}
+        f = fotos_evidencia.c
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(select(f.reporte_codigo, f.id).where(
+                f.reporte_codigo.in_(codigos), f.origen == "reporte")).all()
+        return {codigo: foto_id for codigo, foto_id in filas}
+
+
+def _a_informe(fila: RowMapping) -> InformeRescate:
+    return InformeRescate(
+        codigo=fila["reporte_codigo"], rescatista=fila["rescatista"],
+        encontrado=Encontrado(fila["encontrado"]),
+        estados=tuple(EstadoAnimal(e) for e in fila["estados"]),
+        resultado=ResultadoRescate(fila["resultado"]), motivo=fila["motivo"], nota=fila["nota"],
+        creado_en=fila["creado_en"])
+
+
+def _a_foto(fila: RowMapping) -> FotoEvidencia:
+    return FotoEvidencia(fila["id"], fila["reporte_codigo"], fila["origen"], fila["tipo"],
+                         fila["creada_en"])
 
 
 def _a_rescate(fila: RowMapping) -> Rescate:

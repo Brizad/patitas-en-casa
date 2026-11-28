@@ -142,7 +142,9 @@ def test_la_simulacion_es_solo_para_cuentas_de_demostracion(c):
     assert mapa(c, codigo)["ubicacion"] is None
 
 
-def test_la_simulacion_mueve_al_rescatista_hasta_el_animal_y_atiende(c, monkeypatch):
+def test_la_simulacion_mueve_al_rescatista_y_se_detiene_en_el_sitio(c, monkeypatch):
+    """#504: la simulación solo reemplaza el movimiento; al llegar queda «En el sitio» y NO
+    marca «Atendido» (eso lo hace el informe, el mismo del rescate real)."""
     monkeypatch.setattr(config, "SIMULACION_SEGUNDOS", 0.2)
     monkeypatch.setattr(config, "SIMULACION_INTERVALO_S", 0.02)
     monkeypatch.setattr(config, "SIMULACION_ESPERA_LLEGADA_S", 0.3)
@@ -159,6 +161,9 @@ def test_la_simulacion_mueve_al_rescatista_hasta_el_animal_y_atiende(c, monkeypa
             distancias.append(datos["distancia_m"])
         time.sleep(0.02)
     assert distancias and distancias[0] <= 1510 and min(distancias) < LLEGANDO_M
+    time.sleep(0.2)
     pasos = c.get(f"/reportes/{codigo}/seguimiento").json()["pasos"]
-    assert pasos[3]["nombre"] == "Atendido · Atendido en el sitio"
+    assert (pasos[3]["nombre"], pasos[3]["estado"]) == ("El rescatista llegó al lugar", "hecho")
+    assert (pasos[4]["nombre"], pasos[4]["estado"]) == ("Atendido", "actual")
+    assert c.get("/rescates/mio", headers=demo).json()["estado"] == "en_sitio"
     assert c.app.state.demo_servicios[2]._rescates.ubicacion(codigo) is None

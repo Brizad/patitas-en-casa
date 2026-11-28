@@ -3,7 +3,9 @@ hasta el animal, por el mismo camino que una ubicación real (ServicioRescates.c
 marcada «simulada»). Así cualquier pestaña del ciudadano lo ve moverse igual que en la vida real.
 
 Solo para las cuentas de demostración (dominio de app/demo.py); para cualquier otra, 403. Al
-llegar espera unos segundos («¡Está llegando!») y marca el caso atendido en el sitio.
+llegar espera unos segundos («¡Está llegando!») y marca la llegada («En el sitio»), igual que el
+botón «Ya estoy en el sitio». #504: ahí se detiene; desde ese punto (informe, fotos, «Atendido»)
+todo es el mismo código del rescate real, sin ramas para la demostración.
 """
 from __future__ import annotations
 
@@ -14,7 +16,7 @@ from collections.abc import Callable
 
 from app import config
 from app.demo import DOMINIO
-from app.dominio.modelos import ResultadoRescate, Usuario
+from app.dominio.modelos import Usuario
 from app.reportes.repositorio import RepositorioReportes
 from app.rescates.distancia import desplazar
 from app.rescates.servicio import PasoInvalido, ServicioRescates, SinPermiso
@@ -72,9 +74,7 @@ class Simulaciones:
                 if i < pasos:
                     self._dormir(intervalo)
             self._dormir(config.SIMULACION_ESPERA_LLEGADA_S)  # «¡Está llegando!»
-            self._servicio.llegue(rescatista, codigo)
-            self._servicio.registrar_resultado(rescatista, codigo,
-                                               ResultadoRescate.ATENDIDO_EN_SITIO)
+            self._servicio.llegue(rescatista, codigo)  # «En el sitio»: aquí termina
         except (PasoInvalido, SinPermiso):
             pass  # el rescatista llegó, liberó o atendió a mano: el recorrido termina ahí
         except Exception:  # un hilo de fondo nunca debe caer en silencio

@@ -35,6 +35,7 @@ from app.adopciones.modelos import (
 )
 from app.avisos.modelos import EstadoAviso
 from app.dominio.modelos import (
+    Encontrado,
     Especie,
     EstadoReporte,
     EstadoRescate,
@@ -384,6 +385,40 @@ ubicaciones_rescate = Table(
     CheckConstraint("latitud BETWEEN -90 AND 90 AND longitud BETWEEN -180 AND 180",
                     name="ck_ubicaciones_rescate_rango"),
 )
+
+# #504: informe del rescatista en el sitio (uno por reporte). El ciudadano nunca ve la nota.
+informes_rescate = Table(
+    "informes_rescate",
+    metadata,
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), primary_key=True),
+    Column("rescatista", Text, nullable=False),
+    Column("encontrado", String(12), nullable=False),
+    Column("estados", ARRAY(String(20)), nullable=False, server_default=text("'{}'")),
+    Column("resultado", String(20), nullable=False),
+    Column("motivo", Text),
+    Column("nota", Text),
+    Column("creado_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint(f"encontrado IN ({_valores(Encontrado)})", name="ck_informes_encontrado"),
+    CheckConstraint("nota IS NULL OR char_length(nota) <= 500", name="ck_informes_nota"),
+)
+
+# #504: fotos de evidencia (del rescate, hasta 3; o la del reporte del ciudadano, una). Solo se
+# sirven al personal con sesión, nunca por una URL pública.
+fotos_evidencia = Table(
+    "fotos_evidencia",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("reporte_codigo", String(8), ForeignKey("reportes.codigo"), nullable=False),
+    Column("origen", String(8), nullable=False),
+    Column("tipo", String(20), nullable=False),
+    Column("datos", LargeBinary, nullable=False),
+    Column("creada_en", DateTime(timezone=True), nullable=False),
+    CheckConstraint("origen IN ('reporte', 'rescate')", name="ck_fotos_evidencia_origen"),
+    CheckConstraint("octet_length(datos) <= 1048576", name="ck_fotos_evidencia_tamano"),
+)
+Index("ix_fotos_evidencia_reporte", fotos_evidencia.c.reporte_codigo)
+Index("uq_fotos_evidencia_reporte", fotos_evidencia.c.reporte_codigo, unique=True,
+      postgresql_where=text("origen = 'reporte'"))
 
 # HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a tiempo. La
 # llave primaria garantiza un solo aviso aunque varios procesos revisen a la vez.

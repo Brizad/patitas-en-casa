@@ -343,6 +343,67 @@
     }, 250);
   }
 
+  // --- #504: foto opcional del reporte -----------------------------------------------------
+  // El canvas copia solo los píxeles: la foto sale reducida (1280 px como máximo), como JPEG de
+  // ~200 KB y sin metadatos EXIF (incluido el GPS del teléfono). Se sube con la misma clave.
+  const LADO_MAXIMO = 1280;
+  const PESO_OBJETIVO = 200 * 1024;
+  const TEXTO_FOTO = 'Opcional. Se envía más liviana y sin los datos de ubicación de la foto.';
+  let foto = null;  // Blob ya reducido
+
+  function aBlob(lienzo, calidad) {
+    return new Promise((listo, falla) => lienzo.toBlob((b) => (b ? listo(b) : falla(new Error('foto'))),
+      'image/jpeg', calidad));
+  }
+
+  async function prepararFoto(archivo) {
+    const imagen = await createImageBitmap(archivo, { imageOrientation: 'from-image' });
+    const escala = Math.min(1, LADO_MAXIMO / Math.max(imagen.width, imagen.height));
+    const lienzo = document.createElement('canvas');
+    lienzo.width = Math.max(1, Math.round(imagen.width * escala));
+    lienzo.height = Math.max(1, Math.round(imagen.height * escala));
+    lienzo.getContext('2d').drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+    imagen.close();
+    let blob = await aBlob(lienzo, 0.82);
+    for (const calidad of [0.7, 0.6, 0.5]) {
+      if (blob.size <= PESO_OBJETIVO) break;
+      blob = await aBlob(lienzo, calidad);
+    }
+    return blob;
+  }
+
+  async function elegirFoto(evento) {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    try {
+      foto = await prepararFoto(archivo);
+      $('info-foto').textContent = 'Foto lista: ' + Math.max(1, Math.round(foto.size / 1024)) + ' KB.';
+      $('quitar-foto').hidden = false;
+    } catch (error) {
+      foto = null;
+      $('info-foto').textContent = 'No pudimos leer esa foto. Prueba con otra.';
+    }
+  }
+
+  function quitarFoto() {
+    foto = null;
+    $('info-foto').textContent = TEXTO_FOTO;
+    $('quitar-foto').hidden = true;
+  }
+
+  async function subirFoto(codigo, clave, blob) {
+    try {
+      const respuesta = await fetch('/reportes/' + encodeURIComponent(codigo) + '/foto', {
+        method: 'POST', headers: { 'Idempotency-Key': clave, 'Content-Type': 'image/jpeg' }, body: blob,
+      });
+      if (respuesta.ok) return 'Foto recibida.';
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      if (typeof cuerpo.detail === 'string') return cuerpo.detail;
+    } catch (error) { /* sin señal: abajo */ }
+    return 'No pudimos subir la foto; tu reporte sí llegó.';
+  }
+
   async function subirVideo(codigo, clave, elegido) {
     try {
       const respuesta = await fetch('/reportes/' + encodeURIComponent(codigo) + '/video', {
@@ -375,6 +436,7 @@
     formulario.reset();
     gps = null;
     video = null;
+    quitarFoto();  // #504
     cerrarGrabadora();
     errorEn($('video'), 'error-video', '');
     $('info-video').textContent = TEXTO_VIDEO;
@@ -394,6 +456,7 @@
     // prueba (piloto) nunca entra a la cola: no debe poder enviarse después como real.
     const guardado = !piloto && escribirCola([...leerCola(), pendiente]);
     const elegido = video;
+    const fotoElegida = foto;  // #504
     botonEnviar.disabled = true;
     botonEnviar.textContent = 'Enviando…';
     const tardando = window.Patitas.DESPERTANDO + ' Tu reporte no se pierde.';
@@ -407,18 +470,18 @@
         window.PatitasPiloto.alRecibirCodigo(resultado.codigo);
       } else if (resultado.tipo === 'enviado') {
         limpiar();
-        window.Patitas.mostrarCodigo(resultado.codigo, elegido ? 'Subiendo el video…' : '');
-        if (elegido) {
-          const nota = await subirVideo(resultado.codigo, pendiente.clave, elegido);
-          window.Patitas.mostrarCodigo(resultado.codigo, nota);
-        }
+        window.Patitas.mostrarCodigo(resultado.codigo, elegido || fotoElegida ? 'Subiendo…' : '');
+        const notas = [];
+        if (fotoElegida) notas.push(await subirFoto(resultado.codigo, pendiente.clave, fotoElegida));
+        if (elegido) notas.push(await subirVideo(resultado.codigo, pendiente.clave, elegido));
+        if (notas.length) window.Patitas.mostrarCodigo(resultado.codigo, notas.join(' '));
       } else if (resultado.tipo === 'rechazado') {
         avisar(resultado.detalle, true);  // el texto sigue en el formulario para corregirlo
       } else if (guardado) {
         limpiar();  // ya está en la cola: así no se envía dos veces con otra clave
         avisar('Sin señal: guardamos tu reporte en este teléfono y lo enviaremos solo '
           + 'cuando vuelva la conexión. Mantén la app abierta o vuelve a abrirla después.'
-          + (elegido ? ' El video no se guarda en el teléfono: solo se enviará el texto.' : ''));
+          + (elegido || fotoElegida ? ' El video y la foto no se guardan en el teléfono: solo se enviará el texto.' : ''));
       } else {
         avisar('Sin señal y este navegador no permite guardar el reporte. '
           + 'Intenta de nuevo cuando vuelva la conexión.', true);
@@ -434,6 +497,9 @@
 
   descripcion.addEventListener('input', contar);
   $('video').addEventListener('change', elegirVideo);
+  $('foto').addEventListener('change', elegirFoto);  // #504
+  $('elegir-foto').addEventListener('click', () => $('foto').click());
+  $('quitar-foto').addEventListener('click', quitarFoto);
   $('video-camara').addEventListener('change', elegirVideo);
   $('elegir-video').addEventListener('click', () => $('video').click());
   $('grabar-video').addEventListener('click', grabarVideo);

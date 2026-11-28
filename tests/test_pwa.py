@@ -255,7 +255,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v21" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #502
+    assert "patitas-pwa-v22" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #504
 
 
 
@@ -488,3 +488,14 @@ def test_la_ilustracion_va_sin_marco_y_con_los_bordes_fundidos():
     assert "#FFD23F" in etiqueta and "2.5px solid #2B2340" in etiqueta
     assert "3px 3px 0 #2B2340" in etiqueta
     assert "margin-top: -22px" in etiqueta  # montada sobre el borde de abajo de la foto
+
+
+def test_foto_opcional_reducida_y_sin_exif_con_la_clave_del_reporte(c):
+    """#504: un input de cámara; el canvas la reduce a 1280 px y ~200 KB (y le quita el EXIF);
+    se sube con la misma clave del reporte, como el video."""
+    html = c.get("/app/").text
+    assert '<input type="file" id="foto" accept="image/*" capture="environment" hidden>' in html
+    js = (CARPETA_PWA / "reportar.js").read_text(encoding="utf-8")
+    assert "const LADO_MAXIMO = 1280;" in js and "const PESO_OBJETIVO = 200 * 1024;" in js
+    assert "createImageBitmap(archivo, { imageOrientation: 'from-image' })" in js
+    assert "'/foto'" in js and "'Idempotency-Key': clave" in js

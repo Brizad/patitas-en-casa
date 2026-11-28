@@ -7,20 +7,32 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter,
+    File,
+    Form,
     HTTPException,
+    Request,
+    Response,
+    UploadFile,
 )
 from pydantic import BaseModel, Field
 
+from app import config
 from app.api.comun import Contexto, fecha_utc
 from app.dominio.modelos import (
+    Encontrado,
+    EstadoAnimal,
     EstadoRescate,
+    InformeRescate,
     Reporte,
     Rescate,
     ResultadoRescate,
+    Rol,
     Usuario,
 )
 from app.reportes import orden
+from app.reportes.seguimiento import RESULTADOS
 from app.rescates.servicio import (
+    InformeInvalido,
     PasoInvalido,
     RescateNoOfrecido,
     SinPermiso,
@@ -108,6 +120,8 @@ def _paso(accion, *args):
         raise HTTPException(status_code=409, detail=str(error)) from error
     except SinPermiso as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except InformeInvalido as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 def _registrar_resultado(ctx: Contexto, codigo: str, datos: ResultadoEntrada,
@@ -125,7 +139,102 @@ def crear_rutas_rescates(ctx: Contexto) -> APIRouter:
     _rutas_del_rescatista(rutas, ctx)
     _rutas_de_los_pasos(rutas, ctx)
     _rutas_de_la_ubicacion(rutas, ctx)
+    _rutas_del_informe(rutas, ctx)
     return rutas
+
+
+# --- #504: informe de rescate y fotos de evidencia --------------------------------------------
+
+PERSONAL_DEL_CASO = (Rol.VETERINARIO, Rol.COORDINADOR)
+TOPE_INFORME = config.MAX_FOTOS_RESCATE * config.FOTO_EVIDENCIA_MAX_BYTES + 256 * 1024
+
+
+def _puede_ver(ctx: Contexto, usuario: Usuario, codigo: str) -> bool:
+    """Veterinario y coordinador, o el rescatista asignado a ese caso."""
+    if usuario.rol in PERSONAL_DEL_CASO:
+        return True
+    rescate = ctx.repositorio_rescates.vigente(codigo)
+    return (usuario.rol == Rol.RESCATISTA and rescate is not None
+            and rescate.rescatista == usuario.correo)
+
+
+def _nombre(ctx: Contexto, correo: str) -> str:
+    cuenta = ctx.repositorio_usuarios.buscar_por_correo(correo)
+    return cuenta.nombre if cuenta else correo
+
+
+def _informe(ctx: Contexto, informe: InformeRescate) -> dict:
+    fotos = ctx.repositorio_rescates.fotos_de(informe.codigo)
+    return {"codigo": informe.codigo, "rescatista": _nombre(ctx, informe.rescatista),
+            "encontrado": informe.encontrado.value, "estados": [e.value for e in informe.estados],
+            "resultado": informe.resultado.value,
+            "resultado_texto": RESULTADOS[informe.resultado], "motivo": informe.motivo,
+            "nota": informe.nota, "creado_en": fecha_utc(informe.creado_en),
+            "fotos": [{"id": f.id, "url": f"/fotos/{f.id}"} for f in fotos
+                      if f.origen == "rescate"],
+            "foto_reporte": next(({"id": f.id, "url": f"/fotos/{f.id}"} for f in fotos
+                                  if f.origen == "reporte"), None)}
+
+
+async def _leer_fotos(peticion: Request, fotos: list[UploadFile]) -> list[bytes]:
+    largo = peticion.headers.get("content-length", "")
+    if largo.isdigit() and int(largo) > TOPE_INFORME:
+        raise HTTPException(status_code=413, detail="Las fotos pesan demasiado.")
+    # Se lee como mucho 1 byte más del tope: así se sabe que se pasó sin leer todo.
+    return [await f.read(config.FOTO_EVIDENCIA_MAX_BYTES + 1) for f in fotos[:4]]
+
+
+def _rutas_del_informe(rutas: APIRouter, ctx: Contexto) -> None:
+    rescates = ctx.rescates
+    rescatista_actual = ctx.rescatista_actual
+    usuario_actual = ctx.usuario_actual
+    personal = ctx.personal
+
+    @rutas.post("/rescates/{codigo}/informe", status_code=201)
+    async def enviar_informe(codigo: str, peticion: Request,
+                             encontrado: Annotated[Encontrado, Form()],
+                             estados: Annotated[list[EstadoAnimal], Form()] = (),
+                             accion: Annotated[ResultadoRescate | None, Form()] = None,
+                             motivo: Annotated[str | None, Form(max_length=1000)] = None,
+                             nota: Annotated[str | None, Form(max_length=2000)] = None,
+                             fotos: Annotated[list[UploadFile], File()] = (),
+                             rescatista: Usuario = rescatista_actual):
+        """Solo el rescatista asignado y en el sitio. Fotos JPEG/PNG/WebP (tipo real), de 1 a 3
+        y de 1 MB como mucho cada una; al menos una salvo «No estaba». En una sola operación el
+        caso pasa a «Atendido» y se guardan el informe y las fotos (el mismo camino para el
+        rescate real y el simulado)."""
+        datos = await _leer_fotos(peticion, list(fotos))
+        informe = _paso(rescates.informar, rescatista, codigo.upper(), encontrado,
+                        list(estados), accion, motivo, nota, datos)
+        return _informe(ctx, informe)
+
+    @rutas.get("/rescates/{codigo}/informe")
+    def ver_informe(codigo: str, usuario: Usuario = usuario_actual):
+        """Veterinario, coordinador o el rescatista asignado; el ciudadano nunca (RN-14)."""
+        codigo = codigo.upper()
+        if not _puede_ver(ctx, usuario, codigo):
+            raise HTTPException(status_code=403, detail="No puedes ver el informe de este caso.")
+        informe = ctx.repositorio_rescates.informe(codigo)
+        if informe is None:
+            raise HTTPException(status_code=404, detail="Este caso aún no tiene informe.")
+        return _informe(ctx, informe)
+
+    @rutas.get("/rescates/informes", dependencies=[personal])
+    def informes_recientes():
+        """Los 50 informes más recientes, para el veterinario y el coordinador."""
+        return [_informe(ctx, i) for i in ctx.repositorio_rescates.informes_recientes(50)]
+
+    @rutas.get("/fotos/{foto_id}")
+    def ver_foto(foto_id: int, usuario: Usuario = usuario_actual):
+        """Solo personal con sesión que puede ver ese caso; nunca una URL pública. Se envía con
+        el tipo verificado, nosniff y sin guardarse en cachés compartidas."""
+        foto = ctx.repositorio_rescates.foto(foto_id)
+        if foto is None:
+            raise HTTPException(status_code=404, detail="Esa foto no existe.")
+        if not _puede_ver(ctx, usuario, foto[0].codigo):
+            raise HTTPException(status_code=403, detail="No puedes ver esta foto.")
+        return Response(foto[1], media_type=foto[0].tipo, headers={
+            "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store"})
 
 
 def _rutas_de_la_ubicacion(rutas: APIRouter, ctx: Contexto) -> None:

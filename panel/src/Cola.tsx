@@ -9,6 +9,7 @@ import Confirmar, { resumenAvisos } from "./Confirmar";
 import Descartar from "./Descartar";
 import { Lugar } from "./MiniMapa";
 import VideoDelReporte from "./VideoDelReporte";
+import { FotoPrivada } from "./Evidencias";
 import {
   NOMBRE_PRIORIDAD, etiquetaEstado, evidenciaLegible, explicarSugerencia, faltaJustificacion,
   haceCuanto, nombreModelo, textoError,
@@ -102,7 +103,7 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
             <ul>
               {visibles.map((r) => (
                 <li key={r.codigo}>
-                  <TarjetaCaso r={r} elegido={r.codigo === elegido} alElegir={() => setElegido(r.codigo)} />
+                  <TarjetaCaso token={token} r={r} elegido={r.codigo === elegido} alElegir={() => setElegido(r.codigo)} />
                   {r.atrasado && cuenta.rol === "veterinario" && (
                     <div className="acciones acciones-atrasado">
                       <button onClick={() => setElegido(r.codigo)}>Revisar ahora</button>
@@ -128,6 +129,9 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
             <p className="ds-suave" title={fechaExacta(detalle.creado_en)}>
               Reportado {haceCuanto(detalle.creado_en)} · {fechaExacta(detalle.creado_en)}
               {" "}· {textoEspecie(detalle.especie)} · {textoZona(detalle.ubicacion.comuna)}</p>
+            {detalle.foto && (
+              <FotoPrivada token={token} url={detalle.foto} alt={`Foto del reporte ${detalle.codigo}`}
+                className="foto-reporte" />)}
             <h3>Qué pasó</h3>
             <blockquote className="relato">{detalle.descripcion}</blockquote>
             <h3>Dónde</h3>
@@ -173,16 +177,19 @@ export default function Cola({ token, cuenta }: { token: string; cuenta: Cuenta 
 }
 
 /** #496: nivel con color, animal y estado, zona, video y la espera con su color. */
-function TarjetaCaso({ r, elegido, alElegir }: { r: ReporteEnCola; elegido: boolean; alElegir: () => void }) {
+function TarjetaCaso({ token, r, elegido, alElegir }: {
+  token: string; r: ReporteEnCola; elegido: boolean; alElegir: () => void;
+}) {
   const conVideo = r.video_segundos !== null;
   return (
     <button className={`item tarjeta-caso item--${r.prioridad}${elegido ? " activo" : ""}`}
       onClick={alElegir} aria-pressed={elegido}>
       <span className={`nivel nivel--${r.nivel}`}>{NOMBRE_NIVEL[r.nivel]}</span>
-      {/* Los reportes no traen foto: si trae video se indica; si no, «—» (sin inventar). */}
-      <span className="miniatura" title={conVideo ? "Trae video" : "Sin foto ni video"}>
-        {conVideo ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg> : "—"}
-        <span className="visualmente-oculto">{conVideo ? "Con video" : "Sin foto"}</span></span>
+      {/* #504: la foto del ciudadano (con sesión); sin foto, el video si lo trae; si no, «—». */}
+      {r.foto ? <FotoPrivada token={token} url={r.foto} alt={`Foto del reporte ${r.codigo}`} className="miniatura miniatura--foto" /> : (
+        <span className="miniatura" title={conVideo ? "Trae video" : "Sin foto ni video"}>
+          {conVideo ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg> : "—"}
+          <span className="visualmente-oculto">{conVideo ? "Con video" : "Sin foto"}</span></span>)}
       <span className="caso-datos">
         <b>{textoEspecie(r.especie)}{r.estado_animal ? ` · ${r.estado_animal}` : ""}</b>
         <span className="ds-suave">{textoZona(r.ubicacion.comuna)} · <code>{r.codigo}</code>

@@ -16,7 +16,8 @@ PUBLICAS = {
     ("GET", "/indicadores/publicos"),  # #426: tres totales anónimos para la portada
 }
 # No piden sesión pero tampoco son abiertas: exigen la clave del reporte (403 sin ella).
-CON_CLAVE_PROPIA = {("POST", "/reportes/{codigo}/video")}
+CON_CLAVE_PROPIA = {("POST", "/reportes/{codigo}/video"),
+                    ("POST", "/reportes/{codigo}/foto")}  # #504: la misma clave del reporte
 
 
 def _sin_sesion():
