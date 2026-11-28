@@ -45,7 +45,8 @@ export default function Adoptante({ token, nombre, alSalir }: {
     const [perfil, mias, cat, col] = await Promise.all([miPerfil(token), misSolicitudes(token), catalogo(),
       coleccion().catch(() => null)]);
     // Con perfil, el servidor ordena por compatibilidad y deja fuera las restricciones duras.
-    const recomendados = perfil ? await recomendaciones(token) : null;
+    // #516: sin el seguimiento aceptado (RN-10) no hay matches: el servidor respondería 403.
+    const recomendados = perfil?.acepta_seguimiento ? await recomendaciones(token) : null;
     setDatos({ perfil, mias, catalogo: cat, recomendados, cargando: false, coleccion: col });
   }, [token]);
 
