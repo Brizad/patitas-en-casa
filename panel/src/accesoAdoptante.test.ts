@@ -65,8 +65,11 @@ describe("encuesta y Mi hogar (arreglos, parte C)", () => {
     expect(vista).toContain("catalogo.filter((a) => a.foto)");
     expect(vista).not.toContain("Tu respuesta");
   });
-  it("«Mi hogar» resume lo guardado y ofrece «Cambiar mis respuestas»; la bienvenida, ver los compañeros", () => {
-    expect(vista).toContain("Cambiar mis respuestas");
+  it("«Mi hogar» (#516) muestra lo guardado con «Cambiar» en cada respuesta; la bienvenida, ver los compañeros", () => {
+    const hogar = pantallas["./MiHogar.tsx"] as string;
+    expect(hogar).toContain("resumenHogar(perfil)");  // las respuestas reales guardadas
+    expect(hogar).toContain("onClick={() => alCambiar(r.paso)}");  // abre la encuesta en esa pregunta
+    expect(hogar).toContain("Te falta un paso para poder adoptar");
     expect(vista).toContain("Ver mis compañeros con mis respuestas guardadas");
     expect(pantallas["./Adoptante.tsx"]).toContain('["hogar", "Mi hogar", miHogar]');
   });

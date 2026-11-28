@@ -476,17 +476,9 @@
 }
 
 /* ---------- Mi hogar y respuesta guardada (arreglos, parte C) ---------- */
-.hogar { width: min(760px, 100%); margin: 0 auto; padding: 4px 20px 24px; display: flex; flex-direction: column; gap: 14px; }
-.hogar-resumen { margin: 0; display: grid; gap: 10px; }
-.hogar-fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 12px 16px;
-  background: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 18px; box-shadow: 3px 3px 0 var(--tinta); }
-.hogar-fila dt { font-weight: 700; color: var(--suave); }
-.hogar-fila dd { margin: 0; font-size: 17px; font-weight: 600; text-align: right; }
-.hogar-botones, .hogar-vacio { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .ini-acciones .adop-boton--claro { margin-top: 6px; text-align: center; }
 /* La respuesta guardada se nota solo por el borde (sin la etiqueta «Tu respuesta»). */
 .ds .adop .opcion[aria-pressed="true"] { --sc: var(--tinta); border-width: 2.5px; outline: 3px dashed var(--morado); outline-offset: 3px; }
-@media (max-width: 520px) { .hogar-fila { grid-template-columns: minmax(0, 1fr); } .hogar-fila dd { text-align: left; } }
 
 /* ---------- bienvenida en computador (tarea 4): hero compacto y más contenido abajo ---------- */
 @media (min-width: 1024px) {

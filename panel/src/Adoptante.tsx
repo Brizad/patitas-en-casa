@@ -5,14 +5,15 @@ import {
   guardarPerfil, miPerfil, misSolicitudes, recomendaciones, solicitar,
 } from "./apiAdopcion";
 import {
-  Bienvenida, Combinan, Elegir, Encuesta, Listo, MiHogar, MisSolicitudes,
+  Bienvenida, Combinan, Elegir, Encuesta, Listo, MisSolicitudes,
 } from "./AdoptantePantallas";
 import Acompanar from "./Acompanar";
 import ColeccionAnimales from "./ColeccionAnimales";
 import CuidadosYPasos from "./CuidadosYPasos";
 import Despertando from "./Despertando";
 import EligeCompanero from "./EligeCompanero";
-import { PREGUNTAS, perfilDesdeRespuestas, resumenHogar } from "./encuesta";
+import MiHogar from "./MiHogar";
+import { PREGUNTAS, perfilDesdeRespuestas } from "./encuesta";
 import {
   INICIAL, PantallaAdopcion, actual, contar, filtrar, flujo, mejores, solicitudDe,
 } from "./flujoAdopcion";
@@ -255,8 +256,9 @@ export default function Adoptante({ token, nombre, alSalir }: {
             alVerSinSolicitar={() => ir("siguiente", { tipo: "verTodos" })}
             alInicio={() => ir("atras", { tipo: "irA", pantalla: "inicio" })} />)}
         {s.pantalla === "hogar" && (
-          <MiHogar resumen={resumenHogar(datos.perfil)} alCambiar={cambiarRespuestas} alEmpezar={empezar}
-            alVerCompaneros={verCompaneros} alAtras={() => ir("atras", { tipo: "atras" })} />)}
+          <MiHogar perfil={datos.perfil} alEmpezar={empezar} alVerCompaneros={verCompaneros}
+            alCambiar={(paso) => ir("siguiente", { tipo: "empezar", perfil: datos.perfil, precargar: true, paso })}
+            alAtras={() => ir("atras", { tipo: "atras" })} />)}
         {s.pantalla === "solicitudes" && (
           <MisSolicitudes mias={datos.mias} animalDe={animalDe}
             alVer={(x) => ir("pop", { tipo: "solicitado", animal: x.animal_id, recien: false })}

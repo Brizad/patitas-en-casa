@@ -87,8 +87,13 @@ describe("«Mi hogar» (arreglos, parte C)", () => {
     const r = resumenHogar({ vivienda: "apartamento", tiene_patio: false, hay_ninos: true,
       otros_animales: false, horas_solo_al_dia: 4, experiencia: true, acepta_seguimiento: true });
     expect(r).toHaveLength(7);
-    expect(r[0]).toEqual({ pregunta: "¿Dónde vivirá tu nuevo amigo?", respuesta: "Apartamento" });
+    expect(r[0]).toEqual({ clave: "vivienda", pregunta: "¿Dónde vivirá tu nuevo amigo?", respuesta: "Apartamento",
+                           paso: PREGUNTAS.findIndex((q) => q.clave === "vivienda") });
     expect(r.find((x) => x.pregunta.includes("horas"))?.respuesta).toBe("Medio día (4 h)");
+    expect(r[r.length - 1]).toMatchObject({ clave: "acepta_seguimiento", respuesta: "Sí, acepto", paso: PREGUNTAS.length - 1 });
     expect(resumenHogar(null)).toEqual([]);
+    // #516: una respuesta que falta se muestra «—» (nada inventado).
+    const incompleto = { vivienda: "casa" } as unknown as Parameters<typeof resumenHogar>[0];
+    expect(resumenHogar(incompleto).find((x) => x.clave === "hay_ninos")?.respuesta).toBe("—");
   });
 });
