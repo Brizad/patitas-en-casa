@@ -4,6 +4,7 @@ import {
   egresar, ficha,
 } from "./apiRefugio";
 import { textoError } from "./mensajes";
+import PerfilAdopcion from "./PerfilAdopcion";
 
 /** Fichas clínicas (RF-06, RF-24) y egresos (RF-26) del refugio de la persona. */
 export default function Fichas({ token, rol, version, alCambiarCupo }: {
@@ -102,6 +103,7 @@ function Ficha({ token, rol, animal, alCambiar }: {
             onChange={(e) => setTexto(e.target.value)} /></label>
           <button className="principal">Agregar al historial</button>
         </form>)}
+      {!animal.egresado_en && <PerfilAdopcion token={token} rol={rol} animalId={animal.id} />}
       {rol === "coordinador" && !animal.egresado_en && (
         <form onSubmit={(e) => {
           e.preventDefault();
