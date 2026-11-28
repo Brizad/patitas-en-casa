@@ -85,6 +85,11 @@ veterinarios y control de cupos del refugio.
 - **Ubicación del rescatista (#498)**: solo la última posición (`ubicaciones_rescate`), solo del
   rescatista asignado y en camino; se borra al salir de «en camino». «Simular recorrido» solo
   para cuentas `@demo.patitas.co` (403 para las demás).
+- **Informe de rescate (#504)**: en «En el sitio» el rescatista asignado envía el informe (1 a 3
+  fotos ≤1 MB, salvo «No estaba»); en una transacción pasa a «Atendido». Las fotos
+  (`fotos_evidencia`) solo se sirven con sesión a veterinario, coordinador o el rescatista del
+  caso; el ciudadano nunca ve fotos ni nota. La simulación solo mueve el punto: desde «En el
+  sitio» se usa el mismo código que el rescate real.
 - **Orden de las bandejas (#496)**: una sola regla en `app/reportes/orden.py` (nivel y luego el
   más antiguo; más de 72 h sin avanzar → «Atrasados»). Archivar un atrasado es un descarte con
   motivo `archivado`.

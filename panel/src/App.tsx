@@ -7,6 +7,7 @@ import Adoptante from "./Adoptante";
 import Cola from "./Cola";
 import Historial from "./Historial";
 import Indicadores from "./Indicadores";
+import Informes from "./Informes";
 import { esOtroPortal, textoError } from "./mensajes";
 import { NOMBRE_PANTALLA, Pantalla, pantallasDelRol } from "./navegacion";
 import Refugio from "./Refugio";
@@ -26,6 +27,7 @@ const ICONO_PANTALLA: Record<Pantalla, string> = {
   adopciones: "M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z",
   indicadores: "M4 20V10M10 20V4M16 20v-7M22 20H2",
   piloto: "M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3",
+  informes: "M4 7h3l2-3h6l2 3h3v13H4zM12 17a4 4 0 1 0 0-8a4 4 0 0 0 0 8z",
   administracion: "M8 15a4 4 0 1 0 0-8a4 4 0 1 0 0 8zM12 11h9M18 11v3M21 11v3",
 };
 
@@ -79,6 +81,7 @@ export default function App() {
       {pantalla === "adopciones" && <AdopcionesCoordinador token={token} />}
       {pantalla === "indicadores" && <Indicadores token={token} rol={cuenta.rol} />}
       {pantalla === "piloto" && <Piloto token={token} />}
+      {pantalla === "informes" && <Informes token={token} />}
       {pantalla === "administracion" && <Administracion token={token} yo={cuenta.correo} />}
       {pantalla === null && <p className="ds-vacio">Tu rol no tiene pantallas en el panel.</p>}
       </div>

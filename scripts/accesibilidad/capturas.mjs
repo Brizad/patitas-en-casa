@@ -108,11 +108,12 @@ await foto(p, "08-rescatista", { completa: true });
 const oferta = p.locator("li.oferta").first();
 if (await oferta.count()) {
   await oferta.getByRole("button", { name: "Aceptar rescate" }).click();
-  await p.getByRole("button", { name: "Llegué al sitio" }).click();
+  await p.getByRole("button", { name: "Ya estoy en el sitio" }).click(); // #504
   await p.getByRole("status").first().waitFor();
   await foto(p, "08b-rescatista-en-curso", { completa: true });
-  await p.getByLabel("Resultado").selectOption("trasladado");
-  await p.getByRole("button", { name: "Registrar resultado" }).click();
+  // #504: informe de rescate; «No estaba» no exige fotos (el script no tiene una a mano).
+  await p.getByLabel("No estaba").check();
+  await p.getByRole("button", { name: "Enviar informe" }).click();
   await p.getByRole("status").first().waitFor();
 }
 await pestana(p, "Mis rescates");

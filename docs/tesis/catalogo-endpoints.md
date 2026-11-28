@@ -2,7 +2,7 @@
 
 # Catálogo de endpoints
 
-81 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
+86 rutas de la API, leídas de la app real (`crear_app`). **Quién** sale de `exigir_rol` (401 sin sesión, 403 con otro rol). **Códigos**: el de éxito, los que la ruta lanza con `HTTPException` (también en las funciones auxiliares que llama), 401/403 por la sesión, 422 si tiene parámetros o cuerpo que validar y, en el video, todos los que puede lanzar su servicio (`VideoRechazado`; no todos aplican a cada ruta). Además, cualquier petición con cuerpo de más de 1 MB recibe 413 (A-01). **Requisitos**: los que cita el código de la ruta.
 
 | Método | Ruta | Quién | Códigos | Requisitos |
 |---|---|---|---|---|
@@ -37,6 +37,7 @@
 | GET | `/refugio/seguimientos` | coordinador | 200, 401, 403 | RF-10 |
 | POST | `/refugio/seguimientos/{seguimiento_id}` | coordinador | 200, 401, 403, 404, 409, 422 | — |
 | GET | `/adopciones/solicitudes/{solicitud_id}/compromiso.pdf` | adoptante, coordinador | 200, 401, 403, 404, 409, 422 | RF-29 |
+| POST | `/reportes/{codigo}/foto` | público | 201, 403, 409, 422 | — |
 | POST | `/reportes` | público | 201, 422, 429 | A-02, RF-01, RF-12 |
 | GET | `/reportes/{codigo}` | público | 200, 404, 422 | — |
 | GET | `/reportes/{codigo}/seguimiento` | público | 200, 404, 422 | HU-08, RN-14 |
@@ -59,6 +60,10 @@
 | PUT | `/rescates/{codigo}/ubicacion` | rescatista | 200, 401, 403, 404, 409, 422 | — |
 | DELETE | `/rescates/{codigo}/ubicacion` | rescatista | 200, 401, 403, 404, 409, 422 | — |
 | POST | `/rescates/{codigo}/simulacion` | rescatista | 202, 401, 403, 404, 409, 422 | — |
+| POST | `/rescates/{codigo}/informe` | rescatista | 201, 401, 403, 404, 409, 413, 422 | — |
+| GET | `/rescates/{codigo}/informe` | cualquier sesión | 200, 401, 403, 404, 422 | RN-14 |
+| GET | `/rescates/informes` | coordinador, veterinario | 200, 401, 403 | — |
+| GET | `/fotos/{foto_id}` | cualquier sesión | 200, 401, 403, 404, 422 | — |
 | POST | `/refugio/ingresos` | coordinador | 201, 401, 403, 409, 422 | — |
 | GET | `/refugio/animales` | coordinador, veterinario | 200, 401, 403 | — |
 | GET | `/refugio/animales/{animal_id}` | coordinador, veterinario | 200, 401, 403, 404, 422 | — |

@@ -2,7 +2,7 @@
 
 # Diccionario de datos
 
-23 tablas, leídas de `app/bd/esquema.py` (la misma definición que usan las migraciones de Alembic). La descripción es el comentario del código; «—» quiere decir que el código no tiene comentario para esa columna.
+25 tablas, leídas de `app/bd/esquema.py` (la misma definición que usan las migraciones de Alembic). La descripción es el comentario del código; «—» quiere decir que el código no tiene comentario para esa columna.
 
 ## `bitacora`
 
@@ -230,6 +230,38 @@ HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a 
 | `reporte_codigo` | VARCHAR(8) | no | PK FK → reportes.codigo | — | — |
 | `escalado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
 
+## `fotos_evidencia`
+
+504: fotos de evidencia (del rescate, hasta 3; o la del reporte del ciudadano, una). Solo se sirven al personal con sesión, nunca por una URL pública.
+
+| Columna | Tipo | Nulo | Clave | Por defecto | Descripción |
+|---|---|---|---|---|---|
+| `id` | INTEGER | no | PK | — | — |
+| `reporte_codigo` | VARCHAR(8) | no | FK → reportes.codigo | — | — |
+| `origen` | VARCHAR(8) | no | — | — | — |
+| `tipo` | VARCHAR(20) | no | — | — | — |
+| `datos` | BYTEA | no | — | — | — |
+| `creada_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
+
+Restricciones e índices: `ck_fotos_evidencia_origen`: `origen IN ('reporte', 'rescate')`; `ck_fotos_evidencia_tamano`: `octet_length(datos) <= 1048576`; `ix_fotos_evidencia_reporte`: índice (reporte_codigo); `uq_fotos_evidencia_reporte`: índice único (reporte_codigo) donde `origen = 'reporte'`.
+
+## `informes_rescate`
+
+504: informe del rescatista en el sitio (uno por reporte). El ciudadano nunca ve la nota.
+
+| Columna | Tipo | Nulo | Clave | Por defecto | Descripción |
+|---|---|---|---|---|---|
+| `reporte_codigo` | VARCHAR(8) | no | PK FK → reportes.codigo | — | — |
+| `rescatista` | TEXT | no | — | — | — |
+| `encontrado` | VARCHAR(12) | no | — | — | — |
+| `estados` | VARCHAR(20)[] | no | — | `'{}'` | — |
+| `resultado` | VARCHAR(20) | no | — | — | — |
+| `motivo` | TEXT | sí | — | — | — |
+| `nota` | TEXT | sí | — | — | — |
+| `creado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
+
+Restricciones e índices: `ck_informes_encontrado`: `encontrado IN ('si', 'no_estaba', 'otro_animal')`; `ck_informes_nota`: `nota IS NULL OR char_length(nota) <= 500`.
+
 ## `rescates`
 
 | Columna | Tipo | Nulo | Clave | Por defecto | Descripción |
@@ -243,7 +275,7 @@ HU-06 (#46, RF-23): reportes escalados al coordinador por no tener rescatista a 
 | `actualizado_en` | TIMESTAMP WITH TIME ZONE | no | — | — | — |
 | `llegada_en` | TIMESTAMP WITH TIME ZONE | sí | — | — | — |
 
-Restricciones e índices: `ck_rescates_estado`: `estado IN ('en_camino', 'en_sitio', 'atendido', 'liberado')`; `ck_rescates_resultado`: `resultado IN ('trasladado', 'atendido_en_sitio', 'no_encontrado', 'fallecido')`; `ck_rescates_resultado_al_atender`: `(estado = 'atendido') = (resultado IS NOT NULL)`; `ix_rescates_rescatista`: índice (rescatista, aceptado_en); `uq_rescates_reporte_vigente`: índice único (reporte_codigo) donde `estado <> 'liberado'`; `uq_rescates_rescatista_activo`: índice único (rescatista) donde `estado IN ('en_camino', 'en_sitio')`.
+Restricciones e índices: `ck_rescates_estado`: `estado IN ('en_camino', 'en_sitio', 'atendido', 'liberado')`; `ck_rescates_resultado`: `resultado IN ('trasladado', 'atendido_en_sitio', 'no_encontrado', 'fallecido', 'veterinaria', 'no_rescatado')`; `ck_rescates_resultado_al_atender`: `(estado = 'atendido') = (resultado IS NOT NULL)`; `ix_rescates_rescatista`: índice (rescatista, aceptado_en); `uq_rescates_reporte_vigente`: índice único (reporte_codigo) donde `estado <> 'liberado'`; `uq_rescates_rescatista_activo`: índice único (rescatista) donde `estado IN ('en_camino', 'en_sitio')`.
 
 ## `ubicaciones_rescate`
 

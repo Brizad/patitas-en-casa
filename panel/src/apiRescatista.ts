@@ -2,13 +2,16 @@
 // pantalla para poder probarlas con vitest.
 import { pedir, Prioridad } from "./api";
 
-export type Resultado = "trasladado" | "atendido_en_sitio" | "no_encontrado" | "fallecido";
+export type Resultado = "trasladado" | "atendido_en_sitio" | "no_encontrado" | "fallecido"
+  | "veterinaria" | "no_rescatado";
 
 export const NOMBRE_RESULTADO: Record<Resultado, string> = {
   trasladado: "Trasladado al refugio",
   atendido_en_sitio: "Atendido en el sitio",
   no_encontrado: "No encontrado",
   fallecido: "Fallecido",
+  veterinaria: "Llevado a veterinaria", // #504
+  no_rescatado: "No se pudo rescatar", // #504
 };
 
 export interface EstadoRescatista { disponible: boolean; comunas: number[] }
@@ -74,3 +77,62 @@ export const esCuentaDemo = (correo: string) => correo.endsWith("@demo.patitas.c
 /** true si ya pasó el intervalo desde el último envío (o nunca se envió). */
 export const tocaEnviar = (ultimo: number | null, ahora: number) =>
   ultimo === null || ahora - ultimo >= INTERVALO_UBICACION_MS;
+
+// --- #504: informe del rescate en el sitio -----------------------------------------------
+
+export type Encontrado = "si" | "no_estaba" | "otro_animal";
+export type EstadoAnimal = "herido" | "desnutrido" | "enfermo" | "sano" | "asustado_agresivo";
+export type Accion = "trasladado" | "atendido_en_sitio" | "veterinaria" | "no_rescatado";
+
+export const NOMBRE_ENCONTRADO: Record<Encontrado, string> = {
+  si: "Sí", no_estaba: "No estaba", otro_animal: "Era otro animal",
+};
+export const NOMBRE_ESTADO_ANIMAL: Record<EstadoAnimal, string> = {
+  herido: "Herido", desnutrido: "Desnutrido", enfermo: "Enfermo", sano: "Sano",
+  asustado_agresivo: "Asustado o agresivo",
+};
+export const NOMBRE_ACCION_RESCATE: Record<Accion, string> = {
+  trasladado: "Trasladado al refugio", atendido_en_sitio: "Atendido en el sitio",
+  veterinaria: "Llevado a veterinaria", no_rescatado: "No se pudo rescatar",
+};
+
+export interface InformeEnviado {
+  codigo: string; rescatista: string; encontrado: Encontrado; estados: EstadoAnimal[];
+  resultado: Resultado; resultado_texto: string; motivo: string | null; nota: string | null;
+  creado_en: string; fotos: { id: number; url: string }[];
+  foto_reporte: { id: number; url: string } | null;
+}
+
+export interface DatosInforme {
+  encontrado: Encontrado; estados: EstadoAnimal[]; accion: Accion | null;
+  motivo: string; nota: string;
+}
+
+/** Lo que falta para poder enviar (las mismas reglas del servidor); null si está completo. */
+export function faltaEnInforme(d: DatosInforme, fotos: number): string | null {
+  if (d.encontrado !== "no_estaba" && !d.accion) return "Elige qué se hizo con el animal.";
+  if (d.encontrado !== "no_estaba" && d.accion === "no_rescatado") {
+    const motivo = d.motivo.trim();
+    if (motivo.length < 10 || (motivo.match(/\p{L}/gu) ?? []).length < 5) {
+      return "Escribe por qué no se pudo rescatar (10 caracteres o más).";
+    }
+  }
+  if (d.encontrado !== "no_estaba" && fotos === 0) return "Adjunta al menos una foto de evidencia.";
+  if (fotos > 3) return "Puedes adjuntar hasta 3 fotos.";
+  if (d.nota.length > 500) return "La nota puede tener hasta 500 caracteres.";
+  return null;
+}
+
+/** Un solo envío (multipart): los datos y las fotos ya reducidas. El servidor lo valida todo. */
+export function enviarInforme(t: string, codigo: string, d: DatosInforme, fotos: Blob[]) {
+  const formulario = new FormData();
+  formulario.set("encontrado", d.encontrado);
+  d.estados.forEach((e) => formulario.append("estados", e));
+  if (d.encontrado !== "no_estaba" && d.accion) formulario.set("accion", d.accion);
+  if (d.motivo.trim()) formulario.set("motivo", d.motivo.trim());
+  if (d.nota.trim()) formulario.set("nota", d.nota.trim());
+  fotos.forEach((f, i) => formulario.append("fotos", f, `evidencia-${i + 1}.jpg`));
+  return pedir<InformeEnviado>(`/rescates/${codigo}/informe`, { method: "POST", body: formulario }, t);
+}
+
+export const informesRecientes = (t: string) => pedir<InformeEnviado[]>("/rescates/informes", {}, t);

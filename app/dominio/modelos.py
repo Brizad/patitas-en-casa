@@ -171,6 +171,52 @@ class ResultadoRescate(StrEnum):
     ATENDIDO_EN_SITIO = "atendido_en_sitio"
     NO_ENCONTRADO = "no_encontrado"
     FALLECIDO = "fallecido"
+    VETERINARIA = "veterinaria"  # #504: llevado a una veterinaria
+    NO_RESCATADO = "no_rescatado"  # #504: no se pudo rescatar (con motivo)
+
+
+class Encontrado(StrEnum):
+    """#504: ¿el rescatista encontró al animal del reporte?"""
+
+    SI = "si"
+    NO_ESTABA = "no_estaba"
+    OTRO_ANIMAL = "otro_animal"
+
+
+class EstadoAnimal(StrEnum):
+    """#504: cómo estaba el animal (puede ser más de uno)."""
+
+    HERIDO = "herido"
+    DESNUTRIDO = "desnutrido"
+    ENFERMO = "enfermo"
+    SANO = "sano"
+    ASUSTADO_AGRESIVO = "asustado_agresivo"
+
+
+@dataclass(frozen=True)
+class InformeRescate:
+    """#504: lo que reporta el rescatista en el sitio. Hora y rescatista los pone el servidor.
+    El ciudadano nunca ve la nota ni las fotos: solo el resultado en lenguaje amable."""
+
+    codigo: str
+    rescatista: str
+    encontrado: Encontrado
+    estados: tuple[EstadoAnimal, ...]
+    resultado: ResultadoRescate
+    motivo: str | None
+    nota: str | None
+    creado_en: datetime
+
+
+@dataclass(frozen=True)
+class FotoEvidencia:
+    """#504: foto de evidencia (del rescate o del reporte del ciudadano), guardada en la base."""
+
+    id: int
+    codigo: str
+    origen: str  # "rescate" o "reporte"
+    tipo: str  # MIME verificado por los primeros bytes
+    creada_en: datetime
 
 
 @dataclass

@@ -71,6 +71,7 @@ def test_recien_recibido(c):
         ("Recibido", "hecho", None),
         ("Revisado por el veterinario", "actual", None),
         ("Rescatista en camino", "pendiente", None),
+        ("El rescatista llegó al lugar", "pendiente", None),  # #504
         ("Atendido", "pendiente", None),
         ("Cerrado", "pendiente", None),
     ]
@@ -99,9 +100,13 @@ def test_rescatista_en_camino_y_en_el_sitio(c):
     c.post(f"/rescates/{codigo}/aceptar", headers=ana)
     assert resumen(seguimiento(c, codigo))[2] == ("Rescatista en camino", "actual", None)
     c.post(f"/rescates/{codigo}/llegue", headers=ana)
-    pasos = resumen(seguimiento(c, codigo))
+    datos = seguimiento(c, codigo)
+    pasos = resumen(datos)
     assert pasos[2][1] == "hecho"
-    assert pasos[3] == ("Atendido", "actual", "Rescatista en el sitio")
+    # #504: «El rescatista llegó al lugar» con su hora real; luego el rescatista está con él.
+    assert pasos[3] == ("El rescatista llegó al lugar", "hecho", None)
+    assert datos["pasos"][3]["fecha"] is not None
+    assert pasos[4] == ("Atendido", "actual", "El rescatista está con el animal")
 
 
 def test_atendido_cierra_la_linea_de_tiempo(c):
@@ -112,8 +117,8 @@ def test_atendido_cierra_la_linea_de_tiempo(c):
     c.post(f"/rescates/{codigo}/llegue", headers=ana)
     c.post(f"/rescates/{codigo}/resultado", json={"resultado": "trasladado"}, headers=ana)
     datos = seguimiento(c, codigo)
-    assert [p["estado"] for p in datos["pasos"]] == ["hecho"] * 5
-    assert datos["pasos"][3]["nombre"] == "Atendido · Trasladado a refugio"
+    assert [p["estado"] for p in datos["pasos"]] == ["hecho"] * 6
+    assert datos["pasos"][4]["nombre"] == "Atendido · Lo trasladamos al refugio"  # #504
     assert datos["ultimo_cambio"] == max(p["fecha"] for p in datos["pasos"] if p["fecha"])
 
 

@@ -162,6 +162,15 @@
           <p class="video-info" id="info-video" role="status">Máximo 60 segundos y 50 MB. Grábalo de
             lado, que se vea el animal completo.</p>
           <span class="err-campo" id="error-video" hidden></span>
+          <!-- #504: una foto opcional. Se reduce (1280 px, ~200 KB) y se le quita el EXIF (y el GPS)
+               en el teléfono antes de enviarla; solo la ve el personal del refugio. -->
+          <div class="foto-reporte" id="bloque-foto">
+            <h3 class="h foto-titulo">¿O una foto?</h3>
+            <button type="button" class="secundario hunde" id="elegir-foto">Tomar o elegir una foto</button>
+            <input type="file" id="foto" accept="image/*" capture="environment" hidden>
+            <p class="video-info" id="info-foto" role="status">Opcional. Se envía más liviana y sin los datos de ubicación de la foto.</p>
+            <button type="button" class="pildora" id="quitar-foto" hidden>Quitar la foto</button>
+          </div>
           <p class="caja-punteada caja-punteada--blanca"><svg class="perrito" viewBox="0 0 54 40" aria-hidden="true"><rect x="2" y="6" width="50" height="28" rx="6" fill="#FFE9A6" stroke="#2B2340" stroke-width="2"/><ellipse cx="26" cy="22" rx="12" ry="6" fill="#E3A866" stroke="#2B2340" stroke-width="1.6"/><circle cx="38" cy="17" r="5" fill="#E3A866" stroke="#2B2340" stroke-width="1.6"/></svg><span><b>Grábalo de lado</b>, que se vea el animal completo. Máximo 60 segundos y 50 MB.</span></p>
         </div>
 

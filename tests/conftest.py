@@ -44,7 +44,7 @@ REFUGIO_DEMO = ("Refugio demo Cúcuta", 40)
 # Todas las tablas con datos; una tabla nueva se agrega aquí.
 TABLAS = ("piloto", "videos_trozos", "analisis_video", "fotos_animales", "bitacora", "seguimientos",
           "solicitudes", "publicaciones", "perfiles_adoptante", "historial_clinico", "descartes",
-          "avisos", "ubicaciones_rescate",
+          "avisos", "ubicaciones_rescate", "fotos_evidencia", "informes_rescate",
           "escalamientos", "rescates", "rescatistas", "decisiones_triaje", "reportes", "animales",
           "refugios", "usuarios", "intentos_fallidos")
 

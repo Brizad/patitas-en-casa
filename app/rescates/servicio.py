@@ -11,12 +11,16 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from app import config
+from app.adopciones.fotos import FotoInvalida, tipo_de_imagen
 from app.avisos.modelos import AvisoNuevo
 from app.avisos.repositorio import RepositorioAvisos
 from app.cupos.servicio import Notificador
 from app.dominio.modelos import (
+    Encontrado,
+    EstadoAnimal,
     EstadoReporte,
     EstadoRescate,
+    InformeRescate,
     Prioridad,
     Reporte,
     Rescate,
@@ -61,6 +65,50 @@ class PasoInvalido(Exception):
 
 class SinPermiso(PermissionError):
     """#498: el caso no es de este rescatista (o la acción no es para su cuenta)."""
+
+
+class InformeInvalido(ValueError):
+    """#504: al informe le falta algo o trae algo que no vale; el mensaje se muestra tal cual."""
+
+
+# #504: «Qué se hizo» con el animal encontrado.
+ACCIONES = (ResultadoRescate.TRASLADADO, ResultadoRescate.ATENDIDO_EN_SITIO,
+            ResultadoRescate.VETERINARIA, ResultadoRescate.NO_RESCATADO)
+
+
+def _motivo_valido(motivo: str | None) -> bool:
+    return (motivo is not None and len(motivo) >= config.MIN_CARACTERES_JUSTIFICACION
+            and sum(c.isalpha() for c in motivo) >= config.MIN_LETRAS_JUSTIFICACION)
+
+
+Validado = tuple[ResultadoRescate, str | None, str | None, list[str]]
+
+
+def validar_informe(encontrado: Encontrado, resultado: ResultadoRescate | None,
+                    motivo: str | None, nota: str | None, fotos: list[bytes]) -> Validado:
+    """#504: (resultado, motivo, nota, tipos de las fotos) o InformeInvalido. «No estaba» es
+    «no encontrado» y no exige fotos; si no se pudo rescatar, el motivo es obligatorio."""
+    if encontrado == Encontrado.NO_ESTABA:
+        resultado = ResultadoRescate.NO_ENCONTRADO
+    elif resultado not in ACCIONES:
+        raise InformeInvalido("Elige qué se hizo con el animal.")
+    motivo = (motivo or "").strip() or None
+    if resultado == ResultadoRescate.NO_RESCATADO and not _motivo_valido(motivo):
+        raise InformeInvalido("Escribe por qué no se pudo rescatar "
+                              f"({config.MIN_CARACTERES_JUSTIFICACION} caracteres o más).")
+    nota = (nota or "").strip() or None
+    if nota and len(nota) > config.MAX_CARACTERES_NOTA_RESCATE:
+        raise InformeInvalido(f"La nota puede tener hasta "
+                              f"{config.MAX_CARACTERES_NOTA_RESCATE} caracteres.")
+    if len(fotos) > config.MAX_FOTOS_RESCATE:
+        raise InformeInvalido(f"Puedes adjuntar hasta {config.MAX_FOTOS_RESCATE} fotos.")
+    if not fotos and encontrado != Encontrado.NO_ESTABA:
+        raise InformeInvalido("Adjunta al menos una foto de evidencia.")
+    try:
+        tipos = [tipo_de_imagen(datos, config.FOTO_EVIDENCIA_MAX_BYTES) for datos in fotos]
+    except FotoInvalida as error:
+        raise InformeInvalido(str(error)) from error
+    return resultado, motivo, nota, tipos
 
 
 class ServicioRescates:
@@ -271,6 +319,26 @@ class ServicioRescates:
             raise SinPermiso(
                 "Solo el rescatista asignado a este caso puede dejar de compartir.")
         self._rescates.borrar_ubicacion(codigo)
+
+    # --- #504: informe en el sitio (el MISMO para el rescate real y el simulado) ---------------
+
+    def informar(self, rescatista: Usuario, codigo: str, encontrado: Encontrado,
+                 estados: list[EstadoAnimal], resultado: ResultadoRescate | None,
+                 motivo: str | None, nota: str | None, fotos: list[bytes]) -> InformeRescate:
+        rescate = self._rescates.vigente(codigo)
+        if rescate is None or rescate.rescatista != rescatista.correo:
+            raise SinPermiso("Solo el rescatista asignado a este caso puede enviar el informe.")
+        if rescate.estado == EstadoRescate.EN_CAMINO:
+            raise PasoInvalido("Primero marca «Ya estoy en el sitio».")
+        if rescate.estado != EstadoRescate.EN_SITIO:
+            raise PasoInvalido("Este rescate ya tiene su informe.")
+        resultado, motivo, nota, tipos = validar_informe(encontrado, resultado, motivo, nota, fotos)
+        informe = InformeRescate(codigo, rescatista.correo, encontrado,
+                                 tuple(dict.fromkeys(estados)), resultado, motivo,
+                                 nota, self._reloj())
+        if not self._rescates.atender_con_informe(informe, list(zip(tipos, fotos, strict=True))):
+            raise PasoInvalido("Este rescate ya no está en el sitio contigo.")
+        return informe
 
     def mio(self, rescatista: Usuario) -> tuple[Rescate, Reporte] | None:
         rescate = self._rescates.activo_de(rescatista.correo)

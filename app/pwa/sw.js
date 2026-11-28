@@ -2,7 +2,7 @@
    Guarda solo la interfaz (/app/) para que abra sin señal. Las peticiones a /reportes/ siempre
    van a la red y nunca se guardan: por privacidad y para mostrar el estado actual. El reporte
    hecho sin señal lo guarda reportar.js en localStorage, no el service worker (RF-12). */
-const VERSION = 'patitas-pwa-v21';  // #502: margen del mapa (v20: #500; v19: #498; v18: #496)
+const VERSION = 'patitas-pwa-v22';  // #504: foto del reporte y llegada (v21: #502; v20: #500)
 // #428: la hoja y las fuentes de los prototipos también abren sin señal. Las fotos del
 // catálogo (/adopciones/) no se guardan: sin señal, se ven sin ellas.
 const FUENTES = ['/diseno/fuentes/fredoka-latin-wght-normal.woff2',

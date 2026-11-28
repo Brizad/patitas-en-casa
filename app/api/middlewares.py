@@ -35,7 +35,7 @@ POLITICA_PWA = ("default-src 'self'; script-src 'self'; style-src 'self'; "
 
 # A-01 (#235): el video, la vista previa y las fotos llegan por partes y tienen su propio tope.
 _SUBIDAS_DE_ARCHIVO = re.compile(r"^/(reportes/[^/]+/video|video/trabajos/\d+/vista"
-                                 r"|refugio/animales/\d+/foto)$")
+                                 r"|refugio/animales/\d+/foto|rescates/[^/]+/informe)$")
 
 
 def es_subida_de_archivo(ruta: str) -> bool:

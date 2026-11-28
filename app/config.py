@@ -67,6 +67,11 @@ HORAS_ATRASO = 72
 SIMULACION_SEGUNDOS = 90
 SIMULACION_INTERVALO_S = 3
 SIMULACION_ESPERA_LLEGADA_S = 8
+
+# #504: fotos de evidencia (el navegador ya las reduce a ~200 KB y quita el EXIF).
+FOTO_EVIDENCIA_MAX_BYTES = 1024 * 1024
+MAX_FOTOS_RESCATE = 3
+MAX_CARACTERES_NOTA_RESCATE = 500
 # #390: ya no es la frecuencia (la tarea espera justo hasta que vence el próximo rescate): es la
 # primera espera tras un error de la base, que se duplica hasta 30 min. Lo mismo para videos.
 REVISION_ESCALAMIENTOS_SEGUNDOS = 60

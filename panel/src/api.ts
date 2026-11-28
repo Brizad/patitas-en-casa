@@ -21,6 +21,7 @@ export interface ReporteEnCola {
   atrasado: boolean;
   especie: string | null;
   estado_animal: string | null;
+  foto: string | null; // #504: /fotos/{id} (solo con sesión) o null
   ubicacion: { latitud: number | null; longitud: number | null; direccion: string | null;
                comuna: number | null };
 }

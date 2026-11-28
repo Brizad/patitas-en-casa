@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import re
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import (
@@ -19,6 +19,7 @@ from fastapi import (
 from pydantic import BaseModel, Field
 
 from app import config
+from app.adopciones.fotos import FotoInvalida, tipo_de_imagen
 from app.api.comun import Contexto, fecha_utc
 from app.dominio.modelos import (
     DECIDIDOS,
@@ -143,6 +144,25 @@ def seguimiento_publico(repositorio, repositorio_rescates, codigo: str,
     return datos
 
 
+def guardar_foto_del_reporte(repositorio, repositorio_rescates, codigo: str, datos: bytes,
+                             clave: str | None) -> dict:
+    """#504: solo desde el teléfono que creó el reporte (misma clave), a tiempo y una vez."""
+    reporte = repositorio.buscar_por_clave(clave) if clave else None
+    if reporte is None or reporte.codigo != codigo:
+        raise HTTPException(status_code=403, detail="Solo se puede adjuntar la foto desde el "
+                                                    "teléfono que envió el reporte.")
+    if datetime.now(UTC) - reporte.creado_en > timedelta(
+            minutes=config.VIDEO_VENTANA_SUBIDA_MINUTOS):
+        raise HTTPException(status_code=403, detail="Ya pasó el tiempo para adjuntar la foto.")
+    try:
+        tipo = tipo_de_imagen(datos, config.FOTO_EVIDENCIA_MAX_BYTES)
+    except FotoInvalida as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    if repositorio_rescates.guardar_foto_reporte(codigo, tipo, datos, datetime.now(UTC)) is None:
+        raise HTTPException(status_code=409, detail="Este reporte ya tiene una foto.")
+    return {"codigo": codigo, "foto": True}
+
+
 def contar_reporte_por_ip(limite_intentos, ip: str) -> None:
     """A-02 (#237): 429 con Retry-After si esta IP ya mandó el máximo de reportes."""
     limite = [clave_reporte(ip)]
@@ -169,8 +189,22 @@ ClaveIdempotencia = Annotated[str | None, Header(alias="Idempotency-Key", min_le
                                                  max_length=64, pattern=r"^[A-Za-z0-9_-]+$")]
 
 
+def _ruta_de_la_foto(rutas: APIRouter, ctx: Contexto) -> None:
+    repositorio, repositorio_rescates = ctx.repositorio, ctx.repositorio_rescates
+
+    @rutas.post("/reportes/{codigo}/foto", status_code=201)
+    async def subir_foto_del_reporte(codigo: str, peticion: Request,
+                                     clave: ClaveIdempotencia = None):
+        """#504: una foto opcional, con la misma clave con la que se creó el reporte (como el
+        video). El navegador ya la reduce y le quita el EXIF; aquí se valida el tipo real y el
+        tamaño. Solo la ve el personal con sesión."""
+        return guardar_foto_del_reporte(repositorio, repositorio_rescates,
+                                        normalizar_codigo(codigo), await peticion.body(), clave)
+
+
 def crear_rutas_reportes(ctx: Contexto) -> APIRouter:
     rutas = APIRouter()
+    _ruta_de_la_foto(rutas, ctx)  # #504
     ip_de = ctx.ip_de  # A-04 (#278)
     cifrador = ctx.cifrador
     limite_intentos = ctx.limite_intentos

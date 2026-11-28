@@ -6,7 +6,14 @@ from dataclasses import replace
 from datetime import datetime
 from typing import Protocol
 
-from app.dominio.modelos import EstadoRescate, Rescate, ResultadoRescate, UbicacionRescatista
+from app.dominio.modelos import (
+    EstadoRescate,
+    FotoEvidencia,
+    InformeRescate,
+    Rescate,
+    ResultadoRescate,
+    UbicacionRescatista,
+)
 
 ACTIVOS = (EstadoRescate.EN_CAMINO, EstadoRescate.EN_SITIO)
 
@@ -75,6 +82,32 @@ class RepositorioRescates(Protocol):
 
     def borrar_ubicacion(self, codigo: str) -> None: ...
 
+    # --- #504: informe del rescate y fotos de evidencia ---------------------------------------
+
+    def atender_con_informe(self, informe: InformeRescate,
+                            fotos: list[tuple[str, bytes]]) -> bool:
+        """En UNA operación: el rescate de ese rescatista pasa de «en el sitio» a «atendido» con
+        el resultado del informe, y se guardan el informe y sus fotos. False si no estaba en el
+        sitio con él (y entonces no guarda nada)."""
+        ...
+
+    def informe(self, codigo: str) -> InformeRescate | None: ...
+
+    def informes_recientes(self, limite: int) -> list[InformeRescate]: ...
+
+    def guardar_foto_reporte(self, codigo: str, tipo: str, datos: bytes,
+                             momento: datetime) -> int | None:
+        """La foto del ciudadano (una por reporte). None si el reporte ya tenía."""
+        ...
+
+    def fotos_de(self, codigo: str) -> list[FotoEvidencia]: ...
+
+    def foto(self, foto_id: int) -> tuple[FotoEvidencia, bytes] | None: ...
+
+    def fotos_de_reportes(self, codigos: list[str]) -> dict[str, int]:
+        """Código -> id de la foto del ciudadano, para las miniaturas de la cola."""
+        ...
+
 
 class RepositorioRescatesEnMemoria:
     def __init__(self) -> None:
@@ -83,6 +116,8 @@ class RepositorioRescatesEnMemoria:
         self._escalados: dict[str, datetime] = {}
         self._vigentes: dict[str, Rescate] = {}  # código -> rescate no liberado
         self._ubicaciones: dict[str, UbicacionRescatista] = {}  # #498: solo la última
+        self._informes: dict[str, InformeRescate] = {}  # #504
+        self._fotos: dict[int, tuple[FotoEvidencia, bytes]] = {}
         self._candado = threading.Lock()
 
     def poner_disponible(self, rescatista: str, disponible: bool) -> None:
@@ -176,3 +211,50 @@ class RepositorioRescatesEnMemoria:
     def borrar_ubicacion(self, codigo: str) -> None:
         with self._candado:
             self._ubicaciones.pop(codigo, None)
+
+    # --- #504 ------------------------------------------------------------------------------
+
+    def _nueva_foto(self, codigo: str, origen: str, tipo: str, datos: bytes,
+                    momento: datetime) -> int:
+        foto_id = len(self._fotos) + 1
+        self._fotos[foto_id] = (FotoEvidencia(foto_id, codigo, origen, tipo, momento), datos)
+        return foto_id
+
+    def atender_con_informe(self, informe: InformeRescate,
+                            fotos: list[tuple[str, bytes]]) -> bool:
+        with self._candado:
+            rescate = self._vigentes.get(informe.codigo)
+            if (rescate is None or rescate.rescatista != informe.rescatista
+                    or rescate.estado != EstadoRescate.EN_SITIO):
+                return False
+            rescate.estado, rescate.resultado = EstadoRescate.ATENDIDO, informe.resultado
+            rescate.actualizado_en = informe.creado_en
+            self._informes[informe.codigo] = informe
+            for tipo, datos in fotos:
+                self._nueva_foto(informe.codigo, "rescate", tipo, datos, informe.creado_en)
+            return True
+
+    def informe(self, codigo: str) -> InformeRescate | None:
+        return self._informes.get(codigo)
+
+    def informes_recientes(self, limite: int) -> list[InformeRescate]:
+        return sorted(self._informes.values(), key=lambda i: i.creado_en, reverse=True)[:limite]
+
+    def guardar_foto_reporte(self, codigo: str, tipo: str, datos: bytes,
+                             momento: datetime) -> int | None:
+        with self._candado:
+            if any(f.codigo == codigo and f.origen == "reporte" for f, _ in self._fotos.values()):
+                return None
+            return self._nueva_foto(codigo, "reporte", tipo, datos, momento)
+
+    def fotos_de(self, codigo: str) -> list[FotoEvidencia]:
+        return sorted((f for f, _ in self._fotos.values() if f.codigo == codigo),
+                      key=lambda f: f.id)
+
+    def foto(self, foto_id: int) -> tuple[FotoEvidencia, bytes] | None:
+        return self._fotos.get(foto_id)
+
+    def fotos_de_reportes(self, codigos: list[str]) -> dict[str, int]:
+        buscados = set(codigos)
+        return {f.codigo: f.id for f, _ in self._fotos.values()
+                if f.origen == "reporte" and f.codigo in buscados}

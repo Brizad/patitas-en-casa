@@ -12,8 +12,11 @@ describe("pantallasDelRol", () => {
     expect(pantallasDelRol("alcaldia")).toEqual(["indicadores"]);
   });
   it("el veterinario tiene la pestaña Historial y el coordinador no", () => {
-    expect(pantallasDelRol("veterinario")).toEqual(["cola", "historial", "refugio"]);
+    expect(pantallasDelRol("veterinario")).toEqual(["cola", "historial", "informes", "refugio"]);
     expect(pantallasDelRol("coordinador")).not.toContain("historial");
+    // #504: los informes de rescate son del veterinario y del coordinador, no del rescatista.
+    expect(pantallasDelRol("coordinador")).toContain("informes");
+    expect(pantallasDelRol("rescatista")).not.toContain("informes");
   });
   it("un rol desconocido no ve ninguna pantalla", () => {
     expect(pantallasDelRol("ciudadano")).toEqual([]);
@@ -27,6 +30,7 @@ describe("textos del rescatista", () => {
   });
   it("cada resultado del rescate tiene un nombre legible", () => {
     expect(Object.keys(NOMBRE_RESULTADO)).toEqual(
-      ["trasladado", "atendido_en_sitio", "no_encontrado", "fallecido"]);
+      ["trasladado", "atendido_en_sitio", "no_encontrado", "fallecido", "veterinaria",
+        "no_rescatado"]); // #504
   });
 });

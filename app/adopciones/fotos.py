@@ -22,10 +22,12 @@ class FotoInvalida(ValueError):
     pass
 
 
-def tipo_de_imagen(datos: bytes) -> str:
-    """Devuelve el tipo MIME si los bytes son JPEG, PNG o WebP; si no, FotoInvalida."""
-    if len(datos) > MAX_BYTES:
-        raise FotoInvalida(f"La foto pesa más de {MAX_BYTES // 1024} KB: redúcela.")
+def tipo_de_imagen(datos: bytes, maximo: int = MAX_BYTES) -> str:
+    """Devuelve el tipo MIME si los bytes son JPEG, PNG o WebP; si no, FotoInvalida. #504: las
+    fotos de evidencia usan otro tope (`maximo`)."""
+    if len(datos) > maximo:
+        tope = f"{maximo // 1024} KB" if maximo < 1024 * 1024 else f"{maximo // (1024 * 1024)} MB"
+        raise FotoInvalida(f"La foto pesa más de {tope}: redúcela.")
     for firma, tipo in FIRMAS.items():
         if datos.startswith(firma):
             return tipo

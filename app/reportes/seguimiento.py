@@ -18,12 +18,16 @@ from app.dominio.modelos import (
     ResultadoRescate,
 )
 
+# #504: el ciudadano ve solo el resultado, en lenguaje amable (nunca la nota ni las fotos).
 RESULTADOS = {
-    ResultadoRescate.TRASLADADO: "Trasladado a refugio",
-    ResultadoRescate.ATENDIDO_EN_SITIO: "Atendido en el sitio",
-    ResultadoRescate.NO_ENCONTRADO: "No encontrado",
-    ResultadoRescate.FALLECIDO: "Fallecido",
+    ResultadoRescate.TRASLADADO: "Lo trasladamos al refugio",
+    ResultadoRescate.ATENDIDO_EN_SITIO: "Lo atendimos en el lugar",
+    ResultadoRescate.VETERINARIA: "Lo llevamos a una veterinaria",
+    ResultadoRescate.NO_ENCONTRADO: "No encontramos al animal en el lugar",
+    ResultadoRescate.NO_RESCATADO: "No pudimos rescatarlo",
+    ResultadoRescate.FALLECIDO: "Lamentablemente falleció",
 }
+LLEGADA = "El rescatista llegó al lugar"
 
 
 @dataclass(frozen=True)
@@ -57,25 +61,28 @@ def linea_de_tiempo(reporte: Reporte, decision: DecisionTriaje | None,
     confirmado = reporte.estado == EstadoReporte.CONFIRMADO
     de_rescate = confirmado and reporte.prioridad in (Prioridad.CRITICA, Prioridad.ALTA)
     atendido = rescate is not None and rescate.estado == EstadoRescate.ATENDIDO
-    nombres = [
-        "Recibido",
-        "Revisado por el veterinario",
-        "Atención programada por el refugio" if confirmado and not de_rescate
-        else "Rescatista en camino",
-        f"Atendido · {RESULTADOS[rescate.resultado]}" if atendido else "Atendido",
-        "Cerrado",
-    ]
+    programada = confirmado and not de_rescate  # media o baja: la atiende el refugio
     revisado = decision.decidido_en if decision else None
-    fechas = [reporte.creado_en, revisado,
-              rescate.aceptado_en if rescate else revisado,
-              rescate.actualizado_en if atendido else None,
-              rescate.actualizado_en if atendido else None]
+    # #504: con rescatista, el paso «El rescatista llegó al lugar» y su hora real.
+    pasos_base = [
+        ("Recibido", reporte.creado_en),
+        ("Revisado por el veterinario", revisado),
+        ("Atención programada por el refugio" if programada else "Rescatista en camino",
+         rescate.aceptado_en if rescate else revisado),
+        *([] if programada else [(LLEGADA, rescate.llegada_en if rescate else None)]),
+        (f"Atendido · {RESULTADOS[rescate.resultado]}" if atendido else "Atendido",
+         rescate.actualizado_en if atendido else None),
+        ("Cerrado", rescate.actualizado_en if atendido else None),
+    ]
+    nombres = [n for n, _ in pasos_base]
+    fechas = [f for _, f in pasos_base]
+    ultimo = len(nombres) - 1  # «Cerrado»
 
-    # Paso actual (índice en nombres); 5 = todos hechos. Igual que el prototipo.
+    # Paso actual (índice en nombres); len(nombres) = todos hechos. Igual que el prototipo.
     if atendido:
-        actual, detalle = 5, None
+        actual, detalle = len(nombres), None
     elif rescate is not None and rescate.estado == EstadoRescate.EN_SITIO:
-        actual, detalle = 3, "Rescatista en el sitio"
+        actual, detalle = ultimo - 1, "El rescatista está con el animal"
     elif confirmado:
         actual = 2
         detalle = "Buscando rescatista disponible" if de_rescate and rescate is None else None

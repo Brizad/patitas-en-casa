@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { compartirUbicacion, dejarDeCompartir, tocaEnviar } from "./apiRescatista";
 import { textoError } from "./mensajes";
 
-export default function CompartirUbicacion({ token, codigo }: { token: string; codigo: string }) {
+export default function CompartirUbicacion({ token, codigo, alMoverse }: {
+  token: string; codigo: string; alMoverse?: (yo: { latitud: number; longitud: number }) => void;
+}) {
   const [acepta, setAcepta] = useState(false);
   const [compartiendo, setCompartiendo] = useState(false);
   const [error, setError] = useState("");
@@ -32,6 +34,8 @@ export default function CompartirUbicacion({ token, codigo }: { token: string; c
     setError("");
     setCompartiendo(true);
     vigilancia.current = navigator.geolocation.watchPosition((p) => {
+      setError("");
+      alMoverse?.({ latitud: p.coords.latitude, longitud: p.coords.longitude }); // #504
       const ahora = Date.now();
       if (!tocaEnviar(ultimo.current, ahora)) return;
       ultimo.current = ahora;
@@ -39,9 +43,15 @@ export default function CompartirUbicacion({ token, codigo }: { token: string; c
         setError(textoError(e));
         parar(); // ya no va en camino o el caso no es suyo: se deja de leer la ubicación
       });
-    }, () => {
-      setError("No pudimos leer tu ubicación. Revisa el permiso de ubicación del navegador.");
-      parar();
+    }, (falla) => {
+      // #504: solo se deja de compartir si se negó el permiso. Una lectura fallida (sin señal de
+      // GPS por un momento, tiempo agotado) es pasajera: se avisa y se sigue esperando la próxima.
+      if (falla.code === falla.PERMISSION_DENIED) {
+        setError("No pudimos leer tu ubicación. Revisa el permiso de ubicación del navegador.");
+        parar();
+      } else {
+        setError("Por un momento no se pudo leer tu ubicación; seguimos intentando.");
+      }
     }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 });
   }
 

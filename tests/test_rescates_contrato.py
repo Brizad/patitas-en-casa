@@ -5,8 +5,11 @@ from datetime import UTC, datetime
 import pytest
 
 from app.dominio.modelos import (
+    Encontrado,
+    EstadoAnimal,
     EstadoReporte,
     EstadoRescate,
+    InformeRescate,
     Prioridad,
     Reporte,
     ResultadoRescate,
@@ -181,3 +184,41 @@ def test_la_ubicacion_se_borra_al_salir_de_en_camino(repositorio, pasos):
         assert repositorio.avanzar("AAAA0001", ANA, desde, hasta, MOMENTO, resultado)
         assert repositorio.ubicacion("AAAA0001") is None
     assert repositorio.guardar_ubicacion(_ubicacion(), ANA) is False  # ya no va en camino
+
+
+# --- #504: informe y fotos de evidencia, en una sola operación --------------------------------
+
+def _informe(rescatista=ANA):
+    return InformeRescate("AAAA0001", rescatista, Encontrado.SI,
+                          (EstadoAnimal.HERIDO, EstadoAnimal.SANO), ResultadoRescate.VETERINARIA,
+                          None, "Nota", MOMENTO)
+
+
+def test_atender_con_informe_solo_en_el_sitio_y_del_asignado(repositorio):
+    repositorio.aceptar("AAAA0001", ANA, MOMENTO)
+    fotos = [("image/jpeg", b"\xff\xd8\xff1"), ("image/png", b"\x89PNG2")]
+    assert repositorio.atender_con_informe(_informe(), fotos) is False  # en camino
+    repositorio.avanzar("AAAA0001", ANA, CAMINO, SITIO, MOMENTO)
+    assert repositorio.atender_con_informe(_informe(LUIS), fotos) is False  # no es suyo
+    assert repositorio.informe("AAAA0001") is None and repositorio.fotos_de("AAAA0001") == []
+    assert repositorio.atender_con_informe(_informe(), fotos) is True
+    rescate = repositorio.vigente("AAAA0001")
+    assert (rescate.estado, rescate.resultado) == (EstadoRescate.ATENDIDO,
+                                                   ResultadoRescate.VETERINARIA)
+    assert repositorio.informe("AAAA0001") == _informe()
+    assert [i.codigo for i in repositorio.informes_recientes(5)] == ["AAAA0001"]
+    guardadas = repositorio.fotos_de("AAAA0001")
+    assert [(f.origen, f.tipo) for f in guardadas] == [("rescate", "image/jpeg"),
+                                                       ("rescate", "image/png")]
+    assert repositorio.foto(guardadas[1].id)[1] == b"\x89PNG2"
+    assert repositorio.atender_con_informe(_informe(), fotos) is False  # una sola vez
+
+
+def test_una_foto_del_reporte_por_caso(repositorio):
+    primera = repositorio.guardar_foto_reporte("BBBB0002", "image/jpeg", b"\xff\xd8\xff1", MOMENTO)
+    assert primera is not None
+    assert repositorio.guardar_foto_reporte("BBBB0002", "image/jpeg", b"\xff\xd8\xff2",
+                                            MOMENTO) is None
+    assert repositorio.fotos_de_reportes(["BBBB0002", "AAAA0001"]) == {"BBBB0002": primera}
+    assert repositorio.foto(primera)[0].origen == "reporte"
+    assert repositorio.foto(99999) is None
