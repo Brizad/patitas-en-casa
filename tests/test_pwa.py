@@ -218,8 +218,13 @@ def test_los_enlaces_con_forma_de_boton_no_toman_el_color_de_enlace():
 # --- H-1, H-2 y arranque en frío de Render ---
 
 def _seccion(html: str, id_: str) -> str:
+    """Hasta el </section> que la cierra (#506: «Estado del reporte» tiene secciones adentro)."""
     inicio = html.index(f'id="{id_}"')
-    return html[inicio:html.index("</section>", inicio)]
+    abiertas, i = 1, inicio
+    while abiertas:
+        i = min(j for j in (html.find("<section", i + 1), html.find("</section>", i + 1)) if j >= 0)
+        abiertas += -1 if html.startswith("</section>", i) else 1
+    return html[inicio:i]
 
 
 def test_h1_gracias_por_avisar_dice_que_hacer_mientras_llega_ayuda(c):
@@ -255,7 +260,7 @@ def test_si_el_servidor_tarda_la_pwa_dice_que_esta_despertando():
 
 
 def test_el_service_worker_cambia_de_version_para_que_llegue_la_pantalla_nueva():
-    assert "patitas-pwa-v22" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #504
+    assert "patitas-pwa-v23" in (CARPETA_PWA / "sw.js").read_text(encoding="utf-8")  # #506
 
 
 
@@ -457,9 +462,17 @@ def test_la_ilustracion_es_decorativa_y_no_toca_la_linea_de_tiempo(c):
     assert figura.count('type="image/webp"') == 1
     assert '<ol class="tl" id="res-pasos"></ol>' in marco
     app = (CARPETA_PWA / "app.js").read_text(encoding="utf-8")
-    for etiqueta in ["Recibimos tu reporte", "Un veterinario lo revisó", "El rescate va en camino",
-                     "¡Caso cerrado!"]:
-        assert etiqueta in app
+    # #506: título y frase por estado (sin pastilla).
+    for titulo, frase in [("Consulta tu reporte",
+                           "Tu código está en el mensaje que recibiste al reportar."),
+                          ("Recibimos tu reporte", "Pronto un veterinario lo revisará."),
+                          ("Un veterinario lo revisó", "Ya sabemos qué tan urgente es."),
+                          ("El rescate va en camino", "Va directo hacia el lugar del reporte."),
+                          ("El rescatista llegó", "Está con el animal en este momento."),
+                          ("¡Lo atendimos!", "El animal ya está en buenas manos."),
+                          ("¡Caso cerrado!", "Gracias por ayudar. ¡Hiciste la diferencia!"),
+                          ("Caso cerrado", "No pudimos verificar el reporte.")]:
+        assert f"'{titulo}', '{frase}'" in app
     # Error o código inexistente: la de espera y sin mapa.
     assert "if (esError) {  // código que no existe" in app
     assert "mostrarEtapa('espera');\n      mostrarMapa(null);" in app
@@ -472,22 +485,41 @@ def test_las_fotos_webp_se_sirven_como_image_webp(c):
     assert respuesta.headers["content-type"] == "image/webp"
 
 
-def test_la_ilustracion_va_sin_marco_y_con_los_bordes_fundidos():
-    """#494: como docs/prototipo/consultar-imagen-fundida.html."""
+def test_la_ilustracion_va_sin_marco_con_desvanecido_suave_y_texto_abajo():
+    """#494 / #506: como docs/prototipo/consultar-imagen-fundida.html."""
     css = (CARPETA_PWA / "estilos.css").read_text(encoding="utf-8")
     ilu = re.search(r"\.estado-ilu \{[^}]*\}", css).group(0)
     foto = re.search(r"\.estado-foto \{[^}]*\}", css).group(0)
     for prohibido in ("border", "box-shadow", "background", "blur"):
         assert prohibido not in ilu and prohibido not in foto
-    assert "max-width: 100%; max-height: 300px; width: auto; height: auto" in foto
+    assert "max-width: 100%; max-height: 280px; width: auto; height: auto" in foto  # celular
     assert "mask-composite: intersect" in foto and "-webkit-mask-composite: source-in" in foto
-    assert "#000 16%, #000 84%" in foto and "#000 14%, #000 82%" in foto
+    assert "rgba(0,0,0,.25) 7%, rgba(0,0,0,.7) 15%, #000 24%, #000 76%" in foto
+    assert "rgba(0,0,0,.4) 6%, #000 16%, #000 70%, rgba(0,0,0,.6) 84%" in foto
     assert "transition: opacity .4s ease" in foto
-    assert ".estado-foto { max-height: 540px; }" in css  # en computador
-    etiqueta = re.search(r"\.estado-etiqueta \{[^}]*\}", css).group(0)
-    assert "#FFD23F" in etiqueta and "2.5px solid #2B2340" in etiqueta
-    assert "3px 3px 0 #2B2340" in etiqueta
-    assert "margin-top: -22px" in etiqueta  # montada sobre el borde de abajo de la foto
+    assert ".estado-etiqueta" not in css  # sin la pastilla amarilla
+    texto = re.search(r"\.estado-texto \{[^}]*\}", css).group(0)
+    assert "margin-top: -28px" in texto  # montado sobre el desvanecido
+    assert "max-width: 380px" in texto
+    assert "transition: opacity .4s ease" in texto
+    pc = css.split("/* #490 / #506: en computador", 1)[1]
+    assert "grid-template-columns: minmax(0, 5fr) minmax(0, 6fr)" in pc
+    assert "column-gap: 24px; align-items: center" in pc
+    assert "width: min(1200px, 100%); min-height: calc(100vh - 122px)" in pc
+    assert ".estado-foto { max-height: 600px; }" in pc
+
+
+def test_antes_de_consultar_se_ven_los_6_pasos_y_el_boton_para_reportar(c):
+    """#506: la tarjeta vacía con la ruta y «Hacer un reporte»."""
+    marco = _seccion(c.get("/app/").text, "pantalla-estado")
+    vacia = marco[marco.index('<section id="estado-vacia"'):marco.index('<section id="resultado"')]
+    assert "Así vas a seguir tu reporte" in vacia
+    pasos = re.findall(r'<li><b class="h">(\d)</b>([^<]+)</li>', vacia)
+    assert pasos == [("1", "Recibido"), ("2", "Revisado por el veterinario"),
+                     ("3", "Rescatista en camino"), ("4", "Llegó al lugar"), ("5", "Atendido"),
+                     ("6", "Cerrado")]
+    assert "¿No tienes código? Te lo damos al enviar un reporte." in vacia
+    assert 'href="#reportar">Hacer un reporte</a>' in vacia
 
 
 def test_foto_opcional_reducida_y_sin_exif_con_la_clave_del_reporte(c):

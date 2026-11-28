@@ -146,28 +146,34 @@
 
   // --- Consulta del estado (P-03) ----------------------------------------------------
 
-  // #490: ilustración según el estado real que devuelve el servidor. Solo adorno: no cambia los pasos.
+  // #490 / #506: ilustración, título y frase según el estado real que devuelve el servidor. Solo
+  // adorno: no cambia los pasos. El color del punto va en estilos.css (según data-etapa del texto).
   const ETAPAS = {
-    espera: ['consultar-0-espera', 736, 414, ''],
-    recibido: ['consultar-1-recibido', 736, 736, 'Recibimos tu reporte'],
-    revisado: ['consultar-2-revisado', 736, 983, 'Un veterinario lo revisó'],
-    rescate: ['consultar-3-rescate', 680, 1024, 'El rescate va en camino'],
-    cerrado: ['consultar-4-cerrado', 735, 456, '¡Caso cerrado!'],
+    espera: ['consultar-0-espera', 736, 414, 'Consulta tu reporte', 'Tu código está en el mensaje que recibiste al reportar.'],
+    recibido: ['consultar-1-recibido', 736, 736, 'Recibimos tu reporte', 'Pronto un veterinario lo revisará.'],
+    revisado: ['consultar-2-revisado', 736, 983, 'Un veterinario lo revisó', 'Ya sabemos qué tan urgente es.'],
+    camino: ['consultar-3-rescate', 680, 1024, 'El rescate va en camino', 'Va directo hacia el lugar del reporte.'],
+    sitio: ['consultar-3-rescate', 680, 1024, 'El rescatista llegó', 'Está con el animal en este momento.'],
+    atendido: ['consultar-3-rescate', 680, 1024, '¡Lo atendimos!', 'El animal ya está en buenas manos.'],
+    cerrado: ['consultar-4-cerrado', 735, 456, '¡Caso cerrado!', 'Gracias por ayudar. ¡Hiciste la diferencia!'],
+    archivado: ['consultar-0-espera', 736, 414, 'Caso cerrado', 'No pudimos verificar el reporte.'],
   };
-  const ORDEN = Object.keys(ETAPAS);
   let cambioDeEtapa = 0;
 
   function etapaDelReporte(datos) {
     const pasos = (datos && datos.pasos) || [];
+    const hecho = (nombre) => pasos.some((paso) => paso.estado === 'hecho' && paso.nombre.startsWith(nombre));
     const actual = pasos.find((paso) => paso.estado === 'actual');
     if (!actual) {
-      // Todo hecho: atendido y cerrado. Un descartado (sin «Cerrado») ya lo revisó el veterinario.
-      if (pasos.some((paso) => paso.nombre === 'Cerrado')) return 'cerrado';
+      // Archivado (#496): solo «Recibido» y «Cerrado». Un descartado ya lo revisó el veterinario.
+      if (hecho('Cerrado')) return hecho('Revisado por el veterinario') ? 'cerrado' : 'archivado';
+      if (hecho('Atendido')) return 'atendido';
       return pasos.length ? 'revisado' : 'espera';
     }
-    if (actual.nombre === 'Revisado por el veterinario') return 'recibido';
-    if (actual.nombre.startsWith('Atendido')) return 'rescate';  // el rescatista ya está en el sitio
-    if (actual.nombre === 'Rescatista en camino' && !actual.detalle) return 'rescate';
+    if (actual.nombre === 'Recibido' || actual.nombre === 'Revisado por el veterinario') return 'recibido';
+    if (actual.nombre === 'Cerrado') return 'atendido';
+    if (actual.nombre.startsWith('Atendido') || actual.nombre === 'El rescatista llegó al lugar') return 'sitio';
+    if (actual.nombre === 'Rescatista en camino' && !actual.detalle) return 'camino';
     return 'revisado';  // «Buscando rescatista disponible» o atención programada por el refugio
   }
 
@@ -177,33 +183,41 @@
     const ilu = $('estado-ilu');
     if (ilu.dataset.etapa === etapa) return;
     ilu.dataset.etapa = etapa;
-    const [archivo, ancho, alto, texto] = ETAPAS[etapa];
-    const etiqueta = $('estado-etiqueta');
-    etiqueta.textContent = texto;
-    etiqueta.hidden = !texto;
+    const [archivo, ancho, alto, titulo, frase] = ETAPAS[etapa];
     const foto = ilu.querySelector('img');
+    const texto = $('estado-texto');
     const turno = ++cambioDeEtapa;
-    foto.classList.add('fuera');  // fundido de salida (.4 s); sin movimiento, el cambio es directo
+    [foto, texto].forEach((e) => e.classList.add('fuera'));  // fundido de salida (.4 s) juntos; sin movimiento, directo
     setTimeout(() => {
       if (turno !== cambioDeEtapa) return;  // llegó otra consulta mientras tanto
+      texto.dataset.etapa = etapa;  // el color del punto cambia con el texto, no antes
+      $('estado-titulo').textContent = titulo;
+      $('estado-frase').textContent = frase;
       ilu.querySelector('source').srcset = 'fotos/' + archivo + '.webp';
       foto.src = 'fotos/' + archivo + '.jpg';
       foto.width = ancho;
       foto.height = alto;
-      const entrar = () => { if (turno === cambioDeEtapa) foto.classList.remove('fuera'); };
+      const entrar = () => { if (turno === cambioDeEtapa) [foto, texto].forEach((e) => e.classList.remove('fuera')); };
       // Entra cuando la foto ya está lista, para que el fundido no muestre un hueco.
       if (foto.decode) foto.decode().then(entrar, entrar);
       else entrar();
     }, sinMovimiento.matches ? 0 : 200);
-    const siguiente = ORDEN[ORDEN.indexOf(etapa) + 1];
-    if (siguiente) new Image().src = 'fotos/' + ETAPAS[siguiente][0] + '.webp';  // solo la siguiente
+    const archivos = [...new Set(Object.values(ETAPAS).map(([nombre]) => nombre))];
+    const siguiente = archivos[archivos.indexOf(archivo) + 1];
+    if (siguiente) new Image().src = 'fotos/' + siguiente + '.webp';  // solo la siguiente
+  }
+
+  // #506: la tarjeta de los 6 pasos se ve mientras no hay resultado.
+  function verResultado(si) {
+    resultado.hidden = !si;
+    $('estado-vacia').hidden = si;
   }
 
   function avisar(texto, esError) {
     mensaje.textContent = texto;
     mensaje.classList.toggle('ds-msg--error', Boolean(esError));
     mensaje.hidden = false;
-    resultado.hidden = true;
+    verResultado(false);
     if (esError) {  // código que no existe, sin señal o servidor con fallas
       mostrarEtapa('espera');
       mostrarMapa(null);
@@ -263,7 +277,7 @@
       return item;
     });
     $('res-pasos').replaceChildren(...pasos);
-    resultado.hidden = false;
+    verResultado(true);
     mostrarEtapa(etapaDelReporte(datos));
     mostrarMapa(datos);
   }
