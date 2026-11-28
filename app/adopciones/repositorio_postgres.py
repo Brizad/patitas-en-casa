@@ -295,7 +295,7 @@ def _editables(p: Publicacion) -> dict:
     """Columnas de los CAMPOS_EDITABLES; las etiquetas vacías se guardan como NULL."""
     valores = {c: getattr(p, c) for c in CAMPOS_EDITABLES}
     valores.update(tamano=p.tamano.value, energia=p.energia.value,
-                   etiquetas=list(p.etiquetas) or None)
+                   etiquetas=list(p.etiquetas) or None, habilidades=list(p.habilidades) or None)
     return valores
 
 
@@ -311,4 +311,6 @@ def _publicacion(f) -> Publicacion:
         nombre=f["nombre"], especie=f["especie"], estado=EstadoPublicacion(f["estado"]),
         publicado_en=f["publicado_en"], carino=f["carino"], energia_nivel=f["energia_nivel"],
         juego=f["juego"], calma=f["calma"], etiquetas=list(f["etiquetas"] or []),
-        peso_kg=_kg(f["peso_kg"]), peso_adulto_kg=_kg(f["peso_adulto_kg"]))
+        peso_kg=_kg(f["peso_kg"]), peso_adulto_kg=_kg(f["peso_adulto_kg"]),
+        habilidades=list(f["habilidades"] or []), vacunas=f["vacunas"],
+        esterilizado=f["esterilizado"], desparasitado=f["desparasitado"])

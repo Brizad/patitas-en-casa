@@ -185,6 +185,7 @@ perfiles_adoptante = Table(
 
 # RF-25 (#85): animales publicados para adopción; una publicación por animal.
 NIVELES_PUBLICACION = ("carino", "energia_nivel", "juego", "calma")
+SALUD_PUBLICACION = ("vacunas", "esterilizado", "desparasitado")
 publicaciones = Table(
     "publicaciones",
     metadata,
@@ -214,6 +215,10 @@ publicaciones = Table(
     CheckConstraint("peso_kg > 0 AND peso_kg <= 150", name="ck_publicaciones_peso"),
     CheckConstraint("peso_adulto_kg > 0 AND peso_adulto_kg <= 150",
                     name="ck_publicaciones_peso_adulto"),
+    # #508 (0041): perfil de adopción. Habilidades del catálogo fijo y salud (NULL = sin dato).
+    Column("habilidades", ARRAY(String(30))),
+    *(Column(n, Boolean) for n in SALUD_PUBLICACION),
+    CheckConstraint("cardinality(habilidades) <= 8", name="ck_publicaciones_habilidades"),
 )
 
 # RF-27 (#85): solicitudes de adopción.

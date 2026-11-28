@@ -81,13 +81,20 @@ class Publicacion:
     etiquetas: list[str] = field(default_factory=list)  # hasta 3
     peso_kg: float | None = None  # hoy
     peso_adulto_kg: float | None = None  # estimado de adulto
+    # #508: perfil de adopción (app/adopciones/perfil.py). Habilidades de un catálogo fijo y
+    # salud para la adopción, que solo edita el veterinario: True, False o None (sin dato).
+    habilidades: list[str] = field(default_factory=list)
+    vacunas: bool | None = None
+    esterilizado: bool | None = None
+    desparasitado: bool | None = None
 
 
 # Lo que el coordinador puede corregir de una publicación disponible (#422). Nombre y especie
 # vienen de la ficha del animal; estado y fecha, del flujo de adopción.
 CAMPOS_EDITABLES = ("descripcion", "tamano", "energia", "edad_meses", "apto_ninos",
                     "apto_otros_animales", "necesita_patio", "carino", "energia_nivel", "juego",
-                    "calma", "etiquetas", "peso_kg", "peso_adulto_kg")
+                    "calma", "etiquetas", "peso_kg", "peso_adulto_kg", "habilidades", "vacunas",
+                    "esterilizado", "desparasitado")
 
 
 class EstadoSolicitud(StrEnum):

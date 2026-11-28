@@ -4,6 +4,9 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 
 ## [Sin publicar]
 
+### Agregado
+- Perfil de adopción del animal (#508, parte 1): el catálogo y las recomendaciones traen estadísticas de 1 a 5 (derivadas de los niveles 0-100 de la ficha), el tipo calculado con una regla fija (Juguetón, Aventurero, Tranquilo, Cariñoso, Guardián; sin estadísticas no hay tipo), habilidades de un catálogo fijo y la salud para la adopción (vacunas, esterilizado y desparasitado: sí, no o sin dato). Migración 0041 aditiva. La regla está en `app/adopciones/perfil.py` y en `docs/aprende/fase-3-adopcion.md`.
+
 ### Corregido
 - «Estado del reporte» (#506), como `consultar-imagen-fundida.html`: en computador, dos columnas 5fr | 6fr (máx. 1200 px) centradas en la pantalla; la ilustración hasta 600 px de alto (280 px en el celular), sin agrandarla y con un desvanecido más suave. Sin la pastilla amarilla: debajo de la imagen, un título con su punto de color y una frase según el estado (sin código, recibido, revisado, en camino, en el sitio, atendido, cerrado, archivado), con el mismo fundido de 0,4 s. Antes de consultar, la tarjeta «Así vas a seguir tu reporte» con los 6 pasos y el botón «Hacer un reporte». No cambian la línea de tiempo ni el mapa del rescatista.
 - Compartir ubicación (#504): una lectura fallida del GPS (sin señal un momento, tiempo agotado) ya no deja de compartir; solo se detiene si se niega el permiso.

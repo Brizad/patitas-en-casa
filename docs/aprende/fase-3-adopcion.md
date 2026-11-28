@@ -39,6 +39,34 @@ Issue #85. PR apilados: #86 → #87 → #88 → #89 → #90 → #91 → #92 → 
 8. **404 en vez de 403 para lo ajeno.** Si un adoptante pide el compromiso de otro, recibe
    «no encontrado»: no se confirma que esa solicitud existe.
 
+## Perfil de adopción: estadísticas, tipo, habilidades y salud (#508)
+
+Lo que muestran las cartas de «Adoptar». Es solo para mostrar: la compatibilidad (RF-09) no
+cambia. Todo sale de la ficha real; si un dato falta, la carta no dibuja esa barra, ese tipo ni
+esa insignia (nunca hay valores por defecto). Código: `app/adopciones/perfil.py`.
+
+- **Estadísticas de 1 a 5**: salen de los niveles 0-100 que la publicación ya tenía (#422):
+  Energía = `energia_nivel`, Cariño = `carino`, Juego = `juego` y Paciencia = `calma`.
+  nivel = techo(valor / 20): 0-20 → 1, 21-40 → 2, 41-60 → 3, 61-80 → 4 y 81-100 → 5.
+- **Tipo**: se calcula, nunca se escribe a mano, y solo con las 4 estadísticas. «Alto» es 4 o 5,
+  «medio» es 3 y «bajo» es 1 o 2. Gana la primera regla que se cumple, en este orden:
+
+  | Orden | Tipo | Regla |
+  |---|---|---|
+  | 1 | Juguetón | Juego alto |
+  | 2 | Aventurero | Energía alta |
+  | 3 | Tranquilo | Energía baja y Paciencia alta |
+  | 4 | Cariñoso | Cariño alto |
+  | 5 | Guardián | Paciencia alta y Energía media |
+
+  Si ninguna se cumple (por ejemplo, todo en 3), no hay tipo.
+- **Habilidades**: hasta 8 de un catálogo fijo (Bueno con niños, Le gustan otros perros, Le
+  gustan los gatos, Ideal apartamento, Experto en siestas, Ama caminar, Rey del juego, Abuelito
+  tierno). Opcionales.
+- **Salud para la adopción**: vacunas al día, esterilizado y desparasitado, cada una sí, no o
+  sin dato. Solo la edita el veterinario. Son columnas nuevas (migración 0041): las casillas
+  `vacunado` y `esterilizado` del ingreso no sirven porque no distinguen «no» de «sin dato».
+
 ## Recorrido de una petición: aprobar una adopción
 
 1. En el panel, el coordinador pulsa «Aprobar» (`AdopcionesCoordinador.tsx`).
