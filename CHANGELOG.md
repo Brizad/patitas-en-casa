@@ -5,6 +5,7 @@ Formato basado en *Keep a Changelog*; versiones según SemVer.
 ## [Sin publicar]
 
 ### Corregido
+- «Estado del reporte» (#506), como `consultar-imagen-fundida.html`: en computador, dos columnas 5fr | 6fr (máx. 1200 px) centradas en la pantalla; la ilustración hasta 600 px de alto (280 px en el celular), sin agrandarla y con un desvanecido más suave. Sin la pastilla amarilla: debajo de la imagen, un título con su punto de color y una frase según el estado (sin código, recibido, revisado, en camino, en el sitio, atendido, cerrado, archivado), con el mismo fundido de 0,4 s. Antes de consultar, la tarjeta «Así vas a seguir tu reporte» con los 6 pasos y el botón «Hacer un reporte». No cambian la línea de tiempo ni el mapa del rescatista.
 - Compartir ubicación (#504): una lectura fallida del GPS (sin señal un momento, tiempo agotado) ya no deja de compartir; solo se detiene si se niega el permiso.
 - Mapa del rescate (#502): más margen arriba al encuadrar, para que la franja no tape el nombre del rescatista en el celular.
 - Mapa del rescate (#500): si la consulta responde antes de que carguen los scripts del mapa, el mapa aparece al terminar de cargar la página (antes esperaba al siguiente sondeo, 12 s).

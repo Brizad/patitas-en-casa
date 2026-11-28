@@ -183,20 +183,45 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
 .etq-nivel { padding: 3px 12px; border: 2px solid #2B2340; border-radius: 999px; font-weight: 800; background: #D7F0DC; }
 .nivel-ciudadano[data-nivel="urgente"] .etq-nivel { background: #E8508A; color: #1A1028; } /* 5,2:1 */
 .nivel-ciudadano[data-nivel="alta"] .etq-nivel { background: #FFD23F; }
-/* #494: ilustración del estado sin marco (docs/prototipo/consultar-imagen-fundida.html). La foto completa con su
-   proporción real, nunca agrandada, y los 4 bordes fundidos en el crema: dos degradados que se cruzan
-   (intersect), como los gatitos de la entrada del adoptante. La etiqueta se monta sobre su borde de abajo. */
+/* #494 / #506: ilustración del estado sin marco (docs/prototipo/consultar-imagen-fundida.html). La foto completa con su
+   proporción real, nunca agrandada, y los 4 bordes desvanecidos en el crema poco a poco: dos degradados que se cruzan
+   (intersect), como los gatitos de la entrada del adoptante. Debajo, montado sobre el desvanecido, el título con su
+   punto de color y una frase. En el celular .estado-col no es caja: la foto va arriba y el mapa (#498) sigue entre
+   el aviso y el resultado, como antes. */
+.estado-col { display: contents; }
+.estado-vacia, .resultado, .privacidad { order: 1; }
 .estado-ilu { margin: -4px -20px 0; order: -1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .estado-ilu picture { display: contents; }
-.estado-foto { display: block; max-width: 100%; max-height: 300px; width: auto; height: auto;
-  --borde-lados: linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
-  --borde-arriba-abajo: linear-gradient(to bottom, transparent 0, #000 14%, #000 82%, transparent 100%);
+.estado-foto { display: block; max-width: 100%; max-height: 280px; width: auto; height: auto;
+  --borde-lados: linear-gradient(to right, transparent 0, rgba(0,0,0,.25) 7%, rgba(0,0,0,.7) 15%, #000 24%, #000 76%, rgba(0,0,0,.7) 85%, rgba(0,0,0,.25) 93%, transparent 100%);
+  --borde-arriba-abajo: linear-gradient(to bottom, transparent 0, rgba(0,0,0,.4) 6%, #000 16%, #000 70%, rgba(0,0,0,.6) 84%, transparent 100%);
   -webkit-mask-image: var(--borde-lados), var(--borde-arriba-abajo); -webkit-mask-composite: source-in;
   mask-image: var(--borde-lados), var(--borde-arriba-abajo); mask-composite: intersect;
   transition: opacity .4s ease; }
-.estado-foto.fuera { opacity: 0; }
-.estado-etiqueta { position: relative; margin-top: -22px; padding: 6px 16px; background: #FFD23F; border: 2.5px solid #2B2340;
-  border-radius: 999px; box-shadow: 3px 3px 0 #2B2340; font: 600 13px var(--p-titulo); }
+.estado-foto.fuera, .estado-texto.fuera { opacity: 0; }
+.estado-texto { position: relative; max-width: 380px; margin-top: -28px; text-align: center; transition: opacity .4s ease; }
+.estado-titulo { display: inline-flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 700; color: #2B2340; }
+.estado-punto { width: 12px; height: 12px; flex: none; border-radius: 50%; border: 2.5px solid #2B2340; background: #9B83FA; }
+.estado-texto[data-etapa="recibido"] .estado-punto { background: #FFD23F; }
+.estado-texto[data-etapa="camino"] .estado-punto, .estado-texto[data-etapa="sitio"] .estado-punto { background: #E8508A; }
+.estado-texto[data-etapa="atendido"] .estado-punto, .estado-texto[data-etapa="cerrado"] .estado-punto { background: #D7F0DC; }
+.estado-frase { display: block; margin-top: 4px; font: 600 13.5px var(--p-texto); color: #5A5170; }
+/* #506: antes de consultar, los 6 pasos (3 columnas en computador, 2 en el celular). */
+.estado-vacia { padding: 18px 20px; gap: 12px; }
+.estado-vacia h2 { font-size: 18px; font-weight: 700; }
+.ruta { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ruta li { display: flex; align-items: center; gap: 8px; padding: 9px 10px; background: var(--p-crema); border: 2px solid #2B2340;
+  border-radius: 14px; font-size: 13px; font-weight: 800; line-height: 1.15; }
+.ruta b { width: 26px; height: 26px; flex: none; display: flex; align-items: center; justify-content: center; border: 2px solid #2B2340;
+  border-radius: 50%; background: #FFD23F; color: #1A1028; font-size: 13px; font-weight: 700; }
+.ruta li:nth-child(2) b { background: #9B83FA; }
+.ruta li:nth-child(3) b { background: #E8508A; }
+.ruta li:nth-child(4) b { background: #FBD9E3; }
+.ruta li:nth-child(n+5) b { background: #D7F0DC; }
+.ruta-ayuda { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px;
+  border-top: 2px dashed #D9D2E6; font-size: 13.5px; font-weight: 600; color: #5A5170; }
+.ruta-boton { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; background: #FFD23F; border: 2px solid #2B2340;
+  border-radius: 999px; color: #2B2340; font-size: 14px; font-weight: 600; text-decoration: none; --s: 2px; }
 .tl { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
 .tl li { position: relative; display: flex; gap: 12px; padding-bottom: 14px; color: #5B5070; }
 .tl li::before { content: ""; width: 28px; height: 28px; flex: none; border-radius: 999px; border: 2px solid var(--p-tinta); background: #FFFFFF;
@@ -293,16 +318,18 @@ body:not([data-pantalla="inicio"]):not([data-pantalla="codigo"]):not([data-panta
 .nombre-rescatista { font-weight: 800; }
 @keyframes rebote { 50% { transform: translateY(-6px); } }
 
-/* #490 / #494: en computador, «Estado del reporte» en dos columnas (como el prototipo): lo de siempre a la
-   izquierda y la ilustración centrada a la derecha. La última fila (1fr) absorbe su alto: la izquierda no se estira. */
+/* #490 / #506: en computador, «Estado del reporte» en dos columnas 5fr | 6fr (como el prototipo), centradas en
+   lo que queda de pantalla bajo la barra (76 px de barra + 46 px de márgenes de main): nada pegado arriba. */
 @media (min-width: 1024px) {
-  .estado { width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 520px;
-    grid-template-rows: repeat(7, auto) 1fr; column-gap: 40px; row-gap: 12px; align-items: start; }
-  .estado > * { grid-column: 1; }
-  .estado > .estado-ilu { grid-column: 2; grid-row: 1 / -1; order: 0; margin: 0; min-height: 560px; }
-  .estado-foto { max-height: 540px; }
-  .estado > .estado-mapa { grid-column: 2; grid-row: 1 / -1; justify-self: center; width: 420px; height: 520px; }
-  .estado-etiqueta { margin-top: -14px; font-size: 15px; }
+  .estado { width: min(1200px, 100%); min-height: calc(100vh - 122px); min-height: calc(100dvh - 122px); display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: 24px; align-items: center; }
+  .estado-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .estado > .estado-ilu { grid-column: 2; grid-row: 1; order: 0; margin: 0; }
+  .estado-foto { max-height: 600px; }
+  .estado > .estado-mapa { grid-column: 2; grid-row: 1; justify-self: center; width: 420px; height: 520px; }
+  .estado-titulo { font-size: 22px; }
+  .estado-frase { font-size: 15px; }
+  .ruta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* ---------- movimiento ---------- */
