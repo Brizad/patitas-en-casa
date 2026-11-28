@@ -39,6 +39,7 @@ from app.adopciones.modelos import (
     Tamano,
     Vivienda,
 )
+from app.adopciones.perfil import perfil_de_adopcion
 from app.adopciones.servicio import (
     AnimalNoDisponible,
     PerfilIncompleto,
@@ -128,7 +129,7 @@ def _publicacion(p: Publicacion, con_foto: set[int] = frozenset()) -> dict:
             "estado": p.estado.value, "publicado_en": fecha_utc(p.publicado_en),
             "carino": p.carino, "energia_nivel": p.energia_nivel, "juego": p.juego,
             "calma": p.calma, "etiquetas": list(p.etiquetas), "peso_kg": p.peso_kg,
-            "peso_adulto_kg": p.peso_adulto_kg}
+            "peso_adulto_kg": p.peso_adulto_kg, **perfil_de_adopcion(p)}  # #508
 
 
 class SolicitudEntrada(BaseModel):
