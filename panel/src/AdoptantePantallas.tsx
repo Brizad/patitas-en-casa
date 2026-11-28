@@ -2,7 +2,6 @@
 // con cada toque vienen de Adoptante.tsx (el flujo puro está en flujoAdopcion.ts).
 import type { CSSProperties, KeyboardEvent } from "react";
 import type { AnimalPublicado, MiSolicitud, Recomendado } from "./apiAdopcion";
-import Animalitos from "./Animalitos";
 import Cargando from "./Cargando";
 import Lottie from "./Lottie";
 import { PREGUNTAS, Respuestas, opcionElegida } from "./encuesta";
@@ -10,6 +9,7 @@ import {
   ESTADO_SOLICITUD, Filtro, abierta, convivencia, edadTexto, especieTexto, estadisticas, fondoDe, hoyYAdulto,
   insignias, mejores, paraLaBienvenida, pasosSolicitud, razonCorta, resumenCorto, solicitudDe,
 } from "./flujoAdopcion";
+import { ICONOS } from "./iconosAdopcion";
 import { Confeti, Corazon, FLECHA, FotoAnimal, Huella, Icono } from "./Ilustraciones";
 
 type Animal = AnimalPublicado | Recomendado;
@@ -51,9 +51,13 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
   /** Los que se pueden abrir en «Elige» (con perfil, los compatibles; RN-05). */
   destacados: AnimalPublicado[];
 }) {
-  // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage.
+  // Primero los que tienen foto; si hay menos de 6, se repiten para llenar el collage. #508: si
+  // Lupe está publicada con foto, va abajo a la derecha (collage-3), como el prototipo.
   const orden = [...catalogo].sort((x, y) => Number(!!y.foto) - Number(!!x.foto));
-  const collage = orden.length ? Array.from({ length: 6 }, (_, i) => orden[i % orden.length]) : [];
+  const lupe = orden.find((a) => a.nombre === EN_LA_ESQUINA && a.foto);
+  const resto = orden.filter((a) => a !== lupe);
+  const base = lupe ? [...resto.slice(0, 2), lupe, ...resto.slice(2)] : orden;
+  const collage = base.length ? Array.from({ length: 6 }, (_, i) => base[i % base.length]) : [];
   const total = catalogo.length;
   return (
     <div className="ini">
@@ -79,6 +83,10 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
           </button>
           {/* En el teléfono no hay menú superior: «Mi hogar» se abre desde aquí. */}
           <button className="adop-enlace adop-enlace--suave solo-movil" onClick={alMiHogar}>Mi hogar</button>
+          <ul className="ini-insignias" aria-label="Cómo llegan a tu casa">
+            {INSIGNIAS.map(([texto, icono]) => (
+              <li key={texto}><Icono d={ICONOS[icono]} tam={16} grosor={2.2} />{texto}</li>))}
+          </ul>
         </div>
       </div>
       <div className="collage" aria-hidden={collage.length === 0}>
@@ -88,18 +96,31 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
             className={`collage-${i + 1} aparece d${i + 1}`} />))}
         {/* Lottie (#467): cachorro blanco que salta junto al collage. */}
         <Lottie nombre="perrito-saltando" className="ini-perrito" quieto="cuadro" cuadro={0.25} />
+        <span className="collage-vet"><Icono d={ICONOS.estetoscopio} tam={16} grosor={2.2} />
+          Revisados por veterinario</span>
+        {DECORACION.map(([icono, clase]) => (
+          <span key={clase} className={`collage-deco ${clase}`} aria-hidden="true">
+            <Icono d={ICONOS[icono]} tam={28} grosor={2.2} /></span>))}
         {!cargando && (
           <span className="collage-globo flota">
             <Corazon tam={14} className="late" />
             {total === 0 ? "Pronto habrá nuevos amigos" : `${total} te esperan`}
           </span>)}
       </div>
-      <Animalitos />
       <MasBienvenida catalogo={catalogo} destacados={destacados} cargando={cargando} mias={mias} conPerfil={conPerfil}
         alVer={alVer} alVerTodos={alVerTodos} alMiHogar={alMiHogar} alVerSolicitudes={alVerSolicitudes} />
     </div>
   );
 }
+
+/** #508: el animal que va abajo a la derecha del collage si está publicado con foto. */
+const EN_LA_ESQUINA = "Lupe";
+const INSIGNIAS: [string, keyof typeof ICONOS][] = [
+  ["Vacunados", "jeringa"], ["Revisados", "estetoscopio"], ["Con amor", "corazon"]];
+/** Iconos de veterinaria alrededor del collage (decorativos). */
+const DECORACION: [keyof typeof ICONOS, string][] = [
+  ["corazon", "deco-corazon"], ["jeringa", "deco-jeringa"], ["curita", "deco-curita"],
+  ["estetoscopio", "deco-estetoscopio"]];
 
 const PASOS_ADOPCION: [string, string][] = [
   ["Responde", `${PREGUNTAS.length} preguntas rápidas sobre tu hogar.`],

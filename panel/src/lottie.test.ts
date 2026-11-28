@@ -20,9 +20,9 @@ describe("animaciones Lottie (decorativas)", () => {
     expect(lottie).toContain('el.closest(".adop--quieto")');
   });
 
-  it("cada animación en su sitio; el gato sigue en SVG", () => {
-    expect(fuentes["./Animalitos.tsx"]).toContain('nombre="perro-caminando"');
-    expect(fuentes["./Animalitos.tsx"]).toContain("<Gato />");
+  it("cada animación en su sitio; #508: «Adoptar» ya no tiene animalitos caminando", () => {
+    expect(fuentes["./Animalitos.tsx"]).toBeUndefined();
+    expect(fuentes["./AdoptantePantallas.tsx"]).not.toContain("Animalitos");
     expect(fuentes["./Cargando.tsx"]).toContain('nombre="huellas-cargando"');
     expect(fuentes["./AdoptantePantallas.tsx"]).toContain('nombre="perrito-saltando"');
     expect(fuentes["./AdoptantePantallas.tsx"]).toContain('nombre="gatos-jugando"');

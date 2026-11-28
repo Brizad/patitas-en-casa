@@ -1,5 +1,6 @@
 // Llamadas y textos de la adopción (fase 3, #85: RF-08, RF-25, RF-27, RF-10, RF-29).
 import { ErrorApi, pedir } from "./api";
+import type { Estadisticas, Salud, Tipo } from "./apiPerfilAdopcion";
 
 export interface Perfil {
   vivienda: "casa" | "apartamento" | "finca"; tiene_patio: boolean; hay_ninos: boolean;
@@ -14,6 +15,13 @@ export interface AnimalPublicado {
   carino?: number | null; energia_nivel?: number | null; juego?: number | null;
   calma?: number | null; etiquetas?: string[]; peso_kg?: number | null;
   peso_adulto_kg?: number | null;
+  // #508: perfil de adopción calculado por el servidor (sin dato: null o lista vacía).
+  estadisticas?: Estadisticas; tipo?: Tipo | null; habilidades?: string[]; salud?: Salud;
+}
+/** #508: GET /adopciones/coleccion. Los adoptados traen la fecha en que se aprobó. */
+export interface Coleccion {
+  esperando: number; adoptados_total: number;
+  adoptados: (AnimalPublicado & { adoptado_en: string })[];
 }
 /** RF-09: puntaje 0-100, por qué encaja, qué conversar y restricciones duras (RN-05). */
 export interface Compatibilidad {
@@ -52,6 +60,7 @@ export async function miPerfil(t: string): Promise<Perfil | null> {
 export const guardarPerfil = (t: string, p: Perfil) =>
   pedir("/adoptantes/yo/perfil", json("PUT", p), t);
 export const catalogo = () => pedir<AnimalPublicado[]>("/adopciones/animales");
+export const coleccion = () => pedir<Coleccion>("/adopciones/coleccion");
 /** Solo con perfil: ordena por compatibilidad con el hogar y oculta las restricciones. */
 export const recomendaciones = (t: string) =>
   pedir<Recomendado[]>("/adopciones/recomendaciones", {}, t);
