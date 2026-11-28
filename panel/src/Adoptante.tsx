@@ -8,6 +8,7 @@ import {
   Bienvenida, Combinan, Elegir, Encuesta, Listo, MiHogar, MisSolicitudes,
 } from "./AdoptantePantallas";
 import ColeccionAnimales from "./ColeccionAnimales";
+import CuidadosYPasos from "./CuidadosYPasos";
 import Despertando from "./Despertando";
 import EligeCompanero from "./EligeCompanero";
 import { PREGUNTAS, perfilDesdeRespuestas, resumenHogar } from "./encuesta";
@@ -197,6 +198,7 @@ export default function Adoptante({ token, nombre, alSalir }: {
                 alVerSolicitud={(a) => ir("pop", { tipo: "solicitado", animal: a.animal_id, recien: false })} />
               <ColeccionAnimales disponibles={datos.catalogo} coleccion={datos.coleccion} abribles={fuente}
                 alVer={(a) => ir(sonidoDeEspecie(a.especie), { tipo: "ver", animal: a.animal_id })} />
+              <CuidadosYPasos />
             </>)} />)}
         {s.pantalla === "encuesta" && (
           <Encuesta paso={s.paso} respuestas={s.respuestas} catalogo={datos.catalogo}

@@ -27,7 +27,8 @@ async function entrar(page, { conEncuesta }) {
   await page.route("**/adopciones/animales", (r) => r.fulfill({ json: CATALOGO }));
   await page.route("**/adopciones/recomendaciones", (r) => r.fulfill({
     json: CATALOGO.map((a, i) => ({ ...a, puntaje: 90 - i, razones: ["encaja"], alertas: [], restricciones: [] })) }));
-  await page.route("**/adopciones/coleccion", (r) => r.fulfill({ json: { esperando: 4, adoptados_total: 0, adoptados: [] } }));
+  await page.route("**/adopciones/coleccion", (r) => r.fulfill({ json: { esperando: 4, adoptados_total: 9,
+    adoptados: [animal(7, "Bruno", { tipo: "tranquilo", adoptado_en: "2026-11-20T15:00:00Z" })] } }));
   await page.goto("/panel/");
   await page.getByLabel("Correo").fill("a@correo.co");
   await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
@@ -72,6 +73,25 @@ for (const ancho of [1440, 390]) {
       } else { // en columna, el mejor arriba
         expect(b.y).toBeLessThan(a.y);
       }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+    });
+
+    test("la colección: contador del servidor, numerada, filtros y adoptados en gris sin botón", async ({ page }) => {
+      await entrar(page, { conEncuesta: false });
+      const col = page.locator("section", { has: page.getByRole("heading", { name: "Conoce a los 4 peludos" }) });
+      await expect(col.locator(".coleccion-contador")).toHaveText("Ya encontraron hogar: 9 · Esperando: 4");
+      await expect(col.locator(".album > li")).toHaveCount(5);
+      await expect(col.locator(".carta-num")).toHaveText(["#01", "#02", "#03", "#04", "#05"]);
+      const bruno = col.getByRole("article", { name: "Bruno" });
+      await expect(bruno.locator(".carta-sello")).toHaveText("¡Encontró hogar!");
+      await expect(bruno.getByRole("button")).toHaveCount(0);
+      await expect(bruno).toHaveClass(/carta--adoptada/); // en escala de grises (adoptar-secciones.css)
+      await expect(col.getByRole("article", { name: "Toby" }).getByRole("button", { name: "Conocer a Toby" })).toBeVisible();
+      await col.getByRole("button", { name: "Cariñoso" }).click();
+      await expect(col.locator(".album > li")).toHaveCount(1);
+      await expect(col.getByRole("button", { name: "Guardián" })).toHaveCount(0); // solo los tipos que hay
+      await expect(page.getByRole("heading", { name: "Cuidados por nuestro equipo veterinario" })).toBeVisible();
+      await expect(page.locator(".pasos-adopcion > li")).toHaveCount(5);
       expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
     });
   });

@@ -110,7 +110,6 @@ export function Bienvenida({ catalogo, cargando, mias, conPerfil, alEmpezar, alV
       </div>
     </div>
     {secciones}
-    <MasBienvenida mias={mias} conPerfil={conPerfil} alMiHogar={alMiHogar} alVerSolicitudes={alVerSolicitudes} />
     </>
   );
 }
@@ -123,46 +122,6 @@ const INSIGNIAS: [string, keyof typeof ICONOS][] = [
 const DECORACION: [keyof typeof ICONOS, string][] = [
   ["corazon", "deco-corazon"], ["jeringa", "deco-jeringa"], ["curita", "deco-curita"],
   ["estetoscopio", "deco-estetoscopio"]];
-
-const PASOS_ADOPCION: [string, string][] = [
-  ["Responde", `${PREGUNTAS.length} preguntas rápidas sobre tu hogar.`],
-  ["Elige", "Mira quién combina contigo y conócelo."],
-  ["Solicita", "El refugio revisa tu solicitud y te propone una visita."],
-  ["¡A casa!", "Firmas el compromiso y te acompañamos a 30, 90 y 180 días."],
-];
-
-/** Tarea 4: solo en computador (≥1024 px): el bloque «Así funciona tu adopción» + «Mi hogar» +
- *  «Mis solicitudes». (#508: las 6 tarjetas de antes las reemplazó «La colección».) */
-function MasBienvenida({ mias, conPerfil, alMiHogar, alVerSolicitudes }: {
-  mias: MiSolicitud[]; conPerfil: boolean; alMiHogar: () => void; alVerSolicitudes: () => void;
-}) {
-  return (
-    <div className="ini-mas">
-      <section className="ini-bloque" aria-labelledby="titulo-asi">
-        <div className="ini-asi">
-          <h2 id="titulo-asi" className="h ini-h2">Así funciona tu adopción</h2>
-          <ol className="ini-pasos">
-            {PASOS_ADOPCION.map(([t, s], i) => (
-              <li key={t}><span className="h ini-paso-n">{i + 1}</span>
-                <span><strong className="h">{t}</strong><span>{s}</span></span></li>))}
-          </ol>
-        </div>
-        <div className="ini-lado">
-          <div className="ini-hogar">
-            <h3 className="h">Mi hogar</h3>
-            <p>{conPerfil ? "Tus respuestas guardadas: míralas o cámbialas." : "Cuéntanos cómo es tu hogar para recomendarte."}</p>
-            <button className="adop-enlace" onClick={alMiHogar}>Ir a Mi hogar</button>
-          </div>
-          <div className="ini-mias">
-            <h3 className="h">Mis solicitudes</h3>
-            <p>{mias.length === 0 ? "Aún no has enviado ninguna." : `Tienes ${mias.length} ${mias.length === 1 ? "solicitud" : "solicitudes"}.`}</p>
-            <button className="adop-enlace ini-enlace-claro" onClick={alVerSolicitudes}>Ver mis solicitudes</button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
 
 // ---------- 2 · Mini encuesta ----------
 

@@ -80,14 +80,16 @@ describe("«Mi hogar» en el teléfono", () => {
   });
 });
 
-describe("bienvenida en computador (tarea 4)", () => {
-  it("#508: «La colección» reemplaza a «Te están esperando»; el bloque de 4 pasos con Mi hogar y Mis solicitudes", () => {
+describe("bienvenida (#508)", () => {
+  it("«La colección», «Cuidados» y «Así funciona tu adopción» con sus 5 pasos reemplazan el bloque de antes", () => {
     const vista = pantallas["./AdoptantePantallas.tsx"] as string;
     expect(vista).not.toContain("Te están esperando");
+    expect(vista).not.toContain("MasBienvenida");
     expect(pantallas["./Adoptante.tsx"]).toContain("abribles={fuente}");  // solo los que «Elige» puede abrir
-    expect(vista).toContain("Así funciona tu adopción");
-    for (const paso of ["Responde", "Elige", "Solicita", "¡A casa!"]) expect(vista).toContain(`["${paso}"`);
-    expect(vista).toContain("onClick={alMiHogar}>Ir a Mi hogar");
-    expect(vista).toContain("onClick={alVerSolicitudes}>Ver mis solicitudes");
+    const secciones = pantallas["./CuidadosYPasos.tsx"] as string;
+    expect(secciones).toContain("Cuidados por nuestro equipo veterinario");
+    for (const paso of ["Encuesta", "Conócelo", "Visita", "Chequeo veterinario", "¡A casa!"]) {
+      expect(secciones).toContain(`"${paso}"`);
+    }
   });
 });
