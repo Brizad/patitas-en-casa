@@ -5,7 +5,7 @@ import type { AnimalPublicado, MiSolicitud, Perfil, Recomendado } from "./apiAdo
 import { PASTEL, PREGUNTAS, PrefEspecie, Respuestas, responder, respuestasDesdePerfil } from "./encuesta";
 
 export type PantallaAdopcion = "inicio" | "encuesta" | "combinan" | "elegir" | "listo" | "solicitudes"
-  | "hogar";
+  | "hogar" | "acompanar"; // #516: «Adoptar es para siempre» (no aceptó el seguimiento)
 export type Filtro = "todos" | "perro" | "gato";
 
 export interface EstadoFlujo {
@@ -31,7 +31,7 @@ export type Accion =
   | { tipo: "filtrar"; filtro: Filtro }
   | { tipo: "mover"; ids: number[]; paso: 1 | -1 }
   | { tipo: "solicitado"; animal: number; recien: boolean }
-  | { tipo: "irA"; pantalla: "inicio" | "solicitudes" | "hogar" | "combinan" };
+  | { tipo: "irA"; pantalla: "inicio" | "solicitudes" | "hogar" | "combinan" | "acompanar" };
 
 export const INICIAL: EstadoFlujo = { pantalla: "inicio", paso: 0, respuestas: {}, filtro: "todos",
   elegido: null, desde: "inicio", guardar: false, recien: false };
@@ -50,8 +50,9 @@ export function flujo(s: EstadoFlujo, a: Accion): EstadoFlujo {
     case "responder": {
       const respuestas = responder(s.respuestas, PREGUNTAS[s.paso], a.opcion);
       if (s.paso < PREGUNTAS.length - 1) return { ...s, respuestas, paso: s.paso + 1 };
-      return { ...s, respuestas, pantalla: "combinan", guardar: true,
-               filtro: filtroDe(respuestas.especie) };
+      // #516: con «Ahora no» al seguimiento no hay matches: se guarda y se explica por qué.
+      return { ...s, respuestas, pantalla: respuestas.acepta_seguimiento === false ? "acompanar" : "combinan",
+               guardar: true, filtro: filtroDe(respuestas.especie) };
     }
     case "guardado":
       return { ...s, guardar: false };

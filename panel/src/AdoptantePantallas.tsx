@@ -293,7 +293,7 @@ export function Elegir({ lista, animal, filtro, conteo, ocultos, cargando, conPe
             ? <button className="adop-boton" onClick={() => alVerSolicitud(animal)}>
                 <span className="h">Ver mi solicitud por {animal.nombre}</span>
                 <span className="adop-boton-punta adop-boton-punta--rosa"><Corazon /></span></button>
-            : <button className="adop-boton" disabled={enviando} onClick={() => alElegir(animal)}>
+            : (!conPerfil || aceptaSeguimiento) && <button className="adop-boton" disabled={enviando} onClick={() => alElegir(animal)}>
                 <span className="h">{enviando ? "Enviando…" : `¡Te elijo, ${animal.nombre}!`}</span>
                 <span className="adop-boton-punta adop-boton-punta--rosa anillo"><Corazon className="late" /></span>
               </button>}

@@ -35,6 +35,15 @@ describe("navegación entre pantallas", () => {
     expect(flujo(s, { tipo: "guardado" }).guardar).toBe(false);
   });
 
+  it("#516: con «Ahora no» al seguimiento no van los matches sino «Adoptar es para siempre»", () => {
+    let s = flujo(INICIAL, { tipo: "empezar", perfil: null });
+    for (let i = 0; i < PREGUNTAS.length - 1; i++) s = flujo(s, { tipo: "responder", opcion: 0 });
+    s = flujo(s, { tipo: "responder", opcion: 1 }); // «Ahora no»
+    expect(s.respuestas.acepta_seguimiento).toBe(false);
+    expect(s.pantalla).toBe("acompanar");
+    expect(s.guardar).toBe(true); // la respuesta se guarda igual en el perfil
+  });
+
   it("«Atrás» en la encuesta vuelve a la pregunta anterior y en la primera, a la bienvenida", () => {
     let s = flujo(INICIAL, { tipo: "empezar", perfil: null });
     s = flujo(s, { tipo: "responder", opcion: 1 });
