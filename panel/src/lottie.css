@@ -8,10 +8,6 @@
 .adop--quieto .lottie-activa:has(> .lottie-respaldo) > .lottie-lienzo { display: none; }
 .lottie-respaldo { display: contents; }
 
-/* Perro salchicha que camina (Animalitos). */
-.paseante--perro.lottie { width: 96px; height: 64px; }
-.paseante--perro .paseante-svg { display: block; width: 96px; height: 64px; }
-.paseante--perro .lottie-lienzo { inset: auto; left: -26px; bottom: -32px; width: 150px; height: 150px; }
 
 /* Huellitas de carga. */
 .cargando-huellas { width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center; }
