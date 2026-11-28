@@ -69,6 +69,22 @@
   font-size: 12px; font-weight: 700; white-space: nowrap; }
 .ds .adop .carta-boton--suave { margin-top: auto; background: #FFFFFF; color: var(--tinta); border: 2px solid var(--tinta); font-size: 14px; }
 
+/* «Cuidados por nuestro equipo veterinario» (menta) y «Así funciona tu adopción». */
+.seccion--vet { background: #D7F0DC; border-top: 2.5px solid var(--tinta); border-bottom: 2.5px solid var(--tinta); }
+.seccion--vet .seccion-etiqueta { color: #24613D; }
+.cuidados { list-style: none; margin: 0 auto; padding: 0; max-width: 1168px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cuidados li { padding: 20px 12px; background: #FFFFFF; border: 2.5px solid var(--tinta); border-radius: 22px; box-shadow: 4px 4px 0 var(--tinta); }
+.cuidado-circulo, .paso-circulo { display: grid; place-items: center; border: 2.5px solid var(--tinta); border-radius: 50%; color: var(--tinta); }
+.cuidado-circulo { width: 74px; height: 74px; margin: 0 auto 12px; }
+.ds .adop .cuidados h3 { margin: 0 0 6px; font-size: 16px; }
+.cuidados p, .pasos-adopcion p { margin: 0; font-size: 12.5px; color: var(--suave); }
+.pasos-adopcion { list-style: none; position: relative; margin: 0 auto; padding: 0; max-width: 1060px; display: flex; flex-direction: column;
+  gap: 16px; text-align: left; }
+.pasos-adopcion::before { content: ""; position: absolute; left: 37px; top: 20px; bottom: 20px; border-left: 3px dashed var(--tinta); opacity: .35; }
+.pasos-adopcion li { position: relative; display: flex; align-items: center; gap: 14px; }
+.paso-circulo { flex: none; width: 76px; height: 76px; border-width: 3px; box-shadow: 4px 4px 0 var(--tinta); }
+.ds .adop .pasos-adopcion h3 { margin: 0 0 4px; font-size: 16px; }
+
 /* Hover suave: sube 6 px y gira 1°, solo con movimiento. */
 @media (prefers-reduced-motion: no-preference) {
   .adop--mov .carta:hover { transform: translateY(-6px) rotate(-1deg); }
@@ -84,6 +100,14 @@
   .ds .adop .carta--mini .carta-nombre { font-size: 18px; }
   .carta--mini .carta-barras li { grid-template-columns: 68px 1fr; font-size: 11px; }
   .carta-sello { font-size: 15px; }
+  .cuidados { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .cuidados li { padding: 20px 16px; }
+  .ds .adop .cuidados h3 { font-size: 19px; }
+  .cuidados p, .pasos-adopcion p { font-size: 14px; }
+  .pasos-adopcion { flex-direction: row; justify-content: space-between; text-align: center; }
+  .pasos-adopcion::before { left: 60px; right: 60px; top: 38px; bottom: auto; border-left: 0; border-top: 3px dashed var(--tinta); }
+  .pasos-adopcion li { width: 180px; flex-direction: column; gap: 10px; }
+  .ds .adop .pasos-adopcion h3 { font-size: 17px; }
   .trio--boca-abajo { gap: 26px; }
   .trio--boca-abajo .carta { flex: none; width: 290px; max-width: none; padding: 12px; border-radius: 24px; box-shadow: 6px 6px 0 var(--tinta); }
   .trio--boca-abajo .carta--estrella { width: 320px; }

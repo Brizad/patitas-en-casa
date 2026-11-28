@@ -489,31 +489,10 @@
 @media (max-width: 520px) { .hogar-fila { grid-template-columns: minmax(0, 1fr); } .hogar-fila dd { text-align: left; } }
 
 /* ---------- bienvenida en computador (tarea 4): hero compacto y más contenido abajo ---------- */
-.ini-mas { display: none; }
 @media (min-width: 1024px) {
   .ini { align-content: start; padding-top: 6px; }
   .ds .adop .ini-titulo { font-size: 56px; }
   .collage { max-width: 430px; }
   .ini-acciones { margin-top: 22px; }
   .ini-texto { order: 0; } .collage { order: 1; }
-  .ini-mas { order: 3; grid-column: 1 / -1; display: flex; flex-direction: column; gap: 56px; width: 100%; max-width: 1120px;
-    margin: 28px auto 24px; }
-  .ds .adop .ini-h2 { margin: 6px 0 0; font-size: 40px; line-height: 1.05; }
-  .ini-bloque { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); border: 3px solid var(--tinta); border-radius: 30px;
-    overflow: hidden; box-shadow: 7px 7px 0 var(--tinta); }
-  .ini-asi { padding: 34px 36px; background: var(--morado); color: #FFFFFF; }
-  .ini-pasos { list-style: none; margin: 20px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
-  .ini-pasos li { display: flex; gap: 12px; align-items: flex-start; }
-  .ini-pasos li > span:last-child { display: flex; flex-direction: column; gap: 2px; font-size: 14px; font-weight: 700; line-height: 1.4; }
-  .ini-pasos strong { font-size: 19px; font-weight: 700; }
-  .ini-paso-n { width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 999px;
-    background: #FFD23F; color: var(--tinta); border: 2px solid #FFFFFF; font-weight: 700; }
-  .ini-lado { display: grid; grid-template-rows: 1fr 1fr; border-left: 3px solid var(--tinta); }
-  .ini-hogar, .ini-mias { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 6px; padding: 24px 28px; }
-  .ini-hogar { background: #FFD23F; border-bottom: 3px solid var(--tinta); }
-  .ini-mias { background: var(--tinta); color: #FFFFFF; }
-  .ds .adop .ini-hogar h3, .ds .adop .ini-mias h3 { margin: 0; font-size: 26px; font-weight: 700; color: inherit; }
-  .ds .adop .ini-hogar p, .ds .adop .ini-mias p { margin: 0; font-size: 15px; font-weight: 700; color: inherit; }
-  .ds .adop .ini-asi .ini-h2 { margin: 0; color: #FFFFFF; }
-  .ds .adop .ini-enlace-claro { color: #FFFFFF; }
 }
