@@ -100,7 +100,11 @@
     }
     const todos = [r.animal && [r.animal.latitud, r.animal.longitud], r.ubicacion && [r.ubicacion.latitud, r.ubicacion.longitud]]
       .filter(Boolean);
-    if (todos.length === 2) mapa.fitBounds(todos, { padding: [60, 40], maxZoom: 17, animate: !sinMovimiento.matches });
+    // #502: margen arriba para la franja y el nombre del rescatista (que van encima del punto).
+    if (todos.length === 2) {
+      mapa.fitBounds(todos, { paddingTopLeft: [40, 110], paddingBottomRight: [40, 50], maxZoom: 17,
+        animate: !sinMovimiento.matches });
+    }
     else if (todos.length === 1) mapa.setView(todos[0], 16, { animate: false });
     return true;
   }

@@ -111,7 +111,14 @@ test("el mapa del rescate aparece aunque Leaflet cargue después de la respuesta
     await new Promise((listo) => setTimeout(listo, 2500));
     await r.continue();
   });
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/app/#estado/EEEE5555");
   await expect(page.locator("#mapa-franja")).toHaveText("A 1,2 km · llega en unos 3 min (aprox.)");
   await expect(page.locator("#estado-ilu")).toBeHidden();
+  // #502: la franja no tapa el nombre del rescatista (en el celular, el rescatista va arriba).
+  await expect(page.locator(".nombre-rescatista")).toHaveText("Rita");
+  await page.waitForTimeout(1500); // el encuadre se anima
+  const nombre = await page.locator(".nombre-rescatista").boundingBox();
+  const franja = await page.locator("#mapa-franja").boundingBox();
+  expect(nombre.y).toBeGreaterThanOrEqual(franja.y + franja.height);
 });
