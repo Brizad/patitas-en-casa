@@ -231,6 +231,10 @@ erDiagram
     varchar etiquetas
     numeric peso_kg
     numeric peso_adulto_kg
+    varchar habilidades
+    boolean vacunas
+    boolean esterilizado
+    boolean desparasitado
   }
   solicitudes {
     integer id PK

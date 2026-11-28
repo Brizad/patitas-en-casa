@@ -376,8 +376,12 @@ Restricciones e índices: `ck_perfiles_claro_o_cifrado`: `datos_cifrados IS NOT 
 | `etiquetas` | VARCHAR(20)[] | sí | — | — | — |
 | `peso_kg` | NUMERIC(5, 2) | sí | — | — | — |
 | `peso_adulto_kg` | NUMERIC(5, 2) | sí | — | — | — |
+| `habilidades` | VARCHAR(30)[] | sí | — | — | — |
+| `vacunas` | BOOLEAN | sí | — | — | — |
+| `esterilizado` | BOOLEAN | sí | — | — | — |
+| `desparasitado` | BOOLEAN | sí | — | — | — |
 
-Restricciones e índices: `ck_publicaciones_calma`: `calma BETWEEN 0 AND 100`; `ck_publicaciones_carino`: `carino BETWEEN 0 AND 100`; `ck_publicaciones_edad`: `edad_meses BETWEEN 0 AND 360`; `ck_publicaciones_energia`: `energia IN ('baja', 'media', 'alta')`; `ck_publicaciones_energia_nivel`: `energia_nivel BETWEEN 0 AND 100`; `ck_publicaciones_estado`: `estado IN ('disponible', 'adoptado', 'retirada')`; `ck_publicaciones_etiquetas`: `cardinality(etiquetas) <= 3`; `ck_publicaciones_juego`: `juego BETWEEN 0 AND 100`; `ck_publicaciones_peso`: `peso_kg > 0 AND peso_kg <= 150`; `ck_publicaciones_peso_adulto`: `peso_adulto_kg > 0 AND peso_adulto_kg <= 150`; `ck_publicaciones_tamano`: `tamano IN ('pequeno', 'mediano', 'grande')`.
+Restricciones e índices: `ck_publicaciones_calma`: `calma BETWEEN 0 AND 100`; `ck_publicaciones_carino`: `carino BETWEEN 0 AND 100`; `ck_publicaciones_edad`: `edad_meses BETWEEN 0 AND 360`; `ck_publicaciones_energia`: `energia IN ('baja', 'media', 'alta')`; `ck_publicaciones_energia_nivel`: `energia_nivel BETWEEN 0 AND 100`; `ck_publicaciones_estado`: `estado IN ('disponible', 'adoptado', 'retirada')`; `ck_publicaciones_etiquetas`: `cardinality(etiquetas) <= 3`; `ck_publicaciones_habilidades`: `cardinality(habilidades) <= 8`; `ck_publicaciones_juego`: `juego BETWEEN 0 AND 100`; `ck_publicaciones_peso`: `peso_kg > 0 AND peso_kg <= 150`; `ck_publicaciones_peso_adulto`: `peso_adulto_kg > 0 AND peso_adulto_kg <= 150`; `ck_publicaciones_tamano`: `tamano IN ('pequeno', 'mediano', 'grande')`.
 
 ## `solicitudes`
 
