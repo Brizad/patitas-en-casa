@@ -17,6 +17,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
@@ -41,10 +42,12 @@ from app.adopciones.modelos import (
 )
 from app.adopciones.perfil import perfil_de_adopcion
 from app.adopciones.servicio import (
+    MENSAJE_SIN_SEGUIMIENTO,
     AnimalNoDisponible,
     PerfilIncompleto,
     RazonInvalida,
     RestriccionDura,
+    SeguimientoNoAceptado,
     SeguimientoNoValido,
     SinCupoParaDevolucion,
     SolicitudNoEncontrada,
@@ -283,9 +286,16 @@ async def _subir_foto(ctx: Contexto, animal_id: int, foto: UploadFile,
     return {"foto": f"/adopciones/animales/{animal_id}/foto", "tipo": tipo}
 
 
-def _recomendaciones(ctx: Contexto, adoptante: Usuario) -> list[dict]:
+def _sin_seguimiento(error: SeguimientoNoAceptado) -> JSONResponse:
+    """#516: 403 con el motivo, para que la app explique por qué y ofrezca aceptarlo."""
+    return JSONResponse(status_code=403, content={"detail": str(error), "motivo": error.motivo})
+
+
+def _recomendaciones(ctx: Contexto, adoptante: Usuario) -> list[dict] | JSONResponse:
     perfil = _exigir(ctx.repositorio_adopciones.perfil(adoptante.correo),
                      "Llena tu perfil para ver recomendaciones.", 422)
+    if not perfil.habilitado():  # #516, RN-10: con «Ahora no» al seguimiento no hay matches
+        return _sin_seguimiento(SeguimientoNoAceptado(MENSAJE_SIN_SEGUIMIENTO))
     con_foto = ctx.repositorio_fotos.con_foto()  # #422: antes las recomendaciones no la traían
     return [{**_publicacion(a, con_foto), **_compatibilidad(c)}
             for a, c in recomendar(perfil, ctx.repositorio_adopciones.disponibles())]
@@ -522,8 +532,11 @@ def _rutas_de_solicitudes(rutas: APIRouter, ctx: Contexto) -> None:
     @rutas.post("/adopciones/solicitudes", status_code=201)
     def solicitar_adopcion(datos: SolicitudEntrada, adoptante: Usuario = adoptante_actual):
         """RF-27, RN-10: perfil lleno y seguimiento aceptado; una pendiente por animal."""
-        s = _traducir(ERRORES_SOLICITAR, adopciones.solicitar, adoptante, datos.animal_id,
-                      datos.mensaje)
+        try:
+            s = _traducir(ERRORES_SOLICITAR, adopciones.solicitar, adoptante, datos.animal_id,
+                          datos.mensaje)
+        except SeguimientoNoAceptado as error:  # #516: 403, no 422
+            return _sin_seguimiento(error)
         return {"id": s.id, "animal_id": s.animal_id, "estado": s.estado.value}
 
     @rutas.get("/adopciones/solicitudes/mias")

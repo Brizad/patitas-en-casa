@@ -23,6 +23,17 @@ class PerfilIncompleto(ValueError):
     pass
 
 
+MENSAJE_SIN_SEGUIMIENTO = ("Para ver compañeros y enviar solicitudes acepta el seguimiento a los "
+                           "30, 90 y 180 días (RN-10).")
+
+
+class SeguimientoNoAceptado(PermissionError):
+    """#516: respondió «Ahora no» al seguimiento de 30, 90 y 180 días (RN-10): sin matches ni
+    solicitudes. El servidor lo exige; la app solo lo explica."""
+
+    motivo = "seguimiento_no_aceptado"
+
+
 class AnimalNoDisponible(LookupError):
     pass
 
@@ -66,9 +77,11 @@ class ServicioAdopciones:
             raise PermissionError("Solo una cuenta de adoptante solicita adopciones.")
         perfil = self._repositorio.perfil(adoptante.correo)
         # RN-10: adoptante habilitado = perfil lleno y acepta el seguimiento (RF-10).
-        if perfil is None or not perfil.habilitado():
+        if perfil is None:
             raise PerfilIncompleto("Completa tu perfil y acepta el seguimiento a los 30, 90 "
                                    "y 180 días para poder solicitar (RN-10).")
+        if not perfil.habilitado():
+            raise SeguimientoNoAceptado(MENSAJE_SIN_SEGUIMIENTO)
         publicacion = self._repositorio.publicacion(animal_id)
         if publicacion is None or publicacion.estado != EstadoPublicacion.DISPONIBLE:
             raise AnimalNoDisponible("Ese animal no está disponible para adopción.")

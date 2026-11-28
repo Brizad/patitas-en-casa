@@ -61,10 +61,26 @@ def test_solicitar_y_ver_mis_solicitudes(c):
 def test_rn10_sin_perfil_o_sin_aceptar_seguimiento_no_solicita(c):
     sin = h(c, "sin@correo.co")
     assert c.post("/adopciones/solicitudes", json={"animal_id": 1},
-                  headers=sin).status_code == 422
+                  headers=sin).status_code == 422  # sin perfil: falta llenarlo
     c.put("/adoptantes/yo/perfil", json={**PERFIL, "acepta_seguimiento": False}, headers=sin)
     r = c.post("/adopciones/solicitudes", json={"animal_id": 1}, headers=sin)
-    assert r.status_code == 422 and "RN-10" in r.json()["detail"]
+    # #516: respondió «Ahora no» al seguimiento: 403 con su motivo (no confiar solo en el front).
+    assert r.status_code == 403 and "RN-10" in r.json()["detail"]
+    assert r.json()["motivo"] == "seguimiento_no_aceptado"
+    assert c.get("/adopciones/solicitudes/mias", headers=sin).json() == []
+
+
+def test_sin_seguimiento_no_hay_matches_y_al_aceptar_aparecen(c):
+    """#516: con «Ahora no», las recomendaciones responden 403 con el motivo, sin animales."""
+    sin = h(c, "sin@correo.co")
+    c.put("/adoptantes/yo/perfil", json={**PERFIL, "acepta_seguimiento": False}, headers=sin)
+    r = c.get("/adopciones/recomendaciones", headers=sin)
+    assert r.status_code == 403
+    assert r.json()["motivo"] == "seguimiento_no_aceptado" and "Canela" not in r.text
+    c.put("/adoptantes/yo/perfil", json=PERFIL, headers=sin)  # «Sí, acepto»
+    (canela,) = c.get("/adopciones/recomendaciones", headers=sin).json()
+    assert canela["nombre"] == "Canela"
+    assert c.post("/adopciones/solicitudes", json={"animal_id": 1}, headers=sin).status_code == 201
 
 
 def test_animal_no_publicado_404_y_rol_equivocado_403(c):
